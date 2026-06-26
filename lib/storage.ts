@@ -183,14 +183,11 @@ export const defaultContent: SiteContent = {
   linkedInLink: "https://www.linkedin.com/",
   email: "hello@idea2product.co",
   heroTagline: "Product Development Partner for makers, sellers, and launch teams",
-  heroTitle: "What Product Do You Want To Create Today?",
+  heroTitle: "Turn Your Product Idea Into Reality.",
   heroSubtitle:
-    "We help entrepreneurs turn ideas into manufacturable products through trusted manufacturing partners in China.",
+    "Upload your idea. We'll help you turn it into a manufacturable product through trusted manufacturing partners in China.",
   heroPlaceholders: [
-    "I want to create a magnetic phone stand...",
-    "I designed a capybara night light...",
-    "I want to launch a Kickstarter product...",
-    "I need a custom pet accessory..."
+    "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\""
   ],
   ctaText: "Continue",
   tagline: "Turn Your Product Idea Into Reality.",
@@ -217,10 +214,12 @@ export const defaultContent: SiteContent = {
   pricingProofA: "No hidden factory markups.",
   pricingProofB: "You always know the real factory price.",
   trustBadges: [
-    "Product Development Partner",
-    "Transparent Factory Pricing",
-    "Dedicated Project Manager",
-    "Worldwide Delivery Support"
+    "Product Development",
+    "Manufacturing Partner Matching",
+    "Prototype Management",
+    "Quality Inspection",
+    "Production Follow-up",
+    "Shipping Support"
   ],
   positioningHeadlineA: "We Don't Help You Find Factories.",
   positioningHeadlineB: "We Help You Build Products.",
@@ -357,11 +356,26 @@ export const defaultContent: SiteContent = {
 };
 
 const legacyContent = {
+  heroTitle: "What Product Do You Want To Create Today?",
   heroSubtitle:
     "Upload your design or describe your idea. We help turn it into a real product through trusted manufacturing partners in China.",
+  heroSubtitleV2:
+    "We help entrepreneurs turn ideas into manufacturable products through trusted manufacturing partners in China.",
   founderText:
     "I help entrepreneurs and product creators turn ideas into real products by connecting them with trusted manufacturing partners in China. I personally assist with supplier sourcing, sample verification, production coordination, and logistics support."
 };
+const legacyHeroPlaceholders = [
+  "I want to create a magnetic phone stand...",
+  "I designed a capybara night light...",
+  "I want to launch a Kickstarter product...",
+  "I need a custom pet accessory..."
+];
+const legacyTrustBadges = [
+  "Product Development Partner",
+  "Transparent Factory Pricing",
+  "Dedicated Project Manager",
+  "Worldwide Delivery Support"
+];
 
 function stringValue(value: unknown, fallback: string) {
   return typeof value === "string" ? value : fallback;
@@ -634,6 +648,18 @@ export function normalizeContent(value: unknown): SiteContent {
 
   if (normalized.heroSubtitle === legacyContent.heroSubtitle) {
     normalized.heroSubtitle = defaultContent.heroSubtitle;
+  }
+  if (normalized.heroTitle === legacyContent.heroTitle) {
+    normalized.heroTitle = defaultContent.heroTitle;
+  }
+  if (normalized.heroSubtitle === legacyContent.heroSubtitleV2) {
+    normalized.heroSubtitle = defaultContent.heroSubtitle;
+  }
+  if (normalized.heroPlaceholders.join("|") === legacyHeroPlaceholders.join("|")) {
+    normalized.heroPlaceholders = defaultContent.heroPlaceholders;
+  }
+  if (normalized.trustBadges.join("|") === legacyTrustBadges.join("|")) {
+    normalized.trustBadges = defaultContent.trustBadges;
   }
   if (normalized.founderText === legacyContent.founderText) {
     normalized.founderText = defaultContent.founderText;

@@ -6,9 +6,12 @@ export const languageKey = "idea2product-language";
 
 export const zhContent: SiteContent = {
   ...defaultContent,
-  heroTitle: "今天你想做什么产品？",
+  heroTitle: "把你的产品想法变成现实。",
   heroSubtitle:
-    "我们帮助创业者通过中国可信制造伙伴，把想法变成可制造的真实产品。",
+    "上传你的想法。我们会帮助你通过中国可信制造伙伴，把它变成可制造的真实产品。",
+  heroPlaceholders: [
+    "描述你的产品想法...\n\n示例：\n“我想设计一个适用于 iPhone 的磁吸手机支架。”"
+  ],
   tagline: "把你的产品想法变成现实。",
   founderText:
     "我帮助创业者和产品创作者，通过中国制造网络把想法变成真实产品。TYORA 支持完整产品旅程：从想法验证、制造伙伴匹配，到样品确认、生产协调、质量控制和交付。",
@@ -34,6 +37,7 @@ export const zhContent: SiteContent = {
       features: ["制造伙伴沟通", "样品协调", "质检支持", "生产跟进", "发货协调"]
     }
   ],
+  trustBadges: ["产品开发", "制造伙伴匹配", "样品管理", "质量检查", "生产跟进", "发货支持"],
   cases: [
     {
       ...defaultContent.cases[0],
@@ -116,9 +120,9 @@ export const ui = {
     leadIntro: "Leads submitted from the chat-style questionnaire.",
     linkedIn: "LinkedIn",
     liveVideoCall: "Live Video Call",
-    magneticPrompt: "I want to create a magnetic phone stand...",
-    manufactureQuestion: "What would you like to manufacture?",
-    manufacturePlaceholder: "Describe the product, who it is for, and what makes it different.",
+    magneticPrompt: "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\"",
+    manufactureQuestion: "What product would you like to build?",
+    manufacturePlaceholder: "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\"",
     no: "No",
     note: "Note",
     packaging: "Packaging",
@@ -187,10 +191,12 @@ export const ui = {
     ],
     footerLine: "We don't just manufacture products. We help bring ideas to life.",
     trustBadges: [
-      "Product Development Partner",
-      "Transparent Factory Pricing",
-      "Dedicated Project Manager",
-      "Worldwide Delivery Support"
+      "Product Development",
+      "Manufacturing Partner Matching",
+      "Prototype Management",
+      "Quality Inspection",
+      "Production Follow-up",
+      "Shipping Support"
     ],
     trustCards: [
       ["Transparent Pricing", "You pay manufacturers directly."],
@@ -259,9 +265,9 @@ export const ui = {
     leadIntro: "来自聊天式问卷的项目线索。",
     linkedIn: "LinkedIn",
     liveVideoCall: "视频会议",
-    magneticPrompt: "我想做一个磁吸手机支架...",
-    manufactureQuestion: "你想生产什么产品？",
-    manufacturePlaceholder: "描述产品、目标用户，以及它有什么不同。",
+    magneticPrompt: "描述你的产品想法...\n\n示例：\n“我想设计一个适用于 iPhone 的磁吸手机支架。”",
+    manufactureQuestion: "你想开发什么产品？",
+    manufacturePlaceholder: "描述你的产品想法...\n\n示例：\n“我想设计一个适用于 iPhone 的磁吸手机支架。”",
     no: "否",
     note: "备注",
     packaging: "包装",
@@ -328,7 +334,7 @@ export const ui = {
       "协助包装、物流协调和全球交付。"
     ],
     footerLine: "我们不只是制造产品，我们帮助想法落地。",
-    trustBadges: ["产品开发伙伴", "透明工厂价格", "专属项目经理", "全球交付支持"],
+    trustBadges: ["产品开发", "制造伙伴匹配", "样品管理", "质量检查", "生产跟进", "发货支持"],
     trustCards: [
       ["透明价格", "你直接向制造方付款。"],
       ["专属项目经理", "一个联系人跟进整个项目。"],
@@ -380,6 +386,14 @@ export function localizeContent(content: SiteContent, language: Language): SiteC
       defaultContent.heroSubtitle,
       zhContent.heroSubtitle
     ),
+    heroPlaceholders:
+      content.heroPlaceholders.join("|") === defaultContent.heroPlaceholders.join("|")
+        ? zhContent.heroPlaceholders
+        : content.heroPlaceholders,
+    trustBadges:
+      content.trustBadges.join("|") === defaultContent.trustBadges.join("|")
+        ? zhContent.trustBadges
+        : content.trustBadges,
     tagline: localizeString(content.tagline, defaultContent.tagline, zhContent.tagline),
     founderText: localizeString(
       content.founderText,
