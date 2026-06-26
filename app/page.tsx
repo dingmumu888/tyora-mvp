@@ -1,0 +1,725 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowRight,
+  Calendar,
+  Check,
+  ChevronLeft,
+  FileUp,
+  ImageIcon,
+  Layers,
+  MessageCircle,
+  PackageCheck,
+  Play,
+  Send,
+  Sparkles,
+  Upload,
+  Video
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/input";
+import {
+  defaultContent,
+  Lead,
+  loadContent,
+  saveLead,
+  SiteContent
+} from "@/lib/storage";
+import {
+  Language,
+  localizeContent,
+  UiText,
+  ui
+} from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+
+function makePrompts(t: UiText) {
+  return [
+    t.magneticPrompt,
+    t.capybaraPrompt,
+    languageSafeKickstarter(t),
+    t.petPrompt
+  ];
+}
+
+function languageSafeKickstarter(t: UiText) {
+  return t.language === "EN"
+    ? "我想发布一个 Kickstarter 产品..."
+    : "I want to launch a Kickstarter product...";
+}
+
+function makeWizardSteps(t: UiText) {
+  return [
+  {
+    key: "productIdea",
+    question: t.manufactureQuestion,
+    type: "textarea",
+    placeholder: t.manufacturePlaceholder
+  },
+  {
+    key: "designType",
+    question: t.doYouHaveDesign,
+    options: [
+      t.aiGeneratedImage,
+      t.sketch,
+      t.cadFile,
+      t.existingReference,
+      t.justIdea
+    ]
+  },
+  {
+    key: "quantity",
+    question: t.estimatedQuantity,
+    options: ["100-500", "500-1000", "1000-5000", "5000+"]
+  },
+  {
+    key: "budget",
+    question: t.estimatedBudget,
+    options: ["Under $1,000", t.quoteDeposit, "$5,000-$20,000", "$20,000+"]
+  },
+  {
+    key: "timeline",
+    question: t.startTimeline,
+    options: [t.immediately, t.within30, t.within90, t.researchingOnly]
+  },
+  {
+    key: "sampleRequirement",
+    question: t.sampleNeed,
+    options: [t.yes, t.no]
+  },
+  {
+    key: "sampleReview",
+    question: t.sampleReview,
+    options: [t.inspectionVideo, t.liveVideoCall, t.shipSample],
+    note: t.internationalCourier
+  },
+  {
+    key: "additionalRequirements",
+    question: t.additionalRequirements,
+    type: "textarea",
+    placeholder: t.additionalRequirementsPlaceholder
+  }
+  ] as const;
+}
+
+type Answers = Record<string, string>;
+
+export default function Home() {
+  const [content, setContent] = useState<SiteContent>(defaultContent);
+  const [language, setLanguage] = useState<Language>("en");
+  const [promptIndex, setPromptIndex] = useState(0);
+  const [idea, setIdea] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [answers, setAnswers] = useState<Answers>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    void loadContent().then(setContent).catch(() => setContent(defaultContent));
+  }, []);
+
+  const t = ui[language];
+  const displayContent = useMemo(
+    () => localizeContent(content, language),
+    [content, language]
+  );
+  const prompts = useMemo(
+    () => displayContent.heroPlaceholders.length ? displayContent.heroPlaceholders : makePrompts(t),
+    [displayContent.heroPlaceholders, t]
+  );
+  const wizardSteps = useMemo(() => makeWizardSteps(t), [t]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setPromptIndex((current) => (current + 1) % prompts.length);
+    }, 2600);
+    return () => window.clearInterval(id);
+  }, [prompts.length]);
+
+  const activeSteps = useMemo(() => {
+    return wizardSteps.filter(
+      (step) => step.key !== "sampleReview" || answers.sampleRequirement === t.yes
+    );
+  }, [answers.sampleRequirement, t.yes, wizardSteps]);
+
+  const currentStep = activeSteps[stepIndex] ?? activeSteps[0];
+  const progress = Math.round(((stepIndex + 1) / activeSteps.length) * 100);
+
+  function openWizard() {
+    setWizardOpen(true);
+    setSubmitted(false);
+    setStepIndex(0);
+    setAnswers((current) => ({ ...current, productIdea: current.productIdea || idea }));
+  }
+
+  function setAnswer(key: string, value: string) {
+    setAnswers((current) => ({ ...current, [key]: value }));
+  }
+
+  function nextStep() {
+    if (stepIndex < activeSteps.length - 1) {
+      setStepIndex((current) => current + 1);
+      return;
+    }
+
+    const lead: Lead = {
+      id: crypto.randomUUID(),
+      productIdea: answers.productIdea || idea,
+      designType: answers.designType || "",
+      quantity: answers.quantity || "",
+      budget: answers.budget || "",
+      timeline: answers.timeline || "",
+      sampleRequirement: answers.sampleRequirement || t.no,
+      sampleReview: answers.sampleReview,
+      additionalRequirements: answers.additionalRequirements || "",
+      uploadedFile: fileName,
+      submissionDate: new Date().toISOString(),
+      status: "New"
+    };
+
+    void saveLead(lead);
+    setSubmitted(true);
+  }
+
+  const canContinue = Boolean(answers[currentStep?.key] || (currentStep?.key === "productIdea" && idea));
+  const toggleLanguage = () => {
+    const next = language === "en" ? "zh" : "en";
+    setLanguage(next);
+  };
+
+  return (
+    <main className="min-h-screen bg-white text-[#101216]">
+      <header className="sticky top-0 z-40 border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <a href="#" className="flex items-center gap-2 font-semibold">
+            {displayContent.logoImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={displayContent.logoImage}
+                alt={displayContent.brandName}
+                className="size-8 rounded-lg object-cover"
+              />
+            ) : (
+              <span className="flex size-8 items-center justify-center rounded-lg bg-[#101216] text-white">
+                <Sparkles size={16} />
+              </span>
+            )}
+            <span className="leading-tight">
+              {displayContent.brandName}
+              <span className="block text-[10px] font-medium uppercase tracking-normal text-[#69707d]">
+                Idea2Product
+              </span>
+            </span>
+          </a>
+          <div className="flex items-center gap-2">
+          <Button variant="outline" className="min-h-10 px-3" onClick={toggleLanguage}>
+            {t.language}
+          </Button>
+          <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">
+            <Button variant="secondary" className="min-h-10">
+              <MessageCircle size={16} />
+              {t.whatsApp}
+            </Button>
+          </a>
+          </div>
+        </div>
+      </header>
+
+      <section className="fine-grid border-b border-[#eef1f4]">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="flex flex-col justify-center"
+          >
+            <p className="mb-5 w-fit rounded-full border border-[#dfe4e9] bg-white px-3 py-1 text-sm text-[#69707d]">
+              {displayContent.heroTagline}
+            </p>
+            <h1 className="max-w-3xl text-[3.4rem] font-semibold leading-[1.02] tracking-normal sm:text-[4.1rem] lg:text-[4.85rem]">
+              {displayContent.heroTitle}
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59616e]">
+              {displayContent.heroSubtitle}
+            </p>
+
+            <div className="soft-shadow mt-9 rounded-[20px] border border-[#e1e5ea] bg-white p-3">
+              <div className="flex min-h-44 flex-col gap-4 rounded-2xl bg-[#fbfbfc] p-4">
+                <Textarea
+                  value={idea}
+                  onChange={(event) => setIdea(event.target.value)}
+                  placeholder={prompts[promptIndex]}
+                  className="min-h-24 border-0 bg-transparent px-0 py-0 text-base shadow-none focus:border-transparent focus:ring-0"
+                />
+                <div className="flex flex-col gap-3 border-t border-[#e8ebef] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 ring-1 ring-[#e8ebef]">
+                      <ImageIcon size={14} /> {t.image}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 ring-1 ring-[#e8ebef]">
+                      <FileUp size={14} /> {t.pdf}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 ring-1 ring-[#e8ebef]">
+                      <Layers size={14} /> {t.cad}
+                    </span>
+                    {fileName ? <span className="px-2 py-2">{fileName}</span> : null}
+                  </div>
+                  <div className="flex gap-2">
+                    <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#e1e5ea] bg-white px-4 text-sm font-medium transition hover:bg-[#f5f6f8]">
+                      <Upload size={16} />
+                      {t.uploadDesign}
+                      <input
+                        className="sr-only"
+                        type="file"
+                        accept="image/*,.pdf,.step,.stp,.iges,.igs,.obj,.stl,.dwg,.dxf"
+                        onChange={(event) =>
+                          setFileName(event.target.files?.[0]?.name || "")
+                        }
+                      />
+                    </label>
+                    <Button onClick={openWizard}>
+                      {displayContent.ctaText} <ArrowRight size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              {t.trustBadges.map((badge) => (
+                <div
+                  key={badge}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#e8ebef] bg-white px-3 text-sm text-[#59616e]"
+                >
+                  <Check size={15} className="text-[#0f766e]" />
+                  {badge}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.45 }}
+            className="flex items-center"
+          >
+            <Card className="w-full overflow-hidden soft-shadow">
+              <div className="border-b border-[#eef1f4] bg-[#fafbfc] px-5 py-4">
+                <div className="flex items-center gap-2 text-sm text-[#69707d]">
+                  <span className="size-3 rounded-full bg-[#ff6b5f]" />
+                  <span className="size-3 rounded-full bg-[#f6c85f]" />
+                  <span className="size-3 rounded-full bg-[#5cc785]" />
+                  <span className="ml-2">Project Overview</span>
+                </div>
+              </div>
+              <div className="space-y-3 p-5">
+                {[
+                  ["Product", "Magnetic Phone Stand"],
+                  ["Quantity", "1000 Units"],
+                  ["Target Market", "United States"],
+                  ["Project Status", "Ready For Manufacturing Review"]
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+                    <p className="text-xs uppercase text-[#8c94a1]">{label}</p>
+                    <p className="mt-2 font-medium">{value}</p>
+                  </div>
+                ))}
+                <div className="rounded-lg bg-[#101216] p-4 text-white">
+                  <p className="text-sm text-white/70">Next Step</p>
+                  <p className="mt-2 text-xl font-semibold">Chat With TYORA</p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[0.62fr_1.38fr] lg:px-8">
+        <div>
+          <h2 className="text-[2.25rem] font-semibold leading-tight">{displayContent.video.title}</h2>
+          <p className="mt-4 text-lg leading-8 text-[#59616e]">{displayContent.video.subtitle}</p>
+        </div>
+        <Card className="overflow-hidden bg-[#101216] text-white">
+          <div className="flex min-h-[23rem] flex-col justify-between p-7">
+            <div className="flex items-center justify-between">
+              <span className="rounded-full bg-white/10 px-3 py-1 text-sm">
+                {t.thirtySecond}
+              </span>
+              <span className="flex size-12 items-center justify-center rounded-full bg-white text-[#101216]">
+                {displayContent.video.videoUrl || displayContent.video.uploadedVideoFile ? <Video size={20} /> : <Play size={20} />}
+              </span>
+            </div>
+            {displayContent.video.sourceType === "upload" && displayContent.video.uploadedVideoFile ? (
+              <video
+                className="mt-6 aspect-video w-full rounded-lg object-cover"
+                src={displayContent.video.uploadedVideoFile}
+                poster={displayContent.video.coverImage || undefined}
+                controls={!displayContent.video.autoplay}
+                autoPlay={displayContent.video.autoplay}
+                muted={displayContent.video.muted}
+                loop={displayContent.video.loop}
+              />
+            ) : displayContent.video.videoUrl ? (
+              <div className="mt-6 flex aspect-video w-full items-center justify-center rounded-lg bg-white/8 p-6 text-center text-sm text-white/70">
+                {displayContent.video.sourceType === "youtube" ? "YouTube" : "Vimeo"}: {displayContent.video.videoUrl}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-6">
+                {["Idea", t.supplierMatching, t.prototype, t.production, t.packaging, t.delivery].map(
+                  (item) => (
+                    <div key={item} className="rounded-lg bg-white/8 px-3 py-3 text-center">
+                      {item}
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+      </section>
+
+      <section className="border-y border-[#eef1f4] bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl text-center">
+          <p className="text-sm font-medium text-[#69707d]">TYORA</p>
+          <h2 className="mt-4 text-[2.75rem] font-semibold leading-tight tracking-normal sm:text-[3.4rem]">
+            {displayContent.positioningHeadlineA}
+            <span className="block">{displayContent.positioningHeadlineB}</span>
+          </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[#59616e]">
+            {displayContent.positioningText}
+          </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {displayContent.helpCards.map(({ title, description }) => (
+              <Card key={title} className="p-5">
+                <h3 className="font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mb-9">
+            <h2 className="text-[2.25rem] font-semibold leading-tight">{t.productJourney}</h2>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-5">
+          {[
+            ...displayContent.journeySteps
+          ].map(
+            (step, index) => (
+              <Card key={step.title} className="p-5">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-sm font-semibold text-white">
+                  {index + 1}
+                </span>
+                <div>
+                  <h3 className="mt-5 font-semibold">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#69707d]">
+                    {step.description}
+                  </p>
+                </div>
+              </Card>
+            )
+          )}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-[2.25rem] font-semibold leading-tight">{t.caseStudies}</h2>
+            <p className="mt-2 text-[#59616e]">{t.seeEditable}</p>
+          </div>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {displayContent.cases.filter((story) => story.visible).map((story) => (
+            <Card key={story.name} className="p-4">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h3 className="font-semibold">{story.name}</h3>
+                <span className="rounded-full bg-[#e6f7f4] px-2.5 py-1 text-xs font-medium text-[#0f766e]">
+                  {story.status}
+                </span>
+              </div>
+              <div className="grid gap-2">
+                {[
+                  [story.concept, story.conceptImage],
+                  [story.prototype, story.prototypeImage],
+                  [story.final, story.finalImage]
+                ].map(([label, image], itemIndex) => (
+                  <div key={label}>
+                  <div
+                    className="flex min-h-24 items-center justify-center rounded-lg bg-[#f2f4f6] p-3 text-center text-sm font-medium text-[#69707d]"
+                  >
+                    {image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={image} alt={label} className="h-full max-h-32 w-full rounded-lg object-cover" />
+                    ) : (
+                      label
+                    )}
+                  </div>
+                  {itemIndex < 2 ? (
+                    <div className="py-1 text-center text-[#8c94a1]">↓</div>
+                  ) : null}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-y border-[#eef1f4] bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <h2 className="text-[2.25rem] font-semibold leading-tight">{t.trustTitle}</h2>
+          <div className="mt-7 grid gap-4 lg:grid-cols-4">
+            {t.trustCards.map(([title, description]) => (
+              <Card key={title} className="p-5">
+                <h3 className="font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <h2 className="text-[2.25rem] font-semibold leading-tight">{displayContent.pricingTitle}</h2>
+          <p className="mt-2 text-[#59616e]">{displayContent.pricingSubtitle}</p>
+          <div className="mt-7 grid gap-4 lg:grid-cols-3">
+            {displayContent.pricing.filter((plan) => plan.visible).map((plan) => (
+              <Card key={plan.name} className="p-5">
+                <p className="text-sm text-[#69707d]">{plan.name}</p>
+                <h3 className="mt-3 text-2xl font-semibold">{plan.price}</h3>
+                <ul className="mt-5 space-y-3 text-sm text-[#59616e]">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex gap-2">
+                      <Check className="mt-0.5 shrink-0 text-[#0f766e]" size={16} />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                {plan.note ? <p className="mt-5 text-sm text-[#69707d]">{plan.note}</p> : null}
+              </Card>
+            ))}
+          </div>
+          <div className="mt-8 rounded-lg border border-[#e8ebef] bg-white p-5 text-center">
+            <p className="font-semibold">{displayContent.pricingProofA}</p>
+            <p className="mt-2 text-sm text-[#59616e]">{displayContent.pricingProofB}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-20 sm:px-6 lg:grid-cols-[0.65fr_1.35fr] lg:px-8">
+        <div className="aspect-square rounded-lg bg-[#f2f4f6]">
+          {displayContent.founderPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={displayContent.founderPhoto}
+              alt={displayContent.founderName}
+              className="h-full w-full rounded-lg object-cover"
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center bg-[#f2f4f6] text-[#69707d]">
+              <div className="flex size-24 items-center justify-center rounded-full bg-white text-3xl font-semibold text-[#101216] ring-1 ring-[#e1e5ea]">
+                A
+              </div>
+              <p className="mt-4 text-sm">Adam</p>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col justify-center">
+          <p className="mb-3 text-sm font-medium text-[#69707d]">
+            {displayContent.founderTitle}
+          </p>
+          <h2 className="text-[2.25rem] font-semibold leading-tight">{language === "zh" ? `你好，我是 ${displayContent.founderName}。` : <>Hi, I&apos;m {displayContent.founderName}.</>}</h2>
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-[#59616e]">
+            {language === "zh"
+              ? displayContent.founderText
+              : "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed."}
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">
+              <Button variant="secondary">
+                <MessageCircle size={16} /> {t.whatsApp}
+              </Button>
+            </a>
+            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer">
+              <Button variant="outline">{t.linkedIn}</Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-[#eef1f4] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-[#59616e] sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold text-[#101216]">{displayContent.brandName}</p>
+            <p>{displayContent.footerSlogan}</p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <a href={`mailto:${displayContent.email}`}>{t.email}</a>
+            <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">{t.whatsApp}</a>
+            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer">{t.linkedIn}</a>
+            <a href="/admin">{t.admin}</a>
+          </div>
+        </div>
+      </footer>
+
+      <a
+        href={displayContent.whatsappLink}
+        target="_blank"
+        rel="noreferrer"
+        className="fixed bottom-5 right-5 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#0f766e] px-5 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20"
+      >
+        <MessageCircle size={18} />
+        {t.chatWithUs}
+      </a>
+
+      <AnimatePresence>
+        {wizardOpen ? (
+          <motion.div
+            className="fixed inset-0 z-50 bg-[#101216]/30 p-3 backdrop-blur-sm sm:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.98 }}
+              className="mx-auto flex h-full max-h-[820px] max-w-3xl flex-col overflow-hidden rounded-2xl bg-white soft-shadow"
+            >
+              <div className="border-b border-[#eef1f4] p-4">
+                <div className="flex items-center justify-between">
+                  <button
+                    className="rounded-lg p-2 hover:bg-[#f5f6f8]"
+                    onClick={() => setWizardOpen(false)}
+                    aria-label="Close questionnaire"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <p className="text-sm text-[#69707d]">{t.projectIntake}</p>
+                  <div className="w-9" />
+                </div>
+                {!submitted ? (
+                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#eef1f4]">
+                    <div
+                      className="h-full rounded-full bg-[#101216] transition-all"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-5 sm:p-8">
+                {submitted ? (
+                  <div className="mx-auto flex max-w-lg flex-col items-center justify-center py-16 text-center">
+                    <span className="flex size-14 items-center justify-center rounded-full bg-[#e6f7f4] text-[#0f766e]">
+                      <PackageCheck size={26} />
+                    </span>
+                    <h2 className="mt-5 text-3xl font-semibold">{t.projectReceived}</h2>
+                    <p className="mt-3 text-[#59616e]">
+                      {t.projectReceivedText}
+                    </p>
+                    <div className="mt-7 flex flex-wrap justify-center gap-3">
+                      <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">
+                        <Button variant="secondary">
+                          <MessageCircle size={16} /> {t.chatOnWhatsApp}
+                        </Button>
+                      </a>
+                      <a href={displayContent.callLink} target="_blank" rel="noreferrer">
+                        <Button variant="outline">
+                          <Calendar size={16} /> {t.bookACall}
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    <div className="flex gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-white">
+                        <Sparkles size={16} />
+                      </span>
+                      <div className="rounded-2xl rounded-tl-sm bg-[#f5f6f8] p-4">
+                        <p className="text-lg font-semibold">{currentStep.question}</p>
+                        {"note" in currentStep && currentStep.note ? (
+                          <p className="mt-2 text-sm text-[#69707d]">{currentStep.note}</p>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {"options" in currentStep ? (
+                      <div className="ml-0 grid gap-3 sm:ml-12 sm:grid-cols-2">
+                        {currentStep.options.map((option) => (
+                          <button
+                            key={option}
+                            onClick={() => {
+                              setAnswer(currentStep.key, option);
+                              window.setTimeout(nextStep, 180);
+                            }}
+                            className={cn(
+                              "min-h-14 rounded-lg border px-4 text-left text-sm font-medium transition hover:border-[#101216]",
+                              answers[currentStep.key] === option
+                                ? "border-[#101216] bg-[#101216] text-white"
+                                : "border-[#e1e5ea] bg-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="ml-0 sm:ml-12">
+                        <Textarea
+                          value={
+                            currentStep.key === "productIdea"
+                              ? answers.productIdea || idea
+                              : answers[currentStep.key] || ""
+                          }
+                          placeholder={
+                            "placeholder" in currentStep ? currentStep.placeholder : ""
+                          }
+                          onChange={(event) => {
+                            if (currentStep.key === "productIdea") {
+                              setIdea(event.target.value);
+                            }
+                            setAnswer(currentStep.key, event.target.value);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {!submitted ? (
+                <div className="flex items-center justify-between border-t border-[#eef1f4] p-4">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setStepIndex((current) => Math.max(0, current - 1))}
+                    disabled={stepIndex === 0}
+                  >
+                    {t.back}
+                  </Button>
+                  <Button onClick={nextStep} disabled={!canContinue}>
+                    {stepIndex === activeSteps.length - 1 ? t.submitProject : t.continue}
+                    <Send size={16} />
+                  </Button>
+                </div>
+              ) : null}
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </main>
+  );
+}
