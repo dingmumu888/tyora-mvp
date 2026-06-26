@@ -165,8 +165,6 @@ export const contentKey = "idea2product-content";
 export const leadsKey = "idea2product-leads";
 export const mediaKey = "idea2product-media";
 export const teamMembersKey = "idea2product-team-members";
-export const adminSessionKey = "idea2product-admin-session";
-
 export const defaultTeamMembers: TeamMember[] = [
   { id: "adam", name: "Adam", avatar: "A", email: "adam@tyora.co", role: "Admin", active: true },
   { id: "jack", name: "Jack", avatar: "J", email: "jack@tyora.co", role: "Project Manager", active: true },
@@ -697,6 +695,39 @@ export function normalizeMedia(value: unknown): MediaAsset[] {
   }).filter((asset) => asset.url);
 }
 
+type ApiEnvelope<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      message: string;
+    };
+
+async function parseApiResponse<T>(response: Response): Promise<T> {
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(`Server returned an invalid response (${response.status}).`);
+  }
+
+  if (payload && typeof payload === "object" && "success" in payload) {
+    const envelope = payload as ApiEnvelope<T>;
+    if (envelope.success) {
+      return envelope.data;
+    }
+    throw new Error(envelope.message || `Request failed (${response.status}).`);
+  }
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}).`);
+  }
+
+  return payload as T;
+}
+
 async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...options,
@@ -706,11 +737,7 @@ async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
     }
   });
 
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
-  }
-
-  return response.json() as Promise<T>;
+  return parseApiResponse<T>(response);
 }
 
 export async function loadContent(): Promise<SiteContent> {
@@ -778,8 +805,8 @@ export async function uploadMedia(file: File): Promise<MediaAsset> {
   });
 
   if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status}`);
+    return parseApiResponse<MediaAsset>(response);
   }
 
-  return response.json() as Promise<MediaAsset>;
+  return parseApiResponse<MediaAsset>(response);
 }

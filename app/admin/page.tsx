@@ -30,7 +30,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
 import {
-  adminSessionKey,
   CaseStudy,
   CaseStudyStatus,
   defaultContent,
@@ -78,9 +77,9 @@ const zhText: Record<string, string> = {
   "Restore Defaults": "恢复默认",
   "Save Changes": "保存修改",
   "Saved successfully.": "保存成功。",
-  "Save failed. Browser storage may be full.": "保存失败，浏览器存储空间可能已满。",
+  "Save failed. Please try again.": "保存失败，请重试。",
   "Media saved.": "媒体已保存。",
-  "Media save failed. Browser storage may be full.": "媒体保存失败，浏览器存储空间可能已满。",
+  "Media save failed. Please try again.": "媒体保存失败，请重试。",
   "URL copied.": "链接已复制。",
   "Homepage Content": "首页内容",
   "Media Library": "媒体库",
@@ -479,10 +478,6 @@ export default function AdminPage() {
   const [noteBody, setNoteBody] = useState("");
 
   useEffect(() => {
-    setAuthenticated(window.sessionStorage.getItem(adminSessionKey) === "true");
-  }, []);
-
-  useEffect(() => {
     if (!authenticated) return;
     void Promise.all([loadContent(), loadMedia(), loadLeads(), loadTeamMembers()])
       .then(([nextContent, nextMedia, nextLeads, nextTeamMembers]) => {
@@ -518,7 +513,6 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        window.sessionStorage.setItem(adminSessionKey, "true");
         setAuthenticated(true);
         setPassword("");
         return;
@@ -544,8 +538,8 @@ export default function AdminPage() {
       const saved = await saveContent(next);
       setContent(saved);
       showToast(t("Saved successfully."));
-    } catch {
-      showToast(t("Save failed. Browser storage may be full."));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("Save failed. Please try again."));
     }
   }
 
@@ -554,8 +548,8 @@ export default function AdminPage() {
       const restored = await resetContent();
       setContent(restored);
       showToast(t("Saved successfully."));
-    } catch {
-      showToast(t("Save failed. Browser storage may be full."));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("Save failed. Please try again."));
     }
   }
 
@@ -564,8 +558,8 @@ export default function AdminPage() {
       const saved = await saveMedia(next);
       setMedia(saved);
       showToast(t("Media saved."));
-    } catch {
-      showToast(t("Media save failed. Browser storage may be full."));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : t("Media save failed. Please try again."));
     }
   }
 

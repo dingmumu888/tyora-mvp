@@ -1,14 +1,26 @@
-import { NextResponse } from "next/server";
+import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { getContent, putContent, resetStoredContent } from "@/lib/server/data-store";
 
 export async function GET() {
-  return NextResponse.json(await getContent());
+  try {
+    return ok(await getContent());
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to load website content."));
+  }
 }
 
 export async function PUT(request: Request) {
-  return NextResponse.json(await putContent(await request.json()));
+  try {
+    return ok(await putContent(await request.json()));
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to save website content."));
+  }
 }
 
 export async function DELETE() {
-  return NextResponse.json(await resetStoredContent());
+  try {
+    return ok(await resetStoredContent());
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to reset website content."));
+  }
 }

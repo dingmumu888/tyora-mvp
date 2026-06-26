@@ -1,14 +1,26 @@
-import { NextResponse } from "next/server";
+import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { createLead, getLeads, putLeads } from "@/lib/server/data-store";
 
 export async function GET() {
-  return NextResponse.json(await getLeads());
+  try {
+    return ok(await getLeads());
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to load project submissions."));
+  }
 }
 
 export async function POST(request: Request) {
-  return NextResponse.json(await createLead(await request.json()), { status: 201 });
+  try {
+    return ok(await createLead(await request.json()));
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to save project submission."));
+  }
 }
 
 export async function PUT(request: Request) {
-  return NextResponse.json(await putLeads(await request.json()));
+  try {
+    return ok(await putLeads(await request.json()));
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to save project submissions."));
+  }
 }

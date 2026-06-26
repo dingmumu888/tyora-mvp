@@ -1,10 +1,18 @@
-import { NextResponse } from "next/server";
+import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { getTeamMembers, putTeamMembers } from "@/lib/server/data-store";
 
 export async function GET() {
-  return NextResponse.json(await getTeamMembers());
+  try {
+    return ok(await getTeamMembers());
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to load team members."));
+  }
 }
 
 export async function PUT(request: Request) {
-  return NextResponse.json(await putTeamMembers(await request.json()));
+  try {
+    return ok(await putTeamMembers(await request.json()));
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to save team members."));
+  }
 }

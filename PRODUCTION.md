@@ -1,6 +1,6 @@
 # TYORA Production Backend
 
-TYORA no longer stores CMS, project, team, or media data in browser storage.
+TYORA stores CMS, project, team, and media records through server API routes backed by SQLite.
 
 ## Local Development
 

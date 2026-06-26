@@ -1,10 +1,18 @@
-import { NextResponse } from "next/server";
+import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { getMedia, putMedia } from "@/lib/server/data-store";
 
 export async function GET() {
-  return NextResponse.json(await getMedia());
+  try {
+    return ok(await getMedia());
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to load media library."));
+  }
 }
 
 export async function PUT(request: Request) {
-  return NextResponse.json(await putMedia(await request.json()));
+  try {
+    return ok(await putMedia(await request.json()));
+  } catch (error) {
+    return fail(messageFromError(error, "Unable to save media library."));
+  }
 }

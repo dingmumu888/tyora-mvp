@@ -156,7 +156,7 @@ export const ui = {
     researchingOnly: "Researching Only",
     restoreDefaults: "Restore Defaults",
     saveChanges: "Save Changes",
-    saveFailed: "Save failed. The browser storage may be full; try removing a large uploaded image.",
+    saveFailed: "Save failed. Please check the server response and try again.",
     saved: "Saved",
     sample: "Sample",
     sampleNeed: "Do you need a sample before production?",
