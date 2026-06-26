@@ -73,7 +73,6 @@ const zhText: Record<string, string> = {
   Password: "密码",
   Login: "登录",
   "Incorrect password.": "密码不正确。",
-  "MVP password: tyora2026": "MVP 密码：tyora2026",
   "TYORA CMS": "TYORA 内容管理",
   "No-code website management": "无代码网站管理",
   "Restore Defaults": "恢复默认",
@@ -279,8 +278,6 @@ const caseStatuses: CaseStudyStatus[] = [
   "In Production",
   "Delivered"
 ];
-
-const adminPassword = "tyora2026";
 
 function id(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.round(Math.random() * 100000)}`;
@@ -509,14 +506,33 @@ export default function AdminPage() {
     window.setTimeout(() => setToast(""), 2200);
   }
 
-  function login() {
-    if (password.trim() === adminPassword) {
-      window.sessionStorage.setItem(adminSessionKey, "true");
-      setAuthenticated(true);
-      setLoginError("");
-      return;
+  async function login() {
+    setLoginError("");
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password })
+      });
+
+      if (response.ok) {
+        window.sessionStorage.setItem(adminSessionKey, "true");
+        setAuthenticated(true);
+        setPassword("");
+        return;
+      }
+
+      setLoginError("Incorrect password.");
+    } catch {
+      setLoginError("Incorrect password.");
     }
-    setLoginError("Incorrect password.");
+  }
+
+  function handleLoginSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void login();
   }
 
   function updateContent<K extends keyof SiteContent>(key: K, value: SiteContent[K]) {
@@ -657,28 +673,23 @@ export default function AdminPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfbfc] p-4">
         <Card className="w-full max-w-sm p-6">
-          <div className="mb-4 flex justify-end">
-            <Button variant="outline" className="min-h-9 px-3" onClick={toggleCmsLanguage}>
-              {cmsLanguage === "en" ? "中文" : "EN"}
+          <form onSubmit={handleLoginSubmit}>
+            <div className="mb-5 flex items-center gap-2">
+              <Lock size={18} />
+              <h1 className="text-xl font-semibold">{t("TYORA Admin Login")}</h1>
+            </div>
+            <Field label={t("Password")}>
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </Field>
+            {loginError ? <p className="mt-3 text-sm text-red-600">{t(loginError)}</p> : null}
+            <Button className="mt-5 w-full" type="submit">
+              {t("Login")}
             </Button>
-          </div>
-          <div className="mb-5 flex items-center gap-2">
-            <Lock size={18} />
-            <h1 className="text-xl font-semibold">{t("TYORA Admin Login")}</h1>
-          </div>
-          <Field label={t("Password")}>
-            <Input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && login()}
-            />
-          </Field>
-          {loginError ? <p className="mt-3 text-sm text-red-600">{t(loginError)}</p> : null}
-          <Button className="mt-5 w-full" onClick={login}>
-            {t("Login")}
-          </Button>
-          <p className="mt-4 text-xs text-[#69707d]">{t("MVP password: tyora2026")}</p>
+          </form>
         </Card>
       </main>
     );
