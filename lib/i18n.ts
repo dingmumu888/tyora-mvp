@@ -10,7 +10,7 @@ export const zhContent: SiteContent = {
   heroSubtitle:
     "上传你的想法。我们会帮助你通过中国可信制造伙伴，把它变成可制造的真实产品。",
   heroPlaceholders: [
-    "描述你的产品想法...\n\n示例：\n“我想设计一个适用于 iPhone 的磁吸手机支架。”"
+    "描述你想打造的产品..."
   ],
   tagline: "把你的产品想法变成现实。",
   founderText:
@@ -120,7 +120,8 @@ export const ui = {
     leadIntro: "Leads submitted from the chat-style questionnaire.",
     linkedIn: "LinkedIn",
     liveVideoCall: "Live Video Call",
-    magneticPrompt: "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\"",
+    heroInputExample: "Example:\n\"I want to design a magnetic phone stand for iPhone.\"",
+    magneticPrompt: "Describe the product you want to create...",
     manufactureQuestion: "What product would you like to build?",
     manufacturePlaceholder: "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\"",
     no: "No",
@@ -265,7 +266,8 @@ export const ui = {
     leadIntro: "来自聊天式问卷的项目线索。",
     linkedIn: "LinkedIn",
     liveVideoCall: "视频会议",
-    magneticPrompt: "描述你的产品想法...\n\n示例：\n“我想设计一个适用于 iPhone 的磁吸手机支架。”",
+    heroInputExample: "示例：\n“我想设计一个适用于 iPhone 的磁吸手机支架。”",
+    magneticPrompt: "描述你想打造的产品...",
     manufactureQuestion: "你想开发什么产品？",
     manufacturePlaceholder: "描述你的产品想法...\n\n示例：\n“我想设计一个适用于 iPhone 的磁吸手机支架。”",
     no: "否",

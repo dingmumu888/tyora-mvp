@@ -263,6 +263,11 @@ export default function Home() {
                   placeholder={prompts[promptIndex]}
                   className="min-h-28 border-0 bg-transparent px-0 py-0 text-base shadow-none focus:border-transparent focus:ring-0"
                 />
+                {!idea.trim() ? (
+                  <p className="whitespace-pre-line text-sm leading-6 text-[#8c94a1]">
+                    {t.heroInputExample}
+                  </p>
+                ) : null}
                 <div className="flex flex-col gap-3 border-t border-[#e8ebef] pt-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">
                     <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 ring-1 ring-[#e8ebef]">
@@ -349,7 +354,7 @@ export default function Home() {
                   transition={{ duration: 0.28, delay: index * 0.03 }}
                   className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-[#e8ebef] bg-white px-3 text-sm text-[#59616e] transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5"
                 >
-                  <Icon size={16} className="shrink-0 text-[#0f766e]" />
+                  <Icon size={16} className="shrink-0 text-[#8c94a1]" />
                   <span>{badge}</span>
                 </motion.div>
               );

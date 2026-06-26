@@ -187,9 +187,9 @@ export const defaultContent: SiteContent = {
   heroSubtitle:
     "Upload your idea. We'll help you turn it into a manufacturable product through trusted manufacturing partners in China.",
   heroPlaceholders: [
-    "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\""
+    "Describe the product you want to create..."
   ],
-  ctaText: "Continue",
+  ctaText: "Start Your Project",
   tagline: "Turn Your Product Idea Into Reality.",
   footerSlogan: "We don't just manufacture products. We help bring ideas to life.",
   videoUrl: "",
@@ -357,6 +357,7 @@ export const defaultContent: SiteContent = {
 
 const legacyContent = {
   heroTitle: "What Product Do You Want To Create Today?",
+  ctaText: "Continue",
   heroSubtitle:
     "Upload your design or describe your idea. We help turn it into a real product through trusted manufacturing partners in China.",
   heroSubtitleV2:
@@ -369,6 +370,9 @@ const legacyHeroPlaceholders = [
   "I designed a capybara night light...",
   "I want to launch a Kickstarter product...",
   "I need a custom pet accessory..."
+];
+const legacyHeroPlaceholdersV2 = [
+  "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\""
 ];
 const legacyTrustBadges = [
   "Product Development Partner",
@@ -655,7 +659,13 @@ export function normalizeContent(value: unknown): SiteContent {
   if (normalized.heroSubtitle === legacyContent.heroSubtitleV2) {
     normalized.heroSubtitle = defaultContent.heroSubtitle;
   }
+  if (normalized.ctaText === legacyContent.ctaText) {
+    normalized.ctaText = defaultContent.ctaText;
+  }
   if (normalized.heroPlaceholders.join("|") === legacyHeroPlaceholders.join("|")) {
+    normalized.heroPlaceholders = defaultContent.heroPlaceholders;
+  }
+  if (normalized.heroPlaceholders.join("|") === legacyHeroPlaceholdersV2.join("|")) {
     normalized.heroPlaceholders = defaultContent.heroPlaceholders;
   }
   if (normalized.trustBadges.join("|") === legacyTrustBadges.join("|")) {
