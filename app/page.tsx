@@ -42,6 +42,7 @@ import {
   ui
 } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 
 function makePrompts(t: UiText) {
   return [
@@ -138,6 +139,10 @@ export default function Home() {
   const displayContent = useMemo(
     () => localizeContent(content, language),
     [content, language]
+  );
+  const whatsappUrl = useMemo(
+    () => normalizeWhatsAppUrl(displayContent.whatsappLink),
+    [displayContent.whatsappLink]
   );
   const prompts = useMemo(
     () => displayContent.heroPlaceholders.length ? displayContent.heroPlaceholders : makePrompts(t),
@@ -254,7 +259,7 @@ export default function Home() {
           <Button variant="outline" className="min-h-10 px-3" onClick={toggleLanguage}>
             {t.language}
           </Button>
-          <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">
+          <a href={whatsappUrl} target="_blank" rel="noreferrer">
             <Button variant="secondary" className="min-h-10">
               <MessageCircle size={16} />
               {t.whatsApp}
@@ -289,7 +294,7 @@ export default function Home() {
             </p>
 
             <div className="mt-5 grid gap-3 lg:hidden">
-              <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">
+              <a href={whatsappUrl} target="_blank" rel="noreferrer">
                 <Button variant="secondary" className="min-h-12 w-full">
                   <MessageCircle size={16} /> Chat With Us (WhatsApp)
                 </Button>
@@ -680,7 +685,7 @@ export default function Home() {
               : "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed."}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">
+            <a href={whatsappUrl} target="_blank" rel="noreferrer">
               <Button variant="secondary" className="min-h-12 lg:min-h-11">
                 <MessageCircle size={16} /> {t.whatsApp}
               </Button>
@@ -698,7 +703,7 @@ export default function Home() {
           <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/70">
             Let&apos;s turn your idea into a real product.
           </p>
-          <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full max-w-sm">
+          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full max-w-sm">
             <Button variant="secondary" className="min-h-12 w-full">
               <MessageCircle size={16} /> Chat With Us
             </Button>
@@ -714,7 +719,7 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap gap-4">
             <a href={`mailto:${displayContent.email}`}>{t.email}</a>
-            <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">{t.whatsApp}</a>
+            <a href={whatsappUrl} target="_blank" rel="noreferrer">{t.whatsApp}</a>
             <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer">{t.linkedIn}</a>
             <a href="/admin">{t.admin}</a>
           </div>
@@ -722,7 +727,7 @@ export default function Home() {
       </footer>
 
       <a
-        href={displayContent.whatsappLink}
+        href={whatsappUrl}
         target="_blank"
         rel="noreferrer"
         className="fixed bottom-3 right-3 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:bottom-5 sm:right-5 sm:px-5"
@@ -778,7 +783,7 @@ export default function Home() {
                       {t.projectReceivedText}
                     </p>
                     <div className="mt-7 flex flex-wrap justify-center gap-3">
-                      <a href={displayContent.whatsappLink} target="_blank" rel="noreferrer">
+                      <a href={whatsappUrl} target="_blank" rel="noreferrer">
                         <Button variant="secondary">
                           <MessageCircle size={16} /> {t.chatOnWhatsApp}
                         </Button>

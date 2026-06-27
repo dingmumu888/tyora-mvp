@@ -1,3 +1,5 @@
+import { normalizeWhatsAppUrl, WHATSAPP_URL } from "@/lib/whatsapp";
+
 export type EditableCard = {
   title: string;
   description: string;
@@ -176,7 +178,7 @@ export const defaultContent: SiteContent = {
   brandName: "TYORA",
   logoImage: "",
   favicon: "",
-  whatsappLink: "https://wa.me/15550000000",
+  whatsappLink: WHATSAPP_URL,
   callLink: "https://cal.com/idea2product/intro",
   linkedInLink: "https://www.linkedin.com/",
   email: "hello@idea2product.co",
@@ -613,7 +615,7 @@ export function normalizeContent(value: unknown): SiteContent {
     brandName: stringValue(item.brandName, defaultContent.brandName),
     logoImage: stringValue(item.logoImage, defaultContent.logoImage),
     favicon: stringValue(item.favicon, defaultContent.favicon),
-    whatsappLink: stringValue(item.whatsappLink, defaultContent.whatsappLink),
+    whatsappLink: normalizeWhatsAppUrl(stringValue(item.whatsappLink, defaultContent.whatsappLink)),
     callLink: stringValue(item.callLink, defaultContent.callLink),
     linkedInLink: stringValue(item.linkedInLink, defaultContent.linkedInLink),
     email: stringValue(item.email, defaultContent.email),
