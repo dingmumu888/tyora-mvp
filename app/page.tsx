@@ -32,7 +32,8 @@ import {
   Lead,
   loadContent,
   saveLead,
-  SiteContent
+  SiteContent,
+  uploadMedia
 } from "@/lib/storage";
 import {
   Language,
@@ -121,10 +122,12 @@ export default function Home() {
   const [promptIndex, setPromptIndex] = useState(0);
   const [idea, setIdea] = useState("");
   const [fileName, setFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
@@ -168,29 +171,45 @@ export default function Home() {
     setAnswers((current) => ({ ...current, [key]: value }));
   }
 
-  function nextStep() {
+  async function nextStep() {
+    if (submitting) return;
+
     if (stepIndex < activeSteps.length - 1) {
       setStepIndex((current) => current + 1);
       return;
     }
 
-    const lead: Lead = {
-      id: crypto.randomUUID(),
-      productIdea: answers.productIdea || idea,
-      designType: answers.designType || "",
-      quantity: answers.quantity || "",
-      budget: answers.budget || "",
-      timeline: answers.timeline || "",
-      sampleRequirement: answers.sampleRequirement || t.no,
-      sampleReview: answers.sampleReview,
-      additionalRequirements: answers.additionalRequirements || "",
-      uploadedFile: fileName,
-      submissionDate: new Date().toISOString(),
-      status: "New"
-    };
+    setSubmitting(true);
+    let uploadedFiles: string[] = [];
+    try {
+      if (selectedFile) {
+        const asset = await uploadMedia(selectedFile);
+        uploadedFiles = [asset.url];
+      }
 
-    void saveLead(lead);
-    setSubmitted(true);
+      const lead: Lead = {
+        id: crypto.randomUUID(),
+        productIdea: answers.productIdea || idea,
+        designType: answers.designType || "",
+        quantity: answers.quantity || "",
+        budget: answers.budget || "",
+        timeline: answers.timeline || "",
+        sampleRequirement: answers.sampleRequirement || t.no,
+        sampleReview: answers.sampleReview,
+        additionalRequirements: answers.additionalRequirements || "",
+        uploadedFile: uploadedFiles[0] || fileName,
+        uploadedFiles,
+        submissionDate: new Date().toISOString(),
+        status: "New"
+      };
+
+      await saveLead(lead);
+      setSubmitted(true);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to submit project.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const canContinue = Boolean(answers[currentStep?.key] || (currentStep?.key === "productIdea" && idea));
@@ -289,9 +308,11 @@ export default function Home() {
                         className="sr-only"
                         type="file"
                         accept="image/*,.pdf,.step,.stp,.iges,.igs,.obj,.stl,.dwg,.dxf"
-                        onChange={(event) =>
-                          setFileName(event.target.files?.[0]?.name || "")
-                        }
+                        onChange={(event) => {
+                          const file = event.target.files?.[0] || null;
+                          setSelectedFile(file);
+                          setFileName(file?.name || "");
+                        }}
                       />
                     </label>
                     <Button onClick={openWizard} className="transition hover:scale-[1.01]">
@@ -714,7 +735,7 @@ export default function Home() {
                             key={option}
                             onClick={() => {
                               setAnswer(currentStep.key, option);
-                              window.setTimeout(nextStep, 180);
+                              window.setTimeout(() => void nextStep(), 180);
                             }}
                             className={cn(
                               "min-h-14 rounded-lg border px-4 text-left text-sm font-medium transition hover:border-[#101216]",
@@ -760,7 +781,7 @@ export default function Home() {
                   >
                     {t.back}
                   </Button>
-                  <Button onClick={nextStep} disabled={!canContinue}>
+                  <Button onClick={() => void nextStep()} disabled={!canContinue || submitting}>
                     {stepIndex === activeSteps.length - 1 ? t.submitProject : t.continue}
                     <Send size={16} />
                   </Button>

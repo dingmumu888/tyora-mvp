@@ -1,15 +1,23 @@
 # TYORA Production Backend
 
-TYORA stores CMS, project, team, and media records through server API routes backed by SQLite.
+TYORA stores CMS, pricing, founder profile, case studies, contact settings, team records, media records, and project submissions through server API routes backed by Supabase PostgreSQL. Uploaded images, videos, and documents are stored in Supabase Storage.
 
 ## Local Development
 
-- Database: `prisma/dev.db`
-- Uploads: `public/uploads`
-- Initialize database tables: `npm run db:init`
+- Database: Supabase PostgreSQL via `DATABASE_URL`
+- Uploads: Supabase Storage via `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_STORAGE_BUCKET`
+- Initialize or sync database tables: `npm run db:init`
 - Generate Prisma client/schema artifacts: `npm run db:generate`
 
-The app auto-creates SQLite tables on first API access, so `npm run dev` works after install.
+Create a Supabase Storage bucket named `tyora-media` or set `SUPABASE_STORAGE_BUCKET` to your bucket name. The bucket should be public if uploaded homepage images and videos need to render directly on the public site.
+
+Required production environment variables:
+
+- `DATABASE_URL`
+- `ADMIN_PASSWORD`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_STORAGE_BUCKET`
 
 ## API Boundary
 
@@ -29,9 +37,9 @@ The app auto-creates SQLite tables on first API access, so `npm run dev` works a
 
 The repository layer is isolated in `lib/server/data-store.ts`.
 
-To move from local SQLite to Supabase or PostgreSQL later:
+The current production target is Supabase/PostgreSQL. If TYORA later moves to another managed PostgreSQL provider:
 
 1. Keep the API routes unchanged.
-2. Replace the repository implementation in `lib/server/data-store.ts`.
+2. Update `DATABASE_URL`.
 3. Use `prisma/schema.prisma` as the relational model reference.
-4. Move uploaded files from `public/uploads` to object storage such as Supabase Storage or S3.
+4. Keep media in Supabase Storage or move it to another object storage service behind the same media asset records.
