@@ -1,7 +1,11 @@
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
+import { requireAdminSession } from "@/lib/server/admin-auth";
 import { createLead, getLeads, putLeads } from "@/lib/server/data-store";
 
 export async function GET() {
+  const unauthorized = await requireAdminSession();
+  if (unauthorized) return unauthorized;
+
   try {
     return ok(await getLeads());
   } catch (error) {
@@ -18,6 +22,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const unauthorized = await requireAdminSession();
+  if (unauthorized) return unauthorized;
+
   try {
     return ok(await putLeads(await request.json()));
   } catch (error) {

@@ -810,3 +810,15 @@ export async function uploadMedia(file: File): Promise<MediaAsset> {
 
   return parseApiResponse<MediaAsset>(response);
 }
+
+export async function uploadProjectFile(file: File): Promise<{ name: string; url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/leads/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  return parseApiResponse<{ name: string; url: string }>(response);
+}

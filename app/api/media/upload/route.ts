@@ -1,4 +1,5 @@
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
+import { requireAdminSession } from "@/lib/server/admin-auth";
 import { createMediaAsset } from "@/lib/server/data-store";
 
 export const runtime = "nodejs";
@@ -89,6 +90,9 @@ async function uploadToSupabaseStorage(file: File, type: string) {
 }
 
 export async function POST(request: Request) {
+  const unauthorized = await requireAdminSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file");

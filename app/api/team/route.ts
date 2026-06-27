@@ -1,7 +1,11 @@
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
+import { requireAdminSession } from "@/lib/server/admin-auth";
 import { getTeamMembers, putTeamMembers } from "@/lib/server/data-store";
 
 export async function GET() {
+  const unauthorized = await requireAdminSession();
+  if (unauthorized) return unauthorized;
+
   try {
     return ok(await getTeamMembers());
   } catch (error) {
@@ -10,6 +14,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const unauthorized = await requireAdminSession();
+  if (unauthorized) return unauthorized;
+
   try {
     return ok(await putTeamMembers(await request.json()));
   } catch (error) {

@@ -33,7 +33,7 @@ import {
   loadContent,
   saveLead,
   SiteContent,
-  uploadMedia
+  uploadProjectFile
 } from "@/lib/storage";
 import {
   Language,
@@ -183,7 +183,7 @@ export default function Home() {
     let uploadedFiles: string[] = [];
     try {
       if (selectedFile) {
-        const asset = await uploadMedia(selectedFile);
+        const asset = await uploadProjectFile(selectedFile);
         uploadedFiles = [asset.url];
       }
 

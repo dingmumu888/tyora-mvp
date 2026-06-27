@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { setAdminSessionCookie } from "@/lib/server/admin-auth";
 
 export async function POST(request: Request) {
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -27,7 +28,11 @@ export async function POST(request: Request) {
       : "";
 
   if (password === adminPassword) {
-    return NextResponse.json({ ok: true });
+    try {
+      return setAdminSessionCookie(NextResponse.json({ ok: true }));
+    } catch {
+      return NextResponse.json({ error: "Authentication unavailable." }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });

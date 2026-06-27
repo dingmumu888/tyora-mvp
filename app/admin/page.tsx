@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Library,
   Lock,
+  LogOut,
   MessageCircle,
   Plus,
   Save,
@@ -76,6 +77,7 @@ const zhText: Record<string, string> = {
   "No-code website management": "无代码网站管理",
   "Restore Defaults": "恢复默认",
   "Save Changes": "保存修改",
+  Logout: "退出登录",
   "Saved successfully.": "保存成功。",
   "Save failed. Please try again.": "保存失败，请重试。",
   "Media saved.": "媒体已保存。",
@@ -454,6 +456,7 @@ function MediaUploader({
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [cmsLanguage, setCmsLanguage] = useState<CmsLanguage>("en");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -476,6 +479,14 @@ export default function AdminPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [noteAuthor, setNoteAuthor] = useState("Adam");
   const [noteBody, setNoteBody] = useState("");
+
+  useEffect(() => {
+    void fetch("/api/admin/session")
+      .then((response) => response.ok ? response.json() : { authenticated: false })
+      .then((payload) => setAuthenticated(Boolean(payload.authenticated)))
+      .catch(() => setAuthenticated(false))
+      .finally(() => setCheckingSession(false));
+  }, []);
 
   useEffect(() => {
     if (!authenticated) return;
@@ -514,6 +525,7 @@ export default function AdminPage() {
 
       if (response.ok) {
         setAuthenticated(true);
+        setCheckingSession(false);
         setPassword("");
         return;
       }
@@ -527,6 +539,12 @@ export default function AdminPage() {
   function handleLoginSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void login();
+  }
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => undefined);
+    setAuthenticated(false);
+    setPassword("");
   }
 
   function updateContent<K extends keyof SiteContent>(key: K, value: SiteContent[K]) {
@@ -663,6 +681,16 @@ export default function AdminPage() {
   const leadCountries = useMemo(() => uniqueValues(leads.map((lead) => lead.country || "Unspecified")), [leads]);
   const leadCategories = useMemo(() => uniqueValues(leads.map((lead) => lead.category || "Unspecified")), [leads]);
 
+  if (checkingSession) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#fbfbfc] p-4">
+        <Card className="w-full max-w-sm p-6 text-center">
+          <p className="font-semibold">{t("TYORA CMS")}</p>
+        </Card>
+      </main>
+    );
+  }
+
   if (!authenticated) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfbfc] p-4">
@@ -711,6 +739,9 @@ export default function AdminPage() {
             </Button>
             <Button onClick={() => persistContent()}>
               <Save size={16} /> {t("Save Changes")}
+            </Button>
+            <Button variant="outline" onClick={() => void logout()}>
+              <LogOut size={16} /> {t("Logout")}
             </Button>
           </div>
         </div>
