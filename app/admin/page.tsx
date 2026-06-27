@@ -45,7 +45,6 @@ import {
   MediaAsset,
   MediaType,
   PricingPlan,
-  resetContent,
   saveContent,
   saveLeads,
   saveMedia,
@@ -75,7 +74,7 @@ const zhText: Record<string, string> = {
   "Incorrect password.": "密码不正确。",
   "TYORA CMS": "TYORA 内容管理",
   "No-code website management": "无代码网站管理",
-  "Restore Defaults": "恢复默认",
+  "Clear Filters": "清除筛选",
   "Save Changes": "保存修改",
   Logout: "退出登录",
   "Saved successfully.": "保存成功。",
@@ -561,16 +560,6 @@ export default function AdminPage() {
     }
   }
 
-  async function restoreDefaultContent() {
-    try {
-      const restored = await resetContent();
-      setContent(restored);
-      showToast(t("Saved successfully."));
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : t("Save failed. Please try again."));
-    }
-  }
-
   async function persistMedia(next: MediaAsset[]) {
     try {
       const saved = await saveMedia(next);
@@ -733,9 +722,6 @@ export default function AdminPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={toggleCmsLanguage}>
               {cmsLanguage === "en" ? "中文" : "EN"}
-            </Button>
-            <Button variant="outline" onClick={restoreDefaultContent}>
-              {t("Restore Defaults")}
             </Button>
             <Button onClick={() => persistContent()}>
               <Save size={16} /> {t("Save Changes")}
@@ -1176,7 +1162,7 @@ function ProjectSubmissionsSection({
               setLeadCategoryFilter("all");
               setLeadDateFilter("");
             }}>
-              {t("Restore Defaults")}
+              {t("Clear Filters")}
             </Button>
           </div>
 

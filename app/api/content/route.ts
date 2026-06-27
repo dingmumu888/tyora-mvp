@@ -1,6 +1,6 @@
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { requireAdminSession } from "@/lib/server/admin-auth";
-import { getContent, putContent, resetStoredContent } from "@/lib/server/data-store";
+import { getContent, putContent } from "@/lib/server/data-store";
 
 export async function GET() {
   try {
@@ -18,16 +18,5 @@ export async function PUT(request: Request) {
     return ok(await putContent(await request.json()));
   } catch (error) {
     return fail(messageFromError(error, "Unable to save website content."));
-  }
-}
-
-export async function DELETE() {
-  const unauthorized = await requireAdminSession();
-  if (unauthorized) return unauthorized;
-
-  try {
-    return ok(await resetStoredContent());
-  } catch (error) {
-    return fail(messageFromError(error, "Unable to reset website content."));
   }
 }

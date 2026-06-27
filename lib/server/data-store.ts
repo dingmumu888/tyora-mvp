@@ -144,10 +144,6 @@ export async function putContent(content: unknown): Promise<SiteContent> {
   return normalized;
 }
 
-export async function resetStoredContent(): Promise<SiteContent> {
-  return putContent(defaultContent);
-}
-
 export async function getLeads(): Promise<Lead[]> {
   const rows = await prisma.lead.findMany({
     orderBy: { submissionDate: "desc" }

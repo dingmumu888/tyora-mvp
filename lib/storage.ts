@@ -751,10 +751,6 @@ export async function saveContent(content: SiteContent): Promise<SiteContent> {
   });
 }
 
-export async function resetContent(): Promise<SiteContent> {
-  return apiRequest<SiteContent>("/api/content", { method: "DELETE" });
-}
-
 export async function loadLeads(): Promise<Lead[]> {
   return apiRequest<Lead[]>("/api/leads");
 }
