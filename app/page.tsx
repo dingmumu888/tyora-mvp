@@ -280,18 +280,22 @@ export default function Home() {
             <p className="mb-3 w-fit rounded-full border border-[#dfe4e9] bg-white px-3 py-1 text-xs text-[#69707d] lg:mb-5 lg:text-sm">
               {displayContent.heroTagline}
             </p>
-            <h1 className="max-w-3xl text-[2.65rem] font-semibold leading-[1.04] tracking-normal lg:hidden">
-              Turn Your Product Idea Into Reality.
-            </h1>
-            <h1 className="hidden max-w-3xl text-[4.85rem] font-semibold leading-[1.04] tracking-normal lg:block">
-              {displayContent.heroTitle}
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[#59616e] lg:hidden">
-              Whether your idea came from ChatGPT, Midjourney, a sketch, or a napkin, we help transform it into a manufacturable product.
-            </p>
-            <p className="mt-6 hidden max-w-2xl text-lg leading-8 text-[#59616e] lg:block">
-              {displayContent.heroSubtitle}
-            </p>
+            <div className="lg:hidden">
+              <h1 className="max-w-3xl text-[2.65rem] font-semibold leading-[1.04] tracking-normal">
+                Turn Your Product Idea Into Reality.
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-[#59616e]">
+                Whether your idea came from ChatGPT, Midjourney, a sketch, or a napkin, we help transform it into a manufacturable product.
+              </p>
+            </div>
+            <div className="hidden lg:block">
+              <h1 className="max-w-3xl text-[4.85rem] font-semibold leading-[1.04] tracking-normal">
+                {displayContent.heroTitle}
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59616e]">
+                {displayContent.heroSubtitle}
+              </p>
+            </div>
 
             <div className="mt-5 grid gap-3 lg:hidden">
               <a href={whatsappUrl} target="_blank" rel="noreferrer">
@@ -358,7 +362,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.45 }}
-            className="flex items-center max-lg:hidden"
+            className="hidden items-center lg:flex"
           >
             <Card className="w-full overflow-hidden soft-shadow transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#101216]/5">
               <div className="border-b border-[#eef1f4] bg-[#fafbfc] px-5 py-4">
@@ -506,12 +510,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-[#eef1f4] bg-[#fbfbfc]">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
-          <div className="mb-5 lg:mb-9">
-            <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{t.productJourney}</h2>
+      <section className="border-y border-[#eef1f4] bg-[#fbfbfc] lg:hidden">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <div className="mb-5">
+            <h2 className="text-[2rem] font-semibold leading-tight">{t.productJourney}</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3 lg:hidden">
+          <div className="grid grid-cols-2 gap-3">
             {mobileJourneySteps.map(({ title, icon: Icon }) => (
               <Card key={title} className="p-4">
                 <Icon size={18} className="text-[#101216]" />
@@ -519,24 +523,32 @@ export default function Home() {
               </Card>
             ))}
           </div>
-          <div className="hidden gap-4 lg:grid lg:grid-cols-5">
-          {[
-            ...displayContent.journeySteps
-          ].map(
-            (step, index) => (
-              <Card key={step.title} className="p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-sm font-semibold text-white">
-                  {index + 1}
-                </span>
-                <div>
-                  <h3 className="mt-5 font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#69707d]">
-                    {step.description}
-                  </p>
-                </div>
-              </Card>
-            )
-          )}
+        </div>
+      </section>
+
+      <section className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] lg:block">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mb-9">
+            <h2 className="text-[2.25rem] font-semibold leading-tight">{t.productJourney}</h2>
+          </div>
+          <div className="grid grid-cols-5 gap-4">
+            {[
+              ...displayContent.journeySteps
+            ].map(
+              (step, index) => (
+                <Card key={step.title} className="p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-sm font-semibold text-white">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <h3 className="mt-5 font-semibold">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[#69707d]">
+                      {step.description}
+                    </p>
+                  </div>
+                </Card>
+              )
+            )}
           </div>
         </div>
       </section>
