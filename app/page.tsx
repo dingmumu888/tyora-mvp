@@ -440,6 +440,7 @@ export default function Home() {
         </div>
       </section>
 
+      {isDesktopViewport ? (
       <section className="mx-auto hidden max-w-7xl gap-7 px-4 py-12 sm:px-6 lg:grid lg:grid-cols-[0.62fr_1.38fr] lg:px-8 lg:py-20">
         <div>
           <h2 className="text-[2.25rem] font-semibold leading-tight">{displayContent.video.title}</h2>
@@ -483,6 +484,7 @@ export default function Home() {
           </div>
         </Card>
       </section>
+      ) : null}
 
       {isDesktopViewport ? (
       <section className="hidden border-y border-[#eef1f4] bg-white lg:block">
