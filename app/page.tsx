@@ -130,9 +130,18 @@ export default function Home() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(false);
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
+  }, []);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const updateViewport = () => setIsDesktopViewport(query.matches);
+    updateViewport();
+    query.addEventListener("change", updateViewport);
+    return () => query.removeEventListener("change", updateViewport);
   }, []);
 
   const t = ui[language];
@@ -288,14 +297,16 @@ export default function Home() {
                 Whether your idea came from ChatGPT, Midjourney, a sketch, or a napkin, we help transform it into a manufacturable product.
               </p>
             </div>
-            <div className="hidden lg:block">
-              <h1 className="max-w-3xl text-[4.85rem] font-semibold leading-[1.04] tracking-normal">
-                {displayContent.heroTitle}
-              </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59616e]">
-                {displayContent.heroSubtitle}
-              </p>
-            </div>
+            {isDesktopViewport ? (
+              <div className="hidden lg:block">
+                <h1 className="max-w-3xl text-[4.85rem] font-semibold leading-[1.04] tracking-normal">
+                  {displayContent.heroTitle}
+                </h1>
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59616e]">
+                  {displayContent.heroSubtitle}
+                </p>
+              </div>
+            ) : null}
 
             <div className="mt-5 grid gap-3 lg:hidden">
               <a href={whatsappUrl} target="_blank" rel="noreferrer">
@@ -358,6 +369,7 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {isDesktopViewport ? (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -392,6 +404,7 @@ export default function Home() {
               </div>
             </Card>
           </motion.div>
+          ) : null}
         </div>
       </section>
 
@@ -479,6 +492,7 @@ export default function Home() {
         </Card>
       </section>
 
+      {isDesktopViewport ? (
       <section className="hidden border-y border-[#eef1f4] bg-white lg:block">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl text-center">
@@ -509,6 +523,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
       <section className="border-y border-[#eef1f4] bg-[#fbfbfc] lg:hidden">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
@@ -526,6 +541,7 @@ export default function Home() {
         </div>
       </section>
 
+      {isDesktopViewport ? (
       <section className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] lg:block">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="mb-9">
@@ -552,6 +568,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
         <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
