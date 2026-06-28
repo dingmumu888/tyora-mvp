@@ -744,7 +744,6 @@ export default function Home() {
             <a href={`mailto:${displayContent.email}`}>{t.email}</a>
             <a href={whatsappUrl} target="_blank" rel="noreferrer">{t.whatsApp}</a>
             <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer">{t.linkedIn}</a>
-            <a href="/admin">{t.admin}</a>
           </div>
         </div>
       </footer>
@@ -753,7 +752,7 @@ export default function Home() {
         href={whatsappUrl}
         target="_blank"
         rel="noreferrer"
-        className="fixed bottom-3 right-3 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:bottom-5 sm:right-5 sm:px-5"
+        className="fixed bottom-3 right-3 z-40 hidden min-h-12 items-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:bottom-5 sm:right-5 sm:inline-flex sm:px-5"
       >
         <MessageCircle size={18} />
         {t.chatWithUs}
