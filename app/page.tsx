@@ -119,7 +119,7 @@ type Answers = Record<string, string>;
 
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
-  const [language, setLanguage] = useState<Language>("en");
+  const [language] = useState<Language>("en");
   const [promptIndex, setPromptIndex] = useState(0);
   const [idea, setIdea] = useState("");
   const [fileName, setFileName] = useState("");
@@ -235,11 +235,6 @@ export default function Home() {
   }
 
   const canContinue = Boolean(answers[currentStep?.key] || (currentStep?.key === "productIdea" && idea));
-  const toggleLanguage = () => {
-    const next = language === "en" ? "zh" : "en";
-    setLanguage(next);
-  };
-
   return (
     <main className="min-h-screen bg-white text-[#101216]">
       <header className="sticky top-0 z-40 border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
@@ -265,9 +260,6 @@ export default function Home() {
             </span>
           </a>
           <div className="flex items-center gap-2">
-          <Button variant="outline" className="min-h-10 px-3" onClick={toggleLanguage}>
-            {t.language}
-          </Button>
           <a href={whatsappUrl} target="_blank" rel="noreferrer">
             <Button variant="secondary" className="min-h-10">
               <MessageCircle size={16} />
@@ -448,7 +440,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-7 px-4 py-12 sm:px-6 lg:grid-cols-[0.62fr_1.38fr] lg:px-8 lg:py-20">
+      <section className="mx-auto hidden max-w-7xl gap-7 px-4 py-12 sm:px-6 lg:grid lg:grid-cols-[0.62fr_1.38fr] lg:px-8 lg:py-20">
         <div>
           <h2 className="text-[2.25rem] font-semibold leading-tight">{displayContent.video.title}</h2>
           <p className="mt-4 text-lg leading-8 text-[#59616e]">{displayContent.video.subtitle}</p>
