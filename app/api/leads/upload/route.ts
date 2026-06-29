@@ -6,24 +6,33 @@ const allowedMimeTypes = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
-  "application/pdf",
-  "application/octet-stream",
-  "application/acad",
-  "application/dxf",
-  "model/stl",
-  "model/step"
+  "application/pdf"
 ]);
 
-const allowedExtensions = new Set([
-  ".pdf",
-  ".step",
-  ".stp",
-  ".iges",
-  ".igs",
-  ".obj",
-  ".stl",
-  ".dwg",
-  ".dxf"
+const allowedExtensionsByMime = new Map([
+  ["image/jpeg", new Set([".jpg", ".jpeg"])],
+  ["image/png", new Set([".png"])],
+  ["image/webp", new Set([".webp"])],
+  ["application/pdf", new Set([".pdf"])]
+]);
+
+const blockedExtensions = new Set([
+  ".bat",
+  ".cmd",
+  ".com",
+  ".cpl",
+  ".exe",
+  ".hta",
+  ".html",
+  ".js",
+  ".jar",
+  ".msi",
+  ".php",
+  ".ps1",
+  ".scr",
+  ".sh",
+  ".svg",
+  ".vbs"
 ]);
 
 function extensionFromName(name: string) {
@@ -32,7 +41,14 @@ function extensionFromName(name: string) {
 }
 
 function isAllowedFile(file: File) {
-  return allowedMimeTypes.has(file.type) || allowedExtensions.has(extensionFromName(file.name));
+  const extension = extensionFromName(file.name);
+  const allowedExtensions = allowedExtensionsByMime.get(file.type);
+  return Boolean(
+    extension &&
+      allowedMimeTypes.has(file.type) &&
+      allowedExtensions?.has(extension) &&
+      !blockedExtensions.has(extension)
+  );
 }
 
 function safeFilename(name: string) {
@@ -57,7 +73,7 @@ export async function POST(request: Request) {
     }
 
     if (!isAllowedFile(file)) {
-      return fail("Unsupported file type.", 400);
+      return fail("Unsupported file type. Please upload a JPG, PNG, WebP, or PDF file.", 400);
     }
 
     if (file.size > 20 * 1024 * 1024) {
@@ -77,7 +93,7 @@ export async function POST(request: Request) {
       headers: {
         apikey: serviceRoleKey,
         Authorization: `Bearer ${serviceRoleKey}`,
-        "Content-Type": file.type || "application/octet-stream",
+        "Content-Type": file.type,
         "x-upsert": "false"
       },
       body: bytes
