@@ -56,6 +56,7 @@ export type AnalyticsDashboard = {
 };
 
 const VISITOR_COOKIE = "tyora_visitor_id";
+const VISITOR_STORAGE_KEY = "tyora_visitor_id";
 const SESSION_KEY = "tyora_session_id";
 const SESSION_STARTED_KEY = "tyora_session_started_at";
 
@@ -81,9 +82,14 @@ function setCookie(name: string, value: string) {
 }
 
 function getVisitorId() {
-  const existing = getCookie(VISITOR_COOKIE);
+  const stored =
+    typeof localStorage !== "undefined" ? localStorage.getItem(VISITOR_STORAGE_KEY) || "" : "";
+  const existing = stored || getCookie(VISITOR_COOKIE);
   if (existing) return existing;
   const next = randomId("visitor");
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(VISITOR_STORAGE_KEY, next);
+  }
   setCookie(VISITOR_COOKIE, next);
   return next;
 }

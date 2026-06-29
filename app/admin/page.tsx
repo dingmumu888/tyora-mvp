@@ -82,7 +82,8 @@ const zhText: Record<string, string> = {
   "TYORA CMS": "TYORA 内容管理",
   "CEO Dashboard": "CEO 仪表盘",
   "Today Overview": "今日概览",
-  "Visitors Today": "今日访客",
+  "Unique Visitors Today": "今日独立访客",
+  "Page Views": "页面浏览量",
   "WhatsApp Clicks": "WhatsApp 点击",
   "New Leads": "新线索",
   "Conversion Rate": "转化率",
@@ -1096,10 +1097,16 @@ function CeoDashboardSection({
   const summary = analytics?.summary;
   const summaryCards = [
     {
-      label: t("Visitors Today"),
+      label: t("Unique Visitors Today"),
       value: summary?.visitorsToday ?? 0,
       detail: `${summary?.visitors7Days ?? 0} last 7 days`,
       icon: <Globe2 size={17} />
+    },
+    {
+      label: t("Page Views"),
+      value: summary?.pageViewsToday ?? 0,
+      detail: "Today",
+      icon: <BarChart3 size={17} />
     },
     {
       label: t("WhatsApp Clicks"),
@@ -1116,7 +1123,7 @@ function CeoDashboardSection({
     {
       label: t("Conversion Rate"),
       value: `${summary?.conversionRateToday ?? 0}%`,
-      detail: "Lead / visitor",
+      detail: "Lead / unique visitor",
       icon: <TrendingUp size={17} />
     },
     {
@@ -1143,7 +1150,7 @@ function CeoDashboardSection({
           </Button>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
           {summaryCards.map((card) => (
             <div key={card.label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
               <div className="mb-3 flex items-center justify-between text-[#69707d]">
@@ -1182,7 +1189,7 @@ function CeoDashboardSection({
                   <thead className="text-xs uppercase text-[#69707d]">
                     <tr>
                       <th className="px-3 py-2">Date</th>
-                      <th className="px-3 py-2">Visitors</th>
+                      <th className="px-3 py-2">Unique Visitors</th>
                       <th className="px-3 py-2">Page Views</th>
                       <th className="px-3 py-2">WhatsApp</th>
                       <th className="px-3 py-2">Leads</th>

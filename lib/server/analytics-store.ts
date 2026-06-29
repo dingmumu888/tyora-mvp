@@ -173,7 +173,7 @@ function makeInsights({
   const topSource = sources.find((item) => item.value > 0);
   const topDevice = devices.find((item) => item.value > 0);
 
-  if (topCountry) insights.push(`Most visitors came from ${topCountry.label}.`);
+  if (topCountry) insights.push(`Most unique visitors came from ${topCountry.label}.`);
   if (topSource) insights.push(`${topSource.label} generated the most traffic.`);
   if (topDevice) insights.push(`${topDevice.label} is the leading device type.`);
   if (visitors > 0) insights.push(`WhatsApp click rate is ${percent(whatsappClicks, visitors)}% today.`);
@@ -282,7 +282,7 @@ export async function getAnalyticsDashboard(): Promise<AnalyticsDashboard> {
   const funnelWhatsApp = countType(rows, "whatsapp_click");
   const funnelLeads = countType(rows, "lead_submit_success");
   const funnel = [
-    { label: "Visitors", value: funnelVisitors, percentage: 100 },
+    { label: "Unique Visitors", value: funnelVisitors, percentage: 100 },
     { label: "WhatsApp Clicks", value: funnelWhatsApp, percentage: percent(funnelWhatsApp, funnelVisitors) },
     { label: "Lead Submissions", value: funnelLeads, percentage: percent(funnelLeads, funnelVisitors) },
     { label: "Quoted", value: quotedLeads, percentage: percent(quotedLeads, Math.max(funnelLeads, 1)) },
