@@ -43,6 +43,7 @@ import {
 } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 function makePrompts(t: UiText) {
   return [
@@ -137,6 +138,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    trackAnalyticsEvent("page_visit");
+  }, []);
+
+  useEffect(() => {
     const query = window.matchMedia("(min-width: 1024px)");
     const updateViewport = () => setIsDesktopViewport(query.matches);
     updateViewport();
@@ -183,6 +188,7 @@ export default function Home() {
   ];
 
   function openWizard() {
+    trackAnalyticsEvent("upload_click");
     setWizardOpen(true);
     setSubmitted(false);
     setStepIndex(0);
@@ -226,6 +232,7 @@ export default function Home() {
       };
 
       await saveLead(lead);
+      trackAnalyticsEvent("lead_submit_success");
       setSubmitted(true);
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Unable to submit project.");
@@ -260,7 +267,7 @@ export default function Home() {
             </span>
           </a>
           <div className="flex items-center gap-2">
-          <a href={whatsappUrl} target="_blank" rel="noreferrer">
+          <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
             <Button variant="secondary" className="min-h-10">
               <MessageCircle size={16} />
               {t.whatsApp}
@@ -301,7 +308,7 @@ export default function Home() {
             ) : null}
 
             <div className="mt-5 grid gap-3 lg:hidden">
-              <a href={whatsappUrl} target="_blank" rel="noreferrer">
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
                 <Button variant="secondary" className="min-h-12 w-full">
                   <MessageCircle size={16} /> Chat With Us (WhatsApp)
                 </Button>
@@ -708,12 +715,12 @@ export default function Home() {
               : "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed."}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <a href={whatsappUrl} target="_blank" rel="noreferrer">
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
               <Button variant="secondary" className="min-h-12 lg:min-h-11">
                 <MessageCircle size={16} /> {t.whatsApp}
               </Button>
             </a>
-            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer">
+            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("linkedin_click")}>
               <Button variant="outline">{t.linkedIn}</Button>
             </a>
           </div>
@@ -726,7 +733,7 @@ export default function Home() {
           <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/70">
             Let&apos;s turn your idea into a real product.
           </p>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full max-w-sm">
+          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full max-w-sm" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
             <Button variant="secondary" className="min-h-12 w-full">
               <MessageCircle size={16} /> Chat With Us
             </Button>
@@ -741,9 +748,9 @@ export default function Home() {
             <p>{displayContent.footerSlogan}</p>
           </div>
           <div className="flex flex-wrap gap-4">
-            <a href={`mailto:${displayContent.email}`}>{t.email}</a>
-            <a href={whatsappUrl} target="_blank" rel="noreferrer">{t.whatsApp}</a>
-            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer">{t.linkedIn}</a>
+            <a href={`mailto:${displayContent.email}`} onClick={() => trackAnalyticsEvent("email_click")}>{t.email}</a>
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>{t.whatsApp}</a>
+            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("linkedin_click")}>{t.linkedIn}</a>
           </div>
         </div>
       </footer>
@@ -752,6 +759,7 @@ export default function Home() {
         href={whatsappUrl}
         target="_blank"
         rel="noreferrer"
+        onClick={() => trackAnalyticsEvent("whatsapp_click")}
         className="fixed bottom-3 right-3 z-40 hidden min-h-12 items-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:bottom-5 sm:right-5 sm:inline-flex sm:px-5"
       >
         <MessageCircle size={18} />
@@ -805,7 +813,7 @@ export default function Home() {
                       {t.projectReceivedText}
                     </p>
                     <div className="mt-7 flex flex-wrap justify-center gap-3">
-                      <a href={whatsappUrl} target="_blank" rel="noreferrer">
+                      <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
                         <Button variant="secondary">
                           <MessageCircle size={16} /> {t.chatOnWhatsApp}
                         </Button>

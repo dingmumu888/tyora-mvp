@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  BarChart3,
   ArrowLeft,
   CalendarClock,
   Check,
@@ -12,15 +13,19 @@ import {
   EyeOff,
   File,
   Flag,
+  Globe2,
   ImagePlus,
   LayoutDashboard,
   Library,
   Lock,
   LogOut,
   MessageCircle,
+  MousePointerClick,
   Plus,
   Save,
   Search,
+  Smartphone,
+  TrendingUp,
   Trash2,
   Upload,
   UserRound,
@@ -53,8 +58,10 @@ import {
   TeamMember,
   uploadMedia
 } from "@/lib/storage";
+import { AnalyticsDashboard } from "@/lib/analytics";
 
 type TabId =
+  | "analytics"
   | "homepage"
   | "media"
   | "cases"
@@ -73,6 +80,24 @@ const zhText: Record<string, string> = {
   Login: "登录",
   "Incorrect password.": "密码不正确。",
   "TYORA CMS": "TYORA 内容管理",
+  "CEO Dashboard": "CEO 仪表盘",
+  "Today Overview": "今日概览",
+  "Visitors Today": "今日访客",
+  "WhatsApp Clicks": "WhatsApp 点击",
+  "New Leads": "新线索",
+  "Conversion Rate": "转化率",
+  "Average Session Duration": "平均访问时长",
+  "Visitor Countries": "访客国家",
+  "Traffic Sources": "流量来源",
+  "Device Breakdown": "设备分布",
+  "Top Pages": "热门页面",
+  "CTA Performance": "按钮表现",
+  "Recent Leads": "最新线索",
+  "Lead Conversion Funnel": "线索转化漏斗",
+  "Today's Tasks": "今日任务",
+  "Quick Insights": "快速洞察",
+  "Latest 7 Days": "最近 7 天",
+  "No analytics data yet.": "暂无统计数据。",
   "No-code website management": "无代码网站管理",
   "Clear Filters": "清除筛选",
   "Save Changes": "保存修改",
@@ -248,6 +273,7 @@ const zhText: Record<string, string> = {
 };
 
 const tabs: Array<{ id: TabId; label: string }> = [
+  { id: "analytics", label: "CEO Dashboard" },
   { id: "homepage", label: "Homepage Content" },
   { id: "media", label: "Media Library" },
   { id: "cases", label: "Case Studies" },
@@ -459,11 +485,13 @@ export default function AdminPage() {
   const [cmsLanguage, setCmsLanguage] = useState<CmsLanguage>("en");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [activeTab, setActiveTab] = useState<TabId>("homepage");
+  const [activeTab, setActiveTab] = useState<TabId>("analytics");
   const [content, setContent] = useState<SiteContent>(defaultContent);
   const [media, setMedia] = useState<MediaAsset[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(defaultTeamMembers);
+  const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [mediaSearch, setMediaSearch] = useState("");
   const [mediaFilter, setMediaFilter] = useState<"all" | MediaType>("all");
@@ -497,6 +525,7 @@ export default function AdminPage() {
         setTeamMembers(nextTeamMembers);
       })
       .catch(() => showToast("Unable to load admin data."));
+    void loadAnalytics();
   }, [authenticated]);
 
   const t = (value: string) => (cmsLanguage === "zh" ? zhText[value] || value : value);
@@ -509,6 +538,22 @@ export default function AdminPage() {
   function showToast(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(""), 2200);
+  }
+
+  async function loadAnalytics() {
+    setAnalyticsLoading(true);
+    try {
+      const response = await fetch("/api/analytics");
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || "Unable to load analytics.");
+      }
+      setAnalytics(payload.data);
+    } catch {
+      setAnalytics(null);
+    } finally {
+      setAnalyticsLoading(false);
+    }
   }
 
   async function login() {
@@ -755,6 +800,15 @@ export default function AdminPage() {
         </aside>
 
         <section className="space-y-6">
+          {activeTab === "analytics" ? (
+            <CeoDashboardSection
+              analytics={analytics}
+              loading={analyticsLoading}
+              refresh={() => void loadAnalytics()}
+              t={t}
+            />
+          ) : null}
+
           {activeTab === "homepage" ? (
             <Card className="p-5">
               <div className="mb-5 flex items-center gap-2">
@@ -1026,6 +1080,228 @@ export default function AdminPage() {
       </div>
     </main>
   );
+}
+
+function CeoDashboardSection({
+  analytics,
+  loading,
+  refresh,
+  t
+}: {
+  analytics: AnalyticsDashboard | null;
+  loading: boolean;
+  refresh: () => void;
+  t: (value: string) => string;
+}) {
+  const summary = analytics?.summary;
+  const summaryCards = [
+    {
+      label: t("Visitors Today"),
+      value: summary?.visitorsToday ?? 0,
+      detail: `${summary?.visitors7Days ?? 0} last 7 days`,
+      icon: <Globe2 size={17} />
+    },
+    {
+      label: t("WhatsApp Clicks"),
+      value: summary?.whatsappClicksToday ?? 0,
+      detail: "Today",
+      icon: <MessageCircle size={17} />
+    },
+    {
+      label: t("New Leads"),
+      value: summary?.newLeadsToday ?? 0,
+      detail: "Today",
+      icon: <Users size={17} />
+    },
+    {
+      label: t("Conversion Rate"),
+      value: `${summary?.conversionRateToday ?? 0}%`,
+      detail: "Lead / visitor",
+      icon: <TrendingUp size={17} />
+    },
+    {
+      label: t("Average Session Duration"),
+      value: formatDuration(summary?.averageSessionDurationSeconds ?? 0),
+      detail: "Estimated",
+      icon: <Clock size={17} />
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-5">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <BarChart3 size={18} />
+            <div>
+              <h1 className="text-xl font-semibold">{t("CEO Dashboard")}</h1>
+              <p className="text-sm text-[#69707d]">{t("Today Overview")}</p>
+            </div>
+          </div>
+          <Button variant="outline" className="min-h-9 px-3" onClick={refresh} disabled={loading}>
+            {loading ? "Loading..." : "Refresh"}
+          </Button>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {summaryCards.map((card) => (
+            <div key={card.label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+              <div className="mb-3 flex items-center justify-between text-[#69707d]">
+                {card.icon}
+                <span className="text-xs">{card.detail}</span>
+              </div>
+              <p className="text-2xl font-semibold">{card.value}</p>
+              <p className="mt-1 text-sm text-[#69707d]">{card.label}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {!analytics ? (
+        <Card className="p-8 text-center text-sm text-[#69707d]">
+          {loading ? "Loading analytics..." : t("No analytics data yet.")}
+        </Card>
+      ) : (
+        <>
+          <div className="grid gap-4 xl:grid-cols-3">
+            <MetricPanel title={t("Visitor Countries")} metrics={analytics.countries} />
+            <MetricPanel title={t("Traffic Sources")} metrics={analytics.sources} />
+            <MetricPanel title={t("Device Breakdown")} metrics={analytics.devices} icon={<Smartphone size={17} />} />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <MetricPanel title={t("Top Pages")} metrics={analytics.topPages} />
+            <MetricPanel title={t("CTA Performance")} metrics={analytics.ctaPerformance} icon={<MousePointerClick size={17} />} />
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+            <Card className="p-5">
+              <h2 className="mb-4 font-semibold">{t("Latest 7 Days")}</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[620px] text-left text-sm">
+                  <thead className="text-xs uppercase text-[#69707d]">
+                    <tr>
+                      <th className="px-3 py-2">Date</th>
+                      <th className="px-3 py-2">Visitors</th>
+                      <th className="px-3 py-2">Page Views</th>
+                      <th className="px-3 py-2">WhatsApp</th>
+                      <th className="px-3 py-2">Leads</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.dailyTrend.map((row) => (
+                      <tr key={row.date} className="border-t border-[#eef1f4]">
+                        <td className="px-3 py-3 font-medium">{row.date}</td>
+                        <td className="px-3 py-3">{row.visitors}</td>
+                        <td className="px-3 py-3">{row.pageViews}</td>
+                        <td className="px-3 py-3">{row.whatsappClicks}</td>
+                        <td className="px-3 py-3">{row.leadSubmissions}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            <Card className="p-5">
+              <h2 className="mb-4 font-semibold">{t("Today's Tasks")}</h2>
+              <div className="grid gap-3">
+                {analytics.tasks.map((task) => (
+                  <div key={task.label} className="flex items-center justify-between rounded-lg border border-[#e8ebef] bg-white px-3 py-3">
+                    <span className="text-sm text-[#59616e]">{task.label}</span>
+                    <span className="text-lg font-semibold">{task.value}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+            <MetricPanel title={t("Lead Conversion Funnel")} metrics={analytics.funnel} />
+            <Card className="p-5">
+              <h2 className="mb-4 font-semibold">{t("Quick Insights")}</h2>
+              <div className="space-y-3 text-sm text-[#59616e]">
+                {analytics.insights.length ? analytics.insights.map((insight) => (
+                  <p key={insight} className="rounded-lg bg-[#fbfbfc] p-3">{insight}</p>
+                )) : <p>{t("No analytics data yet.")}</p>}
+              </div>
+            </Card>
+          </div>
+
+          <Card className="p-5">
+            <h2 className="mb-4 font-semibold">{t("Recent Leads")}</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead className="text-xs uppercase text-[#69707d]">
+                  <tr>
+                    <th className="px-3 py-2">Name</th>
+                    <th className="px-3 py-2">Country</th>
+                    <th className="px-3 py-2">Company</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Submission Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.recentLeads.map((lead) => (
+                    <tr key={lead.id} className="border-t border-[#eef1f4]">
+                      <td className="px-3 py-3">{lead.name}</td>
+                      <td className="px-3 py-3">{lead.country}</td>
+                      <td className="px-3 py-3">{lead.company}</td>
+                      <td className="px-3 py-3">{lead.status}</td>
+                      <td className="px-3 py-3">{formatDateTime(lead.submissionTime)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!analytics.recentLeads.length ? (
+                <p className="py-6 text-center text-sm text-[#69707d]">{t("No submissions yet.")}</p>
+              ) : null}
+            </div>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MetricPanel({
+  title,
+  metrics,
+  icon
+}: {
+  title: string;
+  metrics: Array<{ label: string; value: number; percentage?: number }>;
+  icon?: React.ReactNode;
+}) {
+  const visible = metrics.length ? metrics : [{ label: "No data", value: 0, percentage: 0 }];
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex items-center gap-2">
+        {icon || <BarChart3 size={17} />}
+        <h2 className="font-semibold">{title}</h2>
+      </div>
+      <div className="space-y-3">
+        {visible.map((item) => (
+          <div key={item.label}>
+            <div className="mb-1 flex items-center justify-between gap-3 text-sm">
+              <span className="truncate text-[#59616e]">{item.label}</span>
+              <span className="font-medium">{item.value}{typeof item.percentage === "number" ? ` (${item.percentage}%)` : ""}</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-[#eef1f4]">
+              <div className="h-full rounded-full bg-[#101216]" style={{ width: `${Math.min(100, item.percentage || 0)}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function formatDuration(seconds: number) {
+  if (!seconds) return "0s";
+  const minutes = Math.floor(seconds / 60);
+  const remaining = seconds % 60;
+  return minutes ? `${minutes}m ${remaining}s` : `${remaining}s`;
 }
 
 function ProjectSubmissionsSection({

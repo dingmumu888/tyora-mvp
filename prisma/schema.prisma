@@ -75,3 +75,27 @@ model TeamMember {
   @@index([active])
   @@index([role])
 }
+
+model AnalyticsEvent {
+  id                     String   @id
+  type                   String
+  path                   String?
+  pageGroup              String?
+  referrer               String?
+  referrerSource         String?
+  countryName            String?
+  countryCode            String?
+  device                 String?
+  visitorId              String?
+  sessionId              String?
+  sessionDurationSeconds Int?
+  createdAt              DateTime @default(now())
+
+  @@index([type])
+  @@index([createdAt])
+  @@index([visitorId])
+  @@index([sessionId])
+  @@index([countryCode])
+  @@index([referrerSource])
+  @@index([device])
+}
