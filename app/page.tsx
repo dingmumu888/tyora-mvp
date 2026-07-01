@@ -522,10 +522,10 @@ export default function Home() {
                     className={cn(
                       "flex items-center justify-center rounded-lg bg-[#f7f8fa] text-center text-sm font-medium text-[#69707d] ring-1 ring-[#e8ebef]",
                       stage === "final"
-                        ? "min-h-36 p-4 sm:min-h-40 lg:min-h-44"
+                        ? "h-36 sm:h-40 lg:h-44"
                         : stage === "prototype"
-                          ? "min-h-28 p-4 sm:min-h-32 lg:min-h-32"
-                          : "min-h-32 p-4 sm:min-h-36 lg:min-h-36"
+                          ? "h-28 sm:h-32 lg:h-32"
+                          : "h-32 sm:h-36 lg:h-36"
                     )}
                   >
                     {image ? (
@@ -533,10 +533,7 @@ export default function Home() {
                       <img
                         src={image}
                         alt={label}
-                        className={cn(
-                          "h-full w-full rounded-md object-contain",
-                          stage === "final" ? "max-h-40 lg:max-h-48" : "max-h-28 lg:max-h-32"
-                        )}
+                        className="h-[88%] w-[88%] max-w-none rounded-md object-contain"
                       />
                     ) : (
                       label
