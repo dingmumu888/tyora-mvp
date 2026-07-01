@@ -511,25 +511,39 @@ export default function Home() {
                   {story.status}
                 </span>
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-4">
                 {[
-                  [story.concept, story.conceptImage],
-                  [story.prototype, story.prototypeImage],
-                  [story.final, story.finalImage]
-                ].map(([label, image], itemIndex) => (
-                  <div key={label}>
+                  { label: story.concept, image: story.conceptImage, stage: "concept" },
+                  { label: story.prototype, image: story.prototypeImage, stage: "prototype" },
+                  { label: story.final, image: story.finalImage, stage: "final" }
+                ].map(({ label, image, stage }, itemIndex) => (
+                  <div key={label} className="space-y-2">
                   <div
-                    className="flex min-h-16 items-center justify-center rounded-lg bg-[#f2f4f6] p-3 text-center text-sm font-medium text-[#69707d] lg:min-h-24"
+                    className={cn(
+                      "flex items-center justify-center rounded-lg bg-[#f7f8fa] text-center text-sm font-medium text-[#69707d] ring-1 ring-[#e8ebef]",
+                      stage === "final"
+                        ? "min-h-36 p-4 sm:min-h-40 lg:min-h-44"
+                        : stage === "prototype"
+                          ? "min-h-28 p-4 sm:min-h-32 lg:min-h-32"
+                          : "min-h-32 p-4 sm:min-h-36 lg:min-h-36"
+                    )}
                   >
                     {image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={image} alt={label} className="h-full max-h-32 w-full rounded-lg object-cover" />
+                      <img
+                        src={image}
+                        alt={label}
+                        className={cn(
+                          "h-full w-full rounded-md object-contain",
+                          stage === "final" ? "max-h-40 lg:max-h-48" : "max-h-28 lg:max-h-32"
+                        )}
+                      />
                     ) : (
                       label
                     )}
                   </div>
                   {itemIndex < 2 ? (
-                    <div className="py-1 text-center text-[#8c94a1]">↓</div>
+                    <div className="text-center text-sm leading-none text-[#b2bac5]">↓</div>
                   ) : null}
                   </div>
                 ))}
