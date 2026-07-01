@@ -35,27 +35,11 @@ import {
 import {
   Language,
   localizeContent,
-  UiText,
   ui
 } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-
-function makePrompts(t: UiText) {
-  return [
-    t.magneticPrompt,
-    t.capybaraPrompt,
-    languageSafeKickstarter(t),
-    t.petPrompt
-  ];
-}
-
-function languageSafeKickstarter(t: UiText) {
-  return t.language === "EN"
-    ? "我想发布一个 Kickstarter 产品..."
-    : "I want to launch a Kickstarter product...";
-}
 
 const trustBadgeIcons = [Wand2, SearchCheck, ClipboardCheck, ShieldCheck, PackageCheck, Truck];
 const showHomepageVideo = false;
@@ -63,7 +47,6 @@ const showHomepageVideo = false;
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
   const [language] = useState<Language>("en");
-  const [promptIndex, setPromptIndex] = useState(0);
   const [idea, setIdea] = useState("");
   const [productName, setProductName] = useState("");
   const [fileName, setFileName] = useState("");
@@ -98,18 +81,6 @@ export default function Home() {
     () => normalizeWhatsAppUrl(displayContent.whatsappLink),
     [displayContent.whatsappLink]
   );
-  const prompts = useMemo(
-    () => displayContent.heroPlaceholders.length ? displayContent.heroPlaceholders : makePrompts(t),
-    [displayContent.heroPlaceholders, t]
-  );
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setPromptIndex((current) => (current + 1) % prompts.length);
-    }, 2600);
-    return () => window.clearInterval(id);
-  }, [prompts.length]);
-
   const visibleCases = displayContent.cases.filter((story) => story.visible);
   const mobileJourneySteps = [
     { title: "Share Your Idea", icon: SearchCheck },
@@ -245,7 +216,7 @@ export default function Home() {
                 <Textarea
                   value={idea}
                   onChange={(event) => setIdea(event.target.value)}
-                  placeholder={prompts[promptIndex]}
+                  placeholder={t.productNamePlaceholder}
                   className="min-h-20 border-0 bg-transparent px-0 py-0 text-base shadow-none focus:border-transparent focus:ring-0 lg:min-h-28"
                 />
                 {!idea.trim() ? (
