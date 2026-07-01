@@ -29,15 +29,12 @@ function validatePublicLead(body: unknown) {
   }
 
   const data = body as Record<string, unknown>;
-  const name = textField(data, "customerName");
   const email = textField(data, "email");
   const productIdea = textField(data, "productIdea");
 
-  if (!name) return "Name is required.";
-  if (!email) return "Email is required.";
   if (!productIdea) return "Product idea is required.";
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return "Please enter a valid email address.";
   }
 

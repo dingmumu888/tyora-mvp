@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
-  Calendar,
   Check,
   ChevronLeft,
   ClipboardCheck,
@@ -15,7 +14,6 @@ import {
   PackageCheck,
   Play,
   SearchCheck,
-  Send,
   ShieldCheck,
   Sparkles,
   Truck,
@@ -26,7 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/input";
+import { Input, Textarea } from "@/components/ui/input";
 import {
   defaultContent,
   Lead,
@@ -62,73 +60,15 @@ function languageSafeKickstarter(t: UiText) {
 
 const trustBadgeIcons = [Wand2, SearchCheck, ClipboardCheck, ShieldCheck, PackageCheck, Truck];
 
-function makeWizardSteps(t: UiText) {
-  return [
-  {
-    key: "productIdea",
-    question: t.manufactureQuestion,
-    type: "textarea",
-    placeholder: t.manufacturePlaceholder
-  },
-  {
-    key: "designType",
-    question: t.doYouHaveDesign,
-    options: [
-      t.aiGeneratedImage,
-      t.sketch,
-      t.cadFile,
-      t.existingReference,
-      t.justIdea
-    ]
-  },
-  {
-    key: "quantity",
-    question: t.estimatedQuantity,
-    options: ["100-500", "500-1000", "1000-5000", "5000+"]
-  },
-  {
-    key: "budget",
-    question: t.estimatedBudget,
-    options: ["Under $1,000", t.quoteDeposit, "$5,000-$20,000", "$20,000+"]
-  },
-  {
-    key: "timeline",
-    question: t.startTimeline,
-    options: [t.immediately, t.within30, t.within90, t.researchingOnly]
-  },
-  {
-    key: "sampleRequirement",
-    question: t.sampleNeed,
-    options: [t.yes, t.no]
-  },
-  {
-    key: "sampleReview",
-    question: t.sampleReview,
-    options: [t.inspectionVideo, t.liveVideoCall, t.shipSample],
-    note: t.internationalCourier
-  },
-  {
-    key: "additionalRequirements",
-    question: t.additionalRequirements,
-    type: "textarea",
-    placeholder: t.additionalRequirementsPlaceholder
-  }
-  ] as const;
-}
-
-type Answers = Record<string, string>;
-
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
   const [language] = useState<Language>("en");
   const [promptIndex, setPromptIndex] = useState(0);
   const [idea, setIdea] = useState("");
+  const [productName, setProductName] = useState("");
   const [fileName, setFileName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answers>({});
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
   const [isDesktopViewport, setIsDesktopViewport] = useState(false);
@@ -162,7 +102,6 @@ export default function Home() {
     () => displayContent.heroPlaceholders.length ? displayContent.heroPlaceholders : makePrompts(t),
     [displayContent.heroPlaceholders, t]
   );
-  const wizardSteps = useMemo(() => makeWizardSteps(t), [t]);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -171,43 +110,27 @@ export default function Home() {
     return () => window.clearInterval(id);
   }, [prompts.length]);
 
-  const activeSteps = useMemo(() => {
-    return wizardSteps.filter(
-      (step) => step.key !== "sampleReview" || answers.sampleRequirement === t.yes
-    );
-  }, [answers.sampleRequirement, t.yes, wizardSteps]);
-
-  const currentStep = activeSteps[stepIndex] ?? activeSteps[0];
-  const progress = Math.round(((stepIndex + 1) / activeSteps.length) * 100);
   const visibleCases = displayContent.cases.filter((story) => story.visible);
   const mobileJourneySteps = [
-    { title: "Idea Review", icon: SearchCheck },
+    { title: "Share Your Idea", icon: SearchCheck },
+    { title: "Product Review", icon: ClipboardCheck },
+    { title: "Manufacturing Strategy", icon: Layers },
     { title: "Prototype", icon: ClipboardCheck },
-    { title: "Production Prep", icon: PackageCheck },
-    { title: "Manufacturing", icon: Layers }
+    { title: "Production", icon: PackageCheck },
+    { title: "Delivery", icon: Truck }
   ];
 
   function openWizard() {
     trackAnalyticsEvent("upload_click");
     setWizardOpen(true);
-    setSubmitted(false);
-    setStepIndex(0);
-    setAnswers((current) => ({ ...current, productIdea: current.productIdea || idea }));
+    setProductName((current) => current || idea);
   }
 
-  function setAnswer(key: string, value: string) {
-    setAnswers((current) => ({ ...current, [key]: value }));
-  }
-
-  async function nextStep() {
+  async function startWhatsAppChat() {
     if (submitting) return;
-
-    if (stepIndex < activeSteps.length - 1) {
-      setStepIndex((current) => current + 1);
-      return;
-    }
-
     setSubmitting(true);
+    trackAnalyticsEvent("whatsapp_click");
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
     let uploadedFiles: string[] = [];
     try {
       if (selectedFile) {
@@ -217,14 +140,14 @@ export default function Home() {
 
       const lead: Lead = {
         id: crypto.randomUUID(),
-        productIdea: answers.productIdea || idea,
-        designType: answers.designType || "",
-        quantity: answers.quantity || "",
-        budget: answers.budget || "",
-        timeline: answers.timeline || "",
-        sampleRequirement: answers.sampleRequirement || t.no,
-        sampleReview: answers.sampleReview,
-        additionalRequirements: answers.additionalRequirements || "",
+        productIdea: productName || idea || "Product idea not named yet",
+        designType: selectedFile ? "Uploaded reference" : "",
+        quantity: "",
+        budget: "",
+        timeline: "",
+        sampleRequirement: t.no,
+        sampleReview: "",
+        additionalRequirements: "",
         uploadedFile: uploadedFiles[0] || fileName,
         uploadedFiles,
         submissionDate: new Date().toISOString(),
@@ -233,7 +156,7 @@ export default function Home() {
 
       await saveLead(lead);
       trackAnalyticsEvent("lead_submit_success");
-      setSubmitted(true);
+      setWizardOpen(false);
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "Unable to submit project.");
     } finally {
@@ -241,7 +164,8 @@ export default function Home() {
     }
   }
 
-  const canContinue = Boolean(answers[currentStep?.key] || (currentStep?.key === "productIdea" && idea));
+  const canStartChat = Boolean(productName.trim());
+  const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
   return (
     <main className="min-h-screen bg-white text-[#101216]">
       <header className="sticky top-0 z-40 border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
@@ -293,7 +217,7 @@ export default function Home() {
                 Turn Your Product Idea Into Reality.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-[#59616e]">
-                Whether your idea came from ChatGPT, Midjourney, a sketch, or a napkin, we help transform it into a manufacturable product.
+                Upload your idea, name the product, and start a WhatsApp conversation with TYORA.
               </p>
             </div>
             {isDesktopViewport ? (
@@ -308,11 +232,9 @@ export default function Home() {
             ) : null}
 
             <div className="mt-5 grid gap-3 lg:hidden">
-              <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
-                <Button variant="secondary" className="min-h-12 w-full">
-                  <MessageCircle size={16} /> Chat With Us (WhatsApp)
-                </Button>
-              </a>
+              <Button variant="secondary" className="min-h-12 w-full" onClick={openWizard}>
+                <MessageCircle size={16} /> {t.startWhatsAppChat}
+              </Button>
               <Button variant="outline" className="min-h-12 w-full" onClick={openWizard}>
                 <Upload size={16} /> Upload Your Idea
               </Button>
@@ -360,7 +282,7 @@ export default function Home() {
                       />
                     </label>
                     <Button onClick={openWizard} className="min-h-12 transition hover:scale-[1.01] lg:min-h-11">
-                      {displayContent.ctaText} <ArrowRight size={16} />
+                      {t.startWhatsAppChat} <ArrowRight size={16} />
                     </Button>
                   </div>
                 </div>
@@ -387,9 +309,8 @@ export default function Home() {
               <div className="space-y-3 p-5">
                 {[
                   ["Product", "Magnetic Phone Stand"],
-                  ["Quantity", "1000 Units"],
-                  ["Target Market", "United States"],
-                  ["Status", "Ready For Manufacturing Review"]
+                  ["Upload", "Optional"],
+                  ["Next Step", "WhatsApp Chat"]
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
                     <p className="text-xs uppercase text-[#8c94a1]">{label}</p>
@@ -735,7 +656,7 @@ export default function Home() {
           </p>
           <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full max-w-sm" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
             <Button variant="secondary" className="min-h-12 w-full">
-              <MessageCircle size={16} /> Chat With Us
+              <MessageCircle size={16} /> {t.startWhatsAppChat}
             </Button>
           </a>
         </div>
@@ -763,7 +684,7 @@ export default function Home() {
         className="fixed bottom-3 right-3 z-40 hidden min-h-12 items-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:bottom-5 sm:right-5 sm:inline-flex sm:px-5"
       >
         <MessageCircle size={18} />
-        {t.chatWithUs}
+        {t.startWhatsAppChat}
       </a>
 
       <AnimatePresence>
@@ -785,119 +706,88 @@ export default function Home() {
                   <button
                     className="rounded-lg p-2 hover:bg-[#f5f6f8]"
                     onClick={() => setWizardOpen(false)}
-                    aria-label="Close questionnaire"
+                    aria-label={t.closeConversation}
                   >
                     <ChevronLeft size={20} />
                   </button>
-                  <p className="text-sm text-[#69707d]">{t.projectIntake}</p>
+                  <p className="text-sm text-[#69707d]">{t.conversationStart}</p>
                   <div className="w-9" />
                 </div>
-                {!submitted ? (
-                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#eef1f4]">
-                    <div
-                      className="h-full rounded-full bg-[#101216] transition-all"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                ) : null}
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-medium text-[#69707d]">
+                  <span className="rounded-full bg-[#f5f6f8] px-2 py-2">{t.uploadYourIdea}</span>
+                  <span className="rounded-full bg-[#f5f6f8] px-2 py-2">{t.productName}</span>
+                  <span className="rounded-full bg-[#e6f7f4] px-2 py-2 text-[#0f766e]">{t.whatsApp}</span>
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-5 sm:p-8">
-                {submitted ? (
-                  <div className="mx-auto flex max-w-lg flex-col items-center justify-center py-16 text-center">
-                    <span className="flex size-14 items-center justify-center rounded-full bg-[#e6f7f4] text-[#0f766e]">
-                      <PackageCheck size={26} />
-                    </span>
-                    <h2 className="mt-5 text-3xl font-semibold">{t.projectReceived}</h2>
-                    <p className="mt-3 text-[#59616e]">
-                      {t.projectReceivedText}
-                    </p>
-                    <div className="mt-7 flex flex-wrap justify-center gap-3">
-                      <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
-                        <Button variant="secondary">
-                          <MessageCircle size={16} /> {t.chatOnWhatsApp}
-                        </Button>
-                      </a>
-                      <a href={displayContent.callLink} target="_blank" rel="noreferrer">
-                        <Button variant="outline">
-                          <Calendar size={16} /> {t.bookACall}
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-5">
+                <div className="space-y-7">
+                  <section className="space-y-4">
                     <div className="flex gap-3">
                       <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-white">
-                        <Sparkles size={16} />
+                        <Upload size={16} />
                       </span>
-                      <div className="rounded-2xl rounded-tl-sm bg-[#f5f6f8] p-4">
-                        <p className="text-lg font-semibold">{currentStep.question}</p>
-                        {"note" in currentStep && currentStep.note ? (
-                          <p className="mt-2 text-sm text-[#69707d]">{currentStep.note}</p>
-                        ) : null}
+                      <div>
+                        <h2 className="text-2xl font-semibold">{t.uploadYourIdea}</h2>
+                        <p className="mt-2 text-sm leading-6 text-[#59616e]">{t.uploadIdeaSubtitle}</p>
                       </div>
                     </div>
-
-                    {"options" in currentStep ? (
-                      <div className="ml-0 grid gap-3 sm:ml-12 sm:grid-cols-2">
-                        {currentStep.options.map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => {
-                              setAnswer(currentStep.key, option);
-                              window.setTimeout(() => void nextStep(), 180);
-                            }}
-                            className={cn(
-                              "min-h-14 rounded-lg border px-4 text-left text-sm font-medium transition hover:border-[#101216]",
-                              answers[currentStep.key] === option
-                                ? "border-[#101216] bg-[#101216] text-white"
-                                : "border-[#e1e5ea] bg-white"
-                            )}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="ml-0 sm:ml-12">
-                        <Textarea
-                          value={
-                            currentStep.key === "productIdea"
-                              ? answers.productIdea || idea
-                              : answers[currentStep.key] || ""
-                          }
-                          placeholder={
-                            "placeholder" in currentStep ? currentStep.placeholder : ""
-                          }
+                    <div className="ml-0 rounded-lg border border-[#e1e5ea] bg-[#fbfbfc] p-4 sm:ml-12">
+                      <label className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-[#cfd5dd] bg-white px-4 text-sm font-medium transition hover:bg-[#f5f6f8]">
+                        <Upload size={16} />
+                        {fileName || t.uploadDesign}
+                        <input
+                          className="sr-only"
+                          type="file"
+                          accept="image/*,.pdf,.step,.stp,.iges,.igs,.obj,.stl,.dwg,.dxf"
                           onChange={(event) => {
-                            if (currentStep.key === "productIdea") {
-                              setIdea(event.target.value);
-                            }
-                            setAnswer(currentStep.key, event.target.value);
+                            const file = event.target.files?.[0] || null;
+                            setSelectedFile(file);
+                            setFileName(file?.name || "");
                           }}
                         />
+                      </label>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-[#69707d]">
+                        {supportedUploads.map((item) => (
+                          <span key={item} className="rounded-full bg-white px-3 py-1.5 ring-1 ring-[#e8ebef]">
+                            {item}
+                          </span>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <div className="flex gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-white">
+                        <PackageCheck size={16} />
+                      </span>
+                      <div>
+                        <h2 className="text-2xl font-semibold">{t.productName}</h2>
+                        <p className="mt-2 text-sm leading-6 text-[#59616e]">{t.productNameSubtitle}</p>
+                      </div>
+                    </div>
+                    <div className="ml-0 sm:ml-12">
+                      <Input
+                        value={productName}
+                        placeholder={t.productNamePlaceholder}
+                        onChange={(event) => setProductName(event.target.value)}
+                        className="min-h-14 text-base"
+                      />
+                      {!productName.trim() ? (
+                        <p className="mt-3 text-sm text-[#8c94a1]">{t.productNameExample}</p>
+                      ) : null}
+                    </div>
+                  </section>
+                </div>
               </div>
 
-              {!submitted ? (
-                <div className="flex items-center justify-between border-t border-[#eef1f4] p-4">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setStepIndex((current) => Math.max(0, current - 1))}
-                    disabled={stepIndex === 0}
-                  >
-                    {t.back}
-                  </Button>
-                  <Button onClick={() => void nextStep()} disabled={!canContinue || submitting}>
-                    {stepIndex === activeSteps.length - 1 ? t.submitProject : t.continue}
-                    <Send size={16} />
-                  </Button>
-                </div>
-              ) : null}
+              <div className="flex items-center justify-end border-t border-[#eef1f4] p-4">
+                <Button onClick={() => void startWhatsAppChat()} disabled={!canStartChat || submitting}>
+                  <MessageCircle size={16} />
+                  {submitting ? t.saving : t.startWhatsAppChat}
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         ) : null}

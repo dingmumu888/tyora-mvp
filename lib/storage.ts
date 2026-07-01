@@ -187,9 +187,9 @@ export const defaultContent: SiteContent = {
   heroSubtitle:
     "Upload your idea. We'll help you turn it into a manufacturable product through trusted manufacturing partners in China.",
   heroPlaceholders: [
-    "Describe the product you want to create..."
+    "Enter your product name..."
   ],
-  ctaText: "Start Your Project",
+  ctaText: "Start WhatsApp Chat",
   tagline: "Turn Your Product Idea Into Reality.",
   footerSlogan: "We don't just manufacture products. We help bring ideas to life.",
   videoUrl: "",
@@ -221,37 +221,42 @@ export const defaultContent: SiteContent = {
     "Production Follow-up",
     "Shipping Support"
   ],
-  positioningHeadlineA: "We Don't Help You Find Factories.",
-  positioningHeadlineB: "We Help You Build Products.",
+  positioningHeadlineA: "How TYORA Helps",
+  positioningHeadlineB: "",
   positioningText:
-    "From product validation to manufacturing, quality control, and delivery, TYORA supports your entire product journey.",
+    "TYORA supports product development from validation and planning to production, quality assurance, and delivery.",
   journeySteps: [
     {
-      title: "Idea",
-      description: "Submit your product concept, AI image, sketch, reference product, or CAD file."
+      title: "Share Your Idea",
+      description: "Share your product idea, AI concept, sketch, reference product, or CAD file."
     },
     {
-      title: "Development",
-      description: "We review manufacturability, materials, production method, MOQ, and project risks."
+      title: "Product Review",
+      description: "We evaluate feasibility, materials, manufacturing methods, costs, and risks."
     },
     {
-      title: "Manufacturing Partner",
-      description: "We match your project with suitable manufacturing partners in China."
+      title: "Manufacturing Strategy",
+      description: "We identify the right manufacturing solution for your product."
     },
     {
-      title: "Production Management",
-      description: "We help coordinate sampling, production, communication, and inspection."
+      title: "Prototype",
+      description: "We coordinate prototyping, testing, revisions, and production readiness."
+    },
+    {
+      title: "Production",
+      description: "We manage production, quality inspections, and manufacturing progress."
     },
     {
       title: "Delivery",
-      description: "We assist with packaging, logistics coordination, and global delivery."
+      description: "We coordinate packaging, logistics, and worldwide delivery."
     }
   ],
   helpCards: [
-    { title: "Idea Validation", description: "Avoid expensive mistakes before production." },
-    { title: "Manufacturing Partner Matching", description: "Connect with suitable manufacturing partners." },
-    { title: "Production Management", description: "We coordinate communication, samples, and production." },
-    { title: "Quality Assurance", description: "Reduce manufacturing risks before shipment." }
+    { title: "Product Validation", description: "Avoid costly mistakes before production." },
+    { title: "Manufacturing Planning", description: "Plan the right manufacturing approach before committing to production." },
+    { title: "Project Management", description: "Coordinate communication, samples, timelines, and production progress." },
+    { title: "Quality Assurance", description: "Reduce manufacturing risks before shipment." },
+    { title: "Logistics Support", description: "Coordinate packaging, documents, and global delivery." }
   ],
   pricing: [
     {
@@ -358,6 +363,7 @@ export const defaultContent: SiteContent = {
 const legacyContent = {
   heroTitle: "What Product Do You Want To Create Today?",
   ctaText: "Continue",
+  ctaTextV2: "Start Your Project",
   heroSubtitle:
     "Upload your design or describe your idea. We help turn it into a real product through trusted manufacturing partners in China.",
   heroSubtitleV2:
@@ -374,11 +380,27 @@ const legacyHeroPlaceholders = [
 const legacyHeroPlaceholdersV2 = [
   "Describe your product idea...\n\nExample:\n\"I want to design a magnetic phone stand for iPhone.\""
 ];
+const legacyHeroPlaceholdersV3 = [
+  "Describe the product you want to create..."
+];
 const legacyTrustBadges = [
   "Product Development Partner",
   "Transparent Factory Pricing",
   "Dedicated Project Manager",
   "Worldwide Delivery Support"
+];
+const legacyJourneySteps = [
+  "Idea|Submit your product concept, AI image, sketch, reference product, or CAD file.",
+  "Development|We review manufacturability, materials, production method, MOQ, and project risks.",
+  "Manufacturing Partner|We match your project with suitable manufacturing partners in China.",
+  "Production Management|We help coordinate sampling, production, communication, and inspection.",
+  "Delivery|We assist with packaging, logistics coordination, and global delivery."
+];
+const legacyHelpCards = [
+  "Idea Validation|Avoid expensive mistakes before production.",
+  "Manufacturing Partner Matching|Connect with suitable manufacturing partners.",
+  "Production Management|We coordinate communication, samples, and production.",
+  "Quality Assurance|Reduce manufacturing risks before shipment."
 ];
 
 function stringValue(value: unknown, fallback: string) {
@@ -662,10 +684,16 @@ export function normalizeContent(value: unknown): SiteContent {
   if (normalized.ctaText === legacyContent.ctaText) {
     normalized.ctaText = defaultContent.ctaText;
   }
+  if (normalized.ctaText === legacyContent.ctaTextV2) {
+    normalized.ctaText = defaultContent.ctaText;
+  }
   if (normalized.heroPlaceholders.join("|") === legacyHeroPlaceholders.join("|")) {
     normalized.heroPlaceholders = defaultContent.heroPlaceholders;
   }
   if (normalized.heroPlaceholders.join("|") === legacyHeroPlaceholdersV2.join("|")) {
+    normalized.heroPlaceholders = defaultContent.heroPlaceholders;
+  }
+  if (normalized.heroPlaceholders.join("|") === legacyHeroPlaceholdersV3.join("|")) {
     normalized.heroPlaceholders = defaultContent.heroPlaceholders;
   }
   if (normalized.trustBadges.join("|") === legacyTrustBadges.join("|")) {
@@ -673,6 +701,24 @@ export function normalizeContent(value: unknown): SiteContent {
   }
   if (normalized.founderText === legacyContent.founderText) {
     normalized.founderText = defaultContent.founderText;
+  }
+  if (normalized.positioningHeadlineA === "We Don't Help You Find Factories.") {
+    normalized.positioningHeadlineA = defaultContent.positioningHeadlineA;
+  }
+  if (normalized.positioningHeadlineB === "We Help You Build Products.") {
+    normalized.positioningHeadlineB = defaultContent.positioningHeadlineB;
+  }
+  if (
+    normalized.positioningText ===
+    "From product validation to manufacturing, quality control, and delivery, TYORA supports your entire product journey."
+  ) {
+    normalized.positioningText = defaultContent.positioningText;
+  }
+  if (normalized.journeySteps.map((card) => `${card.title}|${card.description}`).join("||") === legacyJourneySteps.join("||")) {
+    normalized.journeySteps = defaultContent.journeySteps;
+  }
+  if (normalized.helpCards.map((card) => `${card.title}|${card.description}`).join("||") === legacyHelpCards.join("||")) {
+    normalized.helpCards = defaultContent.helpCards;
   }
 
   return normalized;
