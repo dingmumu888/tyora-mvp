@@ -18,7 +18,6 @@ import {
   Sparkles,
   Truck,
   Upload,
-  UserCheck,
   Video,
   Wand2
 } from "lucide-react";
@@ -59,6 +58,7 @@ function languageSafeKickstarter(t: UiText) {
 }
 
 const trustBadgeIcons = [Wand2, SearchCheck, ClipboardCheck, ShieldCheck, PackageCheck, Truck];
+const showHomepageVideo = false;
 
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
@@ -368,7 +368,7 @@ export default function Home() {
         </div>
       </section>
 
-      {isDesktopViewport ? (
+      {showHomepageVideo && isDesktopViewport ? (
       <section className="mx-auto hidden max-w-7xl gap-7 px-4 py-12 sm:px-6 lg:grid lg:grid-cols-[0.62fr_1.38fr] lg:px-8 lg:py-20">
         <div>
           <h2 className="text-[2.25rem] font-semibold leading-tight">{displayContent.video.title}</h2>
@@ -599,51 +599,6 @@ export default function Home() {
           <div className="mt-8 rounded-lg border border-[#e8ebef] bg-white p-5 text-center">
             <p className="font-semibold">{displayContent.pricingProofA}</p>
             <p className="mt-2 text-sm text-[#59616e]">{displayContent.pricingProofB}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[0.65fr_1.35fr] lg:px-8 lg:py-20">
-        <div className="aspect-[4/3] rounded-lg bg-[#f2f4f6] lg:aspect-square">
-          {displayContent.founderPhoto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={displayContent.founderPhoto}
-              alt={displayContent.founderName}
-              className="h-full w-full rounded-lg object-cover"
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center bg-[linear-gradient(135deg,#f7f8fa_0%,#eef1f4_100%)] p-8 text-center text-[#69707d]">
-              <div className="relative flex size-24 items-center justify-center rounded-full bg-white ring-1 ring-[#e1e5ea] lg:size-32">
-                <UserCheck size={44} className="text-[#101216] lg:size-[54px]" />
-                <span className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-full bg-[#0f766e] text-white ring-4 ring-white">
-                  <Check size={15} />
-                </span>
-              </div>
-              <p className="mt-5 text-sm font-medium text-[#101216]">{displayContent.founderName}</p>
-              <p className="mt-1 max-w-48 text-xs leading-5">Professional founder photo placeholder</p>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col justify-center">
-          <p className="mb-3 text-sm font-medium text-[#69707d]">
-            {displayContent.founderTitle}
-          </p>
-          <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{language === "zh" ? `你好，我是 ${displayContent.founderName}。` : <>Hi, I&apos;m {displayContent.founderName}.</>}</h2>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-[#59616e] lg:mt-5 lg:text-lg lg:leading-8">
-            {language === "zh"
-              ? displayContent.founderText
-              : "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed."}
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
-              <Button variant="secondary" className="min-h-12 lg:min-h-11">
-                <MessageCircle size={16} /> {t.whatsApp}
-              </Button>
-            </a>
-            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("linkedin_click")}>
-              <Button variant="outline">{t.linkedIn}</Button>
-            </a>
           </div>
         </div>
       </section>
