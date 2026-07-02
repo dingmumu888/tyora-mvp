@@ -20,9 +20,17 @@ export type VideoSettings = {
 export type PricingPlan = {
   id: string;
   name: string;
+  subtitle?: string;
   price: string;
+  priceLabel?: string;
+  priceSuffix?: string;
+  description?: string;
+  badge?: string;
+  highlightBanner?: string;
   note?: string;
   features: string[];
+  exclusions?: string[];
+  bottomNote?: string;
   ctaText: string;
   visible: boolean;
   order: number;
@@ -209,10 +217,11 @@ export const defaultContent: SiteContent = {
   founderPhoto: "",
   founderText:
     "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed.",
-  pricingTitle: "Product Development Support",
-  pricingSubtitle: "Simple, transparent, and project-based pricing.",
-  pricingProofA: "No hidden factory markups.",
-  pricingProofB: "You always know the real factory price.",
+  pricingTitle: "Choose How You'd Like to Work With TYORA",
+  pricingSubtitle: "Choose the level of support that's right for your project.",
+  pricingProofA: "Choose the level of support that fits your project.",
+  pricingProofB:
+    "Whether you manage production yourself or prefer TYORA to manage everything, you'll always receive transparent advice and independent factory recommendations.",
   trustBadges: [
     "Product Development",
     "Manufacturing Partner Matching",
@@ -260,47 +269,57 @@ export const defaultContent: SiteContent = {
   ],
   pricing: [
     {
-      id: "assessment",
-      name: "Free Manufacturing Assessment",
-      price: "Free",
-      ctaText: "Start Assessment",
+      id: "manufacturing-review",
+      name: "Manufacturing Review",
+      subtitle: "Factory Matching Included",
+      priceLabel: "One-Time Project Kickoff Fee",
+      price: "$149 USD",
+      description:
+        "Best for founders who prefer to manage manufacturing themselves after factory introduction.",
+      ctaText: "Start Review",
       visible: true,
       order: 1,
       features: [
-        "Product feasibility review",
-        "MOQ guidance",
-        "Estimated production cost range",
-        "Initial development suggestions"
-      ]
+        "Manufacturing feasibility review",
+        "Factory matching",
+        "Up to 5 suitable factory recommendations",
+        "Factory information and contact details",
+        "Continued factory recommendations if no suitable factory is found"
+      ],
+      exclusions: [
+        "Factory communication",
+        "Price negotiation",
+        "Sample inspection",
+        "Production monitoring",
+        "Factory audit",
+        "Shipping coordination"
+      ],
+      bottomNote: "After we introduce the right factory, you work directly with them."
     },
     {
-      id: "development",
-      name: "Project Development Package",
-      price: "$149 Project Deposit",
-      note: "Deposit is credited toward future service fees if production proceeds.",
+      id: "full-project-management",
+      name: "Full Project Management",
+      subtitle: "We become your manufacturing representative in China.",
+      badge: "Recommended",
+      priceLabel: "Project Kickoff",
+      price: "$149 USD",
+      priceSuffix: "+\nCustom Service Fee",
+      description:
+        "We manage the manufacturing process on your behalf.\n\nYou stay in control and approve the key decisions.",
+      highlightBanner: "We protect your time, your budget, and your product.",
+      note: "Custom Service Fee\nQuoted before production begins.",
       ctaText: "Start Project",
       visible: true,
       order: 2,
       features: [
-        "Partner research",
-        "Quotation collection",
-        "Partner comparison",
-        "Manufacturing recommendations"
-      ]
-    },
-    {
-      id: "production",
-      name: "Production Management",
-      price: "5% Service Fee",
-      note: "Minimum $100. No hidden factory markups. You always know the real factory price.",
-      ctaText: "Discuss Production",
-      visible: true,
-      order: 3,
-      features: [
-        "Manufacturing partner communication",
-        "Sample coordination",
-        "Quality inspection support",
+        "Everything in Manufacturing Review",
+        "Factory communication",
+        "Requirement confirmation",
+        "Factory verification (when required)",
+        "Price negotiation",
+        "Sample inspection",
         "Production follow-up",
+        "Quality follow-up",
         "Shipping coordination"
       ]
     }
@@ -402,6 +421,11 @@ const legacyHelpCards = [
   "Production Management|We coordinate communication, samples, and production.",
   "Quality Assurance|Reduce manufacturing risks before shipment."
 ];
+const legacyPricingTitles = [
+  "Free Manufacturing Assessment|Free",
+  "Project Development Package|$149 Project Deposit",
+  "Production Management|Service Fee"
+];
 
 function stringValue(value: unknown, fallback: string) {
   return typeof value === "string" ? value : fallback;
@@ -452,11 +476,21 @@ function normalizePricing(value: unknown): PricingPlan[] {
       return {
         id: stringValue(item.id, fb.id || cryptoSafeId("plan")),
         name: stringValue(item.name, fb.name),
+        subtitle: stringValue(item.subtitle, fb.subtitle || ""),
         price: stringValue(item.price, fb.price),
+        priceLabel: stringValue(item.priceLabel, fb.priceLabel || ""),
+        priceSuffix: stringValue(item.priceSuffix, fb.priceSuffix || ""),
+        description: stringValue(item.description, fb.description || ""),
+        badge: stringValue(item.badge, fb.badge || ""),
+        highlightBanner: stringValue(item.highlightBanner, fb.highlightBanner || ""),
         note: stringValue(item.note, fb.note || ""),
         features: Array.isArray(item.features)
           ? item.features.map((feature) => String(feature)).filter(Boolean)
           : fb.features,
+        exclusions: Array.isArray(item.exclusions)
+          ? item.exclusions.map((feature) => String(feature)).filter(Boolean)
+          : fb.exclusions || [],
+        bottomNote: stringValue(item.bottomNote, fb.bottomNote || ""),
         ctaText: stringValue(item.ctaText, fb.ctaText || "Get Started"),
         visible: typeof item.visible === "boolean" ? item.visible : fb.visible ?? true,
         order: typeof item.order === "number" ? item.order : fb.order ?? index + 1
@@ -719,6 +753,16 @@ export function normalizeContent(value: unknown): SiteContent {
   }
   if (normalized.helpCards.map((card) => `${card.title}|${card.description}`).join("||") === legacyHelpCards.join("||")) {
     normalized.helpCards = defaultContent.helpCards;
+  }
+  if (
+    normalized.pricingTitle === "Product Development Support" ||
+    normalized.pricing.map((plan) => `${plan.name}|${plan.price.replace(/\d+% /g, "")}`).join("||") === legacyPricingTitles.join("||")
+  ) {
+    normalized.pricingTitle = defaultContent.pricingTitle;
+    normalized.pricingSubtitle = defaultContent.pricingSubtitle;
+    normalized.pricingProofA = defaultContent.pricingProofA;
+    normalized.pricingProofB = defaultContent.pricingProofB;
+    normalized.pricing = defaultContent.pricing;
   }
 
   return normalized;

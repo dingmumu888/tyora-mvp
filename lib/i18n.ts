@@ -18,23 +18,27 @@ export const zhContent: SiteContent = {
   pricing: [
     {
       ...defaultContent.pricing[0],
-      name: "免费制造可行性评估",
-      price: "免费",
-      features: ["产品可行性评估", "MOQ 起订量建议", "预估生产成本区间", "初步开发建议"]
+      name: "制造评估",
+      subtitle: "包含工厂匹配",
+      priceLabel: "一次性项目启动费",
+      price: "$149 USD",
+      description: "适合希望在工厂介绍后自行管理生产的创业者。",
+      features: ["制造可行性评估", "工厂匹配", "最多 5 家合适工厂推荐", "工厂信息和联系方式", "如果没有找到合适工厂，继续推荐工厂"],
+      exclusions: ["工厂沟通", "价格谈判", "样品检查", "生产跟进", "工厂审核", "发货协调"],
+      bottomNote: "我们介绍合适工厂后，你将直接与工厂合作。"
     },
     {
       ...defaultContent.pricing[1],
-      name: "项目开发包",
-      price: "$149 项目订金",
-      note: "如果项目进入生产，订金可抵扣后续服务费。",
-      features: ["制造伙伴调研", "报价收集", "伙伴对比", "制造建议"]
-    },
-    {
-      ...defaultContent.pricing[2],
-      name: "生产管理",
-      price: "5% 服务费",
-      note: "最低 $100。无隐藏工厂加价，你始终知道真实工厂价格。",
-      features: ["制造伙伴沟通", "样品协调", "质检支持", "生产跟进", "发货协调"]
+      name: "全程项目管理",
+      subtitle: "我们成为你在中国的制造代表。",
+      badge: "推荐",
+      priceLabel: "项目启动",
+      price: "$149 USD",
+      priceSuffix: "+\n定制服务费",
+      description: "我们代表你管理制造流程。\n\n你仍然掌控并审批关键决策。",
+      highlightBanner: "我们保护你的时间、预算和产品。",
+      note: "定制服务费\n生产开始前报价。",
+      features: ["包含制造评估的全部内容", "工厂沟通", "需求确认", "工厂验证（需要时）", "价格谈判", "样品检查", "生产跟进", "质量跟进", "发货协调"]
     }
   ],
   trustBadges: ["产品开发", "制造伙伴匹配", "样品管理", "质量检查", "生产跟进", "发货支持"],
@@ -127,8 +131,8 @@ export const ui = {
     positioningHeadlineB: "",
     positioningText:
       "TYORA supports product development from validation and planning to production, quality assurance, and delivery.",
-    pricingSubtitle: "Simple, transparent, and project-based pricing.",
-    pricingTitle: "Product Development Support",
+    pricingSubtitle: "Choose the level of support that's right for your project.",
+    pricingTitle: "Choose How You'd Like to Work With TYORA",
     primaryGoal: "Primary goal",
     processVideoUrl: "Process video URL",
     production: "Production",
@@ -200,8 +204,9 @@ export const ui = {
       ["Global Support", "Worldwide logistics coordination."]
     ],
     trustTitle: "Why Entrepreneurs Choose TYORA",
-    pricingProofA: "No hidden factory markups.",
-    pricingProofB: "You always know the real factory price.",
+    pricingProofA: "Choose the level of support that fits your project.",
+    pricingProofB:
+      "Whether you manage production yourself or prefer TYORA to manage everything, you'll always receive transparent advice and independent factory recommendations.",
     videoSubtitle: "Watch how TYORA helps transform ideas into manufacturable products."
   },
   zh: {
@@ -267,8 +272,8 @@ export const ui = {
     positioningHeadlineB: "",
     positioningText:
       "TYORA 支持从产品验证、制造规划到生产、质量保障和交付的产品开发流程。",
-    pricingSubtitle: "简单、透明、按项目计费。",
-    pricingTitle: "产品开发支持",
+    pricingSubtitle: "选择适合你项目的支持级别。",
+    pricingTitle: "选择你希望如何与 TYORA 合作",
     primaryGoal: "核心目标",
     processVideoUrl: "流程视频链接",
     production: "生产",
@@ -331,8 +336,8 @@ export const ui = {
       ["全球支持", "全球物流协调。"]
     ],
     trustTitle: "为什么创业者选择 TYORA",
-    pricingProofA: "无隐藏工厂加价。",
-    pricingProofB: "你始终知道真实工厂价格。",
+    pricingProofA: "选择适合你项目的支持级别。",
+    pricingProofB: "无论你自行管理生产，还是希望 TYORA 全程管理，你都会获得透明建议和独立工厂推荐。",
     videoSubtitle: "了解 TYORA 如何帮助想法变成可制造产品。"
   }
 } as const;

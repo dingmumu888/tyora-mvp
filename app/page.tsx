@@ -19,7 +19,8 @@ import {
   Truck,
   Upload,
   Video,
-  Wand2
+  Wand2,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -548,24 +549,50 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
           <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{displayContent.pricingTitle}</h2>
           <p className="mt-2 text-[#59616e]">{displayContent.pricingSubtitle}</p>
-          <div className="mt-7 grid gap-4 lg:grid-cols-3">
+          <div className="mt-7 grid gap-4 lg:grid-cols-2">
             {displayContent.pricing.filter((plan) => plan.visible).map((plan) => {
-              const isPopular = plan.price.includes("$149");
+              const isPopular = Boolean(plan.badge);
               return (
               <Card key={plan.name} className={cn(
-                "relative p-4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5 lg:p-5",
+                "relative flex h-full flex-col p-4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5 lg:p-6",
                 isPopular ? "border-[#101216] shadow-lg shadow-[#101216]/5" : ""
               )}>
                 <div className="flex min-h-7 items-start justify-between gap-3">
-                  <p className="text-sm text-[#69707d]">{plan.name}</p>
+                  <div>
+                    <h3 className="text-xl font-semibold lg:text-2xl">{plan.name}</h3>
+                    {plan.subtitle ? <p className="mt-1 text-sm font-medium text-[#69707d]">{plan.subtitle}</p> : null}
+                  </div>
                   {isPopular ? (
                     <span className="rounded-full bg-[#0f766e] px-2.5 py-1 text-xs font-medium text-white">
-                      Most Popular
+                      {plan.badge}
                     </span>
                   ) : null}
                 </div>
-                <h3 className="mt-2 text-xl font-semibold lg:mt-3 lg:text-2xl">{plan.price}</h3>
-                <ul className="mt-4 space-y-2 text-sm text-[#59616e] lg:mt-5 lg:space-y-3">
+                <div className="mt-5 border-y border-[#eef1f4] py-4">
+                  {plan.priceLabel ? <p className="text-sm font-medium text-[#69707d]">{plan.priceLabel}</p> : null}
+                  <p className="mt-1 text-2xl font-semibold">{plan.price}</p>
+                  {plan.priceSuffix ? (
+                    <div className="mt-2 space-y-1 text-sm font-semibold text-[#101216]">
+                      {plan.priceSuffix.split("\n").map((line) => (
+                        <p key={line}>{line}</p>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                {plan.description ? (
+                  <div className="mt-4 space-y-2 text-sm leading-6 text-[#59616e]">
+                    {plan.description.split("\n\n").map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                  </div>
+                ) : null}
+                {plan.highlightBanner ? (
+                  <p className="mt-4 rounded-md bg-[#e7f5f2] px-4 py-3 text-sm font-semibold text-[#0f766e]">
+                    {plan.highlightBanner}
+                  </p>
+                ) : null}
+                <p className="mt-5 text-sm font-semibold">Included</p>
+                <ul className="mt-3 space-y-2 text-sm text-[#59616e] lg:space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex gap-2">
                       <Check className="mt-0.5 shrink-0 text-[#0f766e]" size={16} />
@@ -573,7 +600,29 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                {plan.note ? <p className="mt-4 text-sm text-[#69707d] lg:mt-5">{plan.note}</p> : null}
+                {plan.exclusions && plan.exclusions.length > 0 ? (
+                  <>
+                    <p className="mt-5 text-sm font-semibold">Not Included</p>
+                    <ul className="mt-3 space-y-2 text-sm text-[#59616e] lg:space-y-3">
+                      {plan.exclusions.map((feature) => (
+                        <li key={feature} className="flex gap-2">
+                          <X className="mt-0.5 shrink-0 text-[#b42318]" size={16} />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+                {plan.note ? (
+                  <div className="mt-5 text-sm text-[#69707d]">
+                    {plan.note.split("\n").map((line, index) => (
+                      <p key={`${line}-${index}`} className={index === 0 ? "font-semibold text-[#101216]" : "mt-1"}>
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
+                {plan.bottomNote ? <p className="mt-auto pt-5 text-sm font-medium text-[#69707d]">{plan.bottomNote}</p> : null}
               </Card>
               );
             })}
