@@ -417,6 +417,13 @@ const previousDefaultJourneySteps = [
   "Production|We manage production, quality inspections, and manufacturing progress.",
   "Delivery|We coordinate packaging, logistics, and worldwide delivery."
 ];
+const productionSavedJourneySteps = [
+  "Product Idea|Share your idea, AI concept, sketch, reference product, or CAD file.",
+  "Manufacturing Strategy|We define the best manufacturing strategy based on your product, budget, timeline, and production goals.",
+  "Factory Selection|We select manufacturing partners that best fit your product requirements.",
+  "Production Management|We coordinate sampling, production, communication, and quality control.",
+  "Delivery|We coordinate packaging, logistics, shipping documentation, and global delivery."
+];
 const previousDefaultHelpCards = [
   "Product Validation|Avoid costly mistakes before production.",
   "Manufacturing Planning|Plan the right manufacturing approach before committing to production.",
@@ -819,6 +826,9 @@ export function normalizeContent(value: unknown): SiteContent {
     normalized.journeySteps = defaultContent.journeySteps;
   }
   if (normalized.journeySteps.map((card) => `${card.title}|${card.description}`).join("||") === previousDefaultJourneySteps.join("||")) {
+    normalized.journeySteps = defaultContent.journeySteps;
+  }
+  if (normalized.journeySteps.map((card) => `${card.title}|${card.description}`).join("||") === productionSavedJourneySteps.join("||")) {
     normalized.journeySteps = defaultContent.journeySteps;
   }
   if (normalized.helpCards.map((card) => `${card.title}|${card.description}`).join("||") === legacyHelpCards.join("||")) {
