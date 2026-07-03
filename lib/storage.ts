@@ -190,10 +190,10 @@ export const defaultContent: SiteContent = {
   callLink: "https://cal.com/idea2product/intro",
   linkedInLink: "https://www.linkedin.com/",
   email: "hello@idea2product.co",
-  heroTagline: "Product development and China manufacturing support for US founders",
-  heroTitle: "Turn your product idea into a manufacturable product.",
+  heroTagline: "Factory sourcing and manufacturing support for US founders",
+  heroTitle: "Find the right factory in China — before manufacturing mistakes get expensive.",
   heroSubtitle:
-    "TYORA helps US product founders move from concept to prototype, factory matching, production follow-up, quality checks, and delivery through trusted manufacturing partners in China.",
+    "TYORA helps US product founders validate manufacturability, compare factory fit, manage samples, and avoid costly production mistakes before committing to a supplier.",
   heroPlaceholders: [
     "Enter your product name..."
   ],
@@ -400,6 +400,12 @@ const previousDefaultContent = {
   positioningHeadlineB: "",
   positioningText:
     "TYORA supports product development from validation and planning to production, quality assurance, and delivery."
+};
+const productionSavedHeroContent = {
+  heroTagline: "FROM IDEA TO MANUFACTURING",
+  heroTitle: "Turn your product idea into a manufacturable product.",
+  heroSubtitle:
+    "Whether your idea started with AI, a sketch, or a simple concept, TYORA transforms it into a manufacturable product through trusted manufacturing partners in China."
 };
 const previousDefaultTrustBadges = [
   "Product Development",
@@ -753,16 +759,25 @@ export function normalizeContent(value: unknown): SiteContent {
   if (normalized.heroTagline === previousDefaultContent.heroTagline) {
     normalized.heroTagline = defaultContent.heroTagline;
   }
+  if (normalized.heroTagline === productionSavedHeroContent.heroTagline) {
+    normalized.heroTagline = defaultContent.heroTagline;
+  }
   if (normalized.heroTitle === legacyContent.heroTitle) {
     normalized.heroTitle = defaultContent.heroTitle;
   }
   if (normalized.heroTitle === previousDefaultContent.heroTitle) {
     normalized.heroTitle = defaultContent.heroTitle;
   }
+  if (normalized.heroTitle === productionSavedHeroContent.heroTitle) {
+    normalized.heroTitle = defaultContent.heroTitle;
+  }
   if (normalized.heroSubtitle === legacyContent.heroSubtitleV2) {
     normalized.heroSubtitle = defaultContent.heroSubtitle;
   }
   if (normalized.heroSubtitle === previousDefaultContent.heroSubtitle) {
+    normalized.heroSubtitle = defaultContent.heroSubtitle;
+  }
+  if (normalized.heroSubtitle === productionSavedHeroContent.heroSubtitle) {
     normalized.heroSubtitle = defaultContent.heroSubtitle;
   }
   if (normalized.ctaText === legacyContent.ctaText) {
