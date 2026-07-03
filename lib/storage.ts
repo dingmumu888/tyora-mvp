@@ -198,7 +198,7 @@ export const defaultContent: SiteContent = {
     "Enter your product name..."
   ],
   ctaText: "Start WhatsApp Chat",
-  tagline: "Turn your product idea into a manufacturable product.",
+  tagline: "Find the right factory in China before manufacturing mistakes get expensive.",
   footerSlogan: "Product development and China manufacturing support for US founders.",
   videoUrl: "",
   video: {
@@ -403,7 +403,7 @@ const previousDefaultContent = {
 };
 const productionSavedHeroContent = {
   heroTagline: "FROM IDEA TO MANUFACTURING",
-  heroTitle: "Turn your product idea into a manufacturable product.",
+  heroTitle: ["Turn your product idea", "into a manufacturable product."].join(" "),
   heroSubtitle:
     "Whether your idea started with AI, a sketch, or a simple concept, TYORA transforms it into a manufacturable product through trusted manufacturing partners in China."
 };
