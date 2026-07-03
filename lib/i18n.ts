@@ -156,7 +156,7 @@ export const ui = {
     sample: "Sample",
     sampleStage: "Sample Stage",
     sampleVerification: "Sample Verification",
-    seeEditable: "Each project moves from concept to prototype to final product.",
+    seeEditable: "Examples of how ideas move from concept to prototype to final product.",
     sketch: "Sketch",
     status: "Status",
     startWhatsAppChat: "Start WhatsApp Chat",
@@ -198,12 +198,12 @@ export const ui = {
       "Shipping Support"
     ],
     trustCards: [
-      ["Transparent Pricing", "You pay manufacturers directly."],
-      ["Dedicated Project Manager", "One contact throughout the project."],
-      ["Risk Reduction", "Prototype verification and quality inspections."],
-      ["Global Support", "Worldwide logistics coordination."]
+      ["Founder-Friendly Review", "Start with practical feedback before committing budget to samples or production."],
+      ["China Manufacturing Context", "Get guidance on factory fit, MOQ, samples, tooling, timelines, and risk points."],
+      ["Hands-On Coordination", "Use TYORA for communication, sample review, production follow-up, quality checks, and shipping support."],
+      ["Transparent Decisions", "Stay in control while TYORA helps you understand the tradeoffs before each next step."]
     ],
-    trustTitle: "Why Entrepreneurs Choose TYORA",
+    trustTitle: "Why US Product Founders Choose TYORA",
     pricingProofA: "Choose the level of support that fits your project.",
     pricingProofB:
       "Whether you manage production yourself or prefer TYORA to manage everything, you'll always receive transparent advice and independent factory recommendations.",

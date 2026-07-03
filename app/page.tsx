@@ -43,6 +43,7 @@ import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const trustBadgeIcons = [Wand2, SearchCheck, ClipboardCheck, ShieldCheck, PackageCheck, Truck];
+const journeyIcons = [SearchCheck, ClipboardCheck, Layers, ClipboardCheck, PackageCheck, Truck];
 const showHomepageVideo = false;
 
 export default function Home() {
@@ -83,13 +84,37 @@ export default function Home() {
     [displayContent.whatsappLink]
   );
   const visibleCases = displayContent.cases.filter((story) => story.visible);
-  const mobileJourneySteps = [
-    { title: "Share Your Idea", icon: SearchCheck },
-    { title: "Product Review", icon: ClipboardCheck },
-    { title: "Manufacturing Strategy", icon: Layers },
-    { title: "Prototype", icon: ClipboardCheck },
-    { title: "Production", icon: PackageCheck },
-    { title: "Delivery", icon: Truck }
+  const faqItems = [
+    {
+      question: "Is TYORA a factory?",
+      answer:
+        "No. TYORA is your product development and manufacturing support partner. We help review the product, plan the manufacturing path, match the right factory, and manage the process when needed."
+    },
+    {
+      question: "Do I need a finished design before contacting TYORA?",
+      answer:
+        "No. A product name, sketch, AI image, reference product, PDF, or CAD file is enough to start a review."
+    },
+    {
+      question: "Can TYORA help if I am based in the United States?",
+      answer:
+        "Yes. TYORA is positioned for US product founders who want practical support working with manufacturing partners in China."
+    },
+    {
+      question: "Can I manage the factory myself after the review?",
+      answer:
+        "Yes. You can start with factory matching and manage communication yourself, or choose full project management if you want TYORA involved through samples, production, quality, and shipping."
+    },
+    {
+      question: "Does TYORA guarantee a factory will produce my product?",
+      answer:
+        "No responsible partner can guarantee that before review. TYORA helps you understand feasibility, risks, requirements, and the most realistic manufacturing path before you commit."
+    },
+    {
+      question: "How do I start?",
+      answer:
+        "Enter your product name, upload a reference if you have one, and start the WhatsApp conversation. TYORA will review the project and guide the next step."
+    }
   ];
 
   function openWizard() {
@@ -186,15 +211,15 @@ export default function Home() {
             </p>
             <div className="lg:hidden">
               <h1 className="max-w-3xl text-[2.65rem] font-semibold leading-[1.04] tracking-normal">
-                Turn Your Product Idea Into Reality.
+                {displayContent.heroTitle}
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-[#59616e]">
-                Upload your idea, name the product, and start a WhatsApp conversation with TYORA.
+                {displayContent.heroSubtitle}
               </p>
             </div>
             {isDesktopViewport ? (
               <div className="hidden lg:block">
-                <h1 className="max-w-3xl text-[4.85rem] font-semibold leading-[1.04] tracking-normal">
+                <h1 className="max-w-3xl text-[4.1rem] font-semibold leading-[1.04] tracking-normal xl:text-[4.65rem]">
                   {displayContent.heroTitle}
                 </h1>
                 <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59616e]">
@@ -205,7 +230,7 @@ export default function Home() {
 
             <div className="mt-5 grid gap-3 lg:hidden">
               <Button variant="secondary" className="min-h-12 w-full" onClick={openWizard}>
-                <MessageCircle size={16} /> {t.startWhatsAppChat}
+                <MessageCircle size={16} /> Start Your Manufacturing Review
               </Button>
               <Button variant="outline" className="min-h-12 w-full" onClick={openWizard}>
                 <Upload size={16} /> Upload Your Idea
@@ -254,7 +279,7 @@ export default function Home() {
                       />
                     </label>
                     <Button onClick={openWizard} className="min-h-12 transition hover:scale-[1.01] lg:min-h-11">
-                      {t.startWhatsAppChat} <ArrowRight size={16} />
+                      Start Your Manufacturing Review <ArrowRight size={16} />
                     </Button>
                   </div>
                 </div>
@@ -280,9 +305,9 @@ export default function Home() {
               </div>
               <div className="space-y-3 p-5">
                 {[
-                  ["Product", "Magnetic Phone Stand"],
-                  ["Upload", "Optional"],
-                  ["Next Step", "WhatsApp Chat"]
+                  ["Founder", "US product founder"],
+                  ["Input", "Idea, sketch, AI image, PDF, or CAD"],
+                  ["Next Step", "Manufacturing review"]
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
                     <p className="text-xs uppercase text-[#8c94a1]">{label}</p>
@@ -291,7 +316,7 @@ export default function Home() {
                 ))}
                 <div className="rounded-lg bg-[#101216] p-4 text-white">
                   <p className="text-sm text-white/70">Next Step</p>
-                  <p className="mt-2 text-xl font-semibold">Chat With TYORA</p>
+                  <p className="mt-2 text-xl font-semibold">Chat With TYORA On WhatsApp</p>
                 </div>
               </div>
             </Card>
@@ -326,14 +351,15 @@ export default function Home() {
       <section className="border-b border-[#eef1f4] bg-white lg:hidden">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
           <h2 className="text-[2rem] font-semibold leading-tight">
-            We Don&apos;t Help You Find Factories.
-            <span className="block">We Help You Build Products.</span>
+            {displayContent.positioningHeadlineA}
+            <span className="block">{displayContent.positioningHeadlineB}</span>
           </h2>
+          <p className="mt-4 text-base leading-7 text-[#59616e]">{displayContent.positioningText}</p>
           <div className="mt-5 grid gap-2">
-            {["Product Development", "Manufacturing Partner Matching", "Project Management"].map((item) => (
-              <div key={item} className="flex min-h-11 items-center gap-2 rounded-lg border border-[#e8ebef] bg-white px-3 text-sm font-medium text-[#59616e]">
+            {displayContent.helpCards.slice(0, 3).map((item) => (
+              <div key={item.title} className="flex min-h-11 items-center gap-2 rounded-lg border border-[#e8ebef] bg-white px-3 text-sm font-medium text-[#59616e]">
                 <Check size={16} className="text-[#0f766e]" />
-                {item}
+                {item.title}
               </div>
             ))}
           </div>
@@ -415,6 +441,11 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+          <div className="mt-10 flex justify-center">
+            <Button onClick={openWizard} className="min-h-12 px-5">
+              Start Your Manufacturing Review <ArrowRight size={16} />
+            </Button>
+          </div>
         </div>
       </section>
       ) : null}
@@ -425,12 +456,15 @@ export default function Home() {
             <h2 className="text-[2rem] font-semibold leading-tight">{t.productJourney}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {mobileJourneySteps.map(({ title, icon: Icon }) => (
+            {displayContent.journeySteps.map(({ title }, index) => {
+              const Icon = journeyIcons[index % journeyIcons.length];
+              return (
               <Card key={title} className="p-4">
                 <Icon size={18} className="text-[#101216]" />
                 <h3 className="mt-3 text-sm font-semibold">{title}</h3>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -441,7 +475,7 @@ export default function Home() {
           <div className="mb-9">
             <h2 className="text-[2.25rem] font-semibold leading-tight">{t.productJourney}</h2>
           </div>
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid gap-4 lg:grid-cols-4">
             {[
               ...displayContent.journeySteps
             ].map(
@@ -623,6 +657,9 @@ export default function Home() {
                   </div>
                 ) : null}
                 {plan.bottomNote ? <p className="mt-auto pt-5 text-sm font-medium text-[#69707d]">{plan.bottomNote}</p> : null}
+                <Button onClick={openWizard} className="mt-6 min-h-11 w-full">
+                  {plan.ctaText} <ArrowRight size={16} />
+                </Button>
               </Card>
               );
             })}
@@ -630,6 +667,57 @@ export default function Home() {
           <div className="mt-8 rounded-lg border border-[#e8ebef] bg-white p-5 text-center">
             <p className="font-semibold">{displayContent.pricingProofA}</p>
             <p className="mt-2 text-sm text-[#59616e]">{displayContent.pricingProofB}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-[#eef1f4] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-20">
+          <div>
+            <p className="text-sm font-medium text-[#69707d]">About TYORA</p>
+            <h2 className="mt-4 text-[2rem] font-semibold leading-tight lg:text-[2.6rem]">
+              {displayContent.founderTitle}
+            </h2>
+            <p className="mt-5 text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
+              {displayContent.founderText}
+            </p>
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
+              <Button className="mt-6 min-h-12">
+                <MessageCircle size={16} /> Talk To TYORA On WhatsApp
+              </Button>
+            </a>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["For early product ideas", "Bring a rough idea, reference image, or product name. TYORA helps turn it into a practical manufacturing conversation."],
+              ["For US launch teams", "Get China manufacturing support without trying to manage every supplier detail alone."],
+              ["For risk reduction", "Clarify feasibility, samples, quality checks, timelines, and handoff points before production."],
+              ["For practical execution", "Move from review to factory matching, sample coordination, production follow-up, and delivery support."]
+            ].map(([title, description]) => (
+              <Card key={title} className="p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
+                <h3 className="font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
+          <div className="mb-7 max-w-3xl">
+            <p className="text-sm font-medium text-[#69707d]">FAQ</p>
+            <h2 className="mt-3 text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">
+              Questions founders ask before building with TYORA
+            </h2>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {faqItems.map((item) => (
+              <Card key={item.question} className="p-5">
+                <h3 className="font-semibold">{item.question}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#59616e]">{item.answer}</p>
+              </Card>
+            ))}
           </div>
         </div>
       </section>

@@ -190,16 +190,16 @@ export const defaultContent: SiteContent = {
   callLink: "https://cal.com/idea2product/intro",
   linkedInLink: "https://www.linkedin.com/",
   email: "hello@idea2product.co",
-  heroTagline: "Product Development Partner for makers, sellers, and launch teams",
-  heroTitle: "Turn Your Product Idea Into Reality.",
+  heroTagline: "Product development and China manufacturing support for US founders",
+  heroTitle: "Turn your product idea into a manufacturable product.",
   heroSubtitle:
-    "Upload your idea. We'll help you turn it into a manufacturable product through trusted manufacturing partners in China.",
+    "TYORA helps US product founders move from concept to prototype, factory matching, production follow-up, quality checks, and delivery through trusted manufacturing partners in China.",
   heroPlaceholders: [
     "Enter your product name..."
   ],
   ctaText: "Start WhatsApp Chat",
-  tagline: "Turn Your Product Idea Into Reality.",
-  footerSlogan: "We don't just manufacture products. We help bring ideas to life.",
+  tagline: "Turn your product idea into a manufacturable product.",
+  footerSlogan: "Product development and China manufacturing support for US founders.",
   videoUrl: "",
   video: {
     title: "See How Your Idea Becomes A Product",
@@ -213,59 +213,50 @@ export const defaultContent: SiteContent = {
     loop: false
   },
   founderName: "Adam",
-  founderTitle: "Meet Your Product Partner",
+  founderTitle: "Built for founders who need more than a factory list",
   founderPhoto: "",
   founderText:
-    "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed.",
-  pricingTitle: "Choose How You'd Like to Work With TYORA",
-  pricingSubtitle: "Choose the level of support that's right for your project.",
-  pricingProofA: "Choose the level of support that fits your project.",
+    "TYORA helps US founders turn early product ideas into production-ready plans. We review manufacturability, identify the right manufacturing path, coordinate with China-based partners, and help reduce the risk that comes with building a product overseas.",
+  pricingTitle: "Choose the support level that fits your launch",
+  pricingSubtitle: "Start with a manufacturing review, then decide whether you want TYORA to manage the project with you.",
+  pricingProofA: "Start lean. Scale support when the project is ready.",
   pricingProofB:
-    "Whether you manage production yourself or prefer TYORA to manage everything, you'll always receive transparent advice and independent factory recommendations.",
+    "Whether you want factory recommendations or hands-on production support, TYORA gives you transparent guidance before you commit to manufacturing.",
   trustBadges: [
-    "Product Development",
-    "Manufacturing Partner Matching",
-    "Prototype Management",
-    "Quality Inspection",
+    "US Founder-Focused",
+    "China Manufacturing Network",
+    "Prototype & Sample Support",
+    "Factory Matching",
     "Production Follow-up",
-    "Shipping Support"
+    "Quality & Shipping Support"
   ],
-  positioningHeadlineA: "How TYORA Helps",
-  positioningHeadlineB: "",
+  positioningHeadlineA: "We do not just help you find factories.",
+  positioningHeadlineB: "We help you build products.",
   positioningText:
-    "TYORA supports product development from validation and planning to production, quality assurance, and delivery.",
+    "A factory can quote what you ask for. TYORA helps you clarify what should be built, how it should be made, which supplier is the right fit, and what needs to be checked before money, time, and inventory are at risk.",
   journeySteps: [
     {
-      title: "Share Your Idea",
-      description: "Share your product idea, AI concept, sketch, reference product, or CAD file."
+      title: "Send your product idea",
+      description: "Share a product name, sketch, AI image, reference product, PDF, or CAD file."
     },
     {
-      title: "Product Review",
-      description: "We evaluate feasibility, materials, manufacturing methods, costs, and risks."
+      title: "We review manufacturability",
+      description: "TYORA checks feasibility, materials, production method, likely cost drivers, and project risks."
     },
     {
-      title: "Manufacturing Strategy",
-      description: "We identify the right manufacturing solution for your product."
+      title: "We map the manufacturing path",
+      description: "We identify the factory type, sample plan, tooling needs, MOQ realities, and next decisions."
     },
     {
-      title: "Prototype",
-      description: "We coordinate prototyping, testing, revisions, and production readiness."
-    },
-    {
-      title: "Production",
-      description: "We manage production, quality inspections, and manufacturing progress."
-    },
-    {
-      title: "Delivery",
-      description: "We coordinate packaging, logistics, and worldwide delivery."
+      title: "Build, check, and deliver",
+      description: "For managed projects, TYORA supports samples, factory communication, production follow-up, quality checks, and delivery."
     }
   ],
   helpCards: [
-    { title: "Product Validation", description: "Avoid costly mistakes before production." },
-    { title: "Manufacturing Planning", description: "Plan the right manufacturing approach before committing to production." },
-    { title: "Project Management", description: "Coordinate communication, samples, timelines, and production progress." },
-    { title: "Quality Assurance", description: "Reduce manufacturing risks before shipment." },
-    { title: "Logistics Support", description: "Coordinate packaging, documents, and global delivery." }
+    { title: "Product development review", description: "Turn a rough idea into a clearer product direction before talking to factories." },
+    { title: "Manufacturing strategy", description: "Understand materials, processes, MOQ, sample needs, tooling, and avoidable risk." },
+    { title: "Factory matching", description: "Find manufacturing partners in China that fit the product, category, and project stage." },
+    { title: "Managed production support", description: "Get help with samples, factory communication, production follow-up, quality checks, and shipping." }
   ],
   pricing: [
     {
@@ -390,6 +381,49 @@ const legacyContent = {
   founderText:
     "I help entrepreneurs and product creators turn ideas into real products by connecting them with trusted manufacturing partners in China. I personally assist with supplier sourcing, sample verification, production coordination, and logistics support."
 };
+const previousDefaultContent = {
+  heroTagline: "Product Development Partner for makers, sellers, and launch teams",
+  heroTitle: "Turn Your Product Idea Into Reality.",
+  heroSubtitle:
+    "Upload your idea. We'll help you turn it into a manufacturable product through trusted manufacturing partners in China.",
+  tagline: "Turn Your Product Idea Into Reality.",
+  footerSlogan: "We don't just manufacture products. We help bring ideas to life.",
+  founderTitle: "Meet Your Product Partner",
+  founderText:
+    "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed.",
+  pricingTitle: "Choose How You'd Like to Work With TYORA",
+  pricingSubtitle: "Choose the level of support that's right for your project.",
+  pricingProofA: "Choose the level of support that fits your project.",
+  pricingProofB:
+    "Whether you manage production yourself or prefer TYORA to manage everything, you'll always receive transparent advice and independent factory recommendations.",
+  positioningHeadlineA: "How TYORA Helps",
+  positioningHeadlineB: "",
+  positioningText:
+    "TYORA supports product development from validation and planning to production, quality assurance, and delivery."
+};
+const previousDefaultTrustBadges = [
+  "Product Development",
+  "Manufacturing Partner Matching",
+  "Prototype Management",
+  "Quality Inspection",
+  "Production Follow-up",
+  "Shipping Support"
+];
+const previousDefaultJourneySteps = [
+  "Share Your Idea|Share your product idea, AI concept, sketch, reference product, or CAD file.",
+  "Product Review|We evaluate feasibility, materials, manufacturing methods, costs, and risks.",
+  "Manufacturing Strategy|We identify the right manufacturing solution for your product.",
+  "Prototype|We coordinate prototyping, testing, revisions, and production readiness.",
+  "Production|We manage production, quality inspections, and manufacturing progress.",
+  "Delivery|We coordinate packaging, logistics, and worldwide delivery."
+];
+const previousDefaultHelpCards = [
+  "Product Validation|Avoid costly mistakes before production.",
+  "Manufacturing Planning|Plan the right manufacturing approach before committing to production.",
+  "Project Management|Coordinate communication, samples, timelines, and production progress.",
+  "Quality Assurance|Reduce manufacturing risks before shipment.",
+  "Logistics Support|Coordinate packaging, documents, and global delivery."
+];
 const legacyHeroPlaceholders = [
   "I want to create a magnetic phone stand...",
   "I designed a capybara night light...",
@@ -709,10 +743,19 @@ export function normalizeContent(value: unknown): SiteContent {
   if (normalized.heroSubtitle === legacyContent.heroSubtitle) {
     normalized.heroSubtitle = defaultContent.heroSubtitle;
   }
+  if (normalized.heroTagline === previousDefaultContent.heroTagline) {
+    normalized.heroTagline = defaultContent.heroTagline;
+  }
   if (normalized.heroTitle === legacyContent.heroTitle) {
     normalized.heroTitle = defaultContent.heroTitle;
   }
+  if (normalized.heroTitle === previousDefaultContent.heroTitle) {
+    normalized.heroTitle = defaultContent.heroTitle;
+  }
   if (normalized.heroSubtitle === legacyContent.heroSubtitleV2) {
+    normalized.heroSubtitle = defaultContent.heroSubtitle;
+  }
+  if (normalized.heroSubtitle === previousDefaultContent.heroSubtitle) {
     normalized.heroSubtitle = defaultContent.heroSubtitle;
   }
   if (normalized.ctaText === legacyContent.ctaText) {
@@ -733,8 +776,32 @@ export function normalizeContent(value: unknown): SiteContent {
   if (normalized.trustBadges.join("|") === legacyTrustBadges.join("|")) {
     normalized.trustBadges = defaultContent.trustBadges;
   }
+  if (normalized.trustBadges.join("|") === previousDefaultTrustBadges.join("|")) {
+    normalized.trustBadges = defaultContent.trustBadges;
+  }
+  if (normalized.tagline === previousDefaultContent.tagline) {
+    normalized.tagline = defaultContent.tagline;
+  }
+  if (normalized.footerSlogan === previousDefaultContent.footerSlogan) {
+    normalized.footerSlogan = defaultContent.footerSlogan;
+  }
+  if (normalized.founderTitle === previousDefaultContent.founderTitle) {
+    normalized.founderTitle = defaultContent.founderTitle;
+  }
   if (normalized.founderText === legacyContent.founderText) {
     normalized.founderText = defaultContent.founderText;
+  }
+  if (normalized.founderText === previousDefaultContent.founderText) {
+    normalized.founderText = defaultContent.founderText;
+  }
+  if (normalized.positioningHeadlineA === previousDefaultContent.positioningHeadlineA) {
+    normalized.positioningHeadlineA = defaultContent.positioningHeadlineA;
+  }
+  if (normalized.positioningHeadlineB === previousDefaultContent.positioningHeadlineB) {
+    normalized.positioningHeadlineB = defaultContent.positioningHeadlineB;
+  }
+  if (normalized.positioningText === previousDefaultContent.positioningText) {
+    normalized.positioningText = defaultContent.positioningText;
   }
   if (normalized.positioningHeadlineA === "We Don't Help You Find Factories.") {
     normalized.positioningHeadlineA = defaultContent.positioningHeadlineA;
@@ -751,8 +818,20 @@ export function normalizeContent(value: unknown): SiteContent {
   if (normalized.journeySteps.map((card) => `${card.title}|${card.description}`).join("||") === legacyJourneySteps.join("||")) {
     normalized.journeySteps = defaultContent.journeySteps;
   }
+  if (normalized.journeySteps.map((card) => `${card.title}|${card.description}`).join("||") === previousDefaultJourneySteps.join("||")) {
+    normalized.journeySteps = defaultContent.journeySteps;
+  }
   if (normalized.helpCards.map((card) => `${card.title}|${card.description}`).join("||") === legacyHelpCards.join("||")) {
     normalized.helpCards = defaultContent.helpCards;
+  }
+  if (normalized.helpCards.map((card) => `${card.title}|${card.description}`).join("||") === previousDefaultHelpCards.join("||")) {
+    normalized.helpCards = defaultContent.helpCards;
+  }
+  if (normalized.pricingTitle === previousDefaultContent.pricingTitle) {
+    normalized.pricingTitle = defaultContent.pricingTitle;
+    normalized.pricingSubtitle = defaultContent.pricingSubtitle;
+    normalized.pricingProofA = defaultContent.pricingProofA;
+    normalized.pricingProofB = defaultContent.pricingProofB;
   }
   if (
     normalized.pricingTitle === "Product Development Support" ||
