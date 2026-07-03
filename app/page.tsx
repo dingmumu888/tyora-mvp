@@ -44,6 +44,7 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const trustBadgeIcons = [Wand2, SearchCheck, ClipboardCheck, ShieldCheck, PackageCheck, Truck];
 const journeyIcons = [SearchCheck, ClipboardCheck, Layers, ClipboardCheck, PackageCheck, Truck];
+const heroHeadline = "Find the right factory in China — before manufacturing mistakes get expensive.";
 const showHomepageVideo = false;
 
 export default function Home() {
@@ -211,7 +212,7 @@ export default function Home() {
             </p>
             <div className="lg:hidden">
               <h1 className="max-w-3xl text-[2.65rem] font-semibold leading-[1.04] tracking-normal">
-                {displayContent.heroTitle}
+                {heroHeadline}
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-[#59616e]">
                 {displayContent.heroSubtitle}
@@ -220,7 +221,7 @@ export default function Home() {
             {isDesktopViewport ? (
               <div className="hidden lg:block">
                 <h1 className="max-w-3xl text-[4.1rem] font-semibold leading-[1.04] tracking-normal xl:text-[4.65rem]">
-                  {displayContent.heroTitle}
+                  {heroHeadline}
                 </h1>
                 <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59616e]">
                   {displayContent.heroSubtitle}

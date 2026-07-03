@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TYORA | Turn Your Product Idea Into Reality",
+  title: "TYORA | Find the right factory in China",
   description:
-    "A modern product development partner helping entrepreneurs turn ideas into manufacturable products through trusted manufacturing partners in China.",
+    "Factory sourcing and manufacturing support for US founders before manufacturing mistakes get expensive.",
   keywords: [
     "product development",
     "manufacturing China",
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "TYORA",
-    description: "Turn Your Product Idea Into Reality.",
+    description: "Find the right factory in China — before manufacturing mistakes get expensive.",
     type: "website"
   }
 };
