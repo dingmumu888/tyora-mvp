@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
-const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_NoLogo.mp4";
+const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
 const heroFeatureCards = [
   {
