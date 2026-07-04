@@ -7,8 +7,6 @@ import {
   Check,
   ChevronLeft,
   ClipboardCheck,
-  FileUp,
-  ImageIcon,
   Layers,
   MessageCircle,
   PackageCheck,
@@ -18,13 +16,11 @@ import {
   Sparkles,
   Truck,
   Upload,
-  Video,
-  Wand2,
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import {
   defaultContent,
   Lead,
@@ -42,10 +38,42 @@ import { cn } from "@/lib/utils";
 import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
-const trustBadgeIcons = [Wand2, SearchCheck, ClipboardCheck, ShieldCheck, PackageCheck, Truck];
-const journeyIcons = [SearchCheck, ClipboardCheck, Layers, ClipboardCheck, PackageCheck, Truck];
-const heroHeadline = "Find the right factory in China — before manufacturing mistakes get expensive.";
-const showHomepageVideo = false;
+const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_NoLogo.mp4";
+const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
+const heroFeatureCards = [
+  {
+    title: "Manufacturing Review",
+    description: "Review your product before production.",
+    icon: ClipboardCheck
+  },
+  {
+    title: "Factory Matching",
+    description: "Find manufacturers that actually fit your project.",
+    icon: SearchCheck
+  },
+  {
+    title: "Quote Comparison",
+    description: "Compare quotations with confidence.",
+    icon: Layers
+  },
+  {
+    title: "Production Support",
+    description: "Stay in control throughout manufacturing.",
+    icon: PackageCheck
+  }
+];
+const heroSteps = [
+  ["Idea", Sparkles],
+  ["Review", ClipboardCheck],
+  ["Factory", SearchCheck],
+  ["Sample", PackageCheck],
+  ["Production", Truck]
+] as const;
+const whyTyoraCards = [
+  ["Independent Advice", "We work for founders, not factories.", ShieldCheck],
+  ["Transparent Process", "Clear communication and predictable workflows.", ClipboardCheck],
+  ["Built for Product Founders", "Designed specifically for startups, inventors and growing brands.", Layers]
+] as const;
 
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
@@ -57,7 +85,7 @@ export default function Home() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
-  const [isDesktopViewport, setIsDesktopViewport] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
@@ -65,14 +93,6 @@ export default function Home() {
 
   useEffect(() => {
     trackAnalyticsEvent("page_visit");
-  }, []);
-
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 1024px)");
-    const updateViewport = () => setIsDesktopViewport(query.matches);
-    updateViewport();
-    query.addEventListener("change", updateViewport);
-    return () => query.removeEventListener("change", updateViewport);
   }, []);
 
   const t = ui[language];
@@ -199,305 +219,150 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="fine-grid border-b border-[#eef1f4]">
-        <div className="mx-auto grid max-w-7xl gap-7 px-4 py-9 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-20">
+      <section className="border-b border-[#eef1f4] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[0.45fr_0.55fr] lg:items-center lg:px-8 lg:py-24 xl:py-28">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
             className="flex flex-col justify-center"
           >
-            <p className="mb-3 w-fit rounded-full border border-[#dfe4e9] bg-white px-3 py-1 text-xs text-[#69707d] lg:mb-5 lg:text-sm">
-              {displayContent.heroTagline}
+            <p className="mb-5 w-fit rounded-full border border-[#e5e8ec] bg-[#fbfbfc] px-3 py-1 text-xs font-medium text-[#69707d] lg:text-sm">
+              TYORA Brand Film v2.0
             </p>
-            <div className="lg:hidden">
-              <h1 className="max-w-3xl text-[2.65rem] font-semibold leading-[1.04] tracking-normal">
-                {heroHeadline}
-              </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-[#59616e]">
-                {displayContent.heroSubtitle}
-              </p>
-            </div>
-            {isDesktopViewport ? (
-              <div className="hidden lg:block">
-                <h1 className="max-w-3xl text-[4.1rem] font-semibold leading-[1.04] tracking-normal xl:text-[4.65rem]">
-                  {heroHeadline}
-                </h1>
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-[#59616e]">
-                  {displayContent.heroSubtitle}
-                </p>
-              </div>
-            ) : null}
-
-            <div className="mt-5 grid gap-3 lg:hidden">
-              <Button variant="secondary" className="min-h-12 w-full" onClick={openWizard}>
-                <MessageCircle size={16} /> Start Your Manufacturing Review
+            <h1 className="max-w-3xl text-[3.15rem] font-semibold leading-[1.02] tracking-normal sm:text-[4rem] lg:text-[4.7rem] xl:text-[5.2rem]">
+              Build with confidence.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#59616e] sm:text-lg sm:leading-8">
+              Helping product founders make better manufacturing decisions — from your first idea to your first production run.
+            </p>
+            <div className="mt-8 grid gap-3 sm:flex">
+              <Button onClick={openWizard} className="min-h-12 px-5">
+                Start Your Project <ArrowRight size={16} />
               </Button>
-              <Button variant="outline" className="min-h-12 w-full" onClick={openWizard}>
-                <Upload size={16} /> Upload Your Idea
+              <Button variant="outline" className="min-h-12 px-5" onClick={() => setVideoModalOpen(true)}>
+                <Play size={16} /> Watch Our Story
               </Button>
             </div>
-
-            <div className="soft-shadow mt-6 rounded-[20px] border border-[#e1e5ea] bg-white p-2 transition hover:shadow-xl hover:shadow-[#101216]/5 lg:mt-9 lg:p-3">
-              <div className="flex min-h-36 flex-col gap-3 rounded-2xl bg-[#fbfbfc] p-3 lg:min-h-44 lg:gap-4 lg:p-4">
-                <Textarea
-                  value={idea}
-                  onChange={(event) => setIdea(event.target.value)}
-                  placeholder={t.productNamePlaceholder}
-                  className="min-h-20 border-0 bg-transparent px-0 py-0 text-base shadow-none focus:border-transparent focus:ring-0 lg:min-h-28"
-                />
-                {!idea.trim() ? (
-                  <p className="whitespace-pre-line text-xs leading-5 text-[#8c94a1] lg:text-sm lg:leading-6">
-                    {t.heroInputExample}
-                  </p>
-                ) : null}
-                <div className="flex flex-col gap-3 border-t border-[#e8ebef] pt-3 sm:flex-row sm:items-center sm:justify-between lg:pt-4">
-                  <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 ring-1 ring-[#e8ebef]">
-                      <ImageIcon size={14} /> {t.image}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 ring-1 ring-[#e8ebef]">
-                      <FileUp size={14} /> {t.pdf}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 ring-1 ring-[#e8ebef]">
-                      <Layers size={14} /> {t.cad}
-                    </span>
-                    {fileName ? <span className="px-2 py-2">{fileName}</span> : null}
-                  </div>
-                  <div className="grid gap-2 sm:flex">
-                    <label className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#e1e5ea] bg-white px-4 text-sm font-medium transition hover:scale-[1.01] hover:bg-[#f5f6f8] lg:min-h-11">
-                      <Upload size={16} />
-                      {t.uploadDesign}
-                      <input
-                        className="sr-only"
-                        type="file"
-                        accept="image/*,.pdf,.step,.stp,.iges,.igs,.obj,.stl,.dwg,.dxf"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0] || null;
-                          setSelectedFile(file);
-                          setFileName(file?.name || "");
-                        }}
-                      />
-                    </label>
-                    <Button onClick={openWizard} className="min-h-12 transition hover:scale-[1.01] lg:min-h-11">
-                      Start Your Manufacturing Review <ArrowRight size={16} />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            <div className="mt-8 flex flex-wrap gap-2 text-xs text-[#69707d]">
+              {["Independent review", "Factory fit", "Production clarity"].map((item) => (
+                <span key={item} className="rounded-full border border-[#e8ebef] bg-white px-3 py-2">
+                  {item}
+                </span>
+              ))}
             </div>
           </motion.div>
 
-          {isDesktopViewport ? (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.45 }}
-            className="hidden items-center lg:flex"
+            className="flex items-center"
           >
-            <Card className="w-full overflow-hidden soft-shadow transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#101216]/5">
-              <div className="border-b border-[#eef1f4] bg-[#fafbfc] px-5 py-4">
-                <div className="flex items-center gap-2 text-sm text-[#69707d]">
-                  <span className="size-3 rounded-full bg-[#ff6b5f]" />
-                  <span className="size-3 rounded-full bg-[#f6c85f]" />
-                  <span className="size-3 rounded-full bg-[#5cc785]" />
-                  <span className="ml-2">Project Overview</span>
-                </div>
-              </div>
-              <div className="space-y-3 p-5">
-                {[
-                  ["Founder", "US product founder"],
-                  ["Input", "Idea, sketch, AI image, PDF, or CAD"],
-                  ["Next Step", "Manufacturing review"]
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
-                    <p className="text-xs uppercase text-[#8c94a1]">{label}</p>
-                    <p className="mt-2 font-medium">{value}</p>
-                  </div>
-                ))}
-                <div className="rounded-lg bg-[#101216] p-4 text-white">
-                  <p className="text-sm text-white/70">Next Step</p>
-                  <p className="mt-2 text-xl font-semibold">Chat With TYORA On WhatsApp</p>
-                </div>
-              </div>
+            <Card className="w-full overflow-hidden rounded-2xl border-[#e6e9ee] bg-white p-2 shadow-2xl shadow-[#101216]/10 transition hover:-translate-y-0.5 hover:shadow-[#101216]/15">
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(true)}
+                className="group relative block w-full overflow-hidden rounded-xl bg-[#101216] text-left"
+                aria-label="Watch TYORA brand film"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={brandFilmPoster}
+                  alt="TYORA brand film poster"
+                  className="aspect-[9/16] w-full object-cover opacity-95 transition duration-500 group-hover:scale-[1.015] group-hover:opacity-100"
+                />
+                <span className="absolute inset-0 bg-gradient-to-t from-[#101216]/45 via-transparent to-transparent" />
+                <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-[#101216] backdrop-blur">
+                  30 second story
+                </span>
+                <span className="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#101216] shadow-xl transition group-hover:scale-105">
+                  <Play size={24} fill="currentColor" />
+                </span>
+                <span className="absolute bottom-5 left-5 right-5 text-white">
+                  <span className="block text-sm text-white/75">TYORA Brand Film</span>
+                  <span className="mt-1 block text-xl font-semibold">A calmer path from idea to production.</span>
+                </span>
+              </button>
             </Card>
           </motion.div>
-          ) : null}
+        </div>
+      </section>
+
+      <section className="border-b border-[#eef1f4] bg-[#fbfbfc]">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-18">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {heroFeatureCards.map(({ title, description, icon: Icon }, index) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.3, delay: index * 0.04 }}
+              >
+                <Card className="h-full rounded-xl p-6 shadow-sm shadow-[#101216]/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/6">
+                  <span className="flex size-10 items-center justify-center rounded-lg bg-[#101216] text-white">
+                    <Icon size={18} />
+                  </span>
+                  <h2 className="mt-6 text-lg font-semibold">{title}</h2>
+                  <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="border-b border-[#eef1f4] bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-6">
-            {displayContent.trustBadges.map((badge, index) => {
-              const Icon = trustBadgeIcons[index % trustBadgeIcons.length];
-              return (
-                <motion.div
-                  key={badge}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.28, delay: index * 0.03 }}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#e8ebef] bg-white px-3 text-xs text-[#59616e] transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5 lg:min-h-12 lg:text-sm"
-                >
-                  <Icon size={16} className="shrink-0 text-[#8c94a1]" />
-                  <span>{badge}</span>
-                </motion.div>
-              );
-            })}
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-sm font-medium text-[#69707d]">How It Works</p>
+            <h2 className="mt-3 text-[2.25rem] font-semibold leading-tight lg:text-[3rem]">
+              Five simple steps from idea to production.
+            </h2>
           </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#eef1f4] bg-white lg:hidden">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-          <h2 className="text-[2rem] font-semibold leading-tight">
-            {displayContent.positioningHeadlineA}
-            <span className="block">{displayContent.positioningHeadlineB}</span>
-          </h2>
-          <p className="mt-4 text-base leading-7 text-[#59616e]">{displayContent.positioningText}</p>
-          <div className="mt-5 grid gap-2">
-            {displayContent.helpCards.slice(0, 3).map((item) => (
-              <div key={item.title} className="flex min-h-11 items-center gap-2 rounded-lg border border-[#e8ebef] bg-white px-3 text-sm font-medium text-[#59616e]">
-                <Check size={16} className="text-[#0f766e]" />
-                {item.title}
+          <div className="mt-10 grid gap-3 md:grid-cols-5">
+            {heroSteps.map(([step, Icon], index) => (
+              <div key={step} className="relative">
+                <Card className="flex h-full min-h-36 flex-col items-center justify-center rounded-xl p-5 text-center shadow-sm shadow-[#101216]/5">
+                  <Icon size={22} className="text-[#101216]" />
+                  <h3 className="mt-4 font-semibold">{step}</h3>
+                </Card>
+                {index < heroSteps.length - 1 ? (
+                  <span className="hidden md:block absolute right-[-1.05rem] top-1/2 z-10 -translate-y-1/2 text-[#b2bac5]">
+                    →
+                  </span>
+                ) : null}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {showHomepageVideo && isDesktopViewport ? (
-      <section className="mx-auto hidden max-w-7xl gap-7 px-4 py-12 sm:px-6 lg:grid lg:grid-cols-[0.62fr_1.38fr] lg:px-8 lg:py-20">
-        <div>
-          <h2 className="text-[2.25rem] font-semibold leading-tight">{displayContent.video.title}</h2>
-          <p className="mt-4 text-lg leading-8 text-[#59616e]">{displayContent.video.subtitle}</p>
-        </div>
-        <Card className="overflow-hidden bg-[#101216] text-white">
-          <div className="flex min-h-[23rem] flex-col justify-between p-7">
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-white/10 px-3 py-1 text-sm">
-                {t.thirtySecond}
-              </span>
-              <span className="flex size-12 items-center justify-center rounded-full bg-white text-[#101216]">
-                {displayContent.video.videoUrl || displayContent.video.uploadedVideoFile ? <Video size={20} /> : <Play size={20} />}
-              </span>
+      <section className="border-b border-[#eef1f4] bg-[#fbfbfc]">
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-24">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p className="text-sm font-medium text-[#69707d]">Why TYORA</p>
+              <h2 className="mt-3 text-[2.25rem] font-semibold leading-tight lg:text-[3rem]">
+                Better decisions before manufacturing gets expensive.
+              </h2>
             </div>
-            {displayContent.video.sourceType === "upload" && displayContent.video.uploadedVideoFile ? (
-              <video
-                className="mt-6 aspect-video w-full rounded-lg object-cover"
-                src={displayContent.video.uploadedVideoFile}
-                poster={displayContent.video.coverImage || undefined}
-                controls={!displayContent.video.autoplay}
-                autoPlay={displayContent.video.autoplay}
-                muted={displayContent.video.muted}
-                loop={displayContent.video.loop}
-              />
-            ) : displayContent.video.videoUrl ? (
-              <div className="mt-6 flex aspect-video w-full items-center justify-center rounded-lg bg-white/8 p-6 text-center text-sm text-white/70">
-                {displayContent.video.sourceType === "youtube" ? "YouTube" : "Vimeo"}: {displayContent.video.videoUrl}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-6">
-                {["Idea", t.supplierMatching, t.prototype, t.production, t.packaging, t.delivery].map(
-                  (item) => (
-                    <div key={item} className="rounded-lg bg-white/8 px-3 py-3 text-center">
-                      {item}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
+            <p className="text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
+              TYORA helps founders understand tradeoffs, compare options, and stay in control before committing to production.
+            </p>
           </div>
-        </Card>
-      </section>
-      ) : null}
-
-      {isDesktopViewport ? (
-      <section className="hidden border-y border-[#eef1f4] bg-white lg:block">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-5xl text-center">
-          <p className="text-sm font-medium text-[#69707d]">TYORA</p>
-          <h2 className="mt-4 text-[2.75rem] font-semibold leading-tight tracking-normal sm:text-[3.4rem]">
-            {displayContent.positioningHeadlineA}
-            <span className="block">{displayContent.positioningHeadlineB}</span>
-          </h2>
-          <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[#59616e]">
-            {displayContent.positioningText}
-          </p>
-          </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {displayContent.helpCards.map(({ title, description }, index) => (
-              <motion.div
-                key={title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.32, delay: index * 0.04 }}
-              >
-              <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
-                <h3 className="font-semibold">{title}</h3>
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            {whyTyoraCards.map(([title, description, Icon]) => (
+              <Card key={title} className="rounded-xl bg-white p-6 shadow-sm shadow-[#101216]/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/6">
+                <Icon size={22} className="text-[#101216]" />
+                <h3 className="mt-6 text-lg font-semibold">{title}</h3>
                 <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
               </Card>
-              </motion.div>
             ))}
           </div>
-          <div className="mt-10 flex justify-center">
-            <Button onClick={openWizard} className="min-h-12 px-5">
-              Start Your Manufacturing Review <ArrowRight size={16} />
-            </Button>
-          </div>
         </div>
       </section>
-      ) : null}
-
-      <section className="border-y border-[#eef1f4] bg-[#fbfbfc] lg:hidden">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-          <div className="mb-5">
-            <h2 className="text-[2rem] font-semibold leading-tight">{t.productJourney}</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {displayContent.journeySteps.map(({ title }, index) => {
-              const Icon = journeyIcons[index % journeyIcons.length];
-              return (
-              <Card key={title} className="p-4">
-                <Icon size={18} className="text-[#101216]" />
-                <h3 className="mt-3 text-sm font-semibold">{title}</h3>
-              </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {isDesktopViewport ? (
-      <section className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] lg:block">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="mb-9">
-            <h2 className="text-[2.25rem] font-semibold leading-tight">{t.productJourney}</h2>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-4">
-            {[
-              ...displayContent.journeySteps
-            ].map(
-              (step, index) => (
-                <Card key={step.title} className="p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-sm font-semibold text-white">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <h3 className="mt-5 font-semibold">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-[#69707d]">
-                      {step.description}
-                    </p>
-                  </div>
-                </Card>
-              )
-            )}
-          </div>
-        </div>
-      </section>
-      ) : null}
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
         <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -705,16 +570,16 @@ export default function Home() {
       </section>
 
       <section className="border-y border-[#eef1f4] bg-[#fbfbfc]">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
-          <div className="mb-7 max-w-3xl">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+          <div className="mb-10 max-w-3xl">
             <p className="text-sm font-medium text-[#69707d]">FAQ</p>
-            <h2 className="mt-3 text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">
+            <h2 className="mt-4 text-[2rem] font-semibold leading-tight lg:text-[2.6rem]">
               Questions founders ask before building with TYORA
             </h2>
           </div>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             {faqItems.map((item) => (
-              <Card key={item.question} className="p-5">
+              <Card key={item.question} className="rounded-xl p-6 shadow-sm shadow-[#101216]/5">
                 <h3 className="font-semibold">{item.question}</h3>
                 <p className="mt-3 text-sm leading-6 text-[#59616e]">{item.answer}</p>
               </Card>
@@ -723,17 +588,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-[#eef1f4] bg-[#101216] px-4 py-10 text-white lg:hidden">
-        <div className="mx-auto max-w-7xl text-center">
-          <h2 className="text-[2rem] font-semibold leading-tight">Ready to Build Your Product?</h2>
-          <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/70">
-            Let&apos;s turn your idea into a real product.
+      <section className="border-y border-[#eef1f4] bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-[2.5rem] font-semibold leading-tight tracking-normal lg:text-[4rem]">
+            Ready to build your product?
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
+            Start your manufacturing journey with confidence.
           </p>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full max-w-sm" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
-            <Button variant="secondary" className="min-h-12 w-full">
-              <MessageCircle size={16} /> {t.startWhatsAppChat}
-            </Button>
-          </a>
+          <Button onClick={openWizard} className="mt-8 min-h-12 px-6">
+            Start Your Project <ArrowRight size={16} />
+          </Button>
         </div>
       </section>
 
@@ -763,6 +628,39 @@ export default function Home() {
       </a>
 
       <AnimatePresence>
+        {videoModalOpen ? (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/70 p-4 backdrop-blur-sm sm:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.98 }}
+              className="relative w-full max-w-[420px] overflow-hidden rounded-2xl bg-white p-2 shadow-2xl shadow-black/30"
+            >
+              <button
+                type="button"
+                className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full bg-white/90 text-[#101216] shadow-lg backdrop-blur transition hover:bg-white"
+                onClick={() => setVideoModalOpen(false)}
+                aria-label="Close video"
+              >
+                <X size={18} />
+              </button>
+              <video
+                className="aspect-[9/16] w-full rounded-xl bg-[#101216] object-cover"
+                src={brandFilmUrl}
+                poster={brandFilmPoster}
+                controls
+                muted
+                playsInline
+                preload="metadata"
+              />
+            </motion.div>
+          </motion.div>
+        ) : null}
         {wizardOpen ? (
           <motion.div
             className="fixed inset-0 z-50 bg-[#101216]/30 p-3 backdrop-blur-sm sm:p-6"
