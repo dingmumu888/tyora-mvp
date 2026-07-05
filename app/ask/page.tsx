@@ -53,7 +53,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               <Sparkles size={15} /> Ask TYORA Community
             </p>
             <h1 className="max-w-4xl break-words text-3xl font-semibold leading-tight tracking-normal sm:text-6xl">What&apos;s your next idea?</h1>
-            <p className="mt-5 max-w-2xl break-words text-base leading-8 text-[#59616e] sm:text-lg">
+            <p className="mt-5 max-w-[320px] break-words text-base leading-8 text-[#59616e] sm:max-w-2xl sm:text-lg">
               Upload your idea. Get a FREE manufacturing review within 8 working hours.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -70,7 +70,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <h2 className="text-lg font-semibold">Floating Live Activity</h2>
             <div className="mt-4 space-y-3">
               {liveActivity.length === 0 ? (
-                <p className="break-words text-sm leading-6 text-[#69707d]">No activity yet. Real uploads, TYORA replies, comments, and likes will appear here.</p>
+                <p className="max-w-[300px] break-words text-sm leading-6 text-[#69707d] sm:max-w-none">No activity yet. Real uploads, TYORA replies, comments, and likes will appear here.</p>
               ) : liveActivity.map((item) => (
                 <p key={item} className="rounded-[6px] bg-white p-3 text-sm text-[#59616e] ring-1 ring-[#eef1f4]">{item}</p>
               ))}
