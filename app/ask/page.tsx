@@ -38,10 +38,9 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
           <Link href="/" className="shrink-0 text-sm font-semibold">TYORA</Link>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <a href="/api/community/auth/google" className="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold sm:inline-flex">Google Login</a>
-            <Link href="/ask/new" className="inline-flex min-w-0 items-center gap-2 rounded-full bg-[#101216] px-3 py-2 text-xs font-semibold text-white sm:px-4 sm:text-sm">
+            <Link href="/ask/new" aria-label="Upload My Idea" className="inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-[#101216] text-xs font-semibold text-white sm:w-auto sm:px-4 sm:text-sm">
               <Plus size={16} className="shrink-0" />
               <span className="hidden sm:inline">Upload My Idea</span>
-              <span className="sm:hidden">Upload</span>
             </Link>
           </div>
         </div>
@@ -53,8 +52,8 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#e8ebef] px-3 py-1 text-sm text-[#69707d]">
               <Sparkles size={15} /> Ask TYORA Community
             </p>
-            <h1 className="max-w-4xl break-words text-4xl font-semibold leading-tight tracking-normal sm:text-6xl">What&apos;s your next idea?</h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-[#59616e]">
+            <h1 className="max-w-4xl break-words text-3xl font-semibold leading-tight tracking-normal sm:text-6xl">What&apos;s your next idea?</h1>
+            <p className="mt-5 max-w-2xl break-words text-lg leading-8 text-[#59616e]">
               Upload your idea. Get a FREE manufacturing review within 8 working hours.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -71,7 +70,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <h2 className="text-lg font-semibold">Floating Live Activity</h2>
             <div className="mt-4 space-y-3">
               {liveActivity.length === 0 ? (
-                <p className="text-sm leading-6 text-[#69707d]">No activity yet. Real uploads, TYORA replies, comments, and likes will appear here.</p>
+                <p className="break-words text-sm leading-6 text-[#69707d]">No activity yet. Real uploads, TYORA replies, comments, and likes will appear here.</p>
               ) : liveActivity.map((item) => (
                 <p key={item} className="rounded-[6px] bg-white p-3 text-sm text-[#59616e] ring-1 ring-[#eef1f4]">{item}</p>
               ))}
