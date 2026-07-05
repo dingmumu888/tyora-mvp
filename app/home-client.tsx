@@ -5,9 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
+  Bell,
   Check,
   ChevronLeft,
   ClipboardCheck,
+  Eye,
+  Heart,
   Layers,
   MessageCircle,
   PackageCheck,
@@ -17,6 +20,7 @@ import {
   Sparkles,
   Truck,
   Upload,
+  Users,
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { CommunityIdea } from "@/lib/community";
 
 const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
@@ -87,6 +92,7 @@ export default function Home() {
   const [submitting, setSubmitting] = useState(false);
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
@@ -94,6 +100,13 @@ export default function Home() {
 
   useEffect(() => {
     trackAnalyticsEvent("page_visit");
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/community/ideas?sort=trending")
+      .then((response) => response.json())
+      .then((payload) => setCommunityIdeas(payload.data || []))
+      .catch(() => setCommunityIdeas([]));
   }, []);
 
   const t = ui[language];
@@ -186,7 +199,7 @@ export default function Home() {
   const canStartChat = Boolean(productName.trim());
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
   return (
-    <main className="min-h-screen bg-white text-[#101216]">
+    <main className="min-h-screen overflow-x-hidden bg-white text-[#101216]">
       <header className="sticky top-0 z-40 border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a href="#" className="flex items-center gap-2 font-semibold">
@@ -209,16 +222,135 @@ export default function Home() {
               </span>
             </span>
           </a>
+          <nav className="hidden items-center gap-1 lg:flex">
+            {[
+              ["Discover Ideas", "/ask"],
+              ["Ask TYORA", "/ask/new"],
+              ["Journeys", "/ask"],
+              ["Success Stories", "/ask"],
+              ["Pricing", "#pricing"]
+            ].map(([label, href]) => (
+              <Link key={label} href={href} className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8] hover:text-[#101216]">
+                {label}
+              </Link>
+            ))}
+          </nav>
           <div className="flex items-center gap-2">
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
-            <Button variant="secondary" className="min-h-10">
-              <MessageCircle size={16} />
-              {t.whatsApp}
-            </Button>
-          </a>
+            <div className="hidden h-10 w-44 items-center gap-2 rounded-full border border-[#e1e5ea] bg-white px-3 text-sm text-[#8b93a1] xl:flex">
+              <SearchCheck size={15} /> Search
+            </div>
+            <a href="/api/community/auth/google" className="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold md:inline-flex">Google Login</a>
+            <Link href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+              <Upload size={15} /> <span className="hidden sm:inline">Upload My Idea</span>
+            </Link>
+            <button className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] md:inline-flex" aria-label="Notifications">
+              <Bell size={15} />
+            </button>
           </div>
         </div>
       </header>
+
+      <section className="border-b border-[#eef1f4] bg-[#f7f8fa]">
+        <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:px-8">
+          <aside className="hidden rounded-[22px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4 lg:block">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={18} /></div>
+            <h2 className="mt-4 text-lg font-semibold">Ask TYORA Community</h2>
+            <p className="mt-2 text-sm leading-6 text-[#69707d]">Product creators discussing ideas with Chinese manufacturing expertise.</p>
+            <Link href="/ask/new" className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#101216] text-sm font-semibold text-white">
+              <Upload size={15} /> Upload My Idea
+            </Link>
+            <Link href="/ask" className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Browse Ideas</Link>
+            <p className="mt-3 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">3 FREE Expert Reviews per day</p>
+          </aside>
+
+          <div className="min-w-0">
+            <div className="rounded-[28px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4 sm:p-7">
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
+                <Users size={14} /> Community is the product
+              </p>
+              <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_auto] xl:items-end">
+                <div>
+                  <h1 className="max-w-3xl text-3xl font-semibold leading-[1.08] tracking-normal sm:text-5xl lg:text-6xl">What&apos;s your next idea?</h1>
+                  <p className="mt-4 max-w-[300px] text-base leading-7 text-[#59616e] sm:max-w-2xl sm:text-lg">
+                    Upload your idea. Get a FREE manufacturing review within 8 working hours.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/ask/new" className="inline-flex h-12 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"><Upload size={16} /> Upload My Idea</Link>
+                  <Link href="/ask" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
+                </div>
+              </div>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                {[
+                  ["Ideas Shared", communityIdeas.length],
+                  ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
+                  ["Projects Started", communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length],
+                  ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
+                  ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-4">
+                    <p className="text-2xl font-semibold">{value}</p>
+                    <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+              {["Trending", "Newest", "Most Discussed", "Latest TYORA Reply", "Recently Uploaded"].map((item, index) => (
+                <Link key={item} href="/ask" className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold", index === 0 ? "bg-[#101216] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]")}>{item}</Link>
+              ))}
+            </div>
+
+            <div className="mt-3 grid gap-3">
+              {communityIdeas.length === 0 ? (
+                <Link href="/ask/new" className="rounded-[22px] border border-dashed border-[#cfd5dc] bg-white p-8 text-center">
+                  <p className="mx-auto max-w-[280px] text-lg font-semibold">Be the first product creator to start a discussion.</p>
+                  <p className="mx-auto mt-2 max-w-[280px] text-sm text-[#69707d]">No fake activity. Real uploads and replies will appear here.</p>
+                </Link>
+              ) : communityIdeas.slice(0, 5).map((idea) => (
+                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-3 rounded-[18px] border border-[#e8ebef] bg-white p-4 shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/8 sm:grid-cols-[132px_1fr]">
+                  <div className="flex min-h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-xl font-semibold">
+                    {idea.imageUrls[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="size-full rounded-2xl object-cover" />
+                    ) : idea.title.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">
+                      <span>{idea.country}</span><span>{idea.author.name}</span><span>{idea.status}</span>
+                    </div>
+                    <h2 className="mt-2 line-clamp-1 text-xl font-semibold">{idea.title}</h2>
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#59616e]">{idea.description}</p>
+                    <div className="mt-3 flex gap-4 text-xs font-medium text-[#69707d]">
+                      <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount}</span>
+                      <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length}</span>
+                      <span className="inline-flex items-center gap-1"><Eye size={14} /> {Math.max(idea.likeCount + idea.comments.length + idea.interestedCount, 1) * 17}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <aside className="hidden space-y-4 xl:block">
+            <section className="rounded-[22px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+              <h2 className="text-lg font-semibold">Live Activity</h2>
+              <div className="mt-4 space-y-3">
+                {communityIdeas.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">Real uploads, TYORA replies, comments and likes will appear here.</p> : null}
+                {communityIdeas.slice(0, 4).map((idea) => <p key={idea.id} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{idea.author.name} uploaded {idea.title}</p>)}
+              </div>
+            </section>
+            <section className="rounded-[22px] border border-[#e8ebef] bg-[#101216] p-5 text-white">
+              <h2 className="text-lg font-semibold">Journey of the Week</h2>
+              <div className="mt-4 grid gap-2 text-sm text-white/72">
+                {["Idea", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step) => <span key={step} className="rounded-full bg-white/8 px-3 py-2">{step}</span>)}
+              </div>
+              <Link href="/ask" className="mt-5 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#101216]">View Full Journey</Link>
+            </section>
+          </aside>
+        </div>
+      </section>
 
       <section className="border-b border-[#eef1f4] bg-white">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[0.45fr_0.55fr] lg:items-center lg:px-8 lg:py-24 xl:py-28">
@@ -287,36 +419,6 @@ export default function Home() {
               </button>
             </Card>
           </motion.div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#eef1f4] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-18">
-          <div>
-            <p className="text-sm font-medium text-[#69707d]">ASK TYORA</p>
-            <h2 className="mt-3 text-[2.35rem] font-semibold leading-tight tracking-normal lg:text-[3.3rem]">
-              What&apos;s your next idea?
-            </h2>
-            <p className="mt-4 max-w-xl text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
-              Upload your idea. Get a FREE manufacturing review within 8 working hours.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/ask" className="inline-flex h-12 items-center rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold">
-                Browse Ideas
-              </Link>
-              <Link href="/ask/new" className="inline-flex h-12 items-center rounded-full bg-[#101216] px-5 text-sm font-semibold text-white">
-                Upload My Idea
-              </Link>
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {["Latest Discussions", "Newest Ideas", "Recently Replied", "Latest TYORA Reviews"].map((item) => (
-              <Link key={item} href="/ask" className="rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
-                <p className="text-sm font-semibold text-[#101216]">{item}</p>
-                <p className="mt-2 text-sm leading-6 text-[#69707d]">See what product creators and TYORA are discussing now.</p>
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -600,7 +702,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+      <section id="pricing" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
           <div className="mb-10 max-w-3xl">
             <p className="text-sm font-medium text-[#69707d]">FAQ</p>

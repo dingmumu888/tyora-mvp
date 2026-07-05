@@ -1,10 +1,36 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, Box, Clock, FileText, MessageCircle, PackageCheck, Sparkles, Users } from "lucide-react";
+import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import IdeaActions from "./idea-actions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+const statusStyles: Record<CommunityStatus, string> = {
+  Discussing: "bg-[#f0eaff] text-[#6d28d9] ring-[#ddd0ff]",
+  "TYORA Reviewing": "bg-[#fff7d6] text-[#8a5a00] ring-[#ffe89a]",
+  "Project Started": "bg-[#e9f2ff] text-[#1d4ed8] ring-[#c9ddff]",
+  Manufacturing: "bg-[#fff0df] text-[#c2410c] ring-[#ffd8ad]",
+  Shipping: "bg-[#edf4ff] text-[#315fbd] ring-[#d4e4ff]",
+  Completed: "bg-[#e8f8ef] text-[#15803d] ring-[#c9efd8]"
+};
+
+const timeline = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping", "Delivered"];
+
+function progressFor(status: CommunityStatus) {
+  if (status === "Completed") return 7;
+  if (status === "Shipping") return 6;
+  if (status === "Manufacturing") return 5;
+  if (status === "Project Started") return 4;
+  if (status === "TYORA Reviewing") return 3;
+  return 2;
+}
+
+function timeLabel(value: string) {
+  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -19,39 +45,75 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
   const { slug } = await params;
   const idea = await getCommunityIdeaBySlug(slug);
   if (!idea) notFound();
+  const progress = progressFor(idea.status);
 
   return (
-    <main className="min-h-screen bg-white text-[#101216]">
-      <header className="border-b border-[#eef1f4]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
-          <Link href="/ask" className="text-sm font-semibold">Ask TYORA</Link>
-          <span className="rounded-full border border-[#e8ebef] px-3 py-1 text-xs text-[#69707d]">{idea.status}</span>
+    <main className="min-h-screen bg-[#f7f8fa] pb-24 text-[#101216]">
+      <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/ask" className="inline-flex items-center gap-2 text-sm font-semibold"><ArrowLeft size={16} /> Ask TYORA</Link>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</span>
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
-        <article className="space-y-8">
-          <section className="rounded-[8px] border border-[#e8ebef] p-6">
-            <p className="text-sm font-medium text-[#69707d]">{idea.id}</p>
-            <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">{idea.title}</h1>
-            <div className="mt-5 flex flex-wrap gap-2 text-sm text-[#69707d]">
-              <span>{idea.category}</span>
-              <span>{idea.country}</span>
-              <span>By {idea.author.name}</span>
-              <span>{new Date(idea.createdAt).toLocaleString()}</span>
-            </div>
-            <p className="mt-6 whitespace-pre-wrap text-base leading-8 text-[#59616e]">{idea.description}</p>
-            {idea.imageUrls.length > 0 ? (
-              <div className="mt-5 flex flex-wrap gap-2 text-xs text-[#69707d]">
-                {idea.imageUrls.map((image) => <span key={image} className="rounded-full bg-[#f5f6f8] px-3 py-1">{image}</span>)}
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+        <article className="min-w-0 space-y-5">
+          <section className="overflow-hidden rounded-[28px] border border-[#e8ebef] bg-white shadow-sm shadow-[#101216]/4">
+            <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+              <div className="relative min-h-[320px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff]">
+                {idea.imageUrls[0] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="absolute inset-0 size-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center p-8">
+                    <div className="flex size-32 items-center justify-center rounded-[36px] bg-white/78 text-4xl font-semibold shadow-sm ring-1 ring-white">
+                      {idea.title.slice(0, 2).toUpperCase()}
+                    </div>
+                  </div>
+                )}
               </div>
-            ) : null}
+              <div className="p-6 sm:p-8">
+                <p className="text-sm font-medium text-[#69707d]">{idea.id}</p>
+                <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">{idea.title}</h1>
+                <div className="mt-5 flex flex-wrap gap-2 text-sm text-[#69707d]">
+                  <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{idea.category}</span>
+                  <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{idea.country}</span>
+                  <span className="rounded-full bg-[#f4f6f8] px-3 py-1">By {idea.author.name}</span>
+                  <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{timeLabel(idea.createdAt)}</span>
+                </div>
+                <p className="mt-6 whitespace-pre-wrap text-base leading-8 text-[#59616e]">{idea.description}</p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {idea.questions.map((question) => <span key={question} className="rounded-full border border-[#e8ebef] px-3 py-1 text-xs font-medium text-[#59616e]">{question}</span>)}
+                </div>
+              </div>
+            </div>
           </section>
 
-          <section className="rounded-[8px] border border-[#e8ebef] p-6">
-            <h2 className="text-2xl font-semibold">TYORA Expert Review</h2>
+          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[#69707d]">Project Timeline</p>
+                <h2 className="mt-1 text-2xl font-semibold">From idea to delivered product</h2>
+              </div>
+              <Clock className="text-[#69707d]" size={20} />
+            </div>
+            <div className="mt-6 grid grid-cols-7 gap-2">
+              {timeline.map((step, index) => (
+                <div key={step} className="min-w-0">
+                  <div className={`h-2 rounded-full ${index < progress ? "bg-[#14b8a6]" : "bg-[#e8ebef]"}`} />
+                  <p className="mt-2 truncate text-[11px] font-medium text-[#69707d]">{step}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={20} className="text-[#14b8a6]" />
+              <h2 className="text-2xl font-semibold">TYORA Expert Review</h2>
+            </div>
             {idea.review ? (
-              <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+              <dl className="mt-5 grid gap-3 sm:grid-cols-2">
                 {[
                   ["Manufacturing Feasible", idea.review.manufacturingFeasible],
                   ["Estimated Cost Range", idea.review.estimatedCostRange],
@@ -61,40 +123,85 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
                   ["Factories Matched", idea.review.factoriesMatched],
                   ["Additional Notes", idea.review.additionalNotes]
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-[6px] bg-[#f8f9fa] p-4">
+                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-4">
                     <dt className="text-sm font-semibold">{label}</dt>
                     <dd className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{value || "Not provided yet."}</dd>
                   </div>
                 ))}
               </dl>
             ) : (
-              <p className="mt-4 text-[#59616e]">TYORA has not replied yet. TYORA reviews manufacturing only and never predicts market demand.</p>
+              <p className="mt-4 rounded-2xl bg-[#fff7d6] p-4 text-sm leading-6 text-[#8a5a00]">
+                TYORA has not replied yet. TYORA reviews manufacturing feasibility, cost, materials, MOQ, process and factory fit. It never predicts market demand.
+              </p>
             )}
           </section>
 
-          <section className="rounded-[8px] border border-[#e8ebef] p-6">
-            <h2 className="text-2xl font-semibold">Comments</h2>
+          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">Community Discussion</h2>
+              <span className="inline-flex items-center gap-1 text-sm text-[#69707d]"><MessageCircle size={15} /> {idea.comments.length}</span>
+            </div>
             <div className="mt-5 space-y-3">
-              {idea.comments.length === 0 ? <p className="text-sm text-[#69707d]">No public comments yet.</p> : idea.comments.map((comment) => (
-                <article key={comment.id} className={`rounded-[6px] bg-[#f8f9fa] p-4 ${comment.parentId ? "ml-6" : ""}`}>
-                  <p className="text-sm font-semibold">{comment.author.name}</p>
+              {idea.comments.length === 0 ? <p className="rounded-2xl bg-[#f7f8fa] p-4 text-sm text-[#69707d]">No public comments yet.</p> : null}
+              {idea.comments.map((comment) => (
+                <article key={comment.id} className={`rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-4 ${comment.parentId ? "ml-6" : ""}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="inline-flex items-center gap-2 text-sm font-semibold"><Users size={15} /> {comment.author.name}</p>
+                    <span className="text-xs text-[#8b93a1]">{timeLabel(comment.createdAt)}</span>
+                  </div>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{comment.body}</p>
-                  <p className="mt-2 text-xs text-[#69707d]">{comment.likeCount} likes · {new Date(comment.createdAt).toLocaleString()}</p>
+                  <p className="mt-3 text-xs text-[#69707d]">{comment.likeCount} likes</p>
                 </article>
               ))}
             </div>
           </section>
+
+          <section className="rounded-[24px] border border-dashed border-[#cfd5dc] bg-white p-5">
+            <div className="flex items-center gap-2">
+              <FileText size={20} className="text-[#69707d]" />
+              <h2 className="text-xl font-semibold">Files</h2>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-[#69707d]">Reference files, CAD, drawings, and production documents will appear here as the project grows.</p>
+          </section>
         </article>
 
-        <aside className="space-y-5">
-          <section className="rounded-[8px] border border-[#e8ebef] p-5">
+        <aside className="space-y-5 lg:sticky lg:top-21 lg:self-start">
+          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <h2 className="text-lg font-semibold">Current Status</h2>
-            <p className="mt-2 text-2xl font-semibold">{idea.status}</p>
-            <p className="mt-3 text-sm leading-6 text-[#69707d]">The same post grows through discussion, TYORA review, project start, manufacturing, shipping, and completion.</p>
+            <p className={`mt-3 inline-flex rounded-full px-3 py-1 text-sm font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</p>
+            <p className="mt-4 text-sm leading-6 text-[#69707d]">The same post grows through discussion, TYORA review, project start, manufacturing, shipping, and completion.</p>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-center text-xs text-[#69707d]">
+              <span className="rounded-2xl bg-[#f7f8fa] p-3">{idea.likeCount}<br />Love</span>
+              <span className="rounded-2xl bg-[#f7f8fa] p-3">{idea.comments.length}<br />Comments</span>
+              <span className="rounded-2xl bg-[#f7f8fa] p-3">{idea.interestedCount}<br />I&apos;d Buy</span>
+            </div>
           </section>
+
+          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5">
+            <div className="flex items-center gap-2">
+              <Box size={18} />
+              <h2 className="text-lg font-semibold">Manufacturing Scope</h2>
+            </div>
+            <div className="mt-4 grid gap-2 text-sm text-[#59616e]">
+              <span>Category: {idea.category}</span>
+              <span>Country: {idea.country}</span>
+              <span>Visibility: {idea.visibility}</span>
+              <span>{idea.locked ? "Comments locked" : "Discussion open"}</span>
+            </div>
+          </section>
+
           <IdeaActions idea={idea} />
         </aside>
       </section>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebef] bg-white/92 px-4 py-3 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+          <p className="text-sm font-semibold">Ready to build?</p>
+          <Link href="#continue" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            Continue <PackageCheck size={14} />
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

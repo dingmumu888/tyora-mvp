@@ -79,27 +79,27 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div id="continue" className="space-y-5">
       <div className="grid gap-2 sm:grid-cols-3">
-        <button onClick={() => void react("Like")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold">
+        <button onClick={() => void react("Like")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
           {busy === "Like" ? <Loader2 className="animate-spin" size={16} /> : <Heart size={16} />} Like
         </button>
-        <button onClick={() => void react("Interested")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold">
+        <button onClick={() => void react("Interested")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
           {busy === "Interested" ? <Loader2 className="animate-spin" size={16} /> : <Star size={16} />} Interested
         </button>
-        <button onClick={() => navigator.share?.({ title: idea.title, url: window.location.href })} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold">
+        <button onClick={() => navigator.share?.({ title: idea.title, url: window.location.href })} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
           <Share2 size={16} /> Share
         </button>
       </div>
 
-      <form onSubmit={postComment} className="rounded-[8px] border border-[#e8ebef] p-4">
+      <form onSubmit={postComment} className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
         <p className="text-sm font-semibold">Community Discussion</p>
         <textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
           rows={4}
           placeholder={user ? "Add a manufacturing question, answer, or practical note." : "Google login required to comment."}
-          className="mt-3 w-full resize-none rounded-[6px] border border-[#dfe3e8] p-3 outline-none focus:border-[#101216]"
+          className="mt-3 w-full resize-none rounded-2xl border border-[#dfe3e8] p-3 outline-none focus:border-[#101216]"
         />
         <button className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
           {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} Comment
@@ -107,7 +107,7 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
         {message ? <p className="mt-2 text-sm text-[#8a5a00]">{message}</p> : null}
       </form>
 
-      <section className="rounded-[8px] bg-[#101216] p-6 text-white">
+      <section className="rounded-[24px] bg-[#101216] p-6 text-white shadow-xl shadow-[#101216]/15">
         <h2 className="text-2xl font-semibold">Ready to build?</h2>
         <p className="mt-3 text-sm leading-6 text-white/72">Continue This Project sends TYORA the Idea ID, Idea URL, Title, and Customer Name.</p>
         {user ? (
