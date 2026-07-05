@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -209,6 +210,11 @@ export default function Home() {
             </span>
           </a>
           <div className="flex items-center gap-2">
+          <Link href="/ask">
+            <Button variant="ghost" className="min-h-10">
+              Ask TYORA
+            </Button>
+          </Link>
           <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
             <Button variant="secondary" className="min-h-10">
               <MessageCircle size={16} />
@@ -237,8 +243,13 @@ export default function Home() {
               Helping product founders make better manufacturing decisions — from your first idea to your first production run.
             </p>
             <div className="mt-8 grid gap-3 sm:flex">
-              <Button onClick={openWizard} className="min-h-12 px-5">
-                Start Your Project <ArrowRight size={16} />
+              <Link href="/ask">
+                <Button className="min-h-12 px-5">
+                  Ask TYORA Free <ArrowRight size={16} />
+                </Button>
+              </Link>
+              <Button onClick={openWizard} variant="outline" className="min-h-12 px-5">
+                Start Your Project
               </Button>
               <Button variant="outline" className="min-h-12 px-5" onClick={() => setVideoModalOpen(true)}>
                 <Play size={16} /> Watch Our Story
@@ -523,9 +534,11 @@ export default function Home() {
                   </div>
                 ) : null}
                 {plan.bottomNote ? <p className="mt-auto pt-5 text-sm font-medium text-[#69707d]">{plan.bottomNote}</p> : null}
-                <Button onClick={openWizard} className="mt-6 min-h-11 w-full">
-                  {plan.ctaText} <ArrowRight size={16} />
-                </Button>
+                <Link href="/ask" className="mt-6 block">
+                  <Button className="min-h-11 w-full">
+                    {plan.ctaText} <ArrowRight size={16} />
+                  </Button>
+                </Link>
               </Card>
               );
             })}
