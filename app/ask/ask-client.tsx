@@ -140,10 +140,10 @@ export default function AskClient() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white text-[#101216]">
-      <section className="mx-auto grid max-w-6xl gap-12 px-6 py-8 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:py-14">
-        <div className="flex min-h-[520px] min-w-0 flex-col justify-between">
-          <header className="flex items-center justify-between">
+    <main className="min-h-screen w-full overflow-x-hidden bg-white text-[#101216]">
+      <section className="mx-auto grid w-full max-w-6xl min-w-0 gap-12 overflow-hidden px-4 py-8 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:py-14">
+        <div className="flex min-h-[520px] w-full min-w-0 max-w-full flex-col justify-between">
+          <header className="flex min-w-0 items-center justify-between gap-4 overflow-hidden">
             <Link href="/" className="text-sm font-semibold tracking-normal">TYORA</Link>
             <span className="rounded-full border border-[#e8ebef] px-3 py-1 text-xs text-[#69707d]">Ask v1.0</span>
           </header>
@@ -153,7 +153,7 @@ export default function AskClient() {
               <ShieldCheck size={15} /> Free manufacturing review
             </p>
             <h1 className="max-w-xl text-5xl font-semibold leading-[1.02] tracking-normal sm:text-6xl">
-              Upload your product idea.
+              <span className="break-words">Upload your product idea.</span>
             </h1>
             <p className="mt-6 max-w-lg text-xl leading-8 text-[#555d69]">
               Get a FREE manufacturing review within 8 working hours.
@@ -173,7 +173,7 @@ export default function AskClient() {
           </div>
         </div>
 
-        <form id="ask-form" onSubmit={submit} className="min-w-0 rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-4 shadow-[0_24px_80px_rgba(16,18,22,0.06)] sm:p-6">
+        <form id="ask-form" onSubmit={submit} className="w-full min-w-0 max-w-full overflow-hidden rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-4 shadow-[0_24px_80px_rgba(16,18,22,0.06)] sm:p-6">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold">Ask TYORA FREE</h2>
@@ -184,21 +184,21 @@ export default function AskClient() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium">Product Name
-              <input required value={form.productName} onChange={(event) => setForm({ ...form, productName: event.target.value })} className="h-11 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
+              <input required value={form.productName} onChange={(event) => setForm({ ...form, productName: event.target.value })} className="h-11 w-full min-w-0 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
             </label>
             <label className="grid gap-2 text-sm font-medium">Category
-              <input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} className="h-11 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
+              <input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} className="h-11 w-full min-w-0 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
             </label>
             <label className="grid gap-2 text-sm font-medium">Country
-              <input required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} className="h-11 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
+              <input required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} className="h-11 w-full min-w-0 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
             </label>
             <label className="grid gap-2 text-sm font-medium">Email
-              <input required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} className="h-11 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
+              <input required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} className="h-11 w-full min-w-0 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
             </label>
           </div>
 
           <label className="mt-4 grid gap-2 text-sm font-medium">Description
-            <textarea required rows={6} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="resize-none rounded-[6px] border border-[#dfe3e8] bg-white p-3 outline-none focus:border-[#101216]" />
+            <textarea required rows={6} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="w-full min-w-0 resize-none rounded-[6px] border border-[#dfe3e8] bg-white p-3 outline-none focus:border-[#101216]" />
           </label>
 
           <label className="mt-4 flex min-h-24 cursor-pointer items-center justify-center gap-3 rounded-[6px] border border-dashed border-[#cfd5dc] bg-white px-4 text-sm text-[#69707d]">
@@ -229,10 +229,10 @@ export default function AskClient() {
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium">WhatsApp
-              <input value={form.whatsapp} onChange={(event) => setForm({ ...form, whatsapp: event.target.value })} className="h-11 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
+              <input value={form.whatsapp} onChange={(event) => setForm({ ...form, whatsapp: event.target.value })} className="h-11 w-full min-w-0 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]" />
             </label>
             <label className="grid gap-2 text-sm font-medium">Public or Private
-              <select value={form.visibility} onChange={(event) => setForm({ ...form, visibility: event.target.value as "Public" | "Private" })} className="h-11 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]">
+              <select value={form.visibility} onChange={(event) => setForm({ ...form, visibility: event.target.value as "Public" | "Private" })} className="h-11 w-full min-w-0 rounded-[6px] border border-[#dfe3e8] bg-white px-3 outline-none focus:border-[#101216]">
                 <option>Public</option>
                 <option>Private</option>
               </select>
