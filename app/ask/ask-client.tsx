@@ -140,9 +140,9 @@ export default function AskClient() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#101216]">
+    <main className="min-h-screen overflow-x-hidden bg-white text-[#101216]">
       <section className="mx-auto grid max-w-6xl gap-12 px-6 py-8 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:py-14">
-        <div className="flex min-h-[520px] flex-col justify-between">
+        <div className="flex min-h-[520px] min-w-0 flex-col justify-between">
           <header className="flex items-center justify-between">
             <Link href="/" className="text-sm font-semibold tracking-normal">TYORA</Link>
             <span className="rounded-full border border-[#e8ebef] px-3 py-1 text-xs text-[#69707d]">Ask v1.0</span>
@@ -166,14 +166,14 @@ export default function AskClient() {
             </a>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 border-t border-[#edf0f3] pt-5 text-sm text-[#69707d]">
+          <div className="grid grid-cols-1 gap-3 border-t border-[#edf0f3] pt-5 text-sm text-[#69707d] sm:grid-cols-3">
             <span>3 expert reviews per day</span>
             <span>Community discussion unlimited</span>
             <span>No payment required</span>
           </div>
         </div>
 
-        <form id="ask-form" onSubmit={submit} className="rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-4 shadow-[0_24px_80px_rgba(16,18,22,0.06)] sm:p-6">
+        <form id="ask-form" onSubmit={submit} className="min-w-0 rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-4 shadow-[0_24px_80px_rgba(16,18,22,0.06)] sm:p-6">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold">Ask TYORA FREE</h2>
