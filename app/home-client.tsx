@@ -210,11 +210,6 @@ export default function Home() {
             </span>
           </a>
           <div className="flex items-center gap-2">
-          <Link href="/ask">
-            <Button variant="ghost" className="min-h-10">
-              Ask TYORA
-            </Button>
-          </Link>
           <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
             <Button variant="secondary" className="min-h-10">
               <MessageCircle size={16} />
@@ -243,13 +238,8 @@ export default function Home() {
               Helping product founders make better manufacturing decisions — from your first idea to your first production run.
             </p>
             <div className="mt-8 grid gap-3 sm:flex">
-              <Link href="/ask">
-                <Button className="min-h-12 px-5">
-                  Ask TYORA Free <ArrowRight size={16} />
-                </Button>
-              </Link>
-              <Button onClick={openWizard} variant="outline" className="min-h-12 px-5">
-                Start Your Project
+              <Button onClick={openWizard} className="min-h-12 px-5">
+                Start Your Project <ArrowRight size={16} />
               </Button>
               <Button variant="outline" className="min-h-12 px-5" onClick={() => setVideoModalOpen(true)}>
                 <Play size={16} /> Watch Our Story
@@ -297,6 +287,36 @@ export default function Home() {
               </button>
             </Card>
           </motion.div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#eef1f4] bg-white">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-18">
+          <div>
+            <p className="text-sm font-medium text-[#69707d]">ASK TYORA</p>
+            <h2 className="mt-3 text-[2.35rem] font-semibold leading-tight tracking-normal lg:text-[3.3rem]">
+              What&apos;s your next idea?
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
+              Upload your idea. Get a FREE manufacturing review within 8 working hours.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link href="/ask" className="inline-flex h-12 items-center rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold">
+                Browse Ideas
+              </Link>
+              <Link href="/ask/new" className="inline-flex h-12 items-center rounded-full bg-[#101216] px-5 text-sm font-semibold text-white">
+                Upload My Idea
+              </Link>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {["Latest Discussions", "Newest Ideas", "Recently Replied", "Latest TYORA Reviews"].map((item) => (
+              <Link key={item} href="/ask" className="rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
+                <p className="text-sm font-semibold text-[#101216]">{item}</p>
+                <p className="mt-2 text-sm leading-6 text-[#69707d]">See what product creators and TYORA are discussing now.</p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -534,11 +554,9 @@ export default function Home() {
                   </div>
                 ) : null}
                 {plan.bottomNote ? <p className="mt-auto pt-5 text-sm font-medium text-[#69707d]">{plan.bottomNote}</p> : null}
-                <Link href="/ask" className="mt-6 block">
-                  <Button className="min-h-11 w-full">
-                    {plan.ctaText} <ArrowRight size={16} />
-                  </Button>
-                </Link>
+                <Button onClick={openWizard} className="mt-6 min-h-11 w-full">
+                  {plan.ctaText} <ArrowRight size={16} />
+                </Button>
               </Card>
               );
             })}

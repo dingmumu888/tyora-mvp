@@ -1,0 +1,99 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+
+const COOKIE_NAME = "tyora_community_session";
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+
+function secret() {
+  return process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || "tyora-community-dev-session";
+}
+
+function sign(payload: string) {
+  return createHmac("sha256", secret()).update(payload).digest("base64url");
+}
+
+function encode(value: unknown) {
+  return Buffer.from(JSON.stringify(value)).toString("base64url");
+}
+
+function decode<T>(value: string): T {
+  return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as T;
+}
+
+function safeEqual(left: string, right: string) {
+  const a = Buffer.from(left);
+  const b = Buffer.from(right);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+export type CommunitySession = {
+  userId: string;
+  email: string;
+  name: string;
+};
+
+export function createCommunitySessionToken(session: CommunitySession) {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = encode({
+    ...session,
+    iat: now,
+    exp: now + SESSION_TTL_SECONDS
+  });
+  return `${payload}.${sign(payload)}`;
+}
+
+export function readCommunitySessionToken(token?: string): CommunitySession | null {
+  if (!token || !token.includes(".")) return null;
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature || !safeEqual(signature, sign(payload))) return null;
+
+  try {
+    const session = decode<CommunitySession & { exp?: number }>(payload);
+    if (!session.exp || session.exp <= Math.floor(Date.now() / 1000)) return null;
+    return {
+      userId: session.userId,
+      email: session.email,
+      name: session.name
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getCommunitySession() {
+  const cookieStore = await cookies();
+  return readCommunitySessionToken(cookieStore.get(COOKIE_NAME)?.value);
+}
+
+export async function requireCommunitySession() {
+  const session = await getCommunitySession();
+  if (session) return session;
+  return null;
+}
+
+export function setCommunitySessionCookie(response: NextResponse, session: CommunitySession) {
+  response.cookies.set({
+    name: COOKIE_NAME,
+    value: createCommunitySessionToken(session),
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_TTL_SECONDS
+  });
+  return response;
+}
+
+export function clearCommunitySessionCookie(response: NextResponse) {
+  response.cookies.set({
+    name: COOKIE_NAME,
+    value: "",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0
+  });
+  return response;
+}

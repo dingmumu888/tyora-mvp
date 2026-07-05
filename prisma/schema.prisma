@@ -100,26 +100,108 @@ model AnalyticsEvent {
   @@index([device])
 }
 
-model AskIdea {
-  id               String   @id
-  slug             String   @unique
-  productName      String
-  category         String
-  country          String
-  description      String
-  imageNamesJson   String   @default("[]")
-  questionsJson    String   @default("[]")
-  otherQuestion    String?
-  email            String
-  whatsapp         String?
-  visibility       String
-  status           String   @default("Waiting")
-  expertReview     String?
-  discussionJson   String   @default("[]")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+model CommunityUser {
+  id              String             @id
+  googleId        String             @unique
+  email           String             @unique
+  username        String             @unique
+  name            String
+  avatar          String?
+  country         String?
+  joinedAt        DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  ideas           CommunityIdea[]
+  comments        CommunityComment[]
+  reactions       CommunityReaction[]
 
-  @@index([email])
+  @@index([joinedAt])
+  @@index([country])
+}
+
+model CommunityIdea {
+  id             String              @id
+  slug           String              @unique
+  title          String
+  description    String
+  category       String
+  country        String
+  imageUrlsJson  String              @default("[]")
+  questionsJson  String              @default("[]")
+  otherQuestion  String?
+  visibility     String              @default("Public")
+  status         String              @default("Discussing")
+  hidden         Boolean             @default(false)
+  locked         Boolean             @default(false)
+  pinned         Boolean             @default(false)
+  authorId       String
+  author         CommunityUser       @relation(fields: [authorId], references: [id])
+  comments       CommunityComment[]
+  review         TyoraReview?
+  reactions      CommunityReaction[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([authorId])
   @@index([status])
+  @@index([visibility])
+  @@index([hidden])
+  @@index([pinned])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CommunityComment {
+  id          String              @id
+  body        String
+  hidden      Boolean             @default(false)
+  ideaId      String
+  idea        CommunityIdea       @relation(fields: [ideaId], references: [id])
+  authorId    String
+  author      CommunityUser       @relation(fields: [authorId], references: [id])
+  parentId    String?
+  reactions   CommunityReaction[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([ideaId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([hidden])
+  @@index([createdAt])
+}
+
+model TyoraReview {
+  id                         String        @id
+  ideaId                     String        @unique
+  idea                       CommunityIdea @relation(fields: [ideaId], references: [id])
+  manufacturingFeasible      String?
+  estimatedCostRange         String?
+  suggestedMaterial          String?
+  estimatedMoq               String?
+  suggestedManufacturing     String?
+  factoriesMatched           String?
+  additionalNotes            String?
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
+
+  @@index([createdAt])
+}
+
+model CommunityReaction {
+  id        String             @id
+  type      String
+  userId    String
+  user      CommunityUser      @relation(fields: [userId], references: [id])
+  ideaId    String?
+  idea      CommunityIdea?     @relation(fields: [ideaId], references: [id])
+  commentId String?
+  comment   CommunityComment?  @relation(fields: [commentId], references: [id])
+  createdAt DateTime           @default(now())
+
+  @@unique([userId, type, ideaId])
+  @@unique([userId, type, commentId])
+  @@index([type])
+  @@index([ideaId])
+  @@index([commentId])
   @@index([createdAt])
 }

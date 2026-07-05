@@ -10,7 +10,6 @@ import {
   SiteContent,
   TeamMember
 } from "@/lib/storage";
-import { AskIdea, AskStatus, normalizeAskIdea, normalizeDiscussionItem } from "@/lib/ask";
 import { prisma } from "@/lib/server/db";
 
 function parseJson<T>(value: unknown, fallback: T): T {
@@ -25,66 +24,6 @@ function parseJson<T>(value: unknown, fallback: T): T {
 function dateToIso(value: Date | string | null | undefined) {
   if (!value) return new Date().toISOString();
   return value instanceof Date ? value.toISOString() : value;
-}
-
-function rowToAskIdea(row: {
-  id: string;
-  slug: string;
-  productName: string;
-  category: string;
-  country: string;
-  description: string;
-  imageNamesJson: string;
-  questionsJson: string;
-  otherQuestion: string | null;
-  email: string;
-  whatsapp: string | null;
-  visibility: string;
-  status: string;
-  expertReview: string | null;
-  discussionJson: string;
-  createdAt: Date;
-  updatedAt: Date;
-}): AskIdea {
-  return normalizeAskIdea({
-    id: row.id,
-    slug: row.slug,
-    productName: row.productName,
-    category: row.category,
-    country: row.country,
-    description: row.description,
-    imageNames: parseJson(row.imageNamesJson, []),
-    questions: parseJson(row.questionsJson, []),
-    otherQuestion: row.otherQuestion,
-    email: row.email,
-    whatsapp: row.whatsapp,
-    visibility: row.visibility,
-    status: row.status,
-    expertReview: row.expertReview,
-    discussion: parseJson(row.discussionJson, []),
-    createdAt: dateToIso(row.createdAt),
-    updatedAt: dateToIso(row.updatedAt)
-  });
-}
-
-function askIdeaData(idea: AskIdea) {
-  return {
-    slug: idea.slug,
-    productName: idea.productName,
-    category: idea.category,
-    country: idea.country,
-    description: idea.description,
-    imageNamesJson: JSON.stringify(idea.imageNames),
-    questionsJson: JSON.stringify(idea.questions),
-    otherQuestion: idea.otherQuestion || null,
-    email: idea.email,
-    whatsapp: idea.whatsapp || null,
-    visibility: idea.visibility,
-    status: idea.status,
-    expertReview: idea.expertReview || null,
-    discussionJson: JSON.stringify(idea.discussion),
-    createdAt: new Date(idea.createdAt)
-  };
 }
 
 function rowToLead(row: {
@@ -315,71 +254,4 @@ export async function putTeamMembers(members: unknown): Promise<TeamMember[]> {
     }
   });
   return normalized;
-}
-
-export async function getAskIdeas(): Promise<AskIdea[]> {
-  const rows = await prisma.askIdea.findMany({
-    orderBy: { createdAt: "desc" }
-  });
-  return rows.map(rowToAskIdea);
-}
-
-export async function getAskIdeaBySlug(slug: string): Promise<AskIdea | null> {
-  const row = await prisma.askIdea.findUnique({
-    where: { slug }
-  });
-  return row ? rowToAskIdea(row) : null;
-}
-
-export async function countAskReviewsForEmailToday(email: string): Promise<number> {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  return prisma.askIdea.count({
-    where: {
-      email,
-      createdAt: {
-        gte: start
-      }
-    }
-  });
-}
-
-export async function createAskIdea(idea: unknown): Promise<AskIdea> {
-  const normalized = normalizeAskIdea(idea);
-  await prisma.askIdea.upsert({
-    where: { id: normalized.id },
-    create: {
-      id: normalized.id,
-      ...askIdeaData(normalized)
-    },
-    update: askIdeaData(normalized)
-  });
-  return normalized;
-}
-
-export async function updateAskIdea(slug: string, updates: unknown): Promise<AskIdea> {
-  const existing = await getAskIdeaBySlug(slug);
-  if (!existing) {
-    throw new Error("Ask idea not found.");
-  }
-
-  const data = updates && typeof updates === "object" && !Array.isArray(updates) ? (updates as Record<string, unknown>) : {};
-  const merged = normalizeAskIdea({
-    ...existing,
-    status: data.status || existing.status,
-    expertReview: typeof data.expertReview === "string" ? data.expertReview : existing.expertReview,
-    discussion: Array.isArray(data.discussion)
-      ? data.discussion.map(normalizeDiscussionItem)
-      : existing.discussion
-  });
-
-  await prisma.askIdea.update({
-    where: { slug },
-    data: {
-      status: merged.status as AskStatus,
-      expertReview: merged.expertReview || null,
-      discussionJson: JSON.stringify(merged.discussion)
-    }
-  });
-  return merged;
 }
