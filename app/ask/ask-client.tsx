@@ -145,7 +145,7 @@ export default function AskClient() {
         <div className="flex min-h-[520px] w-full min-w-0 max-w-full flex-col justify-between">
           <header className="flex min-w-0 items-center justify-between gap-4 overflow-hidden">
             <Link href="/" className="text-sm font-semibold tracking-normal">TYORA</Link>
-            <span className="rounded-full border border-[#e8ebef] px-3 py-1 text-xs text-[#69707d]">Ask v1.0</span>
+            <span className="hidden rounded-full border border-[#e8ebef] px-3 py-1 text-xs text-[#69707d] sm:inline-flex">Ask v1.0</span>
           </header>
 
           <div className="py-16 lg:py-20">
@@ -155,7 +155,7 @@ export default function AskClient() {
             <h1 className="max-w-xl text-5xl font-semibold leading-[1.02] tracking-normal sm:text-6xl">
               <span className="break-words">Upload your product idea.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-xl leading-8 text-[#555d69]">
+            <p className="mt-6 max-w-[320px] text-xl leading-8 text-[#555d69] sm:max-w-lg">
               Get a FREE manufacturing review within 8 working hours.
             </p>
             <a
@@ -179,7 +179,7 @@ export default function AskClient() {
               <h2 className="text-xl font-semibold">Ask TYORA FREE</h2>
               <p className="mt-1 text-sm text-[#69707d]">{remaining} expert reviews left today for this email.</p>
             </div>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#69707d] ring-1 ring-[#e8ebef]">FREE</span>
+            <span className="hidden rounded-full bg-white px-3 py-1 text-xs font-medium text-[#69707d] ring-1 ring-[#e8ebef] sm:inline-flex">FREE</span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
