@@ -99,3 +99,27 @@ model AnalyticsEvent {
   @@index([referrerSource])
   @@index([device])
 }
+
+model AskIdea {
+  id               String   @id
+  slug             String   @unique
+  productName      String
+  category         String
+  country          String
+  description      String
+  imageNamesJson   String   @default("[]")
+  questionsJson    String   @default("[]")
+  otherQuestion    String?
+  email            String
+  whatsapp         String?
+  visibility       String
+  status           String   @default("Waiting")
+  expertReview     String?
+  discussionJson   String   @default("[]")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
