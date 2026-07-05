@@ -32,40 +32,42 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
   ].slice(0, 8);
 
   return (
-    <main className="min-h-screen bg-white text-[#101216]">
+    <main className="min-h-screen overflow-x-hidden bg-white text-[#101216]">
       <header className="border-b border-[#eef1f4]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
-          <Link href="/" className="text-sm font-semibold">TYORA</Link>
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-5 sm:px-6 lg:px-8">
+          <Link href="/" className="shrink-0 text-sm font-semibold">TYORA</Link>
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <a href="/api/community/auth/google" className="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold sm:inline-flex">Google Login</a>
-            <Link href="/ask/new" className="inline-flex items-center gap-2 rounded-full bg-[#101216] px-4 py-2 text-sm font-semibold text-white">
-              <Plus size={16} /> Upload My Idea
+            <Link href="/ask/new" className="inline-flex min-w-0 items-center gap-2 rounded-full bg-[#101216] px-3 py-2 text-xs font-semibold text-white sm:px-4 sm:text-sm">
+              <Plus size={16} className="shrink-0" />
+              <span className="hidden sm:inline">Upload My Idea</span>
+              <span className="sm:hidden">Upload</span>
             </Link>
           </div>
         </div>
       </header>
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <div className="grid gap-8 lg:grid-cols-[0.68fr_0.32fr]">
-          <div>
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[0.68fr_0.32fr]">
+          <div className="min-w-0">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#e8ebef] px-3 py-1 text-sm text-[#69707d]">
               <Sparkles size={15} /> Ask TYORA Community
             </p>
-            <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-normal sm:text-6xl">What&apos;s your next idea?</h1>
+            <h1 className="max-w-4xl break-words text-4xl font-semibold leading-tight tracking-normal sm:text-6xl">What&apos;s your next idea?</h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-[#59616e]">
               Upload your idea. Get a FREE manufacturing review within 8 working hours.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#ideas" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold">
+              <a href="#ideas" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold sm:px-5">
                 <Search size={16} /> Browse Ideas
               </a>
-              <Link href="/ask/new" className="inline-flex h-12 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white">
+              <Link href="/ask/new" className="inline-flex h-12 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white sm:px-5">
                 <Plus size={16} /> Upload My Idea
               </Link>
             </div>
           </div>
 
-          <aside className="rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-5">
+          <aside className="min-w-0 rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-5">
             <h2 className="text-lg font-semibold">Floating Live Activity</h2>
             <div className="mt-4 space-y-3">
               {liveActivity.length === 0 ? (
