@@ -71,19 +71,25 @@ export default function CommunityAdminClient() {
   const filtered = ideas.filter((idea) => idea.status === active);
 
   return (
-    <main className="min-h-screen bg-white px-4 py-8 text-[#101216] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#f6f7f9] px-4 py-6 text-[#101216] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <header className="flex flex-col gap-4 border-b border-[#eef1f4] pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <header className="rounded-[24px] border border-[#e8ebef] bg-white p-6 shadow-sm shadow-[#101216]/4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-[#69707d]">TYORA Admin</p>
-            <h1 className="mt-2 text-3xl font-semibold">Community</h1>
+            <p className="text-sm font-medium text-[#69707d]">TYORA OS · Community</p>
+            <h1 className="mt-2 text-3xl font-semibold">Ideas Work Queue</h1>
+            <p className="mt-2 text-sm text-[#69707d]">Reply to waiting ideas, edit TYORA reviews, change status, pin, hide and lock discussions.</p>
           </div>
-          <Link href="/ask" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">View Community</Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">Back to Today</Link>
+            <Link href="/ask" className="rounded-full bg-[#101216] px-4 py-2 text-sm font-semibold text-white">View Community</Link>
+          </div>
+          </div>
         </header>
 
         <div className="mt-6 grid gap-2 md:grid-cols-3 lg:grid-cols-6">
           {buckets.map(([status, label]) => (
-            <button key={status} onClick={() => setActive(status)} className={`rounded-[8px] border p-3 text-left ${active === status ? "border-[#101216] bg-[#101216] text-white" : "border-[#e8ebef]"}`}>
+            <button key={status} onClick={() => setActive(status)} className={`rounded-2xl border p-3 text-left shadow-sm shadow-[#101216]/4 ${active === status ? "border-[#101216] bg-[#101216] text-white" : "border-[#e8ebef] bg-white"}`}>
               <span className="block text-sm font-semibold">{label}</span>
               <span className="text-xs opacity-70">{counts[status] || 0} posts</span>
             </button>
@@ -92,9 +98,9 @@ export default function CommunityAdminClient() {
 
         {loading ? <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin" /></div> : (
           <div className="mt-6 space-y-5">
-            {filtered.length === 0 ? <p className="rounded-[8px] border border-[#e8ebef] p-6 text-sm text-[#69707d]">No posts in this section.</p> : null}
+            {filtered.length === 0 ? <p className="rounded-[22px] border border-[#e8ebef] bg-white p-6 text-sm text-[#69707d]">No posts in this section.</p> : null}
             {filtered.map((idea) => (
-              <article key={idea.id} className="rounded-[8px] border border-[#e8ebef] bg-[#fbfbfc] p-5">
+              <article key={idea.id} className="rounded-[22px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
                 <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
                   <div>
                     <p className="text-xs text-[#69707d]">{idea.id} · {idea.visibility} · {idea.author.name}</p>

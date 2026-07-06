@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export const metadata = {
-  title: "Admin Community | TYORA"
+  title: "Community | TYORA OS"
 };
 
 export default async function AdminCommunityPage() {

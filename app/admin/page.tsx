@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  AlertCircle,
   BarChart3,
   ArrowLeft,
   CalendarClock,
@@ -59,8 +60,10 @@ import {
   uploadMedia
 } from "@/lib/storage";
 import { AnalyticsDashboard } from "@/lib/analytics";
+import { CommunityIdea, CommunityStatus } from "@/lib/community";
 
 type TabId =
+  | "today"
   | "analytics"
   | "homepage"
   | "media"
@@ -273,17 +276,64 @@ const zhText: Record<string, string> = {
   Lost: "已流失"
 };
 
-const tabs: Array<{ id: TabId; label: string }> = [
-  { id: "analytics", label: "CEO Dashboard" },
-  { id: "homepage", label: "Homepage Content" },
-  { id: "media", label: "Media Library" },
-  { id: "cases", label: "Case Studies" },
-  { id: "video", label: "Video Settings" },
-  { id: "brand", label: "Brand Settings" },
-  { id: "founder", label: "Founder Profile" },
-  { id: "pricing", label: "Pricing" },
-  { id: "contact", label: "Contact Settings" },
-  { id: "submissions", label: "Project Submissions" }
+const osSections: Array<{
+  title: string;
+  items: Array<{ id?: TabId; href?: string; label: string; badge?: string }>;
+}> = [
+  { title: "Today", items: [{ id: "today", label: "Today" }] },
+  {
+    title: "Community",
+    items: [
+      { href: "/admin/community", label: "Ideas" },
+      { href: "/admin/community", label: "Comments" },
+      { href: "/admin/community", label: "TYORA Reviews" },
+      { href: "/admin/community", label: "Pinned Posts" },
+      { href: "/admin/community", label: "Reported" }
+    ]
+  },
+  {
+    title: "Projects",
+    items: [
+      { id: "submissions", label: "Active Projects" },
+      { id: "submissions", label: "Manufacturing" },
+      { id: "submissions", label: "Shipping" },
+      { id: "submissions", label: "Completed" }
+    ]
+  },
+  {
+    title: "Journeys",
+    items: [
+      { id: "cases", label: "All Journeys" },
+      { id: "cases", label: "Featured" }
+    ]
+  },
+  {
+    title: "Website",
+    items: [
+      { id: "homepage", label: "Homepage" },
+      { id: "brand", label: "Navigation" },
+      { id: "brand", label: "Footer" },
+      { id: "video", label: "Brand Film" },
+      { id: "pricing", label: "Pricing" },
+      { id: "contact", label: "Contact Settings" },
+      { id: "founder", label: "Founder Profile" }
+    ]
+  },
+  { title: "Media", items: [{ id: "media", label: "Media Library" }] },
+  {
+    title: "Users",
+    items: [
+      { id: "analytics", label: "Users" },
+      { id: "analytics", label: "Roles & Permissions" }
+    ]
+  },
+  {
+    title: "Settings",
+    items: [
+      { id: "brand", label: "General Settings" },
+      { id: "contact", label: "Integrations" }
+    ]
+  }
 ];
 
 const leadStatuses: LeadStatus[] = [
@@ -486,12 +536,13 @@ export default function AdminPage() {
   const [cmsLanguage, setCmsLanguage] = useState<CmsLanguage>("en");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [activeTab, setActiveTab] = useState<TabId>("analytics");
+  const [activeTab, setActiveTab] = useState<TabId>("today");
   const [content, setContent] = useState<SiteContent>(defaultContent);
   const [media, setMedia] = useState<MediaAsset[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(defaultTeamMembers);
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
+  const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [mediaSearch, setMediaSearch] = useState("");
@@ -527,6 +578,7 @@ export default function AdminPage() {
       })
       .catch(() => showToast("Unable to load admin data."));
     void loadAnalytics();
+    void loadCommunityAdminData();
   }, [authenticated]);
 
   const t = (value: string) => (cmsLanguage === "zh" ? zhText[value] || value : value);
@@ -554,6 +606,16 @@ export default function AdminPage() {
       setAnalytics(null);
     } finally {
       setAnalyticsLoading(false);
+    }
+  }
+
+  async function loadCommunityAdminData() {
+    try {
+      const response = await fetch("/api/admin/community");
+      const payload = await response.json();
+      setCommunityIdeas(payload.data || []);
+    } catch {
+      setCommunityIdeas([]);
     }
   }
 
@@ -720,7 +782,8 @@ export default function AdminPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfbfc] p-4">
         <Card className="w-full max-w-sm p-6 text-center">
-          <p className="font-semibold">{t("TYORA CMS")}</p>
+          <p className="font-semibold">TYORA OS</p>
+          <p className="mt-1 text-xs text-[#69707d]">Product Creator Operating System</p>
         </Card>
       </main>
     );
@@ -733,7 +796,10 @@ export default function AdminPage() {
           <form onSubmit={handleLoginSubmit}>
             <div className="mb-5 flex items-center gap-2">
               <Lock size={18} />
-              <h1 className="text-xl font-semibold">{t("TYORA Admin Login")}</h1>
+              <div>
+                <h1 className="text-xl font-semibold">TYORA OS</h1>
+                <p className="text-xs text-[#69707d]">Product Creator Operating System</p>
+              </div>
             </div>
             <Field label={t("Password")}>
               <Input
@@ -753,19 +819,22 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfbfc] text-[#101216]">
-      <header className="sticky top-0 z-30 border-b border-[#e8ebef] bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#f6f7f9] text-[#101216]">
+      <header className="sticky top-0 z-30 border-b border-[#e8ebef] bg-white/92 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <Link href="/" className="rounded-lg p-2 hover:bg-[#f5f6f8]" aria-label="Back to site">
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <p className="font-semibold">{t("TYORA CMS")}</p>
-              <p className="text-xs text-[#69707d]">{t("No-code website management")}</p>
+              <p className="font-semibold">TYORA OS</p>
+              <p className="text-xs text-[#69707d]">Product Creator Operating System</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" className="hidden min-h-10 px-3 sm:inline-flex">
+              <Plus size={15} /> Quick Action
+            </Button>
             <Button variant="outline" onClick={toggleCmsLanguage}>
               {cmsLanguage === "en" ? "中文" : "EN"}
             </Button>
@@ -785,22 +854,50 @@ export default function AdminPage() {
         </div>
       ) : null}
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[250px_1fr] lg:px-8">
-        <aside className="space-y-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
-                activeTab === tab.id ? "bg-[#101216] text-white" : "bg-white text-[#59616e] hover:bg-[#f5f6f8]"
-              }`}
-            >
-              {t(tab.label)}
-            </button>
-          ))}
+      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8">
+        <aside className="rounded-[22px] border border-[#e8ebef] bg-white p-4 shadow-sm shadow-[#101216]/4 lg:sticky lg:top-22 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-auto">
+          <div className="mb-4 rounded-2xl bg-[#101216] p-4 text-white">
+            <p className="text-sm font-semibold">Admin workspace</p>
+            <p className="mt-1 text-xs leading-5 text-white/68">Workflow-first control for community, projects, journeys, website and media.</p>
+          </div>
+          <div className="space-y-4">
+            {osSections.map((section) => (
+              <div key={section.title}>
+                <p className="px-3 text-[11px] font-semibold uppercase tracking-normal text-[#8b93a1]">{section.title}</p>
+                <div className="mt-1 space-y-1">
+                  {section.items.map((item) => item.href ? (
+                    <Link key={`${section.title}-${item.label}`} href={item.href} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">
+                      <span>{item.label}</span>
+                      {item.label === "Ideas" ? <span className="rounded-full bg-[#eef2ff] px-2 py-0.5 text-[11px] text-[#315fbd]">{communityIdeas.length}</span> : null}
+                    </Link>
+                  ) : (
+                    <button
+                      key={`${section.title}-${item.label}`}
+                      onClick={() => item.id && setActiveTab(item.id)}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition ${
+                        activeTab === item.id ? "bg-[#101216] text-white shadow-sm shadow-[#101216]/10" : "text-[#59616e] hover:bg-[#f5f6f8]"
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      {item.badge ? <span className="text-xs opacity-70">{item.badge}</span> : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </aside>
 
-        <section className="space-y-6">
+        <section className="min-w-0 space-y-6">
+          {activeTab === "today" ? (
+            <TodaySection
+              analytics={analytics}
+              communityIdeas={communityIdeas}
+              leads={leads}
+              setActiveTab={setActiveTab}
+            />
+          ) : null}
+
           {activeTab === "analytics" ? (
             <CeoDashboardSection
               analytics={analytics}
@@ -1081,6 +1178,174 @@ export default function AdminPage() {
       </div>
     </main>
   );
+}
+
+function TodaySection({
+  analytics,
+  communityIdeas,
+  leads,
+  setActiveTab
+}: {
+  analytics: AnalyticsDashboard | null;
+  communityIdeas: CommunityIdea[];
+  leads: Lead[];
+  setActiveTab: (tab: TabId) => void;
+}) {
+  const waitingIdeas = communityIdeas.filter((idea) => !idea.review && !idea.hidden).slice(0, 8);
+  const recentReviews = communityIdeas.filter((idea) => idea.review).slice(0, 5);
+  const pinnedIdeas = communityIdeas.filter((idea) => idea.pinned).slice(0, 5);
+  const projectsStarted = communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status));
+  const manufacturing = communityIdeas.filter((idea) => idea.status === "Manufacturing").length;
+  const shipping = communityIdeas.filter((idea) => idea.status === "Shipping").length;
+  const completed = communityIdeas.filter((idea) => idea.status === "Completed").length;
+  const likes = communityIdeas.reduce((sum, idea) => sum + idea.likeCount, 0);
+  const liveActivity = [
+    ...communityIdeas.slice(0, 4).map((idea) => `${idea.author.name} uploaded ${idea.title}`),
+    ...recentReviews.map((idea) => `TYORA reviewed ${idea.title}`),
+    ...communityIdeas.flatMap((idea) => idea.comments.slice(-1).map((comment) => `${comment.author.name} commented on ${idea.title}`))
+  ].slice(0, 8);
+
+  const topCards = [
+    ["Ideas Waiting", waitingIdeas.length, "yellow"],
+    ["TYORA Reviews", recentReviews.length, "green"],
+    ["Projects Started", projectsStarted.length, "blue"],
+    ["New Users", Math.max(communityIdeas.length, leads.length), "purple"],
+    ["Total Views", analytics?.summary.pageViewsToday || 0, "gray"],
+    ["Likes", likes, "orange"]
+  ] as const;
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[24px] border border-[#e8ebef] bg-white p-6 shadow-sm shadow-[#101216]/4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-sm font-medium text-[#69707d]">Today</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-normal">Good morning, Adam 👋</h1>
+            <p className="mt-2 text-[#69707d]">Here&apos;s what needs your attention today.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white"><Plus size={15} /> New Idea</a>
+            <button onClick={() => setActiveTab("submissions")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold"><Plus size={15} /> New Project</button>
+            <button onClick={() => setActiveTab("cases")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold"><Plus size={15} /> Publish Journey</button>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          {topCards.map(([label, value, tone]) => (
+            <div key={label} className={`rounded-2xl border p-4 ${toneClass(tone)}`}>
+              <p className="text-2xl font-semibold">{value}</p>
+              <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Needs Your Reply</h2>
+              <p className="mt-1 text-sm text-[#69707d]">Ideas waiting for TYORA Expert Review.</p>
+            </div>
+            <a href="/admin/community" className="text-sm font-semibold text-[#315fbd]">Open queue</a>
+          </div>
+          <div className="divide-y divide-[#eef1f4]">
+            {waitingIdeas.length === 0 ? <p className="rounded-2xl bg-[#f7f8fa] p-4 text-sm text-[#69707d]">No ideas waiting for review.</p> : null}
+            {waitingIdeas.map((idea) => (
+              <div key={idea.id} className="grid gap-3 py-4 sm:grid-cols-[52px_1fr_auto] sm:items-center">
+                <div className="flex size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e9f7f3] to-[#efe9ff] text-sm font-semibold">
+                  {idea.title.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{idea.title}</p>
+                  <p className="mt-1 text-sm text-[#69707d]">{idea.author.name} · {relativeTime(idea.createdAt)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <OsStatusBadge status={idea.status} waiting={!idea.review} />
+                  <a href="/admin/community" className="rounded-full bg-[#101216] px-3 py-2 text-xs font-semibold text-white">Reply</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
+          <h2 className="text-xl font-semibold">Product Journeys Overview</h2>
+          <div className="mt-5 grid gap-3">
+            {[
+              ["Active Projects", projectsStarted.length, "bg-[#e9f2ff] text-[#1d4ed8]"],
+              ["Manufacturing", manufacturing, "bg-[#f0eaff] text-[#6d28d9]"],
+              ["Shipping", shipping, "bg-[#fff0df] text-[#c2410c]"],
+              ["Completed", completed, "bg-[#e8f8ef] text-[#15803d]"]
+            ].map(([label, value, cls]) => (
+              <div key={label} className="flex items-center justify-between rounded-2xl border border-[#eef1f4] p-4">
+                <span className="font-medium">{label}</span>
+                <span className={`rounded-full px-3 py-1 text-sm font-semibold ${cls}`}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-3">
+        <OsListCard title="Recent Community Activity" empty="No community activity yet." items={liveActivity} />
+        <OsListCard title="Pinned Ideas" empty="No pinned ideas." items={pinnedIdeas.map((idea) => idea.title)} />
+        <OsListCard title="Recent TYORA Reviews" empty="No TYORA reviews yet." items={recentReviews.map((idea) => idea.title)} />
+      </section>
+
+      <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
+        <div className="mb-4 flex items-center gap-2">
+          <AlertCircle size={18} className="text-[#c2410c]" />
+          <h2 className="text-xl font-semibold">Live Activity Feed</h2>
+        </div>
+        <div className="grid gap-2 md:grid-cols-2">
+          {liveActivity.length === 0 ? <p className="text-sm text-[#69707d]">Real activity only. Uploads, comments, TYORA reviews and project changes will appear here.</p> : null}
+          {liveActivity.map((item) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{item}</p>)}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function OsListCard({ title, empty, items }: { title: string; empty: string; items: string[] }) {
+  return (
+    <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="mt-4 space-y-2">
+        {items.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">{empty}</p> : null}
+        {items.slice(0, 6).map((item) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{item}</p>)}
+      </div>
+    </Card>
+  );
+}
+
+function OsStatusBadge({ status, waiting }: { status: CommunityStatus; waiting?: boolean }) {
+  const label = waiting ? "Waiting TYORA Review" : status === "TYORA Reviewing" ? "TYORA Replied" : status;
+  const cls = waiting
+    ? "bg-[#fff7d6] text-[#8a5a00]"
+    : status === "Completed"
+      ? "bg-[#e8f8ef] text-[#15803d]"
+      : status === "Project Started"
+        ? "bg-[#e9f2ff] text-[#1d4ed8]"
+        : status === "Manufacturing"
+          ? "bg-[#f0eaff] text-[#6d28d9]"
+          : status === "Shipping"
+            ? "bg-[#fff0df] text-[#c2410c]"
+            : "bg-[#f0eaff] text-[#6d28d9]";
+  return <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${cls}`}>{label}</span>;
+}
+
+function toneClass(tone: string) {
+  if (tone === "green") return "border-[#c9efd8] bg-[#f3fbf6]";
+  if (tone === "yellow") return "border-[#ffe89a] bg-[#fffbea]";
+  if (tone === "blue") return "border-[#c9ddff] bg-[#f4f8ff]";
+  if (tone === "purple") return "border-[#ddd0ff] bg-[#f7f3ff]";
+  if (tone === "orange") return "border-[#ffd8ad] bg-[#fff7ed]";
+  return "border-[#eef1f4] bg-[#fbfbfc]";
+}
+
+function relativeTime(value: string) {
+  const hours = Math.max(1, Math.round((Date.now() - new Date(value).getTime()) / 36e5));
+  return hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
 }
 
 function CeoDashboardSection({
