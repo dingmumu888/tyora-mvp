@@ -293,7 +293,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             {ideas.length === 0 ? (
               <div className="rounded-[16px] border border-dashed border-[#cfd5dc] bg-white/92 p-7 text-center">
                 <p className="text-xl font-semibold">No ideas yet.</p>
-                <p className="mt-2 text-[#69707d]">Be the first product creator to start a manufacturing discussion.</p>
+                <p className="mx-auto mt-2 max-w-[280px] text-[#69707d] sm:max-w-none">Be the first product creator to start a manufacturing discussion.</p>
               </div>
             ) : ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} />)}
           </div>
