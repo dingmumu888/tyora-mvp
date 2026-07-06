@@ -4,14 +4,19 @@ import { ClipboardEvent, DragEvent, FormEvent, useEffect, useMemo, useRef, useSt
 import Link from "next/link";
 import {
   ArrowRight,
+  ChevronDown,
   CheckCircle2,
+  Globe2,
   ImagePlus,
+  Info,
+  LockKeyhole,
   Loader2,
   MessageCircle,
   PackageCheck,
   SearchCheck,
   Sparkles,
   Trash2,
+  Trophy,
   Upload
 } from "lucide-react";
 import { communityQuestions, CommunityQuestion } from "@/lib/community";
@@ -24,6 +29,39 @@ type ImagePreview = { name: string; url: string };
 
 const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Go Live"] as const;
 const mobileSteps = ["Idea", "Show", "Understand", "Live"] as const;
+const visibilityOptions = [
+  {
+    value: "Public",
+    title: "Community Discussion",
+    badge: "Most Popular",
+    badgeIcon: Trophy,
+    icon: Globe2,
+    intro: "Most founders choose this option.",
+    description: "Share your idea with the TYORA Community.",
+    recommendation: "Recommended if you want more feedback before building.",
+    benefits: [
+      "More community feedback",
+      "More manufacturing suggestions",
+      "More discussion",
+      "More visibility"
+    ]
+  },
+  {
+    value: "Private",
+    title: "Private Discussion",
+    badge: "Private Project",
+    badgeIcon: undefined,
+    icon: LockKeyhole,
+    intro: "Only you and TYORA can view this discussion.",
+    description: "Recommended for early-stage inventions, confidential ideas, or projects you are not ready to share publicly.",
+    recommendation: "Maximum privacy.",
+    benefits: [
+      "Maximum privacy",
+      "Only TYORA can review",
+      "Ideal for confidential ideas"
+    ]
+  }
+] as const;
 const nextSteps = [
   ["Founders start discussing your idea.", MessageCircle],
   ["TYORA reviews manufacturability.", SearchCheck],
@@ -41,6 +79,7 @@ export default function NewIdeaClient() {
   const [loginPrompt, setLoginPrompt] = useState(0);
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [published, setPublished] = useState(false);
+  const [visibilityLearnOpen, setVisibilityLearnOpen] = useState(false);
   const imagePreviewsRef = useRef<ImagePreview[]>([]);
   const [form, setForm] = useState({
     title: "",
@@ -346,12 +385,99 @@ export default function NewIdeaClient() {
                 {form.questions.includes("Other") ? (
                   <input value={form.otherQuestion} onChange={(event) => setForm({ ...form, otherQuestion: event.target.value })} placeholder="What else should TYORA review?" className={inputClass} />
                 ) : null}
-                <label className="grid gap-2 text-sm font-semibold">Public or Private
-                  <select value={form.visibility} onChange={(event) => setForm({ ...form, visibility: event.target.value })} className={inputClass}>
-                    <option>Public</option>
-                    <option>Private</option>
-                  </select>
-                </label>
+                <section className="grid gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold">Who can see this discussion?</h3>
+                    <p className="mt-1 text-sm leading-6 text-[#69707d]">Choose the discussion type that best fits your product idea.</p>
+                  </div>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    {visibilityOptions.map((option) => {
+                      const selected = form.visibility === option.value;
+                      const Icon = option.icon;
+                      const BadgeIcon = option.badgeIcon;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setForm({ ...form, visibility: option.value })}
+                          className={cn(
+                            "group relative flex h-full flex-col rounded-[22px] border bg-white p-4 text-left shadow-sm transition duration-[180ms] hover:-translate-y-0.5 hover:shadow-[0_18px_46px_rgba(15,23,42,0.09)]",
+                            selected
+                              ? "border-[#2563eb] shadow-[0_18px_50px_rgba(37,99,235,0.14)] ring-4 ring-[#2563eb]/10"
+                              : "border-[#e4e8ef] hover:border-[#c7d2fe]"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <span className={cn("flex size-11 items-center justify-center rounded-2xl", selected ? "bg-[#2563eb] text-white" : "bg-[#f7f8fa] text-[#2563eb]")}>
+                              <Icon size={20} />
+                            </span>
+                            {selected ? (
+                              <span className="flex size-7 items-center justify-center rounded-full bg-[#2563eb] text-white shadow-sm">
+                                <CheckCircle2 size={17} />
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="mt-4 flex flex-wrap items-center gap-2">
+                            <h4 className="text-lg font-semibold">{option.title}</h4>
+                            <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold", option.value === "Public" ? "bg-[#fff7ed] text-[#c2410c]" : "bg-[#f4f6f8] text-[#59616e]")}>
+                              {BadgeIcon ? <BadgeIcon size={12} /> : null}
+                              {option.badge}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm font-semibold text-[#101216]">{option.intro}</p>
+                          <p className="mt-2 text-sm leading-6 text-[#59616e]">{option.description}</p>
+                          <div className="mt-4 grid gap-2 text-sm text-[#59616e]">
+                            {option.benefits.map((benefit) => (
+                              <span key={benefit} className="inline-flex items-center gap-2">
+                                <CheckCircle2 size={15} className="shrink-0 text-[#0f766e]" />
+                                {benefit}
+                              </span>
+                            ))}
+                          </div>
+                          <p className="mt-4 rounded-2xl bg-[#f8fafc] p-3 text-sm leading-6 text-[#59616e]">{option.recommendation}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="rounded-[20px] border border-[#dbeafe] bg-[#eff6ff] p-4 text-sm leading-6 text-[#315fbd]">
+                    <div className="flex gap-3">
+                      <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-[#2563eb]">
+                        <Info size={15} />
+                      </span>
+                      <div>
+                        <h4 className="font-semibold text-[#1d4ed8]">Choosing the right discussion type</h4>
+                        <p className="mt-1">Community Discussions are visible to everyone and usually receive much more discussion and manufacturing feedback.</p>
+                        <p className="mt-1">Private Discussions are only visible to you and TYORA.</p>
+                        <p className="mt-1">Choose whichever best fits your project.</p>
+                        <button
+                          type="button"
+                          onClick={() => setVisibilityLearnOpen((current) => !current)}
+                          className="mt-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#2563eb] shadow-sm transition duration-[180ms] hover:-translate-y-0.5"
+                        >
+                          Learn more
+                          <ChevronDown size={14} className={cn("transition duration-[180ms]", visibilityLearnOpen ? "rotate-180" : "")} />
+                        </button>
+                        <div className={cn("grid overflow-hidden transition-[grid-template-rows] duration-[180ms]", visibilityLearnOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                          <div className="min-h-0">
+                            <div className="mt-4 grid gap-4 rounded-2xl bg-white/72 p-4 text-[#59616e]">
+                              <div>
+                                <h5 className="font-semibold text-[#101216]">Why choose Community Discussion?</h5>
+                                <p className="mt-1">Community discussions receive more comments, suggestions and manufacturing feedback from other founders.</p>
+                                <p className="mt-1">This is the recommended option for most creators.</p>
+                              </div>
+                              <div>
+                                <h5 className="font-semibold text-[#101216]">Why choose Private Discussion?</h5>
+                                <p className="mt-1">Private discussions are only visible to you and TYORA.</p>
+                                <p className="mt-1">If your project contains confidential technology or ideas you are not ready to share publicly, private discussions may be a better choice.</p>
+                                <p className="mt-1">TYORA cannot provide legal advice regarding patents or intellectual property.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </div>
             </section>
           ) : null}
