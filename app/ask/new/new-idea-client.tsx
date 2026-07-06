@@ -181,7 +181,10 @@ export default function NewIdeaClient() {
                 Email Login
               </EmailLogin>
             ) : <span className="hidden rounded-full bg-[#ecfdf5] px-3 py-2 text-sm font-semibold text-[#0f766e] sm:inline-flex">{user.name}</span>}
-            <Link href="/ask" className="inline-flex h-10 shrink-0 items-center rounded-full border border-[#dfe3e8] bg-white px-3 text-sm font-semibold text-[#59616e] sm:px-4">Browse Ideas</Link>
+            <Link href="/ask" className="inline-flex h-10 shrink-0 items-center rounded-full border border-[#dfe3e8] bg-white px-3 text-sm font-semibold text-[#59616e] sm:px-4">
+              <span className="sm:hidden">Browse</span>
+              <span className="hidden sm:inline">Browse Ideas</span>
+            </Link>
           </div>
         </div>
       </header>
