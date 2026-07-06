@@ -25,10 +25,17 @@ export default function NewIdeaClient() {
   });
 
   useEffect(() => {
-    fetch("/api/community/session")
-      .then((response) => response.json())
-      .then((data) => setUser(data.user || null))
-      .finally(() => setCheckingSession(false));
+    function refreshSession() {
+      fetch("/api/community/session")
+        .then((response) => response.json())
+        .then((data) => setUser(data.user || null))
+        .catch(() => setUser(null))
+        .finally(() => setCheckingSession(false));
+    }
+
+    refreshSession();
+    window.addEventListener("tyora:community-login", refreshSession);
+    return () => window.removeEventListener("tyora:community-login", refreshSession);
   }, []);
 
   const usedText = useMemo(() => "Today's FREE Expert Reviews: 0 / 3 Used", []);

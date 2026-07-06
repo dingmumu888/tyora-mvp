@@ -15,10 +15,16 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("/api/community/session")
-      .then((response) => response.json())
-      .then((data) => setUser(data.user || null))
-      .catch(() => setUser(null));
+    function refreshSession() {
+      fetch("/api/community/session")
+        .then((response) => response.json())
+        .then((data) => setUser(data.user || null))
+        .catch(() => setUser(null));
+    }
+
+    refreshSession();
+    window.addEventListener("tyora:community-login", refreshSession);
+    return () => window.removeEventListener("tyora:community-login", refreshSession);
   }, []);
 
   const whatsappUrl = useMemo(() => {
