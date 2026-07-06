@@ -230,7 +230,10 @@ export default function Home() {
               ["Success Stories", "/ask"],
               ["Pricing", "#pricing"]
             ].map(([label, href]) => (
-              <Link key={label} href={href} className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8] hover:text-[#101216]">
+              <Link key={label} href={href} className={cn(
+                "rounded-full px-3 py-2 text-sm font-medium transition hover:bg-[#f5f6f8] hover:text-[#101216]",
+                label === "Discover Ideas" ? "bg-[#101216] text-white hover:bg-[#101216] hover:text-white" : "text-[#59616e]"
+              )}>
                 {label}
               </Link>
             ))}
@@ -264,13 +267,13 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
-            <div className="rounded-[28px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4 sm:p-7">
+            <div className="rounded-[28px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4 sm:p-7 lg:p-6">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
               </p>
-              <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_auto] xl:items-end">
+              <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
                 <div>
-                  <h1 className="max-w-3xl text-3xl font-semibold leading-[1.08] tracking-normal sm:text-5xl lg:text-6xl">What&apos;s your next idea?</h1>
+                  <h1 className="max-w-3xl text-3xl font-semibold leading-[1.08] tracking-normal sm:text-5xl lg:text-[3.5rem]">What&apos;s your next idea?</h1>
                   <p className="mt-4 max-w-[300px] text-base leading-7 text-[#59616e] sm:max-w-2xl sm:text-lg">
                     Upload your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
@@ -280,7 +283,7 @@ export default function Home() {
                   <Link href="/ask" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
               </div>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="mt-5 flex gap-3 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
                 {[
                   ["Ideas Shared", communityIdeas.length],
                   ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
@@ -288,7 +291,7 @@ export default function Home() {
                   ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
                   ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-4">
+                  <div key={label} className="min-w-[132px] rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-3 sm:min-w-[150px] xl:min-w-0">
                     <p className="text-2xl font-semibold">{value}</p>
                     <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
                   </div>
@@ -353,7 +356,7 @@ export default function Home() {
       </section>
 
       <section className="border-b border-[#eef1f4] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[0.45fr_0.55fr] lg:items-center lg:px-8 lg:py-24 xl:py-28">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[0.58fr_0.42fr] lg:items-center lg:px-8 lg:py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -363,11 +366,11 @@ export default function Home() {
             <p className="mb-5 w-fit rounded-full border border-[#e5e8ec] bg-[#fbfbfc] px-3 py-1 text-xs font-medium text-[#69707d] lg:text-sm">
               TYORA Brand Film v2.0
             </p>
-            <h1 className="max-w-3xl text-[3.15rem] font-semibold leading-[1.02] tracking-normal sm:text-[4rem] lg:text-[4.7rem] xl:text-[5.2rem]">
-              Build with confidence.
-            </h1>
+            <h2 className="max-w-3xl text-[2.2rem] font-semibold leading-tight tracking-normal sm:text-[3rem] lg:text-[3.4rem]">
+              See how product ideas become real.
+            </h2>
             <p className="mt-5 max-w-xl text-base leading-7 text-[#59616e] sm:text-lg sm:leading-8">
-              Helping product founders make better manufacturing decisions — from your first idea to your first production run.
+              The service story is still here, but the community now leads TYORA. Watch the brand film, then explore the ideas founders are discussing.
             </p>
             <div className="mt-8 grid gap-3 sm:flex">
               <Button onClick={openWizard} className="min-h-12 px-5">
@@ -578,7 +581,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+      <section id="pricing" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
           <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{displayContent.pricingTitle}</h2>
           <p className="mt-2 text-[#59616e]">{displayContent.pricingSubtitle}</p>
@@ -702,7 +705,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="pricing" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+      <section id="faq" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
           <div className="mb-10 max-w-3xl">
             <p className="text-sm font-medium text-[#69707d]">FAQ</p>
@@ -754,7 +757,7 @@ export default function Home() {
         target="_blank"
         rel="noreferrer"
         onClick={() => trackAnalyticsEvent("whatsapp_click")}
-        className="fixed bottom-3 right-3 z-40 hidden min-h-12 items-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:bottom-5 sm:right-5 sm:inline-flex sm:px-5"
+        className="fixed inset-x-4 bottom-3 z-40 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:px-5"
       >
         <MessageCircle size={18} />
         {t.startWhatsAppChat}
