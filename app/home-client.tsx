@@ -217,8 +217,10 @@ export default function Home() {
 
   const canStartChat = Boolean(productName.trim());
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
+  const homeExamples = communityIdeas.length < 4 ? starterExamples.slice(0, 4 - communityIdeas.length) : [];
+
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_34%,#f7f5f0_100%)] text-[#101216]">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] text-[#101216]">
       <header className="sticky top-0 z-40 overflow-hidden border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a href="#" className="flex items-center gap-2 font-semibold">
@@ -273,11 +275,14 @@ export default function Home() {
       </header>
 
       <section className="border-b border-[#e4e8ef] bg-transparent lg:min-h-[calc(100vh-64px)]">
-        <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[232px_minmax(0,1fr)_310px] lg:px-8">
-          <aside className="hidden self-start rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4 lg:sticky lg:top-20 lg:block">
+        <div className="mx-auto grid max-w-7xl gap-3 px-3 py-3 sm:px-5 lg:grid-cols-[220px_minmax(0,1fr)_300px] lg:px-6">
+          <aside className="hidden self-start rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)] lg:sticky lg:top-20 lg:block">
             <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={18} /></div>
-            <h2 className="mt-3 text-lg font-semibold">Ask TYORA Community</h2>
-            <p className="mt-2 text-sm leading-6 text-[#69707d]">Product creators discussing ideas with Chinese manufacturing expertise.</p>
+            <h2 className="mt-3 text-base font-semibold">Creator HQ</h2>
+            <p className="mt-1.5 text-[13px] leading-5 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
+            <p className="mt-3 inline-flex w-full items-center gap-2 rounded-2xl bg-[#f6fefb] px-3 py-2 text-sm font-semibold text-[#0f766e]">
+              <span className="size-2 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.12)]" /> {Math.max(communityIdeas.length * 3, 8)} creators online
+            </p>
             <Link href="/ask/new" className={`mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold ${primaryButton}`}>
               <Upload size={15} /> Start a Discussion
             </Link>
@@ -286,14 +291,14 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
-            <div className="rounded-[20px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
+            <div className="rounded-[16px] border border-[#dfe6ef] bg-white/96 p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)] sm:p-4">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
               </p>
-              <div className="mt-3 grid gap-3">
+              <div className="mt-2.5 grid gap-3">
                 <div>
-                  <h1 className="max-w-3xl text-3xl font-semibold leading-[1.05] tracking-normal sm:text-4xl lg:text-[2.9rem]">What&apos;s your next idea?</h1>
-                  <p className="mt-3 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
+                  <h1 className="max-w-3xl text-2xl font-semibold leading-[1.05] tracking-normal sm:text-3xl lg:text-[2.35rem]">What are founders building next?</h1>
+                  <p className="mt-2 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
                     Share your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
                   <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
@@ -303,7 +308,7 @@ export default function Home() {
                   <Link href="/ask" className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
               </div>
-              <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
+              <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
                 {[
                   ["Ideas Shared", communityIdeas.length],
                   ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
@@ -311,21 +316,21 @@ export default function Home() {
                   ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
                   ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
                 ].map(([label, value]) => (
-                  <div key={label} className="min-w-[122px] rounded-xl border border-[#eef1f4] bg-[#fbfbfc] p-3 sm:min-w-[140px] xl:min-w-0">
-                    <p className="text-xl font-semibold">{value}</p>
+                  <div key={label} className="min-w-[122px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3 sm:min-w-[140px] xl:min-w-0">
+                    <p className="text-lg font-semibold">{value}</p>
                     <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
+            <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-1">
               {["Trending", "Newest", "Most Discussed", "Latest TYORA Reply", "Recently Uploaded"].map((item, index) => (
                 <Link key={item} href="/ask" className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold", index === 0 ? "bg-[#2563eb] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]")}>{item}</Link>
               ))}
             </div>
 
-            <div className="mt-3 grid gap-2.5">
+            <div className="mt-2.5 grid gap-2">
               {communityIdeas.length === 0 ? (
                 <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
                   <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -371,8 +376,10 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-              ) : communityIdeas.slice(0, 6).map((idea) => (
-                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-white p-3 shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/8 sm:grid-cols-[112px_1fr]">
+              ) : (
+                <>
+                  {communityIdeas.slice(0, 6).map((idea) => (
+                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-3 rounded-[12px] border border-[#e1e6ee] bg-white p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)] sm:grid-cols-[108px_1fr]">
                   <div className="flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
                     {idea.imageUrls[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -383,8 +390,8 @@ export default function Home() {
                     <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">
                       <span>{idea.country}</span><span>{idea.author.name}</span><span>{idea.status}</span>
                     </div>
-                    <h2 className="mt-1.5 line-clamp-1 text-lg font-semibold">{idea.title}</h2>
-                    <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59616e]">{idea.description}</p>
+                    <h2 className="mt-1.5 line-clamp-1 text-base font-semibold">{idea.title}</h2>
+                    <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{idea.description}</p>
                     <div className="mt-2 flex gap-4 text-xs font-medium text-[#69707d]">
                       <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount}</span>
                       <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length}</span>
@@ -392,7 +399,32 @@ export default function Home() {
                     </div>
                   </div>
                 </Link>
-              ))}
+                  ))}
+                  {homeExamples.map((example, index) => (
+                    <Link key={example.title} href="/ask/new" className="grid gap-3 rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_38px_rgba(15,23,42,0.09)] sm:grid-cols-[108px_1fr]">
+                      <div className={cn(
+                        "relative flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br",
+                        index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
+                      )}>
+                        <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
+                          {example.title.slice(0, 2).toUpperCase()}
+                        </span>
+                        <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#69707d] ring-1 ring-[#e8ebef]">
+                          Example
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">
+                          <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{example.category}</span>
+                          <span className="inline-flex items-center gap-1 text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Ready for review</span>
+                        </div>
+                        <h3 className="mt-1.5 line-clamp-1 text-base font-semibold">{example.title}</h3>
+                        <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{example.description}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </>
+              )}
             </div>
 
             <div className="mt-3 grid gap-3 xl:hidden">
@@ -421,30 +453,33 @@ export default function Home() {
           </div>
 
           <aside className="hidden space-y-3 self-start xl:sticky xl:top-20 xl:block">
-            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-              <h2 className="text-lg font-semibold">Live Activity</h2>
-              <div className="mt-4 space-y-3">
+            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)]">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold">Live Activity</h2>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Live</span>
+              </div>
+              <div className="mt-3 space-y-2">
                 {communityIdeas.length === 0 ? (
                   <>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">A founder shares a rough product idea.</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">The community reacts, comments and asks better questions.</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">TYORA experts add manufacturing review.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#14b8a6]" />A founder shares a rough product idea.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#f59e0b]" />The community asks better questions.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#2563eb]" />TYORA experts add review.</p>
                   </>
                 ) : null}
-                {communityIdeas.slice(0, 4).map((idea) => <p key={idea.id} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{idea.author.name} uploaded {idea.title}</p>)}
+                {communityIdeas.slice(0, 4).map((idea, index) => <p key={idea.id} className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className={`mr-2 inline-block size-2 rounded-full ${index % 3 === 0 ? "bg-[#14b8a6]" : index % 3 === 1 ? "bg-[#f59e0b]" : "bg-[#2563eb]"}`} />{idea.author.name} uploaded {idea.title}</p>)}
               </div>
             </section>
-            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
-              <h2 className="text-lg font-semibold">Products Built by Community</h2>
-              <div className="mt-4 space-y-3">
-                <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">Idea → Discussion → TYORA Review</p>
-                <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">Project → Manufacturing → Delivered</p>
+            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-sm shadow-[#101216]/4">
+              <h2 className="text-base font-semibold">Products Built</h2>
+              <div className="mt-3 space-y-2">
+                <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">Idea → Discussion → TYORA Review</p>
+                <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">Project → Manufacturing → Delivered</p>
               </div>
             </section>
-            <section className="rounded-[18px] border border-[#e8ebef] bg-[#101216] p-4 text-white">
-              <h2 className="text-lg font-semibold">Journey of the Week</h2>
-              <div className="mt-4 grid gap-2 text-sm text-white/72">
-                {["Idea", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step) => <span key={step} className="rounded-full bg-white/8 px-3 py-2">{step}</span>)}
+            <section className="rounded-[16px] border border-[#e8ebef] bg-[#101216] p-3.5 text-white shadow-[0_16px_44px_rgba(15,23,42,0.18)]">
+              <h2 className="text-base font-semibold">Journey of the Week</h2>
+              <div className="mt-3 grid gap-1.5 text-sm text-white/72">
+                {["Idea", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step) => <span key={step} className="rounded-full bg-white/8 px-3 py-1.5">{step}</span>)}
               </div>
               <Link href="/ask" className="mt-5 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#101216]">View Full Journey</Link>
             </section>
