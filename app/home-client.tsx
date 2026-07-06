@@ -17,6 +17,7 @@ import {
   Play,
   SearchCheck,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Upload,
   Users,
@@ -69,6 +70,38 @@ const starterExamples = [
     description: "A compact insulated mug with a secure lid, tactile grip, and low-MOQ material options."
   }
 ] as const;
+const exampleMetrics = [
+  { love: 28, comments: 14, buy: 9, views: 483, reply: "5 min ago", avatars: ["AL", "TY", "JR"] },
+  { love: 21, comments: 11, buy: 7, views: 356, reply: "9 min ago", avatars: ["SA", "TY", "MK"] },
+  { love: 34, comments: 18, buy: 12, views: 621, reply: "12 min ago", avatars: ["MI", "TY", "LE"] }
+] as const;
+const fallbackActivity = [
+  ["Alex uploaded a new idea", "2 min ago", "bg-[#14b8a6]"],
+  ["TYORA replied to a mug project", "5 min ago", "bg-[#2563eb]"],
+  ["Sarah commented on material choice", "7 min ago", "bg-[#f59e0b]"],
+  ["Mike started manufacturing", "14 min ago", "bg-[#8b5cf6]"]
+] as const;
+const featuredJourney = [
+  ["Idea", "Founder shares a spill-proof mug concept", "Done"],
+  ["Discussion", "Community compares lid, grip and MOQ", "Done"],
+  ["TYORA Review", "Material, tooling and factory path reviewed", "Done"],
+  ["Prototype", "Sample structure and finish confirmed", "Done"],
+  ["Manufacturing", "Factory route and QC plan locked", "Active"],
+  ["Delivered", "First batch ready for creator testing", "Next"]
+] as const;
+
+function timeAgo(value: string) {
+  const diff = Date.now() - new Date(value).getTime();
+  const minutes = Math.max(1, Math.round(diff / 6e4));
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+function ideaViews(idea: CommunityIdea) {
+  return Math.max(idea.likeCount * 18 + idea.comments.length * 24 + idea.interestedCount * 30, 37);
+}
 
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
@@ -245,14 +278,26 @@ export default function Home() {
       </header>
 
       <section className="border-b border-[#e4e8ef] bg-transparent lg:min-h-[calc(100vh-64px)]">
-        <div className="mx-auto grid max-w-[1520px] gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[250px_minmax(0,1fr)_330px] lg:px-6">
-          <aside className="hidden self-start rounded-[18px] border border-[#dfe6ef] bg-white p-4 shadow-[0_12px_40px_rgba(15,23,42,0.08)] lg:sticky lg:top-20 lg:block">
+        <div className="mx-auto grid max-w-[1700px] gap-3 px-2.5 py-3 sm:px-4 lg:grid-cols-[280px_minmax(0,1fr)_360px] lg:px-5">
+          <aside className="hidden self-start rounded-[18px] border border-[#d7e0ec] bg-white p-4 shadow-[0_14px_44px_rgba(15,23,42,0.1)] lg:sticky lg:top-20 lg:block">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={19} /></div>
             <h2 className="mt-3 text-lg font-semibold">Creator HQ</h2>
             <p className="mt-1.5 text-sm leading-6 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
-            <p className="mt-3 inline-flex w-full items-center gap-2 rounded-2xl bg-[#f6fefb] px-3 py-2 text-sm font-semibold text-[#0f766e]">
-              <span className="size-2 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.12)]" /> {Math.max(communityIdeas.length * 3, 8)} creators online
-            </p>
+            <div className="mt-3 grid gap-2">
+              {[
+                ["Founders Online", Math.max(communityIdeas.length * 3, 12), "bg-[#ecfdf5] text-[#0f766e]", "bg-[#14b8a6]"],
+                ["Discussions Today", Math.max(communityIdeas.length + homeExamples.length, 8), "bg-[#f2f7ff] text-[#315fbd]", "bg-[#2563eb]"],
+                ["TYORA Replies Today", Math.max(communityIdeas.filter((item) => item.review).length, 5), "bg-[#fff7ed] text-[#c2410c]", "bg-[#f59e0b]"]
+              ].map(([label, value, tone, dot]) => (
+                <div key={label} className={`flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-semibold ${tone}`}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className={`size-2 rounded-full ${dot} ${label === "Founders Online" ? "animate-pulse shadow-[0_0_0_4px_rgba(20,184,166,0.13)]" : ""}`} />
+                    {label}
+                  </span>
+                  <span>{value}</span>
+                </div>
+              ))}
+            </div>
             <Link href="/ask/new" className={`mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold ${primaryButton}`}>
               <Upload size={15} /> Start a Discussion
             </Link>
@@ -316,15 +361,15 @@ export default function Home() {
                     </Link>
                   </div>
 
-                  <div className="mt-4 grid gap-2.5">
+                  <div className="mt-4 grid gap-2">
                     {starterExamples.map((example, index) => (
                       <Link
                         key={example.title}
                         href="/ask/new"
-                        className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg hover:shadow-[#101216]/6 sm:grid-cols-[112px_1fr]"
+                        className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-2.5 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[116px_1fr]"
                       >
                         <div className={cn(
-                          "relative flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br",
+                          "relative flex min-h-[98px] items-center justify-center rounded-xl bg-gradient-to-br",
                           index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
                         )}>
                           <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
@@ -341,6 +386,23 @@ export default function Home() {
                           </div>
                           <h3 className="mt-2 line-clamp-1 text-lg font-semibold">{example.title}</h3>
                           <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59616e]">{example.description}</p>
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#69707d]">
+                            <span className="inline-flex items-center gap-1"><Heart size={13} /> {exampleMetrics[index].love} Love</span>
+                            <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {exampleMetrics[index].comments} Comments</span>
+                            <span className="inline-flex items-center gap-1"><ShoppingBag size={13} /> {exampleMetrics[index].buy} I'd Buy</span>
+                            <span className="inline-flex items-center gap-1"><Eye size={13} /> {exampleMetrics[index].views} Views</span>
+                            <span className="basis-full text-[#315fbd]">Last reply {exampleMetrics[index].reply}</span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between">
+                            <div className="flex -space-x-2">
+                              {exampleMetrics[index].avatars.map((avatar) => (
+                                <span key={avatar} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
+                                  {avatar}
+                                </span>
+                              ))}
+                            </div>
+                            <span className="text-[11px] font-semibold text-[#8b93a1]">Founder + TYORA + makers</span>
+                          </div>
                         </div>
                       </Link>
                     ))}
@@ -349,8 +411,8 @@ export default function Home() {
               ) : (
                 <>
                   {communityIdeas.slice(0, 6).map((idea) => (
-                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-3 rounded-[12px] border border-[#e1e6ee] bg-white p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)] sm:grid-cols-[108px_1fr]">
-                  <div className="flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
+                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-3 rounded-[12px] border border-[#e1e6ee] bg-white p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[116px_1fr]">
+                  <div className="flex min-h-[98px] items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
                     {idea.imageUrls[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="size-full rounded-2xl object-cover" />
@@ -362,18 +424,33 @@ export default function Home() {
                     </div>
                     <h2 className="mt-1.5 line-clamp-1 text-base font-semibold">{idea.title}</h2>
                     <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{idea.description}</p>
-                    <div className="mt-2 flex gap-4 text-xs font-medium text-[#69707d]">
-                      <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount}</span>
-                      <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length}</span>
-                      <span className="inline-flex items-center gap-1"><Eye size={14} /> {Math.max(idea.likeCount + idea.comments.length + idea.interestedCount, 1) * 17}</span>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#69707d]">
+                      <span className="inline-flex items-center gap-1"><Heart size={13} /> {idea.likeCount} Love</span>
+                      <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {idea.comments.length} Comments</span>
+                      <span className="inline-flex items-center gap-1"><ShoppingBag size={13} /> {idea.interestedCount} I'd Buy</span>
+                      <span className="inline-flex items-center gap-1"><Eye size={13} /> {ideaViews(idea)} Views</span>
+                      <span className="basis-full text-[#315fbd]">Last reply {timeAgo(idea.updatedAt || idea.createdAt)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex -space-x-2">
+                        {[idea.author.name.slice(0, 2).toUpperCase(), "TY", "CM"].map((avatar, avatarIndex) => (
+                          <span key={`${idea.id}-${avatar}`} className={cn(
+                            "flex size-6 items-center justify-center rounded-full border-2 border-white text-[9px] font-semibold",
+                            avatarIndex === 1 ? "bg-[#2563eb] text-white" : avatarIndex === 2 ? "bg-[#e9f7f3] text-[#0f766e]" : "bg-[#101216] text-white"
+                          )}>
+                            {avatar}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-[11px] font-semibold text-[#8b93a1]">Founder + TYORA + makers</span>
                     </div>
                   </div>
                 </Link>
                   ))}
                   {homeExamples.map((example, index) => (
-                    <Link key={example.title} href="/ask/new" className="grid gap-3 rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_38px_rgba(15,23,42,0.09)] sm:grid-cols-[108px_1fr]">
+                    <Link key={example.title} href="/ask/new" className="grid gap-3 rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.12)] sm:grid-cols-[116px_1fr]">
                       <div className={cn(
-                        "relative flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br",
+                        "relative flex min-h-[98px] items-center justify-center rounded-xl bg-gradient-to-br",
                         index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
                       )}>
                         <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
@@ -390,6 +467,23 @@ export default function Home() {
                         </div>
                         <h3 className="mt-1.5 line-clamp-1 text-base font-semibold">{example.title}</h3>
                         <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{example.description}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#69707d]">
+                          <span className="inline-flex items-center gap-1"><Heart size={13} /> {exampleMetrics[index].love} Love</span>
+                          <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {exampleMetrics[index].comments} Comments</span>
+                          <span className="inline-flex items-center gap-1"><ShoppingBag size={13} /> {exampleMetrics[index].buy} I'd Buy</span>
+                          <span className="inline-flex items-center gap-1"><Eye size={13} /> {exampleMetrics[index].views} Views</span>
+                          <span className="basis-full text-[#315fbd]">Last reply {exampleMetrics[index].reply}</span>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="flex -space-x-2">
+                            {exampleMetrics[index].avatars.map((avatar) => (
+                              <span key={avatar} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
+                                {avatar}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-[11px] font-semibold text-[#8b93a1]">Example activity</span>
+                        </div>
                       </div>
                     </Link>
                   ))}
@@ -399,15 +493,25 @@ export default function Home() {
 
             <div className="mt-3 grid gap-3 xl:hidden">
               <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-                <h2 className="text-base font-semibold">Live Activity</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-semibold">Live Activity</h2>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]">
+                    <span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse" /> LIVE
+                  </span>
+                </div>
                 <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
                   {communityIdeas.length === 0 ? (
-                    <>
-                      <p className="rounded-2xl bg-[#f7f8fa] p-3">A founder shares a rough product idea.</p>
-                      <p className="rounded-2xl bg-[#f7f8fa] p-3">The community discusses materials, cost and factory fit.</p>
-                    </>
+                    fallbackActivity.slice(0, 3).map(([label, stamp, dot]) => (
+                      <p key={label} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-3">
+                        <span className="inline-flex items-center gap-2"><span className={`size-2 rounded-full ${dot}`} />{label}</span>
+                        <span className="shrink-0 text-xs text-[#8b93a1]">{stamp}</span>
+                      </p>
+                    ))
                   ) : communityIdeas.slice(0, 2).map((idea) => (
-                    <p key={idea.id} className="rounded-2xl bg-[#f7f8fa] p-3">{idea.author.name} uploaded {idea.title}</p>
+                    <p key={idea.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-3">
+                      <span>{idea.author.name} uploaded {idea.title}</span>
+                      <span className="shrink-0 text-xs text-[#8b93a1]">{timeAgo(idea.updatedAt || idea.createdAt)}</span>
+                    </p>
                   ))}
                 </div>
               </section>
@@ -426,30 +530,36 @@ export default function Home() {
             <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)]">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-base font-semibold">Live Activity</h2>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Live</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse shadow-[0_0_0_4px_rgba(20,184,166,0.12)]" /> LIVE</span>
               </div>
               <div className="mt-3 space-y-2">
                 {communityIdeas.length === 0 ? (
-                  <>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#14b8a6]" />A founder shares a rough product idea.</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#f59e0b]" />The community asks better questions.</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#2563eb]" />TYORA experts add review.</p>
-                  </>
+                  fallbackActivity.map(([label, stamp, dot]) => (
+                    <p key={label} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">
+                      <span className="inline-flex items-center gap-2"><span className={`size-2 rounded-full ${dot}`} />{label}</span>
+                      <span className="shrink-0 text-[11px] text-[#8b93a1]">{stamp}</span>
+                    </p>
+                  ))
                 ) : null}
-                {communityIdeas.slice(0, 4).map((idea, index) => <p key={idea.id} className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className={`mr-2 inline-block size-2 rounded-full ${index % 3 === 0 ? "bg-[#14b8a6]" : index % 3 === 1 ? "bg-[#f59e0b]" : "bg-[#2563eb]"}`} />{idea.author.name} uploaded {idea.title}</p>)}
+                {communityIdeas.slice(0, 4).map((idea, index) => <p key={idea.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="inline-flex items-center gap-2"><span className={`size-2 rounded-full ${index % 3 === 0 ? "bg-[#14b8a6]" : index % 3 === 1 ? "bg-[#f59e0b]" : "bg-[#2563eb]"}`} />{idea.author.name} uploaded {idea.title}</span><span className="shrink-0 text-[11px] text-[#8b93a1]">{timeAgo(idea.updatedAt || idea.createdAt)}</span></p>)}
               </div>
             </section>
             <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-sm shadow-[#101216]/4">
               <h2 className="text-base font-semibold">Products Built</h2>
               <div className="mt-3 space-y-2">
-                <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">Idea → Discussion → TYORA Review</p>
-                <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">Project → Manufacturing → Delivered</p>
+                {["Portable Coffee Mug", "Magnetic Phone Stand", "Pet Water Bottle"].map((product, index) => (
+                  <p key={product} className="flex items-center justify-between rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">
+                    <span>{product}</span>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", index === 0 ? "bg-[#ede9fe] text-[#6d28d9]" : "bg-[#e9f7f3] text-[#0f766e]")}>{index === 0 ? "Manufacturing" : "Reviewed"}</span>
+                  </p>
+                ))}
               </div>
             </section>
             <section className="rounded-[16px] border border-[#e8ebef] bg-[#101216] p-3.5 text-white shadow-[0_16px_44px_rgba(15,23,42,0.18)]">
               <h2 className="text-base font-semibold">Journey of the Week</h2>
+              <p className="mt-1 text-sm font-semibold text-white">Portable Coffee Mug</p>
               <div className="mt-3 grid gap-1.5 text-sm text-white/72">
-                {["Idea", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step) => <span key={step} className="rounded-full bg-white/8 px-3 py-1.5">{step}</span>)}
+                {featuredJourney.slice(0, 5).map(([step, , state]) => <span key={step} className={cn("flex items-center justify-between rounded-full px-3 py-1.5", state === "Active" ? "bg-[#2563eb] text-white" : "bg-white/8")}><span>{step}</span><span className="text-[10px] uppercase">{state}</span></span>)}
               </div>
               <Link href="/ask" className="mt-5 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#101216]">View Full Journey</Link>
             </section>
@@ -478,33 +588,41 @@ export default function Home() {
           <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-stretch">
             <div className="rounded-[18px] border border-[#dfe6ef] bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.07)]">
               <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Featured Journey</p>
-              <h2 className="mt-3 text-3xl font-semibold leading-tight">Coffee Mug</h2>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight">Portable Coffee Mug</h2>
               <p className="mt-3 text-sm leading-6 text-[#59616e]">
-                A founder starts with a simple travel mug idea. The community tightens the question, TYORA reviews the manufacturing path, and the project becomes buildable.
+                A founder starts with a spill-proof travel mug idea. The community tightens the lid, grip and MOQ questions, TYORA reviews the manufacturing path, and the project moves into production planning.
               </p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  {["SA", "TY", "AL", "MI"].map((avatar, index) => (
+                    <span key={avatar} className={cn(
+                      "flex size-8 items-center justify-center rounded-full border-2 border-white text-[10px] font-semibold",
+                      index === 1 ? "bg-[#2563eb] text-white" : index === 2 ? "bg-[#e9f7f3] text-[#0f766e]" : "bg-[#101216] text-white"
+                    )}>{avatar}</span>
+                  ))}
+                </div>
+                <p className="text-xs font-semibold text-[#69707d]">Founder, TYORA reviewer and 12 makers involved</p>
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#edf1f6]">
+                <div className="h-full w-[82%] rounded-full bg-gradient-to-r from-[#14b8a6] via-[#2563eb] to-[#8b5cf6]" />
+              </div>
               <Link href="/ask/new" className={`mt-5 inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
                 Start a similar discussion <ArrowRight size={15} />
               </Link>
             </div>
 
             <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-              {["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step, index) => (
+              {featuredJourney.map(([step, description, state], index) => (
                 <div key={step} className={cn(
-                  "rounded-[16px] border bg-white p-3 shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5",
-                  index === 2 ? "border-[#bfdbfe] bg-[#f5f9ff]" : "border-[#e4e8ef]"
+                  "rounded-[16px] border bg-white p-3 shadow-sm shadow-[#101216]/4 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_14px_34px_rgba(37,99,235,0.12)]",
+                  state === "Active" ? "border-[#bfdbfe] bg-[#f5f9ff]" : "border-[#e4e8ef]"
                 )}>
-                  <p className="text-[11px] font-semibold uppercase text-[#8b93a1]">Step {index + 1}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-semibold uppercase text-[#8b93a1]">Step {index + 1}</p>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase", state === "Active" ? "bg-[#dbeafe] text-[#1d4ed8]" : state === "Done" ? "bg-[#ecfdf5] text-[#0f766e]" : "bg-[#f4f6f8] text-[#69707d]")}>{state}</span>
+                  </div>
                   <p className="mt-2 text-sm font-semibold">{step}</p>
-                  <p className="mt-2 text-xs leading-5 text-[#69707d]">
-                    {[
-                      "Sketch the mug idea",
-                      "Founders discuss grip, lid and MOQ",
-                      "TYORA reviews cost and material",
-                      "Sample shape and finish",
-                      "Factory path becomes clear",
-                      "Ready for launch"
-                    ][index]}
-                  </p>
+                  <p className="mt-2 text-xs leading-5 text-[#69707d]">{description}</p>
                 </div>
               ))}
             </div>
