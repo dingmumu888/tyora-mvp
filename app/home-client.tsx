@@ -243,7 +243,7 @@ export default function Home() {
               <SearchCheck size={15} /> Search
             </div>
             <a href="/api/community/auth/google" className="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold md:inline-flex">Google Login</a>
-            <Link href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            <Link href="/ask/new" className="hidden h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white sm:inline-flex">
               <Upload size={15} /> <span className="hidden sm:inline">Upload My Idea</span>
             </Link>
             <button className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] md:inline-flex" aria-label="Notifications">
