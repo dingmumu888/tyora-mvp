@@ -1,12 +1,15 @@
 "use client";
 
-import { DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ClipboardEvent, DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   CheckCircle2,
   ImagePlus,
   Loader2,
+  MessageCircle,
+  PackageCheck,
+  SearchCheck,
   Sparkles,
   Trash2,
   Upload
@@ -19,7 +22,13 @@ type SessionUser = { id: string; name: string; email: string; username: string }
 type Step = 0 | 1 | 2 | 3;
 type ImagePreview = { name: string; url: string };
 
-const steps = ["Idea", "Images", "Details", "Publish"] as const;
+const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Go Live"] as const;
+const mobileSteps = ["Your Idea", "Show It", "Understand", "Go Live"] as const;
+const nextSteps = [
+  ["Founders start discussing your idea.", MessageCircle],
+  ["TYORA reviews manufacturability.", SearchCheck],
+  ["You decide whether to build.", PackageCheck]
+] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 
 export default function NewIdeaClient() {
@@ -31,6 +40,7 @@ export default function NewIdeaClient() {
   const [message, setMessage] = useState("");
   const [loginPrompt, setLoginPrompt] = useState(0);
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
+  const [published, setPublished] = useState(false);
   const imagePreviewsRef = useRef<ImagePreview[]>([]);
   const [form, setForm] = useState({
     title: "",
@@ -66,8 +76,8 @@ export default function NewIdeaClient() {
   }, []);
 
   const usedText = useMemo(() => "Today's FREE Expert Reviews: 0 / 3 Used", []);
-  const inputClass = "h-12 rounded-[14px] border border-[#dfe3e8] bg-white px-3 text-sm outline-none transition duration-[180ms] focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10";
-  const panelClass = "rounded-[22px] border border-[#e1e7f0] bg-white shadow-[0_16px_50px_rgba(15,23,42,0.08)]";
+  const inputClass = "h-12 rounded-[16px] border border-transparent bg-[#f8fafc] px-4 text-sm outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10";
+  const panelClass = "rounded-[26px] border border-[#e1e7f0] bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)]";
 
   function toggleQuestion(question: CommunityQuestion) {
     setForm((current) => ({
@@ -101,6 +111,15 @@ export default function NewIdeaClient() {
   function onDrop(event: DragEvent<HTMLLabelElement>) {
     event.preventDefault();
     setImages(event.dataTransfer.files);
+  }
+
+  function onPaste(event: ClipboardEvent<HTMLFormElement>) {
+    const imageFiles = Array.from(event.clipboardData.files).filter((file) => file.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+    event.preventDefault();
+    setImages(imageFiles);
+    setMessage("Screenshot pasted. You can add up to 5 images.");
+    if (step !== 1) setStep(1);
   }
 
   function validateStep(target = step) {
@@ -148,10 +167,10 @@ export default function NewIdeaClient() {
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to submit idea.");
-      setMessage("Your idea is live.");
+      setPublished(true);
       window.setTimeout(() => {
         window.location.href = `/ask/${payload.data.slug}`;
-      }, 650);
+      }, 1050);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to submit idea.");
     } finally {
@@ -191,35 +210,49 @@ export default function NewIdeaClient() {
 
       <div className="mx-auto grid max-w-[1560px] gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[250px_minmax(0,1fr)_330px] lg:px-6">
         <aside className="hidden self-start rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_14px_44px_rgba(15,23,42,0.08)] lg:sticky lg:top-20 lg:block">
-          <p className="text-xs font-semibold uppercase text-[#8b93a1]">Create idea</p>
+          <p className="text-xs font-semibold uppercase text-[#8b93a1]">Join the discussion</p>
           <h1 className="mt-2 text-xl font-semibold">Start a Discussion</h1>
           <p className="mt-2 text-sm leading-6 text-[#69707d]">Share the product clearly. TYORA and founders can help shape the manufacturing path.</p>
           <div className="mt-5 grid gap-2">
             {steps.map((item, index) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setStep(index as Step)}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition duration-[180ms]",
-                  step === index ? "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20" : "bg-[#f7f8fa] text-[#59616e] hover:bg-[#eef3ff]"
-                )}
-              >
-                <span className={cn("flex size-6 items-center justify-center rounded-full text-xs", step === index ? "bg-white/18 text-white" : "bg-white text-[#69707d]")}>
-                  {index + 1}
-                </span>
-                {item}
-              </button>
+              <div key={item}>
+                <button
+                  type="button"
+                  onClick={() => setStep(index as Step)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition duration-[180ms]",
+                    step === index ? "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20" : "bg-[#f7f8fa] text-[#59616e] hover:bg-[#eef3ff]"
+                  )}
+                >
+                  <span className={cn("flex size-6 items-center justify-center rounded-full text-xs", step === index ? "bg-white/18 text-white" : "bg-white text-[#69707d]")}>
+                    {index + 1}
+                  </span>
+                  {item}
+                </button>
+                {index < steps.length - 1 ? <p className="py-1 text-center text-xs text-[#b0b7c3]">↓</p> : null}
+              </div>
             ))}
           </div>
           <p className="mt-5 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">FREE expert review within 8 working hours.</p>
         </aside>
 
-        <form onSubmit={submit} className={`${panelClass} min-w-0 p-4 sm:p-6 lg:p-7`}>
+        <form onSubmit={submit} onPaste={onPaste} className={`${panelClass} min-w-0 p-4 sm:p-6 lg:p-7`}>
+          {published ? (
+            <div className="grid min-h-[560px] place-items-center text-center">
+              <div>
+                <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#e9f7f3] text-[#0f766e] shadow-sm">
+                  <Sparkles size={28} />
+                </div>
+                <h2 className="mt-5 text-3xl font-semibold leading-tight">Your discussion is now live.</h2>
+                <p className="mt-3 text-sm font-medium text-[#69707d]">Redirecting to your discussion...</p>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="mb-5 lg:hidden">
-            <div className="flex items-center justify-between gap-2 text-xs font-semibold text-[#69707d]">
-              {steps.map((item, index) => (
-                <button key={item} type="button" onClick={() => setStep(index as Step)} className={cn("rounded-full px-3 py-2", step === index ? "bg-[#2563eb] text-white" : "bg-white ring-1 ring-[#e4e8ef]")}>{item}</button>
+            <div className="no-scrollbar flex items-center gap-2 overflow-x-auto text-xs font-semibold text-[#69707d]">
+              {mobileSteps.map((item, index) => (
+                <button key={item} type="button" onClick={() => setStep(index as Step)} className={cn("shrink-0 rounded-full px-3 py-2", step === index ? "bg-[#2563eb] text-white" : "bg-white ring-1 ring-[#e4e8ef]")}>{index + 1}. {item}</button>
               ))}
             </div>
           </div>
@@ -228,9 +261,18 @@ export default function NewIdeaClient() {
 
           {step === 0 ? (
             <section className="mt-5">
-              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">What are you building?</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">A rough product thought is enough. Start with the simplest version of the idea.</p>
-              <div className="mt-6 grid gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Start a Discussion</h2>
+                  <p className="mt-3 max-w-2xl text-base leading-7 text-[#59616e]">
+                    Share your idea with founders. Get FREE manufacturing feedback within 8 working hours.
+                  </p>
+                </div>
+                <p className="w-fit whitespace-nowrap rounded-2xl bg-[#f7f8fa] px-3 py-2 text-xs font-semibold text-[#59616e]">
+                  Estimated time <span className="ml-1 text-[#101216]">1 minute</span>
+                </p>
+              </div>
+              <div className="mt-7 grid gap-4">
                 <label className="grid gap-2 text-sm font-semibold">Product name
                   <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Magnetic phone stand" className={inputClass} />
                 </label>
@@ -244,21 +286,23 @@ export default function NewIdeaClient() {
           {step === 1 ? (
             <section className="mt-5">
               <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Show us your idea</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Sketches, screenshots, reference products, or AI images are all okay.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Sketches, screenshots, reference products, or AI images are all okay. You can also paste screenshots with Ctrl + V.</p>
               <label
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={onDrop}
-                className="mt-6 flex min-h-44 cursor-pointer flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-[#b8c9f5] bg-[#f8fbff] px-4 text-center transition duration-[180ms] hover:border-[#93c5fd] hover:bg-[#eef6ff]"
+                className="mt-6 flex min-h-52 cursor-pointer flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-[#93b4f8] bg-[linear-gradient(135deg,#f8fbff,#fff,#f3f8ff)] px-4 text-center shadow-inner shadow-[#2563eb]/5 transition duration-[180ms] hover:-translate-y-0.5 hover:border-[#2563eb] hover:bg-[#eef6ff] hover:shadow-[0_18px_50px_rgba(37,99,235,0.12)]"
               >
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-white text-[#2563eb] shadow-sm"><ImagePlus size={22} /></span>
-                <span className="text-sm font-semibold">Upload or drag images here</span>
-                <span className="text-xs text-[#69707d]">Maximum 5 images</span>
+                <span className="text-base font-semibold">Drag images here</span>
+                <span className="text-sm text-[#69707d]">or paste screenshots</span>
+                <span className="text-xs text-[#8b93a1]">Maximum 5 images</span>
                 <input type="file" accept="image/*" multiple className="sr-only" onChange={(event) => setImages(event.target.files || [])} />
               </label>
               {imagePreviews.length > 0 ? (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {imagePreviews.map((image) => (
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {imagePreviews.map((image, index) => (
                     <div key={image.name} className="group relative overflow-hidden rounded-2xl border border-[#e4e8ef] bg-white">
+                      <span className="absolute left-2 top-2 z-10 flex size-7 items-center justify-center rounded-full bg-white/92 text-xs font-semibold text-[#2563eb] shadow-sm">{index + 1}</span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={image.url} alt={image.name} className="aspect-[4/3] w-full object-cover" />
                       <button type="button" onClick={() => removeImage(image.name)} className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/92 text-[#59616e] shadow-sm transition hover:bg-[#fff1f2] hover:text-[#be123c]" aria-label={`Remove ${image.name}`}>
@@ -275,10 +319,10 @@ export default function NewIdeaClient() {
           {step === 2 ? (
             <section className="mt-5">
               <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Help TYORA understand your idea</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Add the manufacturing context TYORA needs to review feasibility, cost, materials and factory fit.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Tell the story behind the product. A few honest details are better than a polished brief.</p>
               <div className="mt-6 grid gap-4">
                 <label className="grid gap-2 text-sm font-semibold">Description
-                  <textarea rows={5} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What does it do, who is it for, and what should TYORA pay attention to?" className="resize-none rounded-[14px] border border-[#dfe3e8] bg-white p-3 text-sm outline-none transition duration-[180ms] focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+                  <textarea rows={7} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What inspired it? Who is it for? What should founders and TYORA pay attention to?" className="min-h-44 resize-none rounded-[18px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm font-semibold">Category
@@ -314,8 +358,8 @@ export default function NewIdeaClient() {
 
           {step === 3 ? (
             <section className="mt-5">
-              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Ready to start the discussion?</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Review the public preview before publishing. You can continue the project later when ready.</p>
+              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Ready to go live?</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">This is your first version. Publish it, let founders react, and let TYORA help clarify the manufacturing path.</p>
               <div className="mt-6 rounded-[20px] border border-[#e4e8ef] bg-[#fbfcff] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Category"}</span>
@@ -353,7 +397,7 @@ export default function NewIdeaClient() {
             </button>
             {step < 3 ? (
               <button type="button" onClick={continueStep} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold ${primaryButton}`}>
-                Continue <ArrowRight size={16} />
+                Next <ArrowRight size={16} />
               </button>
             ) : (
               <button disabled={submitting} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
@@ -362,20 +406,17 @@ export default function NewIdeaClient() {
               </button>
             )}
           </div>
+          </>
+          )}
         </form>
 
         <aside className="hidden space-y-3 self-start xl:sticky xl:top-20 xl:block">
           <section className="rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_14px_44px_rgba(15,23,42,0.08)]">
-            <h2 className="text-lg font-semibold">What happens next?</h2>
+            <h2 className="text-lg font-semibold">After you publish</h2>
             <div className="mt-4 grid gap-2 text-sm text-[#59616e]">
-              {[
-                "Your idea becomes public.",
-                "Founders can discuss it.",
-                "TYORA gives a manufacturing review.",
-                "You can continue the project when ready."
-              ].map((item, index) => (
+              {nextSteps.map(([item, Icon]) => (
                 <p key={item} className="flex gap-3 rounded-2xl bg-[#f7f8fa] p-3">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-[#2563eb] ring-1 ring-[#e4e8ef]">{index + 1}</span>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-[#2563eb] ring-1 ring-[#e4e8ef]"><Icon size={15} /></span>
                   {item}
                 </p>
               ))}
