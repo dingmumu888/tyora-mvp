@@ -39,6 +39,18 @@ function shouldUseTestSender() {
   return sender().includes("login@tyora.io") && process.env.RESEND_USE_TEST_SENDER !== "false";
 }
 
+export function getEmailLoginDebugContext() {
+  return {
+    hasResendApiKey: Boolean(process.env.RESEND_API_KEY),
+    hasAuthOrigin: Boolean(process.env.AUTH_ORIGIN),
+    authOrigin: process.env.AUTH_ORIGIN || null,
+    configuredSender: sender(),
+    resendUseTestSender: process.env.RESEND_USE_TEST_SENDER || null,
+    shouldUseTestSender: shouldUseTestSender(),
+    actualSender: shouldUseTestSender() ? FALLBACK_FROM : sender()
+  };
+}
+
 async function sendLoginEmail(email: string, code: string) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("Email login is not configured.");
@@ -68,7 +80,10 @@ async function sendLoginEmail(email: string, code: string) {
     })
   });
 
-  if (!response.ok) throw new Error("Unable to send login code.");
+  if (!response.ok) {
+    const responseText = await response.text().catch(() => "");
+    throw new Error(`Unable to send login code. Resend status=${response.status} ${response.statusText}; response=${responseText}`);
+  }
 }
 
 export async function requestEmailLoginCode(input: unknown) {

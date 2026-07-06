@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { requestEmailLoginCode } from "@/lib/server/email-login";
+import { getEmailLoginDebugContext, requestEmailLoginCode } from "@/lib/server/email-login";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json() as { email?: string };
     await requestEmailLoginCode(body.email);
-  } catch {
+  } catch (error) {
+    console.error("[email-login-request] failed", {
+      debug: getEmailLoginDebugContext(),
+      error
+    });
     return NextResponse.json({ success: false, message: "Email login is temporarily unavailable." }, { status: 503 });
   }
 
