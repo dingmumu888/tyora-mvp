@@ -200,7 +200,7 @@ export default function Home() {
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
   return (
     <main className="min-h-screen overflow-x-hidden bg-white text-[#101216]">
-      <header className="sticky top-0 z-40 border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-40 overflow-hidden border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a href="#" className="flex items-center gap-2 font-semibold">
             {displayContent.logoImage ? (
