@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-
-function callbackUrl(request: Request) {
-  return new URL("/api/community/auth/google/callback", request.url).toString();
-}
+import { authUrl } from "@/lib/server/auth-url";
 
 export async function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -12,7 +9,7 @@ export async function GET(request: Request) {
 
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", callbackUrl(request));
+  url.searchParams.set("redirect_uri", authUrl("/api/community/auth/google/callback", request));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("prompt", "select_account");

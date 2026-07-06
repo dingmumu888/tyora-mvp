@@ -19,6 +19,14 @@ Required production environment variables:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_STORAGE_BUCKET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `AUTH_ORIGIN` (`https://tyora.io` for canonical production login redirects)
+
+Google OAuth authorized redirect URIs:
+
+- `https://tyora.io/api/community/auth/google/callback`
+- `https://tyora-mvp.vercel.app/api/community/auth/google/callback`
 
 ## API Boundary
 

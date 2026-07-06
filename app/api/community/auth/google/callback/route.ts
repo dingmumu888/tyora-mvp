@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { setCommunitySessionCookie } from "@/lib/server/community-auth";
 import { upsertCommunityUser } from "@/lib/server/community-store";
+import { authUrl } from "@/lib/server/auth-url";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/ask?login=unavailable", request.url));
   }
 
-  const redirectUri = new URL("/api/community/auth/google/callback", request.url).toString();
+  const redirectUri = authUrl("/api/community/auth/google/callback", request);
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
