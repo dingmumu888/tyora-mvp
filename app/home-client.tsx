@@ -283,7 +283,7 @@ export default function Home() {
                   <Link href="/ask" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
               </div>
-              <div className="mt-5 flex gap-3 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
+              <div className="no-scrollbar mt-5 flex gap-3 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
                 {[
                   ["Ideas Shared", communityIdeas.length],
                   ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
@@ -299,7 +299,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+            <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-2">
               {["Trending", "Newest", "Most Discussed", "Latest TYORA Reply", "Recently Uploaded"].map((item, index) => (
                 <Link key={item} href="/ask" className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold", index === 0 ? "bg-[#101216] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]")}>{item}</Link>
               ))}

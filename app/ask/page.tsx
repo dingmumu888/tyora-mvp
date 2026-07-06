@@ -279,7 +279,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             </div>
           </div>
 
-          <nav id="ideas" className="mt-5 flex gap-2 overflow-x-auto pb-2">
+          <nav id="ideas" className="no-scrollbar mt-5 flex gap-2 overflow-x-auto pb-2">
             {tabs.map(([id, label]) => (
               <Link key={id} href={`/ask?sort=${id}`} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${sort === id ? "bg-[#101216] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]"}`}>
                 {label}
