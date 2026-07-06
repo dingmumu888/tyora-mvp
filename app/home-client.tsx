@@ -82,6 +82,23 @@ const whyTyoraCards = [
   ["Transparent Process", "Clear communication and predictable workflows.", ClipboardCheck],
   ["Built for Product Founders", "Designed specifically for startups, inventors and growing brands.", Layers]
 ] as const;
+const starterExamples = [
+  {
+    title: "Magnetic Phone Stand",
+    category: "Phone Accessories",
+    description: "A foldable desk stand with a weighted base, magnetic ring, and manufacturable hinge design."
+  },
+  {
+    title: "Portable Pet Water Bottle",
+    category: "Pet",
+    description: "A leak-resistant travel bottle with a one-hand drinking tray and easy-clean plastic parts."
+  },
+  {
+    title: "Travel Coffee Mug",
+    category: "Kitchen",
+    description: "A compact insulated mug with a secure lid, tactile grip, and low-MOQ material options."
+  }
+] as const;
 
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
@@ -255,7 +272,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="border-b border-[#e4e8ef] bg-transparent">
+      <section className="border-b border-[#e4e8ef] bg-transparent lg:min-h-[calc(100vh-64px)]">
         <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[232px_minmax(0,1fr)_310px] lg:px-8">
           <aside className="hidden self-start rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4 lg:sticky lg:top-20 lg:block">
             <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={18} /></div>
@@ -277,7 +294,7 @@ export default function Home() {
                 <div>
                   <h1 className="max-w-3xl text-3xl font-semibold leading-[1.05] tracking-normal sm:text-4xl lg:text-[2.9rem]">What&apos;s your next idea?</h1>
                   <p className="mt-3 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
-                    Upload your idea. Get a FREE manufacturing review within 8 working hours.
+                    Share your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
                   <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
                 </div>
@@ -310,10 +327,50 @@ export default function Home() {
 
             <div className="mt-3 grid gap-2.5">
               {communityIdeas.length === 0 ? (
-                <Link href="/ask/new" className="rounded-[16px] border border-dashed border-[#cfd5dc] bg-white/92 p-6 text-center">
-                  <p className="mx-auto max-w-[280px] text-lg font-semibold">Be the first product creator to start a discussion.</p>
-                  <p className="mx-auto mt-2 max-w-[280px] text-sm text-[#69707d]">No fake activity. Real uploads and replies will appear here.</p>
-                </Link>
+                <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
+                  <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <div>
+                      <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Starter community</p>
+                      <h2 className="mt-3 text-2xl font-semibold leading-tight">Be the first founder to start a discussion.</h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e]">
+                        Share a product idea and get a free manufacturing review from TYORA.
+                      </p>
+                    </div>
+                    <Link href="/ask/new" className={`inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
+                      <Upload size={16} /> Start a Discussion
+                    </Link>
+                  </div>
+
+                  <div className="mt-4 grid gap-2.5">
+                    {starterExamples.map((example, index) => (
+                      <Link
+                        key={example.title}
+                        href="/ask/new"
+                        className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg hover:shadow-[#101216]/6 sm:grid-cols-[112px_1fr]"
+                      >
+                        <div className={cn(
+                          "relative flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br",
+                          index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
+                        )}>
+                          <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
+                            {example.title.slice(0, 2).toUpperCase()}
+                          </span>
+                          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase text-[#69707d] ring-1 ring-[#e8ebef]">
+                            Example
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">
+                            <span className="rounded-full bg-white px-2 py-1 ring-1 ring-[#e8ebef]">{example.category}</span>
+                            <span>Demo prompt</span>
+                          </div>
+                          <h3 className="mt-2 line-clamp-1 text-lg font-semibold">{example.title}</h3>
+                          <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59616e]">{example.description}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               ) : communityIdeas.slice(0, 6).map((idea) => (
                 <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-white p-3 shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/8 sm:grid-cols-[112px_1fr]">
                   <div className="flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">

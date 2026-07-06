@@ -38,6 +38,23 @@ const categories = ["Phone Accessories", "Pet", "Home", "Office", "Kitchen", "Ou
 const topNav = ["Discover Ideas", "Ask TYORA", "Journeys", "Success Stories", "Pricing"];
 const statusSteps = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping"];
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
+const starterExamples = [
+  {
+    title: "Magnetic Phone Stand",
+    category: "Phone Accessories",
+    description: "A foldable desk stand with a weighted base, magnetic ring, and manufacturable hinge design."
+  },
+  {
+    title: "Portable Pet Water Bottle",
+    category: "Pet",
+    description: "A leak-resistant travel bottle with a one-hand drinking tray and easy-clean plastic parts."
+  },
+  {
+    title: "Travel Coffee Mug",
+    category: "Kitchen",
+    description: "A compact insulated mug with a secure lid, tactile grip, and low-MOQ material options."
+  }
+];
 
 const statusStyles: Record<CommunityStatus, string> = {
   Discussing: "bg-[#f0eaff] text-[#6d28d9] ring-[#ddd0ff]",
@@ -175,6 +192,55 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
   );
 }
 
+function StarterCommunityState() {
+  return (
+    <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
+      <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div>
+          <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Starter community</p>
+          <h2 className="mt-3 text-2xl font-semibold leading-tight">Be the first founder to start a discussion.</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e]">
+            Share a product idea and get a free manufacturing review from TYORA.
+          </p>
+        </div>
+        <Link href="/ask/new" className={`inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
+          <Plus size={16} /> Start a Discussion
+        </Link>
+      </div>
+
+      <div className="mt-4 grid gap-2.5">
+        {starterExamples.map((example, index) => (
+          <Link
+            key={example.title}
+            href="/ask/new"
+            className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg hover:shadow-[#101216]/6 sm:grid-cols-[116px_1fr]"
+          >
+            <div className={`relative flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br ${["from-[#e9f7f3] via-white to-[#efe9ff]", "from-[#fff4e7] via-white to-[#e9f2ff]", "from-[#edf7ff] via-white to-[#effaf3]"][index]}`}>
+              <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
+                {example.title.slice(0, 2).toUpperCase()}
+              </span>
+              <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase text-[#69707d] ring-1 ring-[#e8ebef]">
+                Example
+              </span>
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#69707d]">
+                <span className="rounded-full bg-white px-2 py-1 ring-1 ring-[#e8ebef]">{example.category}</span>
+                <span>Demo prompt</span>
+              </div>
+              <h3 className="mt-2 line-clamp-1 text-lg font-semibold">{example.title}</h3>
+              <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59616e]">{example.description}</p>
+              <p className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#2563eb]">
+                Use this as inspiration <ChevronRight size={13} />
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function AskCommunityPage({ searchParams }: { searchParams: Promise<{ sort?: CommunityFeedSort }> }) {
   const { sort = "trending" } = await searchParams;
   const ideas = await getCommunityIdeas(sort);
@@ -257,7 +323,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               <div>
                 <h1 className="max-w-3xl text-3xl font-semibold leading-[1.05] tracking-normal sm:text-4xl">What&apos;s your next idea?</h1>
                 <p className="mt-3 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
-                  Upload your idea. Get a FREE manufacturing review within 8 working hours.
+                  Share your idea. Get a FREE manufacturing review within 8 working hours.
                 </p>
                 <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
               </div>
@@ -293,10 +359,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
 
           <div className="mt-3 grid gap-2.5">
             {ideas.length === 0 ? (
-              <div className="rounded-[16px] border border-dashed border-[#cfd5dc] bg-white/92 p-7 text-center">
-                <p className="text-xl font-semibold">No ideas yet.</p>
-                <p className="mx-auto mt-2 max-w-[280px] text-[#69707d] sm:max-w-none">Be the first product creator to start a manufacturing discussion.</p>
-              </div>
+              <StarterCommunityState />
             ) : ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} />)}
           </div>
 

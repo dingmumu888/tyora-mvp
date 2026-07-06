@@ -385,7 +385,7 @@ const previousDefaultContent = {
   heroTagline: "Product Development Partner for makers, sellers, and launch teams",
   heroTitle: "Turn Your Product Idea Into Reality.",
   heroSubtitle:
-    "Upload your idea. We'll help you turn it into a manufacturable product through trusted manufacturing partners in China.",
+    "Start a discussion. We'll help you turn the idea into a manufacturable product through trusted manufacturing partners in China.",
   tagline: "Turn Your Product Idea Into Reality.",
   footerSlogan: "We don't just manufacture products. We help bring ideas to life.",
   founderTitle: "Meet Your Product Partner",
