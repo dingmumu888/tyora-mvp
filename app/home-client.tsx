@@ -18,7 +18,6 @@ import {
   SearchCheck,
   ShieldCheck,
   Sparkles,
-  Truck,
   Upload,
   Users,
   X
@@ -47,35 +46,6 @@ import { CommunityIdea } from "@/lib/community";
 
 const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
-const heroFeatureCards = [
-  {
-    title: "Manufacturing Review",
-    description: "Review your product before production.",
-    icon: ClipboardCheck
-  },
-  {
-    title: "Factory Matching",
-    description: "Find manufacturers that actually fit your project.",
-    icon: SearchCheck
-  },
-  {
-    title: "Quote Comparison",
-    description: "Compare quotations with confidence.",
-    icon: Layers
-  },
-  {
-    title: "Production Support",
-    description: "Stay in control throughout manufacturing.",
-    icon: PackageCheck
-  }
-];
-const heroSteps = [
-  ["Idea", Sparkles],
-  ["Review", ClipboardCheck],
-  ["Factory", SearchCheck],
-  ["Sample", PackageCheck],
-  ["Production", Truck]
-] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 const whyTyoraCards = [
   ["Independent Advice", "We work for founders, not factories.", ShieldCheck],
@@ -275,11 +245,11 @@ export default function Home() {
       </header>
 
       <section className="border-b border-[#e4e8ef] bg-transparent lg:min-h-[calc(100vh-64px)]">
-        <div className="mx-auto grid max-w-7xl gap-3 px-3 py-3 sm:px-5 lg:grid-cols-[220px_minmax(0,1fr)_300px] lg:px-6">
-          <aside className="hidden self-start rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)] lg:sticky lg:top-20 lg:block">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={18} /></div>
-            <h2 className="mt-3 text-base font-semibold">Creator HQ</h2>
-            <p className="mt-1.5 text-[13px] leading-5 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
+        <div className="mx-auto grid max-w-[1520px] gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[250px_minmax(0,1fr)_330px] lg:px-6">
+          <aside className="hidden self-start rounded-[18px] border border-[#dfe6ef] bg-white p-4 shadow-[0_12px_40px_rgba(15,23,42,0.08)] lg:sticky lg:top-20 lg:block">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={19} /></div>
+            <h2 className="mt-3 text-lg font-semibold">Creator HQ</h2>
+            <p className="mt-1.5 text-sm leading-6 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
             <p className="mt-3 inline-flex w-full items-center gap-2 rounded-2xl bg-[#f6fefb] px-3 py-2 text-sm font-semibold text-[#0f766e]">
               <span className="size-2 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.12)]" /> {Math.max(communityIdeas.length * 3, 8)} creators online
             </p>
@@ -291,21 +261,21 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
-            <div className="rounded-[16px] border border-[#dfe6ef] bg-white/96 p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)] sm:p-4">
+            <div className="rounded-[18px] border border-[#dfe6ef] bg-white/96 p-4 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:p-5">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
               </p>
               <div className="mt-2.5 grid gap-3">
                 <div>
-                  <h1 className="max-w-3xl text-2xl font-semibold leading-[1.05] tracking-normal sm:text-3xl lg:text-[2.35rem]">What are founders building next?</h1>
-                  <p className="mt-2 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
+                  <h1 className="max-w-4xl text-3xl font-semibold leading-[1.05] tracking-normal sm:text-4xl lg:text-[3rem]">What are founders building next?</h1>
+                  <p className="mt-2 max-w-[320px] text-base leading-7 text-[#59616e] sm:max-w-3xl">
                     Share your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
-                  <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
+                  <p className="mt-2 max-w-[340px] break-words text-sm font-semibold text-[#315fbd] sm:max-w-3xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Link href="/ask/new" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
-                  <Link href="/ask" className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
+                  <Link href="/ask/new" className={`inline-flex h-12 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
+                  <Link href="/ask" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
               </div>
               <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
@@ -316,8 +286,8 @@ export default function Home() {
                   ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
                   ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
                 ].map(([label, value]) => (
-                  <div key={label} className="min-w-[122px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3 sm:min-w-[140px] xl:min-w-0">
-                    <p className="text-lg font-semibold">{value}</p>
+                  <div key={label} className="min-w-[132px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-3 shadow-sm shadow-[#101216]/3 sm:min-w-[150px] xl:min-w-0">
+                    <p className="text-xl font-semibold">{value}</p>
                     <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
                   </div>
                 ))}
@@ -503,226 +473,161 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-b border-[#e4e8ef] bg-[#f6f7fb]/80">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[0.58fr_0.42fr] lg:items-center lg:px-8 lg:py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="flex flex-col justify-center"
-          >
-            <p className="mb-5 w-fit rounded-full border border-[#e5e8ec] bg-[#fbfbfc] px-3 py-1 text-xs font-medium text-[#69707d] lg:text-sm">
+      <section className="border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))]">
+        <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
+          <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-stretch">
+            <div className="rounded-[18px] border border-[#dfe6ef] bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.07)]">
+              <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Featured Journey</p>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight">Coffee Mug</h2>
+              <p className="mt-3 text-sm leading-6 text-[#59616e]">
+                A founder starts with a simple travel mug idea. The community tightens the question, TYORA reviews the manufacturing path, and the project becomes buildable.
+              </p>
+              <Link href="/ask/new" className={`mt-5 inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
+                Start a similar discussion <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              {["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step, index) => (
+                <div key={step} className={cn(
+                  "rounded-[16px] border bg-white p-3 shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5",
+                  index === 2 ? "border-[#bfdbfe] bg-[#f5f9ff]" : "border-[#e4e8ef]"
+                )}>
+                  <p className="text-[11px] font-semibold uppercase text-[#8b93a1]">Step {index + 1}</p>
+                  <p className="mt-2 text-sm font-semibold">{step}</p>
+                  <p className="mt-2 text-xs leading-5 text-[#69707d]">
+                    {[
+                      "Sketch the mug idea",
+                      "Founders discuss grip, lid and MOQ",
+                      "TYORA reviews cost and material",
+                      "Sample shape and finish",
+                      "Factory path becomes clear",
+                      "Ready for launch"
+                    ][index]}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#dfe6ef] bg-[#f6f7fb]/80">
+        <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-[#69707d]">Products Built by Community</p>
+              <h2 className="mt-2 text-3xl font-semibold leading-tight">Real journeys, not product catalog cards.</h2>
+            </div>
+            <Link href="/ask" className="text-sm font-semibold text-[#2563eb]">Browse all ideas →</Link>
+          </div>
+          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+            {[
+              ...communityIdeas.slice(0, 3).map((idea) => ({
+                title: idea.title,
+                tag: idea.status,
+                description: idea.description,
+                meta: `${idea.country} · ${idea.author.name}`,
+                href: `/ask/${idea.slug}`
+              })),
+              ...starterExamples.map((item) => ({
+                title: item.title,
+                tag: "Example",
+                description: item.description,
+                meta: item.category,
+                href: "/ask/new"
+              }))
+            ].slice(0, 6).map((item, index) => (
+              <Link
+                key={`${item.title}-${index}`}
+                href={item.href}
+                className={cn(
+                  "mb-4 block break-inside-avoid rounded-[18px] border border-[#dfe6ef] bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_44px_rgba(15,23,42,0.1)]",
+                  index % 3 === 1 ? "lg:mt-6" : index % 3 === 2 ? "lg:mt-3" : ""
+                )}
+              >
+                <div className="flex min-h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#eff4ff] text-2xl font-semibold">
+                  {item.title.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-[#f4f6f8] px-2.5 py-1 text-xs font-semibold text-[#59616e]">{item.tag}</span>
+                  <span className="text-xs text-[#8b93a1]">{item.meta}</span>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#59616e]">{item.description}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#dfe6ef] bg-[#f7f8fb]">
+        <div className="mx-auto grid max-w-7xl gap-6 px-3 py-8 sm:px-5 lg:grid-cols-[1fr_360px] lg:items-center lg:px-6 lg:py-10">
+          <div>
+            <p className="w-fit rounded-full border border-[#e5e8ec] bg-white px-3 py-1 text-xs font-medium text-[#69707d]">
               TYORA Brand Film v2.0
             </p>
-            <h2 className="max-w-3xl text-[2rem] font-semibold leading-tight tracking-normal text-[#101216]/55 sm:text-[2.8rem] lg:text-[3.1rem]">
-              See how product ideas become real.
+            <h2 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight tracking-normal text-[#101216] lg:text-[2.4rem]">
+              The maker story behind the community.
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-7 text-[#59616e]/70 sm:text-lg sm:leading-8">
-              The service story is still here, but the community now leads TYORA. Watch the brand film, then explore the ideas founders are discussing.
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-[#59616e]">
+              Keep watching the product story unfold: idea, discussion, review, prototype, manufacturing and delivery.
             </p>
-            <div className="mt-8 grid gap-3 sm:flex">
-              <Button onClick={openWizard} className="min-h-12 px-5">
-                Start Your Project <ArrowRight size={16} />
-              </Button>
-              <Button variant="outline" className="min-h-12 px-5" onClick={() => setVideoModalOpen(true)}>
-                <Play size={16} /> Watch Our Story
-              </Button>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-2 text-xs text-[#69707d]">
+            <div className="mt-5 flex flex-wrap gap-2 text-xs text-[#69707d]">
               {["Independent review", "Factory fit", "Production clarity"].map((item) => (
                 <span key={item} className="rounded-full border border-[#e8ebef] bg-white px-3 py-2">
                   {item}
                 </span>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.45 }}
-            className="flex items-center"
-          >
-            <Card className="w-full overflow-hidden rounded-2xl border-[#e6e9ee] bg-white p-2 shadow-2xl shadow-[#101216]/10 transition hover:-translate-y-0.5 hover:shadow-[#101216]/15">
-              <button
-                type="button"
-                onClick={() => setVideoModalOpen(true)}
-                className="group relative block w-full overflow-hidden rounded-xl bg-[#101216] text-left"
-                aria-label="Watch TYORA brand film"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={brandFilmPoster}
-                  alt="TYORA brand film poster"
-                  className="aspect-[9/16] w-full object-cover opacity-95 transition duration-500 group-hover:scale-[1.015] group-hover:opacity-100"
-                />
-                <span className="absolute inset-0 bg-gradient-to-t from-[#101216]/45 via-transparent to-transparent" />
-                <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-[#101216] backdrop-blur">
-                  30 second story
-                </span>
-                <span className="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#101216] shadow-xl transition group-hover:scale-105">
-                  <Play size={24} fill="currentColor" />
-                </span>
-                <span className="absolute bottom-5 left-5 right-5 text-white">
-                  <span className="block text-sm text-white/75">TYORA Brand Film</span>
-                  <span className="mt-1 block text-xl font-semibold">A calmer path from idea to production.</span>
-                </span>
-              </button>
-            </Card>
-          </motion.div>
+          <Card className="w-full overflow-hidden rounded-2xl border-[#e6e9ee] bg-white p-2 shadow-xl shadow-[#101216]/10 transition hover:-translate-y-0.5 hover:shadow-[#101216]/15">
+            <button
+              type="button"
+              onClick={() => setVideoModalOpen(true)}
+              className="group relative block w-full overflow-hidden rounded-xl bg-[#101216] text-left"
+              aria-label="Watch TYORA brand film"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={brandFilmPoster}
+                alt="TYORA brand film poster"
+                className="aspect-[9/16] w-full object-cover opacity-95 transition duration-500 group-hover:scale-[1.015] group-hover:opacity-100"
+              />
+              <span className="absolute inset-0 bg-gradient-to-t from-[#101216]/45 via-transparent to-transparent" />
+              <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-[#101216] backdrop-blur">
+                30 second story
+              </span>
+              <span className="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#101216] shadow-xl transition group-hover:scale-105">
+                <Play size={22} fill="currentColor" />
+              </span>
+              <span className="absolute bottom-5 left-5 right-5 text-white">
+                <span className="block text-sm text-white/75">TYORA Brand Film</span>
+                <span className="mt-1 block text-lg font-semibold">A calmer path from idea to production.</span>
+              </span>
+            </button>
+          </Card>
         </div>
       </section>
 
-      <section className="border-b border-[#eef1f4] bg-[#fbfbfc]">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-18">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {heroFeatureCards.map(({ title, description, icon: Icon }, index) => (
-              <motion.div
-                key={title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.3, delay: index * 0.04 }}
-              >
-                <Card className="h-full rounded-xl p-6 shadow-sm shadow-[#101216]/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/6">
-                  <span className="flex size-10 items-center justify-center rounded-lg bg-[#101216] text-white">
-                    <Icon size={18} />
-                  </span>
-                  <h2 className="mt-6 text-lg font-semibold">{title}</h2>
-                  <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#eef1f4] bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-medium text-[#69707d]">How It Works</p>
-            <h2 className="mt-3 text-[2.25rem] font-semibold leading-tight lg:text-[3rem]">
-              Five simple steps from idea to production.
-            </h2>
-          </div>
-          <div className="mt-10 grid gap-3 md:grid-cols-5">
-            {heroSteps.map(([step, Icon], index) => (
-              <div key={step} className="relative">
-                <Card className="flex h-full min-h-36 flex-col items-center justify-center rounded-xl p-5 text-center shadow-sm shadow-[#101216]/5">
-                  <Icon size={22} className="text-[#101216]" />
-                  <h3 className="mt-4 font-semibold">{step}</h3>
-                </Card>
-                {index < heroSteps.length - 1 ? (
-                  <span className="hidden md:block absolute right-[-1.05rem] top-1/2 z-10 -translate-y-1/2 text-[#b2bac5]">
-                    →
-                  </span>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#eef1f4] bg-[#fbfbfc]">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-24">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+      <section className="border-b border-[#dfe6ef] bg-white/88">
+        <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
             <div>
-              <p className="text-sm font-medium text-[#69707d]">Why TYORA</p>
-              <h2 className="mt-3 text-[2.25rem] font-semibold leading-tight lg:text-[3rem]">
-                Better decisions before manufacturing gets expensive.
-              </h2>
+              <p className="text-sm font-medium text-[#69707d]">Manufacturing Confidence</p>
+              <h2 className="mt-2 text-3xl font-semibold leading-tight">Better decisions before manufacturing gets expensive.</h2>
             </div>
-            <p className="text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
+            <p className="text-sm leading-6 text-[#59616e]">
               TYORA helps founders understand tradeoffs, compare options, and stay in control before committing to production.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          <div className="mt-5 grid gap-3 lg:grid-cols-3">
             {whyTyoraCards.map(([title, description, Icon]) => (
-              <Card key={title} className="rounded-xl bg-white p-6 shadow-sm shadow-[#101216]/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/6">
-                <Icon size={22} className="text-[#101216]" />
-                <h3 className="mt-6 text-lg font-semibold">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
-        <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-[2.25rem] font-semibold leading-tight">{t.caseStudies}</h2>
-            <p className="mt-2 text-[#59616e]">{t.seeEditable}</p>
-          </div>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {visibleCases.map((story, index) => (
-            <Card key={story.name} className={cn(
-              "p-4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5",
-              index >= 3 && !showAllMobileCases ? "hidden lg:block" : ""
-            )}>
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="font-semibold">{story.name}</h3>
-                <span className="rounded-full bg-[#e6f7f4] px-2.5 py-1 text-xs font-medium text-[#0f766e]">
-                  {story.status}
-                </span>
-              </div>
-              <div className="grid gap-4">
-                {[
-                  { label: story.concept, image: story.conceptImage, stage: "concept" },
-                  { label: story.prototype, image: story.prototypeImage, stage: "prototype" },
-                  { label: story.final, image: story.finalImage, stage: "final" }
-                ].map(({ label, image, stage }, itemIndex) => (
-                  <div key={label} className="space-y-2">
-                  <div
-                    className={cn(
-                      "flex items-center justify-center rounded-lg bg-[#f7f8fa] text-center text-sm font-medium text-[#69707d] ring-1 ring-[#e8ebef]",
-                      stage === "final"
-                        ? "h-52 sm:h-56 lg:h-60"
-                        : stage === "prototype"
-                          ? "h-40 sm:h-44 lg:h-48"
-                          : "h-44 sm:h-48 lg:h-52"
-                    )}
-                  >
-                    {image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={image}
-                        alt={label}
-                        className="h-[94%] w-[94%] max-w-none rounded-md object-contain"
-                      />
-                    ) : (
-                      label
-                    )}
-                  </div>
-                  {itemIndex < 2 ? (
-                    <div className="text-center text-sm leading-none text-[#b2bac5]">↓</div>
-                  ) : null}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
-        {visibleCases.length > 3 ? (
-          <Button
-            variant="outline"
-            className="mt-4 min-h-12 w-full lg:hidden"
-            onClick={() => setShowAllMobileCases((current) => !current)}
-          >
-            {showAllMobileCases ? "Show Fewer Projects" : "View More Projects"}
-          </Button>
-        ) : null}
-      </section>
-
-      <section className="border-y border-[#eef1f4] bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
-          <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{t.trustTitle}</h2>
-          <div className="mt-7 grid gap-4 lg:grid-cols-4">
-            {t.trustCards.map(([title, description]) => (
-              <Card key={title} className="p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
-                <h3 className="font-semibold">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
+              <Card key={title} className="rounded-[16px] bg-white p-4 shadow-sm shadow-[#101216]/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/6">
+                <Icon size={20} className="text-[#101216]" />
+                <h3 className="mt-4 font-semibold">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#59616e]">{description}</p>
               </Card>
             ))}
           </div>
@@ -854,19 +759,22 @@ export default function Home() {
       </section>
 
       <section id="faq" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-          <div className="mb-10 max-w-3xl">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <div className="mb-6 max-w-3xl">
             <p className="text-sm font-medium text-[#69707d]">FAQ</p>
-            <h2 className="mt-4 text-[2rem] font-semibold leading-tight lg:text-[2.6rem]">
+            <h2 className="mt-3 text-[2rem] font-semibold leading-tight lg:text-[2.35rem]">
               Questions founders ask before building with TYORA
             </h2>
           </div>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2">
             {faqItems.map((item) => (
-              <Card key={item.question} className="rounded-xl p-6 shadow-sm shadow-[#101216]/5">
-                <h3 className="font-semibold">{item.question}</h3>
+              <details key={item.question} className="group rounded-[14px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold">
+                  {item.question}
+                  <span className="text-[#8b93a1] transition group-open:rotate-45">+</span>
+                </summary>
                 <p className="mt-3 text-sm leading-6 text-[#59616e]">{item.answer}</p>
-              </Card>
+              </details>
             ))}
           </div>
         </div>
@@ -881,7 +789,7 @@ export default function Home() {
             Start your manufacturing journey with confidence.
           </p>
           <Button onClick={openWizard} className="mt-8 min-h-12 px-6">
-            Start Your Project <ArrowRight size={16} />
+            Start Building <ArrowRight size={16} />
           </Button>
         </div>
       </section>
