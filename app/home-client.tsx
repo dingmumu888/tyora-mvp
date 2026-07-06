@@ -322,6 +322,7 @@ export default function Home() {
                   <Link href="/ask/new" className={`inline-flex h-12 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
                   <Link href="/ask" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
+                <p className="-mt-1 text-xs font-semibold text-[#69707d]">Share your idea. Get FREE manufacturing feedback within 8 working hours.</p>
               </div>
               <div className="no-scrollbar mt-2.5 hidden gap-2 overflow-x-auto pb-1 sm:flex xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
                 {[
@@ -830,9 +831,9 @@ export default function Home() {
                   </div>
                 ) : null}
                 {plan.bottomNote ? <p className="mt-auto pt-5 text-sm font-medium text-[#69707d]">{plan.bottomNote}</p> : null}
-                <Button onClick={openWizard} className="mt-6 min-h-11 w-full">
+                <Link href="/ask/new" className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[#101216] px-4 text-sm font-medium text-white transition hover:bg-[#1f2329]">
                   {plan.ctaText} <ArrowRight size={16} />
-                </Button>
+                </Link>
               </Card>
               );
             })}
@@ -906,9 +907,9 @@ export default function Home() {
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
             Start your manufacturing journey with confidence.
           </p>
-          <Button onClick={openWizard} className="mt-8 min-h-12 px-6">
+          <Link href="/ask/new" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#101216] px-6 text-sm font-medium text-white transition hover:bg-[#1f2329]">
             Start Building <ArrowRight size={16} />
-          </Button>
+          </Link>
         </div>
       </section>
 

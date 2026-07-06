@@ -11,11 +11,13 @@ const loginSuccessEvent = "tyora:community-login";
 export default function EmailLogin({
   children = "Email Login",
   className,
-  onSuccess
+  onSuccess,
+  openSignal
 }: {
   children?: ReactNode;
   className?: string;
   onSuccess?: () => void;
+  openSignal?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("email");
@@ -59,6 +61,14 @@ export default function EmailLogin({
     if (step === "email") emailInputRef.current?.focus();
     if (step === "code") codeInputRef.current?.focus();
   }, [open, step]);
+
+  useEffect(() => {
+    if (!openSignal) return;
+    setStep("email");
+    setMessage("");
+    setMessageType("info");
+    setOpen(true);
+  }, [openSignal]);
 
   async function sendCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
