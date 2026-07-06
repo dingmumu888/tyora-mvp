@@ -75,6 +75,7 @@ const heroSteps = [
   ["Sample", PackageCheck],
   ["Production", Truck]
 ] as const;
+const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 const whyTyoraCards = [
   ["Independent Advice", "We work for founders, not factories.", ShieldCheck],
   ["Transparent Process", "Clear communication and predictable workflows.", ClipboardCheck],
@@ -232,7 +233,7 @@ export default function Home() {
             ].map(([label, href]) => (
               <Link key={label} href={href} className={cn(
                 "rounded-full px-3 py-2 text-sm font-medium transition hover:bg-[#f5f6f8] hover:text-[#101216]",
-                label === "Discover Ideas" ? "bg-[#101216] text-white hover:bg-[#101216] hover:text-white" : "text-[#59616e]"
+                label === "Discover Ideas" ? "bg-[#2563eb] text-white hover:bg-[#1d4ed8] hover:text-white" : "text-[#59616e]"
               )}>
                 {label}
               </Link>
@@ -243,7 +244,7 @@ export default function Home() {
               <SearchCheck size={15} /> Search
             </div>
             <a href="/api/community/auth/google" className="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold md:inline-flex">Google Login</a>
-            <Link href="/ask/new" className="hidden h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white sm:inline-flex">
+            <Link href="/ask/new" className={`hidden h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:inline-flex ${primaryButton}`}>
               <Upload size={15} /> <span className="hidden sm:inline">Start a Discussion</span>
             </Link>
             <button className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] md:inline-flex" aria-label="Notifications">
@@ -259,7 +260,7 @@ export default function Home() {
             <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={18} /></div>
             <h2 className="mt-3 text-lg font-semibold">Ask TYORA Community</h2>
             <p className="mt-2 text-sm leading-6 text-[#69707d]">Product creators discussing ideas with Chinese manufacturing expertise.</p>
-            <Link href="/ask/new" className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#101216] text-sm font-semibold text-white">
+            <Link href="/ask/new" className={`mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold ${primaryButton}`}>
               <Upload size={15} /> Start a Discussion
             </Link>
             <Link href="/ask" className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Browse Ideas</Link>
@@ -280,7 +281,7 @@ export default function Home() {
                   <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Link href="/ask/new" className="inline-flex h-11 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"><Upload size={16} /> Start a Discussion</Link>
+                  <Link href="/ask/new" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
                   <Link href="/ask" className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
               </div>
@@ -302,7 +303,7 @@ export default function Home() {
 
             <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
               {["Trending", "Newest", "Most Discussed", "Latest TYORA Reply", "Recently Uploaded"].map((item, index) => (
-                <Link key={item} href="/ask" className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold", index === 0 ? "bg-[#101216] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]")}>{item}</Link>
+                <Link key={item} href="/ask" className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold", index === 0 ? "bg-[#2563eb] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]")}>{item}</Link>
               ))}
             </div>
 
@@ -335,19 +336,52 @@ export default function Home() {
                 </Link>
               ))}
             </div>
+
+            <div className="mt-3 grid gap-3 xl:hidden">
+              <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
+                <h2 className="text-base font-semibold">Live Activity</h2>
+                <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
+                  {communityIdeas.length === 0 ? (
+                    <>
+                      <p className="rounded-2xl bg-[#f7f8fa] p-3">A founder shares a rough product idea.</p>
+                      <p className="rounded-2xl bg-[#f7f8fa] p-3">The community discusses materials, cost and factory fit.</p>
+                    </>
+                  ) : communityIdeas.slice(0, 2).map((idea) => (
+                    <p key={idea.id} className="rounded-2xl bg-[#f7f8fa] p-3">{idea.author.name} uploaded {idea.title}</p>
+                  ))}
+                </div>
+              </section>
+              <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
+                <h2 className="text-base font-semibold">Community Flow</h2>
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 text-sm text-[#59616e]">
+                  {["Idea", "Discussion", "TYORA Review", "Project", "Manufacturing", "Delivered"].map((step) => (
+                    <span key={step} className="whitespace-nowrap rounded-full bg-[#f7f8fa] px-3 py-2">{step}</span>
+                  ))}
+                </div>
+              </section>
+            </div>
           </div>
 
           <aside className="hidden space-y-3 self-start xl:sticky xl:top-20 xl:block">
             <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
               <h2 className="text-lg font-semibold">Live Activity</h2>
               <div className="mt-4 space-y-3">
-                {communityIdeas.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">Real uploads, TYORA replies, comments and likes will appear here.</p> : null}
+                {communityIdeas.length === 0 ? (
+                  <>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">A founder shares a rough product idea.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">The community reacts, comments and asks better questions.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">TYORA experts add manufacturing review.</p>
+                  </>
+                ) : null}
                 {communityIdeas.slice(0, 4).map((idea) => <p key={idea.id} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{idea.author.name} uploaded {idea.title}</p>)}
               </div>
             </section>
             <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Products Built by Community</h2>
-              <p className="mt-3 text-sm leading-6 text-[#69707d]">Completed community products will appear here when real projects are delivered.</p>
+              <div className="mt-4 space-y-3">
+                <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">Idea → Discussion → TYORA Review</p>
+                <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">Project → Manufacturing → Delivered</p>
+              </div>
             </section>
             <section className="rounded-[18px] border border-[#e8ebef] bg-[#101216] p-4 text-white">
               <h2 className="text-lg font-semibold">Journey of the Week</h2>
@@ -355,6 +389,22 @@ export default function Home() {
                 {["Idea", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step) => <span key={step} className="rounded-full bg-white/8 px-3 py-2">{step}</span>)}
               </div>
               <Link href="/ask" className="mt-5 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#101216]">View Full Journey</Link>
+            </section>
+            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
+              <h2 className="text-lg font-semibold">Community Statistics</h2>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                {[
+                  ["Ideas", communityIdeas.length],
+                  ["Reviews", communityIdeas.filter((idea) => idea.review).length],
+                  ["Projects", communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length],
+                  ["Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length]
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
+                    <p className="text-lg font-semibold text-[#101216]">{value}</p>
+                    <p className="text-xs text-[#69707d]">{label}</p>
+                  </div>
+                ))}
+              </div>
             </section>
           </aside>
         </div>

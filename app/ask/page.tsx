@@ -36,6 +36,7 @@ const tabs: Array<[CommunityFeedSort, string]> = [
 const categories = ["Phone Accessories", "Pet", "Home", "Office", "Kitchen", "Outdoor", "Electronics", "Fashion"];
 const topNav = ["Discover Ideas", "Ask TYORA", "Journeys", "Success Stories", "Pricing"];
 const statusSteps = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping"];
+const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 
 const statusStyles: Record<CommunityStatus, string> = {
   Discussing: "bg-[#f0eaff] text-[#6d28d9] ring-[#ddd0ff]",
@@ -163,7 +164,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
               <span className="inline-flex items-center gap-1"><ShoppingBag size={14} /> {idea.interestedCount} I&apos;d Buy</span>
               <span className="inline-flex items-center gap-1"><Eye size={14} /> {Math.max(idea.likeCount + idea.comments.length + idea.interestedCount, 1) * 17}</span>
             </div>
-            <Link href={`/ask/${idea.slug}`} className="inline-flex h-9 items-center gap-2 rounded-full bg-[#101216] px-4 text-xs font-semibold text-white">
+            <Link href={`/ask/${idea.slug}`} className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold ${primaryButton}`}>
               Join Discussion <ChevronRight size={14} />
             </Link>
           </div>
@@ -199,7 +200,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               <Search size={16} /> Search ideas
             </div>
             <a href="/api/community/auth/google" className="hidden rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold sm:inline-flex">Google Login</a>
-            <Link href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
               <Plus size={16} /> <span className="hidden sm:inline">Start a Discussion</span>
             </Link>
             <button className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] bg-white md:inline-flex" aria-label="Notifications">
@@ -218,7 +219,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               <p className="mt-2 text-sm leading-6 text-[#69707d]">The product creator community powered by Chinese manufacturing expertise.</p>
               <div className="mt-4 grid gap-2 text-sm">
                 <span className="inline-flex items-center gap-2 text-[#59616e]"><Users size={15} /> {Math.max(ideas.length * 3, ideas.length)} members online</span>
-                <Link href="/ask/new" className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 font-semibold text-white"><Plus size={15} /> Start a Discussion</Link>
+                <Link href="/ask/new" className={`inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 font-semibold ${primaryButton}`}><Plus size={15} /> Start a Discussion</Link>
                 <a href="#feed" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] font-semibold">Browse Ideas</a>
                 <span className="rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">3 FREE Expert Reviews per day</span>
               </div>
@@ -260,7 +261,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
                 <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link href="/ask/new" className="inline-flex h-11 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"><Plus size={16} /> Start a Discussion</Link>
+                <Link href="/ask/new" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}><Plus size={16} /> Start a Discussion</Link>
                 <a href="#ideas" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><Search size={16} /> Browse Ideas</a>
               </div>
             </div>
@@ -297,6 +298,38 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               </div>
             ) : ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} />)}
           </div>
+
+          <div className="mt-3 grid gap-3 xl:hidden">
+            <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
+              <h2 className="text-base font-semibold">Live Activity</h2>
+              <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
+                {liveActivity.length === 0 ? (
+                  <>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3">A founder uploads a product idea.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3">Creators discuss feasibility, cost and materials.</p>
+                  </>
+                ) : liveActivity.slice(0, 2).map((item) => (
+                  <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3">{item}</p>
+                ))}
+              </div>
+            </section>
+            <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
+              <h2 className="text-base font-semibold">Community Statistics</h2>
+              <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs text-[#69707d]">
+                {[
+                  ["Ideas", ideas.length],
+                  ["Reviews", latestReviews.length],
+                  ["Projects", projectsStarted],
+                  ["Built", delivered.length]
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
+                    <p className="text-lg font-semibold text-[#101216]">{value}</p>
+                    <p>{label}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         </section>
 
         <aside className="hidden xl:block">
@@ -304,7 +337,13 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
               <h2 className="text-lg font-semibold">Live Activity</h2>
               <div className="mt-4 space-y-3">
-                {liveActivity.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">No activity yet. Real uploads, TYORA replies, comments, and likes will appear here.</p> : null}
+                {liveActivity.length === 0 ? (
+                  <>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">A founder uploads a product idea.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">Creators discuss feasibility, cost and materials.</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">TYORA experts reply with manufacturing guidance.</p>
+                  </>
+                ) : null}
                 {liveActivity.map((item) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{item}</p>)}
               </div>
             </section>
@@ -312,7 +351,12 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Products Built by Community</h2>
               <div className="mt-4 space-y-3">
-                {delivered.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">Completed community products will appear here when real projects are delivered.</p> : null}
+                {delivered.length === 0 ? (
+                  <>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">Idea → TYORA Review → Project Started</p>
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">Manufacturing → Shipping → Delivered</p>
+                  </>
+                ) : null}
                 {delivered.slice(0, 3).map((idea) => (
                   <Link key={idea.id} href={`/ask/${idea.slug}`} className="block rounded-2xl border border-[#eef1f4] p-3">
                     <p className="font-semibold">{idea.title}</p>
@@ -329,6 +373,23 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               </div>
               <Link href="/ask" className="mt-5 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#101216]">View Full Journey</Link>
             </section>
+
+            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
+              <h2 className="text-lg font-semibold">Community Statistics</h2>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                {[
+                  ["Ideas", ideas.length],
+                  ["Reviews", latestReviews.length],
+                  ["Projects", projectsStarted],
+                  ["Delivered", delivered.length]
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
+                    <p className="text-lg font-semibold text-[#101216]">{value}</p>
+                    <p className="text-xs text-[#69707d]">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         </aside>
       </div>
@@ -336,7 +397,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebef] bg-white/92 px-4 py-3 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[calc(100vw-2rem)] items-center justify-between gap-3 sm:max-w-[1520px]">
           <p className="hidden text-sm font-semibold sm:block">Ready to build your idea?</p>
-          <Link href="/ask/new" className="inline-flex h-10 w-full max-w-full items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white sm:ml-auto sm:w-auto">
+          <Link href="/ask/new" className={`inline-flex h-10 w-full max-w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold sm:ml-auto sm:w-auto ${primaryButton}`}>
             <span className="hidden sm:inline">Continue This Project on WhatsApp</span>
             <span className="sm:hidden">WhatsApp</span>
             <Send size={14} className="shrink-0" />

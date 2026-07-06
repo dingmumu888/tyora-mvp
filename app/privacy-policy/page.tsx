@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-white text-[#101216]">
-      <header className="border-b border-[#eef1f4] bg-white">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_36%,#f7f5f0_100%)] text-[#101216]">
+      <header className="border-b border-[#eef1f4] bg-white/86 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="font-semibold tracking-normal">
             TYORA
@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:py-20">
+      <section className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
         <p className="mb-3 text-sm font-medium uppercase tracking-normal text-[#69707d]">
           Legal
         </p>
@@ -35,8 +35,8 @@ export default function PrivacyPolicyPage() {
           understand your product inquiry and start a business conversation.
         </p>
 
-        <div className="mt-10 space-y-8 text-sm leading-7 text-[#59616e]">
-          <section>
+        <div className="mt-8 space-y-4 text-sm leading-7 text-[#59616e]">
+          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <h2 className="text-lg font-semibold text-[#101216]">Information We Collect</h2>
             <p className="mt-2">
               We may collect the product name or description you enter, optional uploaded
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section>
+          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <h2 className="text-lg font-semibold text-[#101216]">How We Use Information</h2>
             <p className="mt-2">
               We use submitted information to review your product idea, discuss
@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section>
+          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <h2 className="text-lg font-semibold text-[#101216]">Data Storage</h2>
             <p className="mt-2">
               TYORA does not intentionally store sensitive data. Project information is
@@ -63,7 +63,7 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section>
+          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <h2 className="text-lg font-semibold text-[#101216]">Sharing</h2>
             <p className="mt-2">
               We do not sell personal information. When needed, project details may be
@@ -72,7 +72,7 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section>
+          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <h2 className="text-lg font-semibold text-[#101216]">Contact</h2>
             <p className="mt-2">
               For privacy questions, contact TYORA through the email or WhatsApp details

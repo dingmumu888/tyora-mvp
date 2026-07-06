@@ -18,6 +18,7 @@ const statusStyles: Record<CommunityStatus, string> = {
 };
 
 const timeline = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping", "Delivered"];
+const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8]";
 
 function progressFor(status: CommunityStatus) {
   if (status === "Completed") return 7;
@@ -48,7 +49,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
   const progress = progressFor(idea.status);
 
   return (
-    <main className="min-h-screen bg-[#f7f8fa] pb-24 text-[#101216]">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_36%,#f7f5f0_100%)] pb-24 text-[#101216]">
       <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/ask" className="inline-flex items-center gap-2 text-sm font-semibold"><ArrowLeft size={16} /> Ask TYORA</Link>
@@ -56,40 +57,54 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
-        <article className="min-w-0 space-y-5">
-          <section className="overflow-hidden rounded-[28px] border border-[#e8ebef] bg-white shadow-sm shadow-[#101216]/4">
-            <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-              <div className="relative min-h-[320px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff]">
+      <section className="mx-auto grid max-w-[1520px] gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:px-8">
+        <aside className="hidden space-y-3 self-start lg:sticky lg:top-20 lg:block">
+          <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-[#2563eb] text-white"><Sparkles size={18} /></div>
+            <h2 className="mt-3 text-lg font-semibold">Community Thread</h2>
+            <p className="mt-2 text-sm leading-6 text-[#69707d]">This idea grows through discussion, TYORA review, project start and delivery.</p>
+            <Link href="/ask/new" className={`mt-4 inline-flex h-10 w-full items-center justify-center rounded-full px-4 text-sm font-semibold ${primaryButton}`}>Start a Discussion</Link>
+          </section>
+          <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-3">
+            {["Idea", "Community Discussion", "TYORA Expert Review", "Ready to Build"].map((item) => (
+              <a key={item} href={`#${item.toLowerCase().replaceAll(" ", "-")}`} className="block rounded-xl px-3 py-2 text-sm font-medium text-[#59616e] hover:bg-[#f5f6f8]">{item}</a>
+            ))}
+          </section>
+        </aside>
+
+        <article className="min-w-0 space-y-3">
+          <section id="idea" className="overflow-hidden rounded-[20px] border border-[#e4e8ef] bg-white shadow-sm shadow-[#101216]/4">
+            <div className="grid gap-0 lg:grid-cols-[280px_1fr]">
+              <div className="relative min-h-[220px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff]">
                 {idea.imageUrls[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="absolute inset-0 size-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center p-8">
-                    <div className="flex size-32 items-center justify-center rounded-[36px] bg-white/78 text-4xl font-semibold shadow-sm ring-1 ring-white">
+                    <div className="flex size-24 items-center justify-center rounded-[28px] bg-white/78 text-3xl font-semibold shadow-sm ring-1 ring-white">
                       {idea.title.slice(0, 2).toUpperCase()}
                     </div>
                   </div>
                 )}
               </div>
-              <div className="p-6 sm:p-8">
+              <div className="p-5 sm:p-6">
                 <p className="text-sm font-medium text-[#69707d]">{idea.id}</p>
-                <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">{idea.title}</h1>
+                <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-normal sm:text-4xl">{idea.title}</h1>
                 <div className="mt-5 flex flex-wrap gap-2 text-sm text-[#69707d]">
                   <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{idea.category}</span>
                   <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{idea.country}</span>
                   <span className="rounded-full bg-[#f4f6f8] px-3 py-1">By {idea.author.name}</span>
                   <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{timeLabel(idea.createdAt)}</span>
                 </div>
-                <p className="mt-6 whitespace-pre-wrap text-base leading-8 text-[#59616e]">{idea.description}</p>
-                <div className="mt-6 flex flex-wrap gap-2">
+                <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-[#59616e] sm:text-base">{idea.description}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
                   {idea.questions.map((question) => <span key={question} className="rounded-full border border-[#e8ebef] px-3 py-1 text-xs font-medium text-[#59616e]">{question}</span>)}
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+          <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-[#69707d]">Project Timeline</p>
@@ -107,7 +122,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             </div>
           </section>
 
-          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+          <section id="tyora-expert-review" className="rounded-[18px] border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <div className="flex items-center gap-2">
               <Sparkles size={20} className="text-[#14b8a6]" />
               <h2 className="text-2xl font-semibold">TYORA Expert Review</h2>
@@ -136,7 +151,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             )}
           </section>
 
-          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+          <section id="community-discussion" className="rounded-[18px] border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold">Community Discussion</h2>
               <span className="inline-flex items-center gap-1 text-sm text-[#69707d]"><MessageCircle size={15} /> {idea.comments.length}</span>
@@ -156,7 +171,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             </div>
           </section>
 
-          <section className="rounded-[24px] border border-dashed border-[#cfd5dc] bg-white p-5">
+          <section className="rounded-[18px] border border-dashed border-[#cfd5dc] bg-white p-5">
             <div className="flex items-center gap-2">
               <FileText size={20} className="text-[#69707d]" />
               <h2 className="text-xl font-semibold">Files</h2>
@@ -165,8 +180,8 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
           </section>
         </article>
 
-        <aside className="space-y-5 lg:sticky lg:top-21 lg:self-start">
-          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+        <aside className="space-y-3 self-start lg:sticky lg:top-20">
+          <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
             <h2 className="text-lg font-semibold">Current Status</h2>
             <p className={`mt-3 inline-flex rounded-full px-3 py-1 text-sm font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</p>
             <p className="mt-4 text-sm leading-6 text-[#69707d]">The same post grows through discussion, TYORA review, project start, manufacturing, shipping, and completion.</p>
@@ -177,7 +192,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             </div>
           </section>
 
-          <section className="rounded-[24px] border border-[#e8ebef] bg-white p-5">
+          <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
             <div className="flex items-center gap-2">
               <Box size={18} />
               <h2 className="text-lg font-semibold">Manufacturing Scope</h2>
@@ -191,13 +206,22 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
           </section>
 
           <IdeaActions idea={idea} />
+
+          <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
+            <h2 className="text-lg font-semibold">Live Activity</h2>
+            <div className="mt-4 space-y-3 text-sm text-[#59616e]">
+              <p className="rounded-2xl bg-[#f7f8fa] p-3">{idea.author.name} started this discussion.</p>
+              {idea.review ? <p className="rounded-2xl bg-[#f7f8fa] p-3">TYORA expert review is available.</p> : <p className="rounded-2xl bg-[#f7f8fa] p-3">Waiting for TYORA expert review.</p>}
+              <p className="rounded-2xl bg-[#f7f8fa] p-3">{idea.comments.length} community comments.</p>
+            </div>
+          </section>
         </aside>
       </section>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebef] bg-white/92 px-4 py-3 backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
           <p className="text-sm font-semibold">Ready to build?</p>
-          <Link href="#continue" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+          <Link href="#continue" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
             Continue <PackageCheck size={14} />
           </Link>
         </div>
