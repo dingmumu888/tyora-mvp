@@ -97,15 +97,15 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
   const progress = statusProgress(idea.status);
 
   return (
-    <article className="group overflow-hidden rounded-[18px] border border-[#e8ebef] bg-white shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#101216]/8">
-      <div className="grid gap-0 sm:grid-cols-[184px_1fr]">
-        <Link href={`/ask/${idea.slug}`} className={`relative block min-h-44 overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
+    <article className="group overflow-hidden rounded-[14px] border border-[#e4e8ef] bg-white shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/7">
+      <div className="grid gap-0 sm:grid-cols-[132px_1fr]">
+        <Link href={`/ask/${idea.slug}`} className={`relative block min-h-32 overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
           {idea.imageUrls[0] ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center p-6">
-              <div className="flex size-20 items-center justify-center rounded-3xl bg-white/74 text-2xl font-semibold shadow-sm ring-1 ring-white">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-white/74 text-xl font-semibold shadow-sm ring-1 ring-white">
                 {idea.title.slice(0, 2).toUpperCase()}
               </div>
             </div>
@@ -113,7 +113,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
           <span className="absolute left-3 top-3 rounded-full bg-white/88 px-2.5 py-1 text-[11px] font-semibold text-[#101216] backdrop-blur">{idea.category}</span>
         </Link>
 
-        <div className="min-w-0 p-4">
+        <div className="min-w-0 p-3">
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#69707d]">
             <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{flagFor(idea.country)}</span>
             <span>{idea.author.name}</span>
@@ -122,18 +122,18 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
           </div>
 
           <Link href={`/ask/${idea.slug}`} className="mt-2 block">
-            <h2 className="line-clamp-1 text-[1.35rem] font-semibold leading-tight tracking-normal text-[#101216]">{idea.title}</h2>
-            <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#59616e]">{idea.description}</p>
+            <h2 className="line-clamp-1 text-lg font-semibold leading-tight tracking-normal text-[#101216]">{idea.title}</h2>
+            <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-[#59616e]">{idea.description}</p>
           </Link>
 
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
             {idea.questions.slice(0, 2).map((question) => (
               <span key={question} className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">{question}</span>
             ))}
             <span className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">Concept</span>
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 {statusSteps.map((step, index) => (
@@ -156,7 +156,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-3 text-xs font-medium text-[#69707d]">
               <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount} Love</span>
               <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length}</span>
@@ -183,7 +183,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
   const liveActivity = activity(ideas);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f7f8fa] pb-24 text-[#101216]">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_34%,#f7f5f0_100%)] pb-20 text-[#101216]">
       <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-[1520px] items-center gap-4 px-4 sm:px-6 lg:px-8">
           <Link href="/" className="text-sm font-semibold tracking-normal">TYORA</Link>
@@ -200,7 +200,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             </div>
             <a href="/api/community/auth/google" className="hidden rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold sm:inline-flex">Google Login</a>
             <Link href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-              <Plus size={16} /> <span className="hidden sm:inline">Upload My Idea</span>
+              <Plus size={16} /> <span className="hidden sm:inline">Start a Discussion</span>
             </Link>
             <button className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] bg-white md:inline-flex" aria-label="Notifications">
               <Bell size={16} />
@@ -209,22 +209,22 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1520px] gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)_340px] lg:px-8">
+      <div className="mx-auto grid max-w-[1520px] gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[232px_minmax(0,1fr)_320px] lg:px-8">
         <aside className="hidden lg:block">
-          <div className="sticky top-21 space-y-4">
-            <section className="rounded-[22px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+          <div className="sticky top-20 space-y-3">
+            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
               <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={18} /></div>
-              <h2 className="mt-4 text-lg font-semibold">Ask TYORA Community</h2>
+              <h2 className="mt-3 text-lg font-semibold">Ask TYORA Community</h2>
               <p className="mt-2 text-sm leading-6 text-[#69707d]">The product creator community powered by Chinese manufacturing expertise.</p>
               <div className="mt-4 grid gap-2 text-sm">
                 <span className="inline-flex items-center gap-2 text-[#59616e]"><Users size={15} /> {Math.max(ideas.length * 3, ideas.length)} members online</span>
-                <Link href="/ask/new" className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 font-semibold text-white"><Plus size={15} /> Upload My Idea</Link>
+                <Link href="/ask/new" className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 font-semibold text-white"><Plus size={15} /> Start a Discussion</Link>
                 <a href="#feed" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] font-semibold">Browse Ideas</a>
                 <span className="rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">3 FREE Expert Reviews per day</span>
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-[#e8ebef] bg-white p-4">
+            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-3">
               {["Discover Ideas", "Following", "My Discussions", "My Projects", "Notifications"].map((item) => (
                 <Link key={item} href="/ask" className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#59616e] hover:bg-[#f5f6f8]">
                   {item}<ChevronRight size={14} />
@@ -232,14 +232,14 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               ))}
             </section>
 
-            <section className="rounded-[22px] border border-[#e8ebef] bg-white p-4">
+            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-3">
               <p className="px-3 text-xs font-semibold uppercase text-[#8b93a1]">Categories</p>
               <div className="mt-2 grid gap-1">
                 {categories.map((item) => <Link key={item} href="/ask" className="rounded-xl px-3 py-2 text-sm text-[#59616e] hover:bg-[#f5f6f8]">{item}</Link>)}
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-[#d7f1eb] bg-[#effaf6] p-4">
+            <section className="rounded-[18px] border border-[#d7f1eb] bg-[#effaf6] p-3">
               <p className="text-sm font-semibold text-[#0f766e]">Invite Friends</p>
               <p className="mt-1 text-sm leading-6 text-[#3d766d]">Get FREE review quota</p>
             </section>
@@ -247,23 +247,24 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         </aside>
 
         <section id="feed" className="min-w-0">
-          <div className="rounded-[28px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4 sm:p-7">
+          <div className="rounded-[20px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
             <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
               <Sparkles size={14} /> 3 FREE Expert Reviews per day
             </p>
-            <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_auto] xl:items-end">
+            <div className="mt-3 grid gap-3 xl:grid-cols-[1fr_auto] xl:items-end">
               <div>
-                <h1 className="max-w-3xl text-3xl font-semibold leading-[1.08] tracking-normal sm:text-5xl">What&apos;s your next idea?</h1>
-                <p className="mt-4 max-w-[300px] text-base leading-7 text-[#59616e] sm:max-w-2xl sm:text-lg">
+                <h1 className="max-w-3xl text-3xl font-semibold leading-[1.05] tracking-normal sm:text-4xl">What&apos;s your next idea?</h1>
+                <p className="mt-3 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
                   Upload your idea. Get a FREE manufacturing review within 8 working hours.
                 </p>
+                <p className="mt-2 text-sm font-medium text-[#315fbd]">Founders are discussing product ideas with TYORA manufacturing experts.</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Link href="/ask/new" className="inline-flex h-12 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"><Plus size={16} /> Upload My Idea</Link>
+                <Link href="/ask/new" className="inline-flex h-11 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"><Plus size={16} /> Start a Discussion</Link>
                 <a href="#ideas" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><Search size={16} /> Browse Ideas</a>
               </div>
             </div>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
               {[
                 ["Ideas Shared", ideas.length],
                 ["TYORA Reviews", latestReviews.length],
@@ -271,15 +272,15 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
                 ["Products Delivered", delivered.length],
                 ["Countries", countries]
               ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-4">
-                  <p className="text-2xl font-semibold">{value}</p>
+                <div key={label} className="rounded-xl border border-[#eef1f4] bg-[#fbfbfc] p-3">
+                  <p className="text-xl font-semibold">{value}</p>
                   <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <nav id="ideas" className="no-scrollbar mt-5 flex gap-2 overflow-x-auto pb-2">
+          <nav id="ideas" className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
             {tabs.map(([id, label]) => (
               <Link key={id} href={`/ask?sort=${id}`} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${sort === id ? "bg-[#101216] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]"}`}>
                 {label}
@@ -288,9 +289,9 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <button className="inline-flex whitespace-nowrap rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold text-[#59616e]"><Filter size={15} /> Filter</button>
           </nav>
 
-          <div className="mt-4 grid gap-3">
+          <div className="mt-3 grid gap-2.5">
             {ideas.length === 0 ? (
-              <div className="rounded-[22px] border border-dashed border-[#cfd5dc] bg-white p-10 text-center">
+              <div className="rounded-[16px] border border-dashed border-[#cfd5dc] bg-white/92 p-7 text-center">
                 <p className="text-xl font-semibold">No ideas yet.</p>
                 <p className="mt-2 text-[#69707d]">Be the first product creator to start a manufacturing discussion.</p>
               </div>
@@ -299,8 +300,8 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         </section>
 
         <aside className="hidden xl:block">
-          <div className="sticky top-21 space-y-4">
-            <section className="rounded-[22px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+          <div className="sticky top-20 space-y-3">
+            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
               <h2 className="text-lg font-semibold">Live Activity</h2>
               <div className="mt-4 space-y-3">
                 {liveActivity.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">No activity yet. Real uploads, TYORA replies, comments, and likes will appear here.</p> : null}
@@ -308,7 +309,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-[#e8ebef] bg-white p-5">
+            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Products Built by Community</h2>
               <div className="mt-4 space-y-3">
                 {delivered.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">Completed community products will appear here when real projects are delivered.</p> : null}
@@ -321,7 +322,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-[#e8ebef] bg-[#101216] p-5 text-white">
+            <section className="rounded-[18px] border border-[#e8ebef] bg-[#101216] p-4 text-white">
               <h2 className="text-lg font-semibold">Journey of the Week</h2>
               <div className="mt-4 grid gap-2 text-sm text-white/72">
                 {["Idea", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step) => <span key={step} className="rounded-full bg-white/8 px-3 py-2">{step}</span>)}
