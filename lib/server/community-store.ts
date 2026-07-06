@@ -15,7 +15,7 @@ import { prisma } from "@/lib/server/db";
 
 type UserRow = {
   id: string;
-  googleId: string;
+  googleId: string | null;
   email: string;
   username: string;
   name: string;
@@ -113,7 +113,7 @@ const ideaInclude = {
 } as const;
 
 export async function upsertCommunityUser(input: {
-  googleId: string;
+  googleId?: string | null;
   email: string;
   name: string;
   avatar?: string | null;
@@ -132,7 +132,7 @@ export async function upsertCommunityUser(input: {
     where: { email },
     create: {
       id,
-      googleId: input.googleId,
+      googleId: input.googleId || null,
       email,
       username,
       name: input.name || username,
@@ -140,7 +140,7 @@ export async function upsertCommunityUser(input: {
       country: input.country || null
     },
     update: {
-      googleId: input.googleId,
+      googleId: input.googleId || existing?.googleId || null,
       name: input.name || username,
       avatar: input.avatar || null,
       country: input.country || null
@@ -149,7 +149,7 @@ export async function upsertCommunityUser(input: {
 
   return {
     id: row.id,
-    googleId: row.googleId,
+    googleId: row.googleId || undefined,
     email: row.email,
     username: row.username,
     name: row.name,
@@ -164,7 +164,7 @@ export async function getCommunityUser(userId: string) {
   return row
     ? {
         id: row.id,
-        googleId: row.googleId,
+        googleId: row.googleId || undefined,
         email: row.email,
         username: row.username,
         name: row.name,

@@ -2,8 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ImagePlus, Loader2, MessageCircle, Sparkles, Upload, Users } from "lucide-react";
+import { CheckCircle2, ImagePlus, Loader2, Sparkles, Upload } from "lucide-react";
 import { communityQuestions, CommunityQuestion } from "@/lib/community";
+import EmailLogin from "@/components/email-login";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
 
@@ -79,12 +80,12 @@ export default function NewIdeaClient() {
     return (
       <main className="flex min-h-screen items-center justify-center overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_36%,#f7f5f0_100%)] px-6 text-[#101216]">
         <section className="max-w-xl rounded-[20px] border border-[#e4e8ef] bg-white p-8 text-center shadow-sm shadow-[#101216]/5">
-          <p className="text-sm font-semibold text-[#69707d]">Google Login Required</p>
+          <p className="text-sm font-semibold text-[#69707d]">Email Login Required</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight">Join the product creator community.</h1>
-          <p className="mt-4 leading-7 text-[#59616e]">Browsing and reading are open. Posting, commenting, interested, and continue project require Google login only.</p>
-          <a href="/api/community/auth/google" className="mt-7 inline-flex h-12 items-center gap-2 rounded-full bg-[#2563eb] px-6 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8]">
-            Continue with Google <ArrowRight size={16} />
-          </a>
+          <p className="mt-4 leading-7 text-[#59616e]">Browsing and reading are open. Posting, commenting, interested, and continue project require email login only.</p>
+          <EmailLogin className="mt-7 inline-flex h-12 items-center gap-2 rounded-full bg-[#2563eb] px-6 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8]">
+            Email Login
+          </EmailLogin>
         </section>
       </main>
     );

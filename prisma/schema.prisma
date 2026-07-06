@@ -102,7 +102,7 @@ model AnalyticsEvent {
 
 model CommunityUser {
   id              String             @id
-  googleId        String             @unique
+  googleId        String?            @unique
   email           String             @unique
   username        String             @unique
   name            String
@@ -116,6 +116,19 @@ model CommunityUser {
 
   @@index([joinedAt])
   @@index([country])
+}
+
+model EmailLoginCode {
+  id        String    @id
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+  @@index([createdAt])
 }
 
 model CommunityIdea {

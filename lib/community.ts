@@ -22,7 +22,7 @@ export type CommunityQuestion = (typeof communityQuestions)[number];
 
 export type CommunityUser = {
   id: string;
-  googleId: string;
+  googleId?: string;
   email: string;
   username: string;
   name: string;

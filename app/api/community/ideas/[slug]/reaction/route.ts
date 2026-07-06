@@ -4,7 +4,7 @@ import { fail, messageFromError, ok } from "@/lib/server/api-response";
 
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const session = await getCommunitySession();
-  if (!session) return fail("Google login is required.", 401);
+  if (!session) return fail("Email login is required.", 401);
   const { slug } = await params;
   const body = await request.json() as { type?: "Like" | "Interested" };
   if (body.type !== "Like" && body.type !== "Interested") return fail("Invalid reaction.", 400);

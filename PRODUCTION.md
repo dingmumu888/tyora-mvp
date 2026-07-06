@@ -19,14 +19,12 @@ Required production environment variables:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_STORAGE_BUCKET`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `AUTH_ORIGIN` (`https://tyora.io` for canonical production login redirects)
+- `RESEND_API_KEY`
+- `RESEND_FROM` (`TYORA <login@tyora.io>`)
+- `RESEND_USE_TEST_SENDER` (`true` only while the custom sender domain is not ready)
+- `AUTH_ORIGIN` (`https://tyora.io`)
 
-Google OAuth authorized redirect URIs:
-
-- `https://tyora.io/api/community/auth/google/callback`
-- `https://tyora-mvp.vercel.app/api/community/auth/google/callback`
+Email login uses 6-digit verification codes sent through Resend. Codes expire after 10 minutes and can only be used once.
 
 ## API Boundary
 

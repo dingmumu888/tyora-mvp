@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await getCommunitySession();
-  if (!session) return fail("Google login is required to post an idea.", 401);
+  if (!session) return fail("Email login is required to post an idea.", 401);
   try {
     const used = await countReviewsUsedToday(session.userId);
     if (used >= 3) {

@@ -4,12 +4,9 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Heart, Loader2, MessageCircle, Share2, Star } from "lucide-react";
 import { CommunityIdea } from "@/lib/community";
 import { WHATSAPP_URL } from "@/lib/whatsapp";
+import EmailLogin from "@/components/email-login";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
-
-function loginUrl() {
-  return "/api/community/auth/google";
-}
 
 export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -38,7 +35,7 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
   async function postComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) {
-      window.location.href = loginUrl();
+      setMessage("Email login is required to comment.");
       return;
     }
     setBusy("comment");
@@ -59,7 +56,7 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
 
   async function react(type: "Like" | "Interested") {
     if (!user) {
-      window.location.href = loginUrl();
+      setMessage("Email login is required.");
       return;
     }
     setBusy(type);
@@ -81,12 +78,24 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
   return (
     <div id="continue" className="space-y-5">
       <div className="grid gap-2 sm:grid-cols-3">
-        <button onClick={() => void react("Like")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
-          {busy === "Like" ? <Loader2 className="animate-spin" size={16} /> : <Heart size={16} />} Like
-        </button>
-        <button onClick={() => void react("Interested")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
-          {busy === "Interested" ? <Loader2 className="animate-spin" size={16} /> : <Star size={16} />} Interested
-        </button>
+        {user ? (
+          <button onClick={() => void react("Like")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
+            {busy === "Like" ? <Loader2 className="animate-spin" size={16} /> : <Heart size={16} />} Like
+          </button>
+        ) : (
+          <EmailLogin className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
+            <Heart size={16} /> Like
+          </EmailLogin>
+        )}
+        {user ? (
+          <button onClick={() => void react("Interested")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
+            {busy === "Interested" ? <Loader2 className="animate-spin" size={16} /> : <Star size={16} />} Interested
+          </button>
+        ) : (
+          <EmailLogin className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
+            <Star size={16} /> Interested
+          </EmailLogin>
+        )}
         <button onClick={() => navigator.share?.({ title: idea.title, url: window.location.href })} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
           <Share2 size={16} /> Share
         </button>
@@ -98,12 +107,18 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
           value={body}
           onChange={(event) => setBody(event.target.value)}
           rows={4}
-          placeholder={user ? "Add a manufacturing question, answer, or practical note." : "Google login required to comment."}
+          placeholder={user ? "Add a manufacturing question, answer, or practical note." : "Email login required to comment."}
           className="mt-3 w-full resize-none rounded-2xl border border-[#dfe3e8] p-3 outline-none focus:border-[#101216]"
         />
-        <button className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-          {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} Comment
-        </button>
+        {user ? (
+          <button className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} Comment
+          </button>
+        ) : (
+          <EmailLogin className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            <MessageCircle size={15} /> Email Login to Comment
+          </EmailLogin>
+        )}
         {message ? <p className="mt-2 text-sm text-[#8a5a00]">{message}</p> : null}
       </form>
 
@@ -115,9 +130,9 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
             Continue This Project →
           </a>
         ) : (
-          <a href={loginUrl()} className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
-            Google Login to Continue
-          </a>
+          <EmailLogin className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
+            Email Login to Continue
+          </EmailLogin>
         )}
       </section>
     </div>
