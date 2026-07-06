@@ -323,7 +323,7 @@ export default function Home() {
                   <Link href="/ask" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
               </div>
-              <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
+              <div className="no-scrollbar mt-2.5 hidden gap-2 overflow-x-auto pb-1 sm:flex xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
                 {[
                   ["Ideas Shared", communityIdeas.length],
                   ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
@@ -356,7 +356,7 @@ export default function Home() {
                         Share a product idea and get a free manufacturing review from TYORA.
                       </p>
                     </div>
-                    <Link href="/ask/new" className={`inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
+                    <Link href="/ask/new" className={`hidden h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold sm:inline-flex ${primaryButton}`}>
                       <Upload size={16} /> Start a Discussion
                     </Link>
                   </div>
