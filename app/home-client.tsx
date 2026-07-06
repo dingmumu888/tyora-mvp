@@ -306,14 +306,14 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
-            <div className="rounded-[18px] border border-[#dfe6ef] bg-white/96 p-4 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:p-5">
+            <div className="rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3.5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:p-4">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
               </p>
               <div className="mt-2.5 grid gap-3">
                 <div>
-                  <h1 className="max-w-4xl text-3xl font-semibold leading-[1.05] tracking-normal sm:text-4xl lg:text-[3rem]">What are founders building next?</h1>
-                  <p className="mt-2 max-w-[320px] text-base leading-7 text-[#59616e] sm:max-w-3xl">
+                  <h1 className="max-w-4xl text-[2rem] font-semibold leading-[1.05] tracking-normal sm:text-4xl lg:text-[2.65rem]">What are founders building next?</h1>
+                  <p className="mt-2 max-w-[320px] text-sm leading-6 text-[#59616e] sm:max-w-3xl sm:text-base">
                     Share your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
                   <p className="mt-2 max-w-[340px] break-words text-sm font-semibold text-[#315fbd] sm:max-w-3xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
@@ -323,7 +323,7 @@ export default function Home() {
                   <Link href="/ask" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
               </div>
-              <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
+              <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-1 xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
                 {[
                   ["Ideas Shared", communityIdeas.length],
                   ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
@@ -331,8 +331,8 @@ export default function Home() {
                   ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
                   ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
                 ].map(([label, value]) => (
-                  <div key={label} className="min-w-[132px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-3 shadow-sm shadow-[#101216]/3 sm:min-w-[150px] xl:min-w-0">
-                    <p className="text-xl font-semibold">{value}</p>
+                  <div key={label} className="min-w-[122px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3 sm:min-w-[142px] xl:min-w-0">
+                    <p className="text-lg font-semibold">{value}</p>
                     <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
                   </div>
                 ))}
@@ -347,29 +347,29 @@ export default function Home() {
 
             <div className="mt-2.5 grid gap-2">
               {communityIdeas.length === 0 ? (
-                <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
-                  <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-3 shadow-sm shadow-[#101216]/4 sm:p-4">
+                  <div className="grid gap-2.5 lg:grid-cols-[1fr_auto] lg:items-center">
                     <div>
                       <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Starter community</p>
-                      <h2 className="mt-3 text-2xl font-semibold leading-tight">Be the first founder to start a discussion.</h2>
-                      <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e]">
+                      <h2 className="mt-2 text-xl font-semibold leading-tight sm:text-2xl">Be the first founder to start a discussion.</h2>
+                      <p className="mt-1.5 max-w-2xl text-sm leading-5 text-[#59616e]">
                         Share a product idea and get a free manufacturing review from TYORA.
                       </p>
                     </div>
-                    <Link href="/ask/new" className={`inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
+                    <Link href="/ask/new" className={`inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
                       <Upload size={16} /> Start a Discussion
                     </Link>
                   </div>
 
-                  <div className="mt-4 grid gap-2">
+                  <div className="mt-3 grid gap-2">
                     {starterExamples.map((example, index) => (
                       <Link
                         key={example.title}
                         href="/ask/new"
-                        className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-2.5 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[116px_1fr]"
+                        className="grid gap-2.5 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-2 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[104px_1fr]"
                       >
                         <div className={cn(
-                          "relative flex min-h-[98px] items-center justify-center rounded-xl bg-gradient-to-br",
+                          "relative flex min-h-[86px] items-center justify-center rounded-xl bg-gradient-to-br",
                           index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
                         )}>
                           <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
@@ -384,16 +384,16 @@ export default function Home() {
                             <span className="rounded-full bg-white px-2 py-1 ring-1 ring-[#e8ebef]">{example.category}</span>
                             <span>Demo prompt</span>
                           </div>
-                          <h3 className="mt-2 line-clamp-1 text-lg font-semibold">{example.title}</h3>
+                          <h3 className="mt-1.5 line-clamp-1 text-base font-semibold sm:text-lg">{example.title}</h3>
                           <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59616e]">{example.description}</p>
-                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#69707d]">
+                          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] font-medium text-[#69707d]">
                             <span className="inline-flex items-center gap-1"><Heart size={13} /> {exampleMetrics[index].love} Love</span>
                             <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {exampleMetrics[index].comments} Comments</span>
                             <span className="inline-flex items-center gap-1"><ShoppingBag size={13} /> {exampleMetrics[index].buy} I'd Buy</span>
                             <span className="inline-flex items-center gap-1"><Eye size={13} /> {exampleMetrics[index].views} Views</span>
-                            <span className="basis-full text-[#315fbd]">Last reply {exampleMetrics[index].reply}</span>
+                            <span className="text-[#315fbd]">Last reply {exampleMetrics[index].reply}</span>
                           </div>
-                          <div className="mt-2 flex items-center justify-between">
+                          <div className="mt-1.5 flex items-center justify-between">
                             <div className="flex -space-x-2">
                               {exampleMetrics[index].avatars.map((avatar) => (
                                 <span key={avatar} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
@@ -411,8 +411,8 @@ export default function Home() {
               ) : (
                 <>
                   {communityIdeas.slice(0, 6).map((idea) => (
-                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-3 rounded-[12px] border border-[#e1e6ee] bg-white p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[116px_1fr]">
-                  <div className="flex min-h-[98px] items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
+                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-2.5 rounded-[12px] border border-[#e1e6ee] bg-white p-2 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[104px_1fr]">
+                  <div className="flex min-h-[86px] items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
                     {idea.imageUrls[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="size-full rounded-2xl object-cover" />
@@ -424,14 +424,14 @@ export default function Home() {
                     </div>
                     <h2 className="mt-1.5 line-clamp-1 text-base font-semibold">{idea.title}</h2>
                     <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{idea.description}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#69707d]">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] font-medium text-[#69707d]">
                       <span className="inline-flex items-center gap-1"><Heart size={13} /> {idea.likeCount} Love</span>
                       <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {idea.comments.length} Comments</span>
                       <span className="inline-flex items-center gap-1"><ShoppingBag size={13} /> {idea.interestedCount} I'd Buy</span>
                       <span className="inline-flex items-center gap-1"><Eye size={13} /> {ideaViews(idea)} Views</span>
-                      <span className="basis-full text-[#315fbd]">Last reply {timeAgo(idea.updatedAt || idea.createdAt)}</span>
+                      <span className="text-[#315fbd]">Last reply {timeAgo(idea.updatedAt || idea.createdAt)}</span>
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
+                    <div className="mt-1.5 flex items-center justify-between">
                       <div className="flex -space-x-2">
                         {[idea.author.name.slice(0, 2).toUpperCase(), "TY", "CM"].map((avatar, avatarIndex) => (
                           <span key={`${idea.id}-${avatar}`} className={cn(
@@ -448,9 +448,9 @@ export default function Home() {
                 </Link>
                   ))}
                   {homeExamples.map((example, index) => (
-                    <Link key={example.title} href="/ask/new" className="grid gap-3 rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 p-2.5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.12)] sm:grid-cols-[116px_1fr]">
+                    <Link key={example.title} href="/ask/new" className="grid gap-2.5 rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 p-2 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.12)] sm:grid-cols-[104px_1fr]">
                       <div className={cn(
-                        "relative flex min-h-[98px] items-center justify-center rounded-xl bg-gradient-to-br",
+                        "relative flex min-h-[86px] items-center justify-center rounded-xl bg-gradient-to-br",
                         index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
                       )}>
                         <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
@@ -467,14 +467,14 @@ export default function Home() {
                         </div>
                         <h3 className="mt-1.5 line-clamp-1 text-base font-semibold">{example.title}</h3>
                         <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{example.description}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#69707d]">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] font-medium text-[#69707d]">
                           <span className="inline-flex items-center gap-1"><Heart size={13} /> {exampleMetrics[index].love} Love</span>
                           <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {exampleMetrics[index].comments} Comments</span>
                           <span className="inline-flex items-center gap-1"><ShoppingBag size={13} /> {exampleMetrics[index].buy} I'd Buy</span>
                           <span className="inline-flex items-center gap-1"><Eye size={13} /> {exampleMetrics[index].views} Views</span>
-                          <span className="basis-full text-[#315fbd]">Last reply {exampleMetrics[index].reply}</span>
+                          <span className="text-[#315fbd]">Last reply {exampleMetrics[index].reply}</span>
                         </div>
-                        <div className="mt-2 flex items-center justify-between">
+                        <div className="mt-1.5 flex items-center justify-between">
                           <div className="flex -space-x-2">
                             {exampleMetrics[index].avatars.map((avatar) => (
                               <span key={avatar} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
