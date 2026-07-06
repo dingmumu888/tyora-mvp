@@ -7,6 +7,15 @@ const REQUEST_WINDOW_MINUTES = 10;
 const MAX_REQUESTS_PER_WINDOW = 3;
 const FALLBACK_FROM = "onboarding@resend.dev";
 const DEFAULT_FROM = "TYORA <login@tyora.io>";
+export type EmailLoginStage =
+  | "normalize_email"
+  | "validate_email"
+  | "rate_limit_check"
+  | "create_login_code"
+  | "before_resend_fetch"
+  | "after_resend_fetch";
+
+type EmailLoginTrace = (stage: EmailLoginStage, data?: Record<string, unknown>) => void;
 
 function normalizeEmail(value: unknown) {
   if (typeof value !== "string") return "";
@@ -51,7 +60,7 @@ export function getEmailLoginDebugContext() {
   };
 }
 
-async function sendLoginEmail(email: string, code: string) {
+async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTrace) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("Email login is not configured.");
 
@@ -66,6 +75,11 @@ async function sendLoginEmail(email: string, code: string) {
     "If you did not request this, you can ignore this email."
   ].join("\n");
 
+  trace?.("before_resend_fetch", {
+    email,
+    from,
+    hasResendApiKey: Boolean(apiKey)
+  });
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -79,6 +93,11 @@ async function sendLoginEmail(email: string, code: string) {
       text
     })
   });
+  trace?.("after_resend_fetch", {
+    email,
+    status: response.status,
+    ok: response.ok
+  });
 
   if (!response.ok) {
     const responseText = await response.text().catch(() => "");
@@ -86,9 +105,18 @@ async function sendLoginEmail(email: string, code: string) {
   }
 }
 
-export async function requestEmailLoginCode(input: unknown) {
+export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTrace) {
   const email = normalizeEmail(input);
-  if (!isEmail(email)) return;
+  trace?.("normalize_email", {
+    inputType: typeof input,
+    email
+  });
+  const valid = isEmail(email);
+  trace?.("validate_email", {
+    email,
+    valid
+  });
+  if (!valid) return;
 
   const since = new Date(Date.now() - REQUEST_WINDOW_MINUTES * 60 * 1000);
   const recent = await prisma.emailLoginCode.count({
@@ -96,6 +124,12 @@ export async function requestEmailLoginCode(input: unknown) {
       email,
       createdAt: { gte: since }
     }
+  });
+  trace?.("rate_limit_check", {
+    email,
+    recent,
+    limit: MAX_REQUESTS_PER_WINDOW,
+    limited: recent >= MAX_REQUESTS_PER_WINDOW
   });
   if (recent >= MAX_REQUESTS_PER_WINDOW) return;
 
@@ -108,7 +142,10 @@ export async function requestEmailLoginCode(input: unknown) {
       expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000)
     }
   });
-  await sendLoginEmail(email, code);
+  trace?.("create_login_code", {
+    email
+  });
+  await sendLoginEmail(email, code, trace);
 }
 
 export async function verifyEmailLoginCode(emailInput: unknown, codeInput: unknown) {
