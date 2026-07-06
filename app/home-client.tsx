@@ -277,7 +277,7 @@ export default function Home() {
                   <p className="mt-3 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
                     Upload your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
-                  <p className="mt-2 text-sm font-medium text-[#315fbd]">Founders are discussing product ideas with TYORA manufacturing experts.</p>
+                  <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Link href="/ask/new" className="inline-flex h-11 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"><Upload size={16} /> Start a Discussion</Link>
