@@ -23,7 +23,7 @@ type Step = 0 | 1 | 2 | 3;
 type ImagePreview = { name: string; url: string };
 
 const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Go Live"] as const;
-const mobileSteps = ["Your Idea", "Show It", "Understand", "Go Live"] as const;
+const mobileSteps = ["Idea", "Show", "Understand", "Live"] as const;
 const nextSteps = [
   ["Founders start discussing your idea.", MessageCircle],
   ["TYORA reviews manufacturability.", SearchCheck],
@@ -250,9 +250,9 @@ export default function NewIdeaClient() {
           ) : (
           <>
           <div className="mb-5 lg:hidden">
-            <div className="no-scrollbar flex items-center gap-2 overflow-x-auto text-xs font-semibold text-[#69707d]">
+            <div className="grid grid-cols-4 gap-2 text-[11px] font-semibold text-[#69707d]">
               {mobileSteps.map((item, index) => (
-                <button key={item} type="button" onClick={() => setStep(index as Step)} className={cn("shrink-0 rounded-full px-3 py-2", step === index ? "bg-[#2563eb] text-white" : "bg-white ring-1 ring-[#e4e8ef]")}>{index + 1}. {item}</button>
+                <button key={item} type="button" onClick={() => setStep(index as Step)} className={cn("min-w-0 rounded-full px-2 py-2", step === index ? "bg-[#2563eb] text-white" : "bg-white ring-1 ring-[#e4e8ef]")}>{index + 1}. {item}</button>
               ))}
             </div>
           </div>
