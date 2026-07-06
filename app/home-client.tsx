@@ -271,9 +271,9 @@ export default function Home() {
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
               </p>
-              <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
+              <div className="mt-4 grid gap-4">
                 <div>
-                  <h1 className="max-w-3xl text-3xl font-semibold leading-[1.08] tracking-normal sm:text-5xl lg:text-[3.5rem]">What&apos;s your next idea?</h1>
+                  <h1 className="max-w-3xl text-3xl font-semibold leading-[1.08] tracking-normal sm:text-5xl lg:text-[3rem]">What&apos;s your next idea?</h1>
                   <p className="mt-4 max-w-[300px] text-base leading-7 text-[#59616e] sm:max-w-2xl sm:text-lg">
                     Upload your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
