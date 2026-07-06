@@ -36,7 +36,7 @@ function sender() {
 }
 
 function shouldUseTestSender() {
-  return sender().includes("login@tyora.io") && process.env.RESEND_USE_TEST_SENDER === "true";
+  return sender().includes("login@tyora.io") && process.env.RESEND_USE_TEST_SENDER !== "false";
 }
 
 async function sendLoginEmail(email: string, code: string) {

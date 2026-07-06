@@ -21,7 +21,7 @@ Required production environment variables:
 - `SUPABASE_STORAGE_BUCKET`
 - `RESEND_API_KEY`
 - `RESEND_FROM` (`TYORA <login@tyora.io>`)
-- `RESEND_USE_TEST_SENDER` (`true` only while the custom sender domain is not ready)
+- `RESEND_USE_TEST_SENDER` (`true` while the custom sender domain is not ready; set `false` after DNS verification)
 - `AUTH_ORIGIN` (`https://tyora.io`)
 
 Email login uses 6-digit verification codes sent through Resend. Codes expire after 10 minutes and can only be used once.
