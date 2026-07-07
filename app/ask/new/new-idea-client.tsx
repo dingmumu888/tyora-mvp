@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardEvent, DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ClipboardEvent, DragEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -69,6 +69,15 @@ const nextSteps = [
 ] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Unable to read image."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function NewIdeaClient() {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -80,7 +89,6 @@ export default function NewIdeaClient() {
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [published, setPublished] = useState(false);
   const [visibilityLearnOpen, setVisibilityLearnOpen] = useState(false);
-  const imagePreviewsRef = useRef<ImagePreview[]>([]);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -106,14 +114,6 @@ export default function NewIdeaClient() {
     return () => window.removeEventListener("tyora:community-login", refreshSession);
   }, []);
 
-  useEffect(() => {
-    imagePreviewsRef.current = imagePreviews;
-  }, [imagePreviews]);
-
-  useEffect(() => {
-    return () => imagePreviewsRef.current.forEach((image) => URL.revokeObjectURL(image.url));
-  }, []);
-
   const usedText = useMemo(() => "Today's FREE Expert Reviews: 0 / 3 Used", []);
   const inputClass = "h-12 rounded-[16px] border border-transparent bg-[#f8fafc] px-4 text-sm outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10";
   const panelClass = "rounded-[26px] border border-[#e1e7f0] bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)]";
@@ -127,24 +127,27 @@ export default function NewIdeaClient() {
     }));
   }
 
-  function setImages(files: FileList | File[]) {
-    const selected = Array.from(files).slice(0, 5 - imagePreviews.length);
+  async function setImages(files: FileList | File[]) {
+    const selected = Array.from(files).filter((file) => file.type.startsWith("image/")).slice(0, 5 - imagePreviews.length);
     if (selected.length === 0) return;
-    const nextPreviews = selected.map((file) => ({ name: file.name, url: URL.createObjectURL(file) }));
-    setImagePreviews((current) => [...current, ...nextPreviews].slice(0, 5));
-    setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...selected.map((file) => file.name)].slice(0, 5) }));
-    if (Array.from(files).length + imagePreviews.length > 5) {
-      setMessage("Maximum 5 images. Only the first 5 were attached.");
+    try {
+      const nextPreviews = await Promise.all(selected.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) })));
+      setImagePreviews((current) => [...current, ...nextPreviews].slice(0, 5));
+      setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...nextPreviews.map((image) => image.url)].slice(0, 5) }));
+      if (Array.from(files).length + imagePreviews.length > 5) {
+        setMessage("Maximum 5 images. Only the first 5 were attached.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to read image.");
     }
   }
 
   function removeImage(name: string) {
     setImagePreviews((current) => {
-      const image = current.find((item) => item.name === name);
-      if (image) URL.revokeObjectURL(image.url);
-      return current.filter((item) => item.name !== name);
+      const nextImages = current.filter((item) => item.name !== name);
+      setForm((formState) => ({ ...formState, imageUrls: nextImages.map((image) => image.url) }));
+      return nextImages;
     });
-    setForm((current) => ({ ...current, imageUrls: current.imageUrls.filter((item) => item !== name) }));
   }
 
   function onDrop(event: DragEvent<HTMLLabelElement>) {

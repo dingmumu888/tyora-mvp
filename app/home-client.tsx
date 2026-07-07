@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import EmailLogin from "@/components/email-login";
+import CommunityImage from "@/components/community-image";
 import {
   defaultContent,
   Lead,
@@ -414,10 +415,7 @@ export default function Home() {
                   {communityIdeas.slice(0, 6).map((idea) => (
                 <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-2.5 rounded-[12px] border border-[#e1e6ee] bg-white p-2 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[104px_1fr]">
                   <div className="flex min-h-[86px] items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
-                    {idea.imageUrls[0] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="size-full rounded-2xl object-cover" />
-                    ) : idea.title.slice(0, 2).toUpperCase()}
+                    <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-2xl object-cover" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap gap-2 text-xs text-[#69707d]">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, Box, Clock, FileText, MessageCircle, PackageCheck, Sparkles, Users } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
+import CommunityImage from "@/components/community-image";
 import IdeaActions from "./idea-actions";
 
 export const dynamic = "force-dynamic";
@@ -76,16 +77,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
           <section id="idea" className="overflow-hidden rounded-[20px] border border-[#e4e8ef] bg-white shadow-sm shadow-[#101216]/4">
             <div className="grid gap-0 lg:grid-cols-[280px_1fr]">
               <div className="relative min-h-[220px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff]">
-                {idea.imageUrls[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="absolute inset-0 size-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center p-8">
-                    <div className="flex size-24 items-center justify-center rounded-[28px] bg-white/78 text-3xl font-semibold shadow-sm ring-1 ring-white">
-                      {idea.title.slice(0, 2).toUpperCase()}
-                    </div>
-                  </div>
-                )}
+                <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-cover" fallbackClassName="absolute inset-0 p-8" initialsClassName="size-24 rounded-[28px] text-3xl" />
               </div>
               <div className="p-5 sm:p-6">
                 <p className="text-sm font-medium text-[#69707d]">{idea.id}</p>

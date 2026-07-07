@@ -17,6 +17,7 @@ import {
 import { CommunityFeedSort, CommunityIdea, CommunityStatus } from "@/lib/community";
 import { getCommunityIdeas } from "@/lib/server/community-store";
 import EmailLogin from "@/components/email-login";
+import CommunityImage from "@/components/community-image";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -119,16 +120,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
     <article className="group overflow-hidden rounded-[12px] border border-[#e1e6ee] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)]">
       <div className="grid gap-0 sm:grid-cols-[108px_1fr]">
         <Link href={`/ask/${idea.slug}`} className={`relative block min-h-24 overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
-          {idea.imageUrls[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={idea.imageUrls[0]} alt={idea.title} loading="lazy" className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center p-6">
-              <div className="flex size-14 items-center justify-center rounded-2xl bg-white/74 text-lg font-semibold shadow-sm ring-1 ring-white">
-                {idea.title.slice(0, 2).toUpperCase()}
-              </div>
-            </div>
-          )}
+          <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" fallbackClassName="absolute inset-0 p-6" initialsClassName="bg-white/74" />
           <span className="absolute left-2 top-2 rounded-full bg-white/88 px-2 py-0.5 text-[10px] font-semibold text-[#101216] backdrop-blur">{idea.category}</span>
         </Link>
 
