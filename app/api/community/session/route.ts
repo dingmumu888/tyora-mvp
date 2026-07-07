@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getCommunitySession, refreshCommunitySessionCookieIfNeeded } from "@/lib/server/community-auth";
-import { getCommunityUser, updateCommunityProfile } from "@/lib/server/community-store";
+import { getCommunityNotificationCount, getCommunityUser, updateCommunityProfile } from "@/lib/server/community-store";
 
 export async function GET() {
   const session = await getCommunitySession();
   const user = session ? await getCommunityUser(session.userId) : null;
-  const response = NextResponse.json({ authenticated: Boolean(user), user });
+  const notificationCount = session && user ? await getCommunityNotificationCount(session.userId) : 0;
+  const response = NextResponse.json({ authenticated: Boolean(user), user, notificationCount });
   return session && user ? refreshCommunitySessionCookieIfNeeded(response, session) : response;
 }
 

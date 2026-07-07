@@ -424,6 +424,25 @@ export async function getCommunityUserActivity(userId: string) {
   };
 }
 
+export async function getCommunityNotificationCount(userId: string) {
+  const [receivedComments, receivedReactions, reviewedIdeas, statusIdeas] = await Promise.all([
+    prisma.communityComment.count({
+      where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId, hidden: false } }
+    }),
+    prisma.communityReaction.count({
+      where: { userId: { not: userId }, ideaId: { not: null }, idea: { authorId: userId, hidden: false } }
+    }),
+    prisma.communityIdea.count({
+      where: { authorId: userId, hidden: false, review: { isNot: null } }
+    }),
+    prisma.communityIdea.count({
+      where: { authorId: userId, hidden: false, status: { not: "Discussing" } }
+    })
+  ]);
+
+  return receivedComments + receivedReactions + reviewedIdeas + statusIdeas;
+}
+
 export async function countReviewsUsedToday(userId: string) {
   const start = new Date();
   start.setHours(0, 0, 0, 0);

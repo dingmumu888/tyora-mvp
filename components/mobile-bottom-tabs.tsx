@@ -22,6 +22,7 @@ function shouldShow(pathname: string) {
 export default function MobileBottomTabs() {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     const syncHash = () => setHash(window.location.hash);
@@ -30,9 +31,31 @@ export default function MobileBottomTabs() {
     return () => window.removeEventListener("hashchange", syncHash);
   }, [pathname]);
 
+  useEffect(() => {
+    let active = true;
+    async function loadNotificationCount() {
+      try {
+        const response = await fetch("/api/community/session", { cache: "no-store" });
+        const payload = await response.json();
+        if (active) setNotificationCount(Number(payload.notificationCount || 0));
+      } catch {
+        if (active) setNotificationCount(0);
+      }
+    }
+    void loadNotificationCount();
+    window.addEventListener("tyora:community-login", loadNotificationCount);
+    window.addEventListener("tyora:community-profile-updated", loadNotificationCount);
+    return () => {
+      active = false;
+      window.removeEventListener("tyora:community-login", loadNotificationCount);
+      window.removeEventListener("tyora:community-profile-updated", loadNotificationCount);
+    };
+  }, []);
+
   if (!shouldShow(pathname)) return null;
 
   const plusActive = pathname === "/ask/new";
+  const notificationLabel = notificationCount > 99 ? "99+" : String(notificationCount);
 
   return (
     <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[9990] rounded-[28px] border border-white/10 bg-[#07080a]/96 px-2 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
@@ -60,7 +83,11 @@ export default function MobileBottomTabs() {
           const active = tab.match(pathname, hash);
           return (
             <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
-              {tab.label === "Activity" ? <span className="absolute right-5 top-1 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">•</span> : null}
+              {tab.label === "Activity" && notificationCount > 0 ? (
+                <span className="absolute right-3 top-1 min-w-5 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-center text-[9px] font-bold leading-none text-white">
+                  {notificationLabel}
+                </span>
+              ) : null}
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
               <span>{tab.label}</span>
             </Link>

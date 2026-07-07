@@ -48,6 +48,11 @@ function IdeaRow({ idea, meta }: { idea: CommunityIdea; meta?: string }) {
   );
 }
 
+function badgeCount(value: number) {
+  if (value <= 0) return "";
+  return value > 99 ? "99+" : String(value);
+}
+
 function EmptyState({ title, cta }: { title: string; cta?: string }) {
   return (
     <div className="rounded-[18px] border border-dashed border-[#cfd8e6] bg-white/78 p-5 text-sm text-[#69707d]">
@@ -84,6 +89,11 @@ export default async function MyTyoraPage() {
     ["I'd Buy", stats.interestedIdeas, ThumbsUp],
     ["Received comments", stats.receivedComments, Send],
     ["Received likes", stats.receivedLikes + stats.receivedInterested, Bell]
+  ] as const;
+  const topNotificationCards = [
+    ["Received comments", stats.receivedComments, Send],
+    ["Received likes", stats.receivedLikes + stats.receivedInterested, Bell],
+    ["TYORA reviews", ideas.filter((idea) => idea.review).length, PackageCheck]
   ] as const;
 
   return (
@@ -137,18 +147,14 @@ export default async function MyTyoraPage() {
               </Link>
             </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {statCards.slice(4).map(([label, value, Icon]) => (
-                <div key={label} className="rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
+              {topNotificationCards.map(([label, value, Icon]) => (
+                <div key={label} className="relative rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
+                  {badgeCount(value) ? <span className="absolute right-3 top-3 rounded-full bg-[#ff385c] px-2 py-1 text-[10px] font-bold leading-none text-white">NEW {badgeCount(value)}</span> : null}
                   <Icon size={16} className="text-[#0f766e]" />
                   <p className="mt-2 text-2xl font-semibold">{value}</p>
                   <p className="text-sm text-[#69707d]">{label}</p>
                 </div>
               ))}
-              <div className="rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
-                <PackageCheck size={16} className="text-[#8b5cf6]" />
-                <p className="mt-2 text-2xl font-semibold">{ideas.filter((idea) => idea.review).length}</p>
-                <p className="text-sm text-[#69707d]">TYORA reviews</p>
-              </div>
             </div>
           </section>
 
