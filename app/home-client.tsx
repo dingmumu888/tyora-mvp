@@ -322,7 +322,7 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
-            <div className="rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:p-4">
+            <div className="hidden rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:block sm:p-4">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
               </p>
@@ -498,6 +498,25 @@ export default function Home() {
                   ))}
                 </>
               )}
+            </div>
+
+            <div className="mt-2.5 rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:hidden">
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
+                <Users size={14} /> Community is the product
+              </p>
+              <div className="mt-2 grid gap-2.5">
+                <div>
+                  <h2 className="text-[1.45rem] font-semibold leading-[1.08] tracking-normal">What are founders building next?</h2>
+                  <p className="mt-1.5 text-sm leading-5 text-[#59616e]">
+                    Share your idea. Get a FREE manufacturing review within 8 working hours.
+                  </p>
+                  <p className="mt-1.5 break-words text-xs font-semibold text-[#315fbd]">Founders are discussing product ideas with TYORA manufacturing experts.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
+                  <Link href="/ask" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
+                </div>
+              </div>
             </div>
 
             <div className="mt-3 grid gap-3 xl:hidden">
