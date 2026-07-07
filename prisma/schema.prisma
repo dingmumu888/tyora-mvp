@@ -107,6 +107,8 @@ model CommunityUser {
   username        String             @unique
   name            String
   avatar          String?
+  bio             String?
+  profileCompleted Boolean           @default(false)
   country         String?
   joinedAt        DateTime           @default(now())
   updatedAt       DateTime           @updatedAt

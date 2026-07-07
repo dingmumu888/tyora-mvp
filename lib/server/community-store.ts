@@ -20,6 +20,8 @@ type UserRow = {
   username: string;
   name: string;
   avatar: string | null;
+  bio: string | null;
+  profileCompleted: boolean;
   country: string | null;
   joinedAt: Date;
 };
@@ -44,6 +46,8 @@ function userPublic(user: UserRow) {
     username: user.username,
     name: user.name,
     avatar: user.avatar || undefined,
+    bio: user.bio || undefined,
+    profileCompleted: Boolean(user.profileCompleted),
     country: user.country || undefined
   };
 }
@@ -137,6 +141,7 @@ export async function upsertCommunityUser(input: {
       username,
       name: input.name || username,
       avatar: input.avatar || null,
+      profileCompleted: false,
       country: input.country || null
     },
     update: {
@@ -154,6 +159,8 @@ export async function upsertCommunityUser(input: {
     username: row.username,
     name: row.name,
     avatar: row.avatar || undefined,
+    bio: row.bio || undefined,
+    profileCompleted: row.profileCompleted,
     country: row.country || undefined,
     joinedAt: iso(row.joinedAt)
   };
@@ -169,10 +176,67 @@ export async function getCommunityUser(userId: string) {
         username: row.username,
         name: row.name,
         avatar: row.avatar || undefined,
+        bio: row.bio || undefined,
+        profileCompleted: row.profileCompleted,
         country: row.country || undefined,
         joinedAt: iso(row.joinedAt)
       }
     : null;
+}
+
+function safeProfileString(value: unknown, maxLength: number) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function safeAvatarUrl(value: unknown) {
+  const avatar = safeProfileString(value, 450000);
+  if (!avatar) return null;
+  if (avatar.startsWith("data:image/") || avatar.startsWith("https://") || avatar.startsWith("http://") || avatar.startsWith("/")) {
+    return avatar;
+  }
+  return null;
+}
+
+export async function updateCommunityProfile(userId: string, input: unknown) {
+  const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
+  const name = safeProfileString(data.name, 80);
+  const usernameInput = safeProfileString(data.username, 32)
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  const bio = safeProfileString(data.bio, 180);
+  const avatar = safeAvatarUrl(data.avatar);
+  if (!name) throw new Error("Display name is required.");
+  if (!usernameInput) throw new Error("Username is required.");
+
+  const existing = await prisma.communityUser.findUnique({ where: { id: userId } });
+  if (!existing) throw new Error("User not found.");
+  const usernameOwner = await prisma.communityUser.findUnique({ where: { username: usernameInput } });
+  if (usernameOwner && usernameOwner.id !== userId) throw new Error("Username is already taken.");
+
+  const row = await prisma.communityUser.update({
+    where: { id: userId },
+    data: {
+      name,
+      username: usernameInput,
+      avatar,
+      bio: bio || null,
+      profileCompleted: true
+    }
+  });
+
+  return {
+    id: row.id,
+    googleId: row.googleId || undefined,
+    email: row.email,
+    username: row.username,
+    name: row.name,
+    avatar: row.avatar || undefined,
+    bio: row.bio || undefined,
+    profileCompleted: row.profileCompleted,
+    country: row.country || undefined,
+    joinedAt: iso(row.joinedAt)
+  };
 }
 
 export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", includeHidden = false) {

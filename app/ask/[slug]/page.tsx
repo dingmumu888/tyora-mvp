@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Box, Clock, FileText, MessageCircle, PackageCheck, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, Box, Clock, FileText, MessageCircle, PackageCheck, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import CommunityImage from "@/components/community-image";
+import CommunityAvatar from "@/components/community-avatar";
 import IdeaActions from "./idea-actions";
 
 export const dynamic = "force-dynamic";
@@ -85,7 +86,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
                 <div className="mt-5 flex flex-wrap gap-2 text-sm text-[#69707d]">
                   <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{idea.category}</span>
                   <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{idea.country}</span>
-                  <span className="rounded-full bg-[#f4f6f8] px-3 py-1">By {idea.author.name}</span>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-[#f4f6f8] px-3 py-1"><CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-5 border-0 text-[9px]" /> By {idea.author.name}</span>
                   <span className="rounded-full bg-[#f4f6f8] px-3 py-1">{timeLabel(idea.createdAt)}</span>
                 </div>
                 <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-[#59616e] sm:text-base">{idea.description}</p>
@@ -153,7 +154,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
               {idea.comments.map((comment) => (
                 <article key={comment.id} className={`rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-4 ${comment.parentId ? "ml-6" : ""}`}>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="inline-flex items-center gap-2 text-sm font-semibold"><Users size={15} /> {comment.author.name}</p>
+                    <p className="inline-flex items-center gap-2 text-sm font-semibold"><CommunityAvatar name={comment.author.name} src={comment.author.avatar} className="size-7 border-0 text-[10px]" /> {comment.author.name}</p>
                     <span className="text-xs text-[#8b93a1]">{timeLabel(comment.createdAt)}</span>
                   </div>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{comment.body}</p>
@@ -202,7 +203,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
           <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
             <h2 className="text-lg font-semibold">Live Activity</h2>
             <div className="mt-4 space-y-3 text-sm text-[#59616e]">
-              <p className="rounded-2xl bg-[#f7f8fa] p-3">{idea.author.name} started this discussion.</p>
+              <p className="flex items-center gap-2 rounded-2xl bg-[#f7f8fa] p-3"><CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-7 border-0 text-[10px]" /> {idea.author.name} started this discussion.</p>
               {idea.review ? <p className="rounded-2xl bg-[#f7f8fa] p-3">TYORA expert review is available.</p> : <p className="rounded-2xl bg-[#f7f8fa] p-3">Waiting for TYORA expert review.</p>}
               <p className="rounded-2xl bg-[#f7f8fa] p-3">{idea.comments.length} community comments.</p>
             </div>

@@ -11,13 +11,13 @@ import {
   Search,
   Send,
   ShoppingBag,
-  Sparkles,
-  Users
+  Sparkles
 } from "lucide-react";
 import { CommunityFeedSort, CommunityIdea, CommunityStatus } from "@/lib/community";
 import { getCommunityIdeas } from "@/lib/server/community-store";
-import EmailLogin from "@/components/email-login";
 import CommunityImage from "@/components/community-image";
+import CommunityAvatar from "@/components/community-avatar";
+import CommunityUserMenu from "@/components/community-user-menu";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -159,9 +159,10 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
             </div>
 
             <div className="flex items-center gap-1">
-              {[0, 1, 2].map((item) => (
+              <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="-ml-1 size-6 border text-[10px]" />
+              {["TY", "CM"].map((item) => (
                 <span key={item} className="-ml-1 flex size-6 items-center justify-center rounded-full border border-white bg-[#edf2f7] text-[10px] font-semibold text-[#59616e]">
-                  {idea.author.name.slice(item, item + 1).toUpperCase() || "T"}
+                  {item}
                 </span>
               ))}
             </div>
@@ -288,7 +289,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <div className="hidden h-10 w-64 items-center gap-2 rounded-full border border-[#e1e5ea] bg-white px-3 text-sm text-[#8b93a1] md:flex">
               <Search size={16} /> Search ideas
             </div>
-            <EmailLogin className="hidden rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold sm:inline-flex">Email Login</EmailLogin>
+            <CommunityUserMenu loginClassName="hidden rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold sm:inline-flex" />
             <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
               <Plus size={16} /> <span className="hidden sm:inline">Start a Discussion</span>
             </Link>

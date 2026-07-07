@@ -27,6 +27,8 @@ export type CommunityUser = {
   username: string;
   name: string;
   avatar?: string;
+  bio?: string;
+  profileCompleted: boolean;
   country?: string;
   joinedAt: string;
 };

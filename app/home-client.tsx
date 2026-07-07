@@ -26,8 +26,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import EmailLogin from "@/components/email-login";
 import CommunityImage from "@/components/community-image";
+import CommunityAvatar from "@/components/community-avatar";
+import CommunityUserMenu from "@/components/community-user-menu";
 import {
   defaultContent,
   Lead,
@@ -267,7 +268,7 @@ export default function Home() {
             <div className="hidden h-10 w-44 items-center gap-2 rounded-full border border-[#e1e5ea] bg-white px-3 text-sm text-[#8b93a1] xl:flex">
               <SearchCheck size={15} /> Search
             </div>
-            <EmailLogin className="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold md:inline-flex">Email Login</EmailLogin>
+            <CommunityUserMenu loginClassName="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold md:inline-flex" />
             <Link href="/ask/new" className={`hidden h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:inline-flex ${primaryButton}`}>
               <Upload size={15} /> <span className="hidden sm:inline">Start a Discussion</span>
             </Link>
@@ -432,10 +433,11 @@ export default function Home() {
                     </div>
                     <div className="mt-1.5 flex items-center justify-between">
                       <div className="flex -space-x-2">
-                        {[idea.author.name.slice(0, 2).toUpperCase(), "TY", "CM"].map((avatar, avatarIndex) => (
+                        <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-6 border-2 text-[9px]" />
+                        {["TY", "CM"].map((avatar, avatarIndex) => (
                           <span key={`${idea.id}-${avatar}`} className={cn(
                             "flex size-6 items-center justify-center rounded-full border-2 border-white text-[9px] font-semibold",
-                            avatarIndex === 1 ? "bg-[#2563eb] text-white" : avatarIndex === 2 ? "bg-[#e9f7f3] text-[#0f766e]" : "bg-[#101216] text-white"
+                            avatarIndex === 0 ? "bg-[#2563eb] text-white" : "bg-[#e9f7f3] text-[#0f766e]"
                           )}>
                             {avatar}
                           </span>
