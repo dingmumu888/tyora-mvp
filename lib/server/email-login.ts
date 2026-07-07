@@ -72,7 +72,8 @@ function sender() {
 }
 
 function shouldUseTestSender() {
-  return sender().includes("login@tyora.io") && process.env.RESEND_USE_TEST_SENDER !== "false";
+  const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
+  return !isProduction && sender().includes("login@tyora.io") && process.env.RESEND_USE_TEST_SENDER === "true";
 }
 
 export function getEmailLoginDebugContext() {
