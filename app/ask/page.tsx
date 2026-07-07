@@ -6,10 +6,8 @@ import {
   Filter,
   Heart,
   MessageCircle,
-  PackageCheck,
   Plus,
   Search,
-  Send,
   ShoppingBag,
   Sparkles
 } from "lucide-react";
@@ -295,7 +293,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
   ] as const;
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-20 text-[#101216]">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-28 text-[#101216] md:pb-20">
       <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-[1520px] items-center gap-4 px-4 sm:px-6 lg:px-8">
           <Link href="/" className="text-sm font-semibold tracking-normal">TYORA</Link>
@@ -535,20 +533,6 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebef] bg-white/92 px-4 py-3 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-[calc(100vw-2rem)] items-center justify-between gap-3 sm:max-w-[1520px]">
-          <p className="hidden text-sm font-semibold sm:block">Have a product idea?</p>
-          <Link href="/ask/new" className={`inline-flex h-10 w-full max-w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold sm:ml-auto sm:w-auto ${primaryButton}`}>
-            <span className="hidden sm:inline">Start a Discussion</span>
-            <span className="sm:hidden">Start Discussion</span>
-            <Send size={14} className="shrink-0" />
-          </Link>
-        </div>
-      </div>
-
-      <Link href="/ask/new" className="fixed bottom-20 right-5 z-40 hidden h-12 items-center gap-2 rounded-full bg-[#14b8a6] px-4 text-sm font-semibold text-white shadow-xl shadow-[#14b8a6]/25 sm:inline-flex sm:px-5">
-        <PackageCheck size={17} /> <span className="hidden sm:inline">Ask TYORA</span>
-      </Link>
     </main>
   );
 }

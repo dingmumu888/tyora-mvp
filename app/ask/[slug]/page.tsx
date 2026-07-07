@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Box, Clock, FileText, MessageCircle, PackageCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, Box, Clock, FileText, MessageCircle, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import CommunityImage from "@/components/community-image";
@@ -222,14 +222,6 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
         </aside>
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebef] bg-white/92 px-4 py-3 backdrop-blur-xl lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-          <p className="text-sm font-semibold">Ready to build?</p>
-          <Link href="#continue" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
-            Continue <PackageCheck size={14} />
-          </Link>
-        </div>
-      </div>
     </main>
   );
 }

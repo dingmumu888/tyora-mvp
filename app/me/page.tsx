@@ -63,7 +63,7 @@ export default async function MyTyoraPage() {
 
   if (!session || !activity) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_45%,#f7f5f0_100%)] px-4 py-16 text-[#101216]">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_45%,#f7f5f0_100%)] px-4 pb-28 pt-16 text-[#101216] md:pb-16">
         <section className="mx-auto max-w-xl rounded-[28px] border border-[#dfe6ef] bg-white p-7 text-center shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={20} /></div>
           <h1 className="mt-5 text-3xl font-semibold">Log in to view My TYORA</h1>
@@ -87,7 +87,7 @@ export default async function MyTyoraPage() {
   ] as const;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_42%,#f7f5f0_100%)] pb-12 text-[#101216]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_42%,#f7f5f0_100%)] pb-28 text-[#101216] md:pb-12">
       <header className="sticky top-0 z-30 border-b border-[#e4e8ef]/90 bg-white/88 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/ask" className="text-sm font-semibold">TYORA</Link>

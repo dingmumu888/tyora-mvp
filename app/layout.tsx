@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CommunityProfileGate from "@/components/community-profile-gate";
+import MobileBottomTabs from "@/components/mobile-bottom-tabs";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body>
         {children}
         <CommunityProfileGate />
+        <MobileBottomTabs />
       </body>
     </html>
   );
