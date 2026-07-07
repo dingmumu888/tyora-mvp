@@ -91,6 +91,13 @@ const featuredJourney = [
   ["Manufacturing", "Factory route and QC plan locked", "Active"],
   ["Delivered", "First batch ready for creator testing", "Next"]
 ] as const;
+const topNavigation = [
+  ["Discover Ideas", "/ask"],
+  ["Ask TYORA", "/ask/new"],
+  ["Journeys", "/#journeys"],
+  ["Success Stories", "/#success-stories"],
+  ["Pricing", "/#pricing"]
+] as const;
 
 function timeAgo(value: string) {
   const diff = Date.now() - new Date(value).getTime();
@@ -249,13 +256,7 @@ export default function Home() {
             </span>
           </a>
           <nav className="hidden items-center gap-1 lg:flex">
-            {[
-              ["Discover Ideas", "/ask"],
-              ["Ask TYORA", "/ask/new"],
-              ["Journeys", "/ask"],
-              ["Success Stories", "/ask"],
-              ["Pricing", "#pricing"]
-            ].map(([label, href]) => (
+            {topNavigation.map(([label, href]) => (
               <Link key={label} href={href} className={cn(
                 "rounded-full px-3 py-2 text-sm font-medium transition hover:bg-[#f5f6f8] hover:text-[#101216]",
                 label === "Discover Ideas" ? "bg-[#2563eb] text-white hover:bg-[#1d4ed8] hover:text-white" : "text-[#59616e]"
@@ -279,7 +280,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="border-b border-[#e4e8ef] bg-transparent lg:min-h-[calc(100vh-64px)]">
+      <section id="community" className="scroll-mt-20 border-b border-[#e4e8ef] bg-transparent lg:min-h-[calc(100vh-64px)]">
         <div className="mx-auto grid max-w-[1700px] gap-3 px-2.5 py-3 sm:px-4 lg:grid-cols-[280px_minmax(0,1fr)_360px] lg:px-5">
           <aside className="hidden self-start rounded-[18px] border border-[#d7e0ec] bg-white p-4 shadow-[0_14px_44px_rgba(15,23,42,0.1)] lg:sticky lg:top-20 lg:block">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={19} /></div>
@@ -584,7 +585,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))]">
+      <section id="journeys" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))]">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-stretch">
             <div className="rounded-[18px] border border-[#dfe6ef] bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.07)]">
@@ -631,7 +632,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-b border-[#dfe6ef] bg-[#f6f7fb]/80">
+      <section id="success-stories" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[#f6f7fb]/80">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>

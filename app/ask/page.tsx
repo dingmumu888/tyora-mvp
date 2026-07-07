@@ -36,7 +36,13 @@ const tabs: Array<[CommunityFeedSort, string]> = [
 ];
 
 const categories = ["Phone Accessories", "Pet", "Home", "Office", "Kitchen", "Outdoor", "Electronics", "Fashion"];
-const topNav = ["Discover Ideas", "Ask TYORA", "Journeys", "Success Stories", "Pricing"];
+const topNav = [
+  ["Discover Ideas", "/ask"],
+  ["Ask TYORA", "/ask/new"],
+  ["Journeys", "/#journeys"],
+  ["Success Stories", "/#success-stories"],
+  ["Pricing", "/#pricing"]
+] as const;
 const statusSteps = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping"];
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 const starterExamples = [
@@ -279,9 +285,9 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         <div className="mx-auto flex h-16 max-w-[1520px] items-center gap-4 px-4 sm:px-6 lg:px-8">
           <Link href="/" className="text-sm font-semibold tracking-normal">TYORA</Link>
           <nav className="hidden flex-1 items-center gap-1 lg:flex">
-            {topNav.map((item) => (
-              <Link key={item} href={item === "Ask TYORA" || item === "Discover Ideas" ? "/ask" : item === "Pricing" ? "/#pricing" : "/ask"} className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f2f4f7] hover:text-[#101216]">
-                {item}
+            {topNav.map(([label, href]) => (
+              <Link key={label} href={href} className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f2f4f7] hover:text-[#101216]">
+                {label}
               </Link>
             ))}
           </nav>
