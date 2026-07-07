@@ -144,9 +144,7 @@ async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTra
   trace?.("after_resend_fetch", {
     email,
     status: response.status,
-    ok: response.ok,
-    headers,
-    rawResponseBody: responseText
+    ok: response.ok
   });
 
   if (!response.ok) {
