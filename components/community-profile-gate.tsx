@@ -5,6 +5,29 @@ import CommunityProfileModal, { CommunitySessionUser } from "@/components/commun
 
 const SKIP_PREFIX = "tyora_profile_setup_skipped_";
 
+function skippedKey(userId: string) {
+  return `${SKIP_PREFIX}${userId}`;
+}
+
+function wasSkipped(userId: string) {
+  try {
+    if (typeof window === "undefined" || !window.sessionStorage) return false;
+    return window.sessionStorage.getItem(skippedKey(userId)) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function rememberSkipped(userId: string) {
+  try {
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      window.sessionStorage.setItem(skippedKey(userId), "true");
+    }
+  } catch {
+    // Storage can be unavailable in locked-down desktop browsers. Skipping should never crash the app.
+  }
+}
+
 export default function CommunityProfileGate() {
   const [user, setUser] = useState<CommunitySessionUser | null>(null);
   const [open, setOpen] = useState(false);
@@ -19,7 +42,7 @@ export default function CommunityProfileGate() {
         setOpen(false);
         return;
       }
-      const skipped = sessionStorage.getItem(`${SKIP_PREFIX}${nextUser.id}`) === "true";
+      const skipped = wasSkipped(nextUser.id);
       if (!nextUser.profileCompleted && (forcePrompt || !skipped)) {
         setOpen(true);
       }
@@ -49,7 +72,7 @@ export default function CommunityProfileGate() {
 
   function close() {
     if (user && !user.profileCompleted) {
-      sessionStorage.setItem(`${SKIP_PREFIX}${user.id}`, "true");
+      rememberSkipped(user.id);
     }
     setOpen(false);
   }

@@ -33,6 +33,7 @@ function fileToDataUrl(file: File) {
 }
 
 export default function CommunityProfileModal({ open, user, mode = "setup", onClose, onSaved }: CommunityProfileModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
@@ -41,6 +42,10 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
   const [message, setMessage] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
   const titleId = useMemo(() => `tyora-profile-${mode}`, [mode]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open || !user) return;
@@ -54,14 +59,14 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
 
   useEffect(() => {
     if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const previousOverflow = document.body?.style.overflow || "";
+    if (document.body) document.body.style.overflow = "hidden";
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !busy) onClose();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      if (document.body) document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [busy, onClose, open]);
@@ -98,7 +103,7 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
     }
   }
 
-  if (!open || !user) return null;
+  if (!mounted || !open || !user || typeof document === "undefined" || !document.body) return null;
 
   return createPortal(
     <div
