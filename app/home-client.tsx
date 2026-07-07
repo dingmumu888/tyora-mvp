@@ -11,12 +11,10 @@ import {
   ClipboardCheck,
   Eye,
   Heart,
-  Layers,
   MessageCircle,
   PackageCheck,
   Play,
   SearchCheck,
-  ShieldCheck,
   ShoppingBag,
   Sparkles,
   Upload,
@@ -50,11 +48,6 @@ import { CommunityIdea } from "@/lib/community";
 const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const whyTyoraCards = [
-  ["Independent Advice", "We work for founders, not factories.", ShieldCheck],
-  ["Transparent Process", "Clear communication and predictable workflows.", ClipboardCheck],
-  ["Built for Product Founders", "Designed specifically for startups, inventors and growing brands.", Layers]
-] as const;
 const starterExamples = [
   {
     title: "Magnetic Phone Stand",
@@ -90,6 +83,18 @@ const featuredJourney = [
   ["Prototype", "Sample structure and finish confirmed", "Done"],
   ["Manufacturing", "Factory route and QC plan locked", "Active"],
   ["Delivered", "First batch ready for creator testing", "Next"]
+] as const;
+const earlyCommunityStats = [
+  ["Early access", "Founder community"],
+  ["Free review", "Within 8 working hours"],
+  ["Public discussion", "Open to browse"],
+  ["No password", "Email code login"],
+  ["Build path", "When ready"]
+] as const;
+const buildSupportCards = [
+  ["Manufacturing review", "Understand feasibility, materials, MOQ and cost before paying for samples.", ClipboardCheck],
+  ["Factory path", "When a discussion is ready, TYORA can help identify the right manufacturing route.", SearchCheck],
+  ["Project support", "Move from community feedback into samples, QC, production and shipping when needed.", PackageCheck]
 ] as const;
 const topNavigation = [
   ["Discover Ideas", "/ask"],
@@ -230,6 +235,14 @@ export default function Home() {
   const canStartChat = Boolean(productName.trim());
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
   const homeExamples = communityIdeas.length < 4 ? starterExamples.slice(0, 4 - communityIdeas.length) : [];
+  const hasCommunityStats = communityIdeas.length > 0;
+  const communityStats = [
+    ["Ideas Shared", communityIdeas.length],
+    ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
+    ["Projects Started", communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length],
+    ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
+    ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
+  ] as const;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] text-[#101216]">
@@ -328,13 +341,7 @@ export default function Home() {
                 <p className="-mt-1 text-xs font-semibold text-[#69707d]">Share your idea. Get FREE manufacturing feedback within 8 working hours.</p>
               </div>
               <div className="no-scrollbar mt-2.5 hidden gap-2 overflow-x-auto pb-1 sm:flex xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
-                {[
-                  ["Ideas Shared", communityIdeas.length],
-                  ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
-                  ["Projects Started", communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length],
-                  ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
-                  ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
-                ].map(([label, value]) => (
+                {(hasCommunityStats ? communityStats : earlyCommunityStats).map(([label, value]) => (
                   <div key={label} className="min-w-[122px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3 sm:min-w-[142px] xl:min-w-0">
                     <p className="text-lg font-semibold">{value}</p>
                     <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
@@ -568,12 +575,17 @@ export default function Home() {
             <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Community Statistics</h2>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                {[
+                {(hasCommunityStats ? [
                   ["Ideas", communityIdeas.length],
                   ["Reviews", communityIdeas.filter((idea) => idea.review).length],
                   ["Projects", communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length],
                   ["Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length]
-                ].map(([label, value]) => (
+                ] : [
+                  ["Access", "Open"],
+                  ["Reviews", "Free"],
+                  ["Login", "Email"],
+                  ["Stage", "Early"]
+                ]).map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
                     <p className="text-lg font-semibold text-[#101216]">{value}</p>
                     <p className="text-xs text-[#69707d]">{label}</p>
@@ -732,18 +744,18 @@ export default function Home() {
       </section>
 
       <section className="border-b border-[#dfe6ef] bg-white/88">
-        <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
-          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+        <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 lg:px-6 lg:py-9">
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
-              <p className="text-sm font-medium text-[#69707d]">Manufacturing Confidence</p>
-              <h2 className="mt-2 text-3xl font-semibold leading-tight">Better decisions before manufacturing gets expensive.</h2>
+              <p className="text-sm font-medium text-[#69707d]">When you're ready to build</p>
+              <h2 className="mt-2 text-3xl font-semibold leading-tight">Turn a good discussion into a manufacturing plan.</h2>
             </div>
             <p className="text-sm leading-6 text-[#59616e]">
-              TYORA helps founders understand tradeoffs, compare options, and stay in control before committing to production.
+              Community comes first. When an idea is ready, TYORA helps founders move from feedback into feasibility, factory fit, samples, quality and shipping with clearer decisions.
             </p>
           </div>
           <div className="mt-5 grid gap-3 lg:grid-cols-3">
-            {whyTyoraCards.map(([title, description, Icon]) => (
+            {buildSupportCards.map(([title, description, Icon]) => (
               <Card key={title} className="rounded-[16px] bg-white p-4 shadow-sm shadow-[#101216]/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/6">
                 <Icon size={20} className="text-[#101216]" />
                 <h3 className="mt-4 font-semibold">{title}</h3>

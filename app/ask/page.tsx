@@ -62,6 +62,13 @@ const starterExamples = [
     description: "A compact insulated mug with a secure lid, tactile grip, and low-MOQ material options."
   }
 ];
+const earlyCommunityStats = [
+  ["Early access", "Founder community"],
+  ["Free review", "Within 8 working hours"],
+  ["Public discussion", "Open to browse"],
+  ["No password", "Email code login"],
+  ["Build path", "When ready"]
+] as const;
 
 const statusStyles: Record<CommunityStatus, string> = {
   Discussing: "bg-[#f0eaff] text-[#6d28d9] ring-[#ddd0ff]",
@@ -278,6 +285,14 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
   const countries = new Set(ideas.map((idea) => idea.country).filter(Boolean)).size;
   const liveActivity = activity(ideas);
   const feedExamples = ideas.length < 4 ? starterExamples.slice(0, 4 - ideas.length) : [];
+  const hasCommunityStats = ideas.length > 0;
+  const communityStats = [
+    ["Ideas Shared", ideas.length],
+    ["TYORA Reviews", latestReviews.length],
+    ["Projects Started", projectsStarted],
+    ["Products Delivered", delivered.length],
+    ["Countries", countries]
+  ] as const;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-20 text-[#101216]">
@@ -337,8 +352,8 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             </section>
 
             <section className="rounded-[18px] border border-[#d7f1eb] bg-[#effaf6] p-3">
-              <p className="text-sm font-semibold text-[#0f766e]">Invite Friends</p>
-              <p className="mt-1 text-sm leading-6 text-[#3d766d]">Get FREE review quota</p>
+              <p className="text-sm font-semibold text-[#0f766e]">Early founder community</p>
+              <p className="mt-1 text-sm leading-6 text-[#3d766d]">Share an idea and get FREE manufacturing feedback.</p>
             </section>
           </div>
         </aside>
@@ -352,7 +367,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               <div>
                 <h1 className="max-w-3xl text-2xl font-semibold leading-[1.05] tracking-normal sm:text-3xl">What are founders building next?</h1>
                 <p className="mt-2 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
-                  Share your idea. Get a FREE manufacturing review within 8 working hours.
+                  Discover product ideas from founders, or share your own and get a FREE manufacturing review within 8 working hours.
                 </p>
                 <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
               </div>
@@ -362,13 +377,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               </div>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-              {[
-                ["Ideas Shared", ideas.length],
-                ["TYORA Reviews", latestReviews.length],
-                ["Projects Started", projectsStarted],
-                ["Products Delivered", delivered.length],
-                ["Countries", countries]
-              ].map(([label, value]) => (
+              {(hasCommunityStats ? communityStats : earlyCommunityStats).map(([label, value]) => (
                 <div key={label} className="rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3">
                   <p className="text-lg font-semibold">{value}</p>
                   <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
@@ -414,12 +423,17 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-base font-semibold">Community Statistics</h2>
               <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs text-[#69707d]">
-                {[
+                {(hasCommunityStats ? [
                   ["Ideas", ideas.length],
                   ["Reviews", latestReviews.length],
                   ["Projects", projectsStarted],
                   ["Built", delivered.length]
-                ].map(([label, value]) => (
+                ] : [
+                  ["Access", "Open"],
+                  ["Reviews", "Free"],
+                  ["Login", "Email"],
+                  ["Stage", "Early"]
+                ]).map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
                     <p className="text-lg font-semibold text-[#101216]">{value}</p>
                     <p>{label}</p>
@@ -478,12 +492,17 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Community Statistics</h2>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                {[
+                {(hasCommunityStats ? [
                   ["Ideas", ideas.length],
                   ["Reviews", latestReviews.length],
                   ["Projects", projectsStarted],
                   ["Delivered", delivered.length]
-                ].map(([label, value]) => (
+                ] : [
+                  ["Access", "Open"],
+                  ["Reviews", "Free"],
+                  ["Login", "Email"],
+                  ["Stage", "Early"]
+                ]).map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
                     <p className="text-lg font-semibold text-[#101216]">{value}</p>
                     <p className="text-xs text-[#69707d]">{label}</p>
@@ -497,10 +516,10 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8ebef] bg-white/92 px-4 py-3 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[calc(100vw-2rem)] items-center justify-between gap-3 sm:max-w-[1520px]">
-          <p className="hidden text-sm font-semibold sm:block">Ready to build your idea?</p>
+          <p className="hidden text-sm font-semibold sm:block">Have a product idea?</p>
           <Link href="/ask/new" className={`inline-flex h-10 w-full max-w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold sm:ml-auto sm:w-auto ${primaryButton}`}>
-            <span className="hidden sm:inline">Continue This Project on WhatsApp</span>
-            <span className="sm:hidden">WhatsApp</span>
+            <span className="hidden sm:inline">Start a Discussion</span>
+            <span className="sm:hidden">Start Discussion</span>
             <Send size={14} className="shrink-0" />
           </Link>
         </div>
