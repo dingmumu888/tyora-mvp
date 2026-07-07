@@ -35,6 +35,22 @@ function timeLabel(value: string) {
   return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+function expertReplyText(idea: Awaited<ReturnType<typeof getCommunityIdeaBySlug>>) {
+  if (!idea?.review) return "";
+  if (idea.review.additionalNotes) return idea.review.additionalNotes;
+  return [
+    ["Manufacturing feasible", idea.review.manufacturingFeasible],
+    ["Estimated cost range", idea.review.estimatedCostRange],
+    ["Suggested material", idea.review.suggestedMaterial],
+    ["Estimated MOQ", idea.review.estimatedMoq],
+    ["Suggested manufacturing process", idea.review.suggestedManufacturing],
+    ["Factories matched", idea.review.factoriesMatched]
+  ]
+    .map(([label, value]) => value ? `${label}: ${value}` : "")
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const idea = await getCommunityIdeaBySlug(slug);
@@ -49,6 +65,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
   const idea = await getCommunityIdeaBySlug(slug);
   if (!idea) notFound();
   const progress = progressFor(idea.status);
+  const expertReply = expertReplyText(idea);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_36%,#f7f5f0_100%)] pb-24 text-[#101216]">
@@ -121,25 +138,19 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
               <h2 className="text-2xl font-semibold">TYORA Expert Review</h2>
             </div>
             {idea.review ? (
-              <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-                {[
-                  ["Manufacturing Feasible", idea.review.manufacturingFeasible],
-                  ["Estimated Cost Range", idea.review.estimatedCostRange],
-                  ["Suggested Material", idea.review.suggestedMaterial],
-                  ["Estimated MOQ", idea.review.estimatedMoq],
-                  ["Suggested Manufacturing Process", idea.review.suggestedManufacturing],
-                  ["Factories Matched", idea.review.factoriesMatched],
-                  ["Additional Notes", idea.review.additionalNotes]
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-4">
-                    <dt className="text-sm font-semibold">{label}</dt>
-                    <dd className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{value || "Not provided yet."}</dd>
+              <div className="mt-5 rounded-[20px] bg-[#f7f8fa] p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-[#101216] text-sm font-semibold text-white">TY</div>
+                  <div>
+                    <p className="text-sm font-semibold">TYORA Expert</p>
+                    <p className="text-xs text-[#8b93a1]">Manufacturing reply</p>
                   </div>
-                ))}
-              </dl>
+                </div>
+                <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#404650]">{expertReply || "TYORA has replied, but no public reply text is available yet."}</p>
+              </div>
             ) : (
               <p className="mt-4 rounded-2xl bg-[#fff7d6] p-4 text-sm leading-6 text-[#8a5a00]">
-                TYORA has not replied yet. TYORA reviews manufacturing feasibility, cost, materials, MOQ, process and factory fit. It never predicts market demand.
+                TYORA has not replied yet. A TYORA expert will write a clear manufacturing reply when this idea is reviewed.
               </p>
             )}
           </section>

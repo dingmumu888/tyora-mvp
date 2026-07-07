@@ -2,21 +2,45 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Loader2, Save } from "lucide-react";
-import { communityStatuses, CommunityIdea, CommunityStatus } from "@/lib/community";
+import { Loader2, MessageSquare, Save, X } from "lucide-react";
+import { CommunityIdea } from "@/lib/community";
 
-const buckets: Array<[CommunityStatus, string]> = [
-  ["Discussing", "Waiting Reply"],
-  ["TYORA Reviewing", "Answered"],
-  ["Project Started", "Project Started"],
-  ["Manufacturing", "Manufacturing"],
-  ["Shipping", "Shipping"],
-  ["Completed", "Completed"]
+type QueueFilter = "needs-reply" | "replied" | "pinned" | "hidden" | "all";
+
+const buckets: Array<[QueueFilter, string]> = [
+  ["needs-reply", "Needs Reply"],
+  ["replied", "Replied"],
+  ["pinned", "Pinned"],
+  ["hidden", "Hidden"],
+  ["all", "All"]
 ];
+
+const reviewFields = [
+  ["manufacturingFeasible", "Manufacturing feasible"],
+  ["estimatedCostRange", "Estimated cost range"],
+  ["suggestedMaterial", "Suggested material"],
+  ["estimatedMoq", "Estimated MOQ"],
+  ["suggestedManufacturing", "Suggested manufacturing process"],
+  ["factoriesMatched", "Factories matched"],
+  ["additionalNotes", "Additional notes"]
+] as const;
+
+function existingReply(idea: CommunityIdea) {
+  if (!idea.review) return "";
+  if (idea.review.additionalNotes) return idea.review.additionalNotes;
+  return reviewFields
+    .map(([key, label]) => {
+      const value = idea.review?.[key];
+      return value ? `${label}: ${value}` : "";
+    })
+    .filter(Boolean)
+    .join("\n\n");
+}
 
 export default function CommunityAdminClient() {
   const [ideas, setIdeas] = useState<CommunityIdea[]>([]);
-  const [active, setActive] = useState<CommunityStatus>("Discussing");
+  const [active, setActive] = useState<QueueFilter>("needs-reply");
+  const [replyingTo, setReplyingTo] = useState<CommunityIdea | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
 
@@ -28,10 +52,13 @@ export default function CommunityAdminClient() {
   }, []);
 
   const counts = useMemo(() => {
-    return communityStatuses.reduce<Record<string, number>>((acc, status) => {
-      acc[status] = ideas.filter((idea) => idea.status === status).length;
-      return acc;
-    }, {});
+    return {
+      "needs-reply": ideas.filter((idea) => !idea.review && !idea.hidden).length,
+      replied: ideas.filter((idea) => idea.review && !idea.hidden).length,
+      pinned: ideas.filter((idea) => idea.pinned && !idea.hidden).length,
+      hidden: ideas.filter((idea) => idea.hidden).length,
+      all: ideas.length
+    };
   }, [ideas]);
 
   async function save(event: FormEvent<HTMLFormElement>, idea: CommunityIdea) {
@@ -44,13 +71,7 @@ export default function CommunityAdminClient() {
       locked: form.get("locked") === "on",
       pinned: form.get("pinned") === "on",
       review: {
-        manufacturingFeasible: form.get("manufacturingFeasible"),
-        estimatedCostRange: form.get("estimatedCostRange"),
-        suggestedMaterial: form.get("suggestedMaterial"),
-        estimatedMoq: form.get("estimatedMoq"),
-        suggestedManufacturing: form.get("suggestedManufacturing"),
-        factoriesMatched: form.get("factoriesMatched"),
-        additionalNotes: form.get("additionalNotes")
+        additionalNotes: form.get("reply")
       }
     };
     try {
@@ -62,13 +83,20 @@ export default function CommunityAdminClient() {
       const payload = await response.json();
       if (payload.success) {
         setIdeas((current) => current.map((item) => item.id === idea.id ? payload.data : item));
+        setReplyingTo(null);
       }
     } finally {
       setSaving("");
     }
   }
 
-  const filtered = ideas.filter((idea) => idea.status === active);
+  const filtered = ideas.filter((idea) => {
+    if (active === "needs-reply") return !idea.review && !idea.hidden;
+    if (active === "replied") return Boolean(idea.review) && !idea.hidden;
+    if (active === "pinned") return idea.pinned && !idea.hidden;
+    if (active === "hidden") return idea.hidden;
+    return true;
+  });
 
   return (
     <main className="min-h-screen bg-[#f6f7f9] px-4 py-6 text-[#101216] sm:px-6 lg:px-8">
@@ -78,7 +106,7 @@ export default function CommunityAdminClient() {
           <div>
             <p className="text-sm font-medium text-[#69707d]">TYORA OS · Community</p>
             <h1 className="mt-2 text-3xl font-semibold">Ideas Work Queue</h1>
-            <p className="mt-2 text-sm text-[#69707d]">Reply to waiting ideas, edit TYORA reviews, change status, pin, hide and lock discussions.</p>
+            <p className="mt-2 text-sm text-[#69707d]">Read founder ideas and publish natural TYORA replies. Keep community management simple and conversational.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href="/admin" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">Back to Today</Link>
@@ -112,38 +140,57 @@ export default function CommunityAdminClient() {
                       <span>{idea.interestedCount} interested</span>
                     </div>
                   </div>
-                  <form onSubmit={(event) => void save(event, idea)} className="grid gap-3">
-                    <select name="status" defaultValue={idea.status} className="h-10 rounded-[6px] border border-[#dfe3e8] bg-white px-3">
-                      {communityStatuses.map((status) => <option key={status}>{status}</option>)}
-                    </select>
-                    {[
-                      ["manufacturingFeasible", "Manufacturing Feasible"],
-                      ["estimatedCostRange", "Estimated Cost Range"],
-                      ["suggestedMaterial", "Suggested Material"],
-                      ["estimatedMoq", "Estimated MOQ"],
-                      ["suggestedManufacturing", "Suggested Manufacturing Process"],
-                      ["factoriesMatched", "Factories Matched"],
-                      ["additionalNotes", "Additional Notes"]
-                    ].map(([name, label]) => (
-                      <label key={name} className="grid gap-1 text-sm font-medium">{label}
-                        <textarea name={name} defaultValue={(idea.review as any)?.[name] || ""} rows={name === "additionalNotes" ? 4 : 2} className="resize-none rounded-[6px] border border-[#dfe3e8] bg-white p-2 text-sm" />
-                      </label>
-                    ))}
-                    <div className="grid gap-2 text-sm sm:grid-cols-3">
-                      <label><input name="hidden" type="checkbox" defaultChecked={idea.hidden} /> Hide Post</label>
-                      <label><input name="locked" type="checkbox" defaultChecked={idea.locked} /> Lock Comments</label>
-                      <label><input name="pinned" type="checkbox" defaultChecked={idea.pinned} /> Pin Post</label>
+                  <div className="flex flex-col items-start justify-between rounded-[20px] border border-[#eef1f4] bg-[#fbfbfc] p-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b93a1]">TYORA Reply</p>
+                      {idea.review ? (
+                        <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{existingReply(idea)}</p>
+                      ) : (
+                        <p className="mt-3 text-sm leading-6 text-[#69707d]">No TYORA reply yet. Open the reply box and write one clear, helpful response.</p>
+                      )}
                     </div>
-                    <button className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-                      {saving === idea.slug ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} Reply / Save
+                    <button type="button" onClick={() => setReplyingTo(idea)} className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white transition hover:bg-[#24272d]">
+                      <MessageSquare size={15} /> Reply
                     </button>
-                  </form>
+                  </div>
                 </div>
               </article>
             ))}
           </div>
         )}
       </div>
+      {replyingTo ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/35 px-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <form onSubmit={(event) => void save(event, replyingTo)} className="w-full max-w-2xl rounded-[28px] border border-[#e8ebef] bg-white p-5 shadow-2xl shadow-[#101216]/20 sm:p-6">
+            <input type="hidden" name="status" value={replyingTo.status} />
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[#69707d]">{replyingTo.id}</p>
+                <h2 className="mt-1 text-2xl font-semibold">Reply to {replyingTo.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-[#69707d]">Write one complete TYORA response. Mention feasibility, cost, material, MOQ, factory fit or next step naturally if useful.</p>
+              </div>
+              <button type="button" onClick={() => setReplyingTo(null)} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e8ebef] text-[#69707d] transition hover:bg-[#f5f6f8]" aria-label="Close reply dialog">
+                <X size={18} />
+              </button>
+            </div>
+            <label className="mt-5 grid gap-2 text-sm font-semibold">
+              TYORA Reply
+              <textarea name="reply" defaultValue={existingReply(replyingTo)} rows={12} autoFocus className="min-h-[260px] resize-y rounded-[18px] border border-[#dfe3e8] bg-white p-4 text-sm leading-6 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder="Example: Yes, this can be manufactured. I recommend starting with..." />
+            </label>
+            <div className="mt-4 grid gap-3 rounded-[18px] bg-[#f7f8fa] p-4 text-sm sm:grid-cols-3">
+              <label className="flex items-center gap-2"><input name="hidden" type="checkbox" defaultChecked={replyingTo.hidden} /> Hide Post</label>
+              <label className="flex items-center gap-2"><input name="locked" type="checkbox" defaultChecked={replyingTo.locked} /> Lock Comments</label>
+              <label className="flex items-center gap-2"><input name="pinned" type="checkbox" defaultChecked={replyingTo.pinned} /> Pin Post</label>
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button type="button" onClick={() => setReplyingTo(null)} className="inline-flex h-11 items-center justify-center rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold">Cancel</button>
+              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white">
+                {saving === replyingTo.slug ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} Publish Reply
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </main>
   );
 }
