@@ -1,4 +1,5 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { renderVerificationEmail } from "@/lib/email";
 import { makeCommunityId, usernameFromEmail } from "@/lib/community";
 import { prisma } from "@/lib/server/db";
 
@@ -111,15 +112,7 @@ async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTra
   if (!apiKey) throw new Error("Email login is not configured.");
 
   const from = shouldUseTestSender() ? FALLBACK_FROM : sender();
-  const text = [
-    "Your TYORA login code is:",
-    "",
-    code,
-    "",
-    "This code expires in 10 minutes.",
-    "",
-    "If you did not request this, you can ignore this email."
-  ].join("\n");
+  const emailContent = renderVerificationEmail({ code });
 
   trace?.("before_resend_fetch", {
     email,
@@ -135,8 +128,9 @@ async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTra
     body: JSON.stringify({
       from,
       to: email,
-      subject: "Your TYORA login code",
-      text
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text
     })
   });
   const responseText = await response.text().catch((error) => `Unable to read Resend response body: ${error instanceof Error ? error.message : String(error)}`);
