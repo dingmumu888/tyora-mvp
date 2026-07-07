@@ -377,10 +377,10 @@ export default function Home() {
                       <Link
                         key={example.title}
                         href="/ask/new"
-                        className="grid gap-2.5 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-2 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[104px_1fr]"
+                        className="grid gap-2.5 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-2 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[132px_1fr]"
                       >
                         <div className={cn(
-                          "relative flex min-h-[86px] items-center justify-center rounded-xl bg-gradient-to-br",
+                          "relative flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br",
                           index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
                         )}>
                           <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
@@ -422,8 +422,8 @@ export default function Home() {
               ) : (
                 <>
                   {communityIdeas.slice(0, 6).map((idea) => (
-                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-2.5 rounded-[12px] border border-[#e1e6ee] bg-white p-2 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[104px_1fr]">
-                  <div className="flex min-h-[86px] items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
+                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid gap-2.5 rounded-[12px] border border-[#e1e6ee] bg-white p-2 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[132px_1fr]">
+                  <div className="flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
                     <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-2xl object-cover" />
                   </div>
                   <div className="min-w-0">
@@ -457,9 +457,9 @@ export default function Home() {
                 </Link>
                   ))}
                   {homeExamples.map((example, index) => (
-                    <Link key={example.title} href="/ask/new" className="grid gap-2.5 rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 p-2 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.12)] sm:grid-cols-[104px_1fr]">
+                    <Link key={example.title} href="/ask/new" className="grid gap-2.5 rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 p-2 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_18px_42px_rgba(37,99,235,0.12)] sm:grid-cols-[132px_1fr]">
                       <div className={cn(
-                        "relative flex min-h-[86px] items-center justify-center rounded-xl bg-gradient-to-br",
+                        "relative flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br",
                         index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
                       )}>
                         <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">

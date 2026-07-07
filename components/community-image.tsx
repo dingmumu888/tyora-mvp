@@ -11,7 +11,7 @@ type CommunityImageProps = {
   initialsClassName?: string;
 };
 
-const MAX_INLINE_IMAGE_LENGTH = 180000;
+const MAX_INLINE_IMAGE_LENGTH = 900000;
 
 function initialsFor(value: string) {
   const words = value.trim().split(/\s+/).filter(Boolean);

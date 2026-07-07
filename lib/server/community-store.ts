@@ -26,7 +26,7 @@ type UserRow = {
   joinedAt: Date;
 };
 
-const MAX_INLINE_IDEA_IMAGE_LENGTH = 180000;
+const MAX_INLINE_IDEA_IMAGE_LENGTH = 900000;
 const MAX_INLINE_AVATAR_LENGTH = 120000;
 
 function parseJson<T>(value: unknown, fallback: T): T {

@@ -131,8 +131,8 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
 
   return (
     <article className="group overflow-hidden rounded-[12px] border border-[#e1e6ee] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)]">
-      <div className="grid gap-0 sm:grid-cols-[108px_1fr]">
-        <Link href={`/ask/${idea.slug}`} className={`relative block min-h-24 overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
+      <div className="grid gap-0 sm:grid-cols-[132px_1fr]">
+        <Link href={`/ask/${idea.slug}`} className={`relative block aspect-square overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
           <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" fallbackClassName="absolute inset-0 p-6" initialsClassName="bg-white/74" />
           <span className="absolute left-2 top-2 rounded-full bg-white/88 px-2 py-0.5 text-[10px] font-semibold text-[#101216] backdrop-blur">{idea.category}</span>
         </Link>
@@ -202,8 +202,8 @@ function ExampleCommunityCard({ example, index }: { example: (typeof starterExam
   const tone = ["from-[#e9f7f3] via-white to-[#efe9ff]", "from-[#fff4e7] via-white to-[#e9f2ff]", "from-[#edf7ff] via-white to-[#effaf3]"][index % 3];
 
   return (
-    <Link href="/ask/new" className="group grid gap-0 overflow-hidden rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_38px_rgba(15,23,42,0.09)] sm:grid-cols-[108px_1fr]">
-      <div className={`relative flex min-h-24 items-center justify-center bg-gradient-to-br ${tone}`}>
+    <Link href="/ask/new" className="group grid gap-0 overflow-hidden rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_38px_rgba(15,23,42,0.09)] sm:grid-cols-[132px_1fr]">
+      <div className={`relative flex aspect-square items-center justify-center bg-gradient-to-br ${tone}`}>
         <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
           {example.title.slice(0, 2).toUpperCase()}
         </span>

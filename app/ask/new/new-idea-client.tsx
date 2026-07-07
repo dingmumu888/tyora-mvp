@@ -68,7 +68,8 @@ const nextSteps = [
   ["You decide whether to build.", PackageCheck]
 ] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const MAX_INLINE_IMAGE_LENGTH = 180000;
+const PRODUCT_IMAGE_SIZE = 800;
+const PRODUCT_IMAGE_QUALITY = 0.82;
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -77,6 +78,37 @@ function fileToDataUrl(file: File) {
     reader.onerror = () => reject(new Error("Unable to read image."));
     reader.readAsDataURL(file);
   });
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("This image format is not supported by your browser."));
+    image.src = src;
+  });
+}
+
+async function normalizeProductImage(file: File) {
+  const source = await fileToDataUrl(file);
+  const image = await loadImage(source);
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Unable to prepare image.");
+
+  const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const sourceX = Math.max(0, (image.naturalWidth - sourceSize) / 2);
+  const sourceY = Math.max(0, (image.naturalHeight - sourceSize) / 2);
+
+  canvas.width = PRODUCT_IMAGE_SIZE;
+  canvas.height = PRODUCT_IMAGE_SIZE;
+  context.fillStyle = "#f8fafc";
+  context.fillRect(0, 0, PRODUCT_IMAGE_SIZE, PRODUCT_IMAGE_SIZE);
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, PRODUCT_IMAGE_SIZE, PRODUCT_IMAGE_SIZE);
+
+  return canvas.toDataURL("image/jpeg", PRODUCT_IMAGE_QUALITY);
 }
 
 export default function NewIdeaClient() {
@@ -129,22 +161,17 @@ export default function NewIdeaClient() {
   }
 
   async function setImages(files: FileList | File[]) {
-    const selected = Array.from(files).filter((file) => file.type.startsWith("image/")).slice(0, 5 - imagePreviews.length);
+    const selected = Array.from(files).slice(0, 5 - imagePreviews.length);
     if (selected.length === 0) return;
     try {
-      const nextPreviews = (await Promise.all(selected.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) }))))
-        .filter((image) => image.url.length <= MAX_INLINE_IMAGE_LENGTH);
-      if (nextPreviews.length === 0) {
-        setMessage("Please use a smaller image. Large photos are not supported yet.");
-        return;
-      }
+      const nextPreviews = await Promise.all(selected.map(async (file) => ({ name: file.name, url: await normalizeProductImage(file) })));
       setImagePreviews((current) => [...current, ...nextPreviews].slice(0, 5));
       setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...nextPreviews.map((image) => image.url)].slice(0, 5) }));
       if (Array.from(files).length + imagePreviews.length > 5) {
         setMessage("Maximum 5 images. Only the first 5 were attached.");
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to read image.");
+      setMessage(error instanceof Error ? error.message : "Unable to prepare image.");
     }
   }
 
@@ -162,7 +189,7 @@ export default function NewIdeaClient() {
   }
 
   function onPaste(event: ClipboardEvent<HTMLFormElement>) {
-    const imageFiles = Array.from(event.clipboardData.files).filter((file) => file.type.startsWith("image/"));
+    const imageFiles = Array.from(event.clipboardData.files);
     if (imageFiles.length === 0) return;
     event.preventDefault();
     setImages(imageFiles);
@@ -339,8 +366,8 @@ export default function NewIdeaClient() {
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-white text-[#2563eb] shadow-sm"><ImagePlus size={22} /></span>
                 <span className="text-base font-semibold">Drag images here</span>
                 <span className="text-sm text-[#69707d]">or paste screenshots</span>
-                <span className="text-xs text-[#8b93a1]">Maximum 5 images</span>
-                <input type="file" accept="image/*" multiple className="sr-only" onChange={(event) => setImages(event.target.files || [])} />
+                <span className="text-xs text-[#8b93a1]">Maximum 5 images · auto-cropped to 800 x 800</span>
+                <input type="file" multiple className="sr-only" onChange={(event) => setImages(event.target.files || [])} />
               </label>
               {imagePreviews.length > 0 ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -348,7 +375,7 @@ export default function NewIdeaClient() {
                     <div key={image.name} className="group relative overflow-hidden rounded-2xl border border-[#e4e8ef] bg-white">
                       <span className="absolute left-2 top-2 z-10 flex size-7 items-center justify-center rounded-full bg-white/92 text-xs font-semibold text-[#2563eb] shadow-sm">{index + 1}</span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={image.url} alt={image.name} className="aspect-[4/3] w-full object-cover" />
+                      <img src={image.url} alt={image.name} className="aspect-square w-full object-cover" />
                       <button type="button" onClick={() => removeImage(image.name)} className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/92 text-[#59616e] shadow-sm transition hover:bg-[#fff1f2] hover:text-[#be123c]" aria-label={`Remove ${image.name}`}>
                         <Trash2 size={15} />
                       </button>
@@ -503,7 +530,7 @@ export default function NewIdeaClient() {
                   <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
                     {imagePreviews.map((image) => (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img key={image.name} src={image.url} alt={image.name} className="h-24 w-28 shrink-0 rounded-2xl object-cover" />
+                      <img key={image.name} src={image.url} alt={image.name} className="size-24 shrink-0 rounded-2xl object-cover" />
                     ))}
                   </div>
                 ) : null}
