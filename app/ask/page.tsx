@@ -131,7 +131,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
 
   return (
     <article className="group overflow-hidden rounded-[12px] border border-[#e1e6ee] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)]">
-      <div className="grid gap-0 sm:grid-cols-[132px_1fr]">
+      <div className="grid grid-cols-[96px_1fr] gap-0 sm:grid-cols-[132px_1fr]">
         <Link href={`/ask/${idea.slug}`} className={`relative block aspect-square overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
           <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" fallbackClassName="absolute inset-0 p-6" initialsClassName="bg-white/74" />
           <span className="absolute left-2 top-2 rounded-full bg-white/88 px-2 py-0.5 text-[10px] font-semibold text-[#101216] backdrop-blur">{idea.category}</span>
@@ -142,7 +142,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
             <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{flagFor(idea.country)}</span>
             <span>{idea.author.name}</span>
             <span>{timeAgo(idea.createdAt)}</span>
-            <span className={`rounded-full px-2.5 py-1 font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</span>
+            <span className={`rounded-full px-2.5 py-1 font-semibold ring-1 max-sm:hidden ${statusStyles[idea.status]}`}>{idea.status}</span>
           </div>
 
           <Link href={`/ask/${idea.slug}`} className="mt-1.5 block">
@@ -150,14 +150,14 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
             <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{idea.description}</p>
           </Link>
 
-          <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
+          <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] max-sm:hidden">
             {idea.questions.slice(0, 2).map((question) => (
               <span key={question} className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">{question}</span>
             ))}
             <span className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">Concept</span>
           </div>
 
-          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="mt-2 grid gap-2 max-sm:hidden sm:grid-cols-[1fr_auto] sm:items-center">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 {statusSteps.map((step, index) => (
@@ -182,13 +182,13 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
           </div>
 
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-3 text-xs font-medium text-[#69707d]">
+            <div className="flex flex-wrap gap-2 text-[11px] font-medium text-[#69707d] sm:gap-3 sm:text-xs">
               <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount} Love</span>
               <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length}</span>
-              <span className="inline-flex items-center gap-1"><ShoppingBag size={14} /> {idea.interestedCount} I&apos;d Buy</span>
-              <span className="inline-flex items-center gap-1"><Eye size={14} /> {Math.max(idea.likeCount + idea.comments.length + idea.interestedCount, 1) * 17}</span>
+              <span className="inline-flex items-center gap-1 max-sm:hidden"><ShoppingBag size={14} /> {idea.interestedCount} I&apos;d Buy</span>
+              <span className="inline-flex items-center gap-1 max-sm:hidden"><Eye size={14} /> {Math.max(idea.likeCount + idea.comments.length + idea.interestedCount, 1) * 17}</span>
             </div>
-            <Link href={`/ask/${idea.slug}`} className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold ${primaryButton}`}>
+            <Link href={`/ask/${idea.slug}`} className={`hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold sm:inline-flex ${primaryButton}`}>
               Join Discussion <ChevronRight size={14} />
             </Link>
           </div>
@@ -202,7 +202,7 @@ function ExampleCommunityCard({ example, index }: { example: (typeof starterExam
   const tone = ["from-[#e9f7f3] via-white to-[#efe9ff]", "from-[#fff4e7] via-white to-[#e9f2ff]", "from-[#edf7ff] via-white to-[#effaf3]"][index % 3];
 
   return (
-    <Link href="/ask/new" className="group grid gap-0 overflow-hidden rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_38px_rgba(15,23,42,0.09)] sm:grid-cols-[132px_1fr]">
+    <Link href="/ask/new" className="group grid grid-cols-[96px_1fr] gap-0 overflow-hidden rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_38px_rgba(15,23,42,0.09)] sm:grid-cols-[132px_1fr]">
       <div className={`relative flex aspect-square items-center justify-center bg-gradient-to-br ${tone}`}>
         <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
           {example.title.slice(0, 2).toUpperCase()}
@@ -214,12 +214,12 @@ function ExampleCommunityCard({ example, index }: { example: (typeof starterExam
       <div className="min-w-0 p-2.5">
         <div className="flex flex-wrap items-center gap-2 text-xs text-[#69707d]">
           <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{example.category}</span>
-          <span>Demo prompt</span>
-          <span className="inline-flex items-center gap-1 text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Ready for review</span>
+          <span className="max-sm:hidden">Demo prompt</span>
+          <span className="inline-flex items-center gap-1 text-[#0f766e] max-sm:hidden"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Ready for review</span>
         </div>
         <h3 className="mt-1.5 line-clamp-1 text-base font-semibold">{example.title}</h3>
         <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{example.description}</p>
-        <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2563eb]">
+        <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2563eb] max-sm:hidden">
           Start from this example <ChevronRight size={13} />
         </p>
       </div>
@@ -248,7 +248,7 @@ function StarterCommunityState() {
           <Link
             key={example.title}
             href="/ask/new"
-            className="grid gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg hover:shadow-[#101216]/6 sm:grid-cols-[116px_1fr]"
+            className="grid grid-cols-[92px_1fr] gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-2.5 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg hover:shadow-[#101216]/6 sm:grid-cols-[116px_1fr] sm:p-3"
           >
             <div className={`relative flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br ${["from-[#e9f7f3] via-white to-[#efe9ff]", "from-[#fff4e7] via-white to-[#e9f2ff]", "from-[#edf7ff] via-white to-[#effaf3]"][index]}`}>
               <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
@@ -380,24 +380,24 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         </aside>
 
         <section id="feed" className="min-w-0">
-          <div className="rounded-[16px] border border-[#dfe6ef] bg-white/96 p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)] sm:p-4">
+          <div className="rounded-[16px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_10px_36px_rgba(15,23,42,0.07)] sm:p-4">
             <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
               <Sparkles size={14} /> 3 FREE Expert Reviews per day
             </p>
-            <div className="mt-2.5 grid gap-3 xl:grid-cols-[1fr_auto] xl:items-end">
+            <div className="mt-2 grid gap-2.5 xl:grid-cols-[1fr_auto] xl:items-end">
               <div>
-                <h1 className="max-w-3xl text-2xl font-semibold leading-[1.05] tracking-normal sm:text-3xl">What are founders building next?</h1>
-                <p className="mt-2 max-w-[300px] text-sm leading-6 text-[#59616e] sm:max-w-2xl">
+                <h1 className="max-w-3xl text-[1.45rem] font-semibold leading-[1.08] tracking-normal sm:text-3xl">What are founders building next?</h1>
+                <p className="mt-1.5 max-w-[300px] text-sm leading-5 text-[#59616e] sm:mt-2 sm:max-w-2xl sm:leading-6">
                   Discover product ideas from founders, or share your own and get a FREE manufacturing review within 8 working hours.
                 </p>
-                <p className="mt-2 max-w-[320px] break-words text-sm font-medium text-[#315fbd] sm:max-w-2xl">Founders are discussing product ideas with TYORA manufacturing experts.</p>
+                <p className="mt-1.5 max-w-[320px] break-words text-xs font-medium text-[#315fbd] sm:mt-2 sm:max-w-2xl sm:text-sm">Founders are discussing product ideas with TYORA manufacturing experts.</p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/ask/new" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}><Plus size={16} /> Start a Discussion</Link>
-                <a href="#ideas" className="inline-flex h-12 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold"><Search size={16} /> Browse Ideas</a>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:h-11 sm:px-5 ${primaryButton}`}><Plus size={16} /> Start a Discussion</Link>
+                <a href="#ideas" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold sm:h-12 sm:px-5"><Search size={16} /> Browse Ideas</a>
               </div>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-3 hidden gap-2 sm:grid sm:grid-cols-2 xl:grid-cols-5">
               {(hasCommunityStats ? communityStats : earlyCommunityStats).map(([label, value]) => (
                 <div key={label} className="rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3">
                   <p className="text-lg font-semibold">{value}</p>
@@ -427,7 +427,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             )}
           </div>
 
-          <div className="mt-3 grid gap-3 xl:hidden">
+          <div className="mt-3 hidden gap-3 sm:grid xl:hidden">
             <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
               <h2 className="text-base font-semibold">Live Activity</h2>
               <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
@@ -546,7 +546,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         </div>
       </div>
 
-      <Link href="/ask/new" className="fixed bottom-20 right-5 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-[#14b8a6] px-4 text-sm font-semibold text-white shadow-xl shadow-[#14b8a6]/25 sm:px-5">
+      <Link href="/ask/new" className="fixed bottom-20 right-5 z-40 hidden h-12 items-center gap-2 rounded-full bg-[#14b8a6] px-4 text-sm font-semibold text-white shadow-xl shadow-[#14b8a6]/25 sm:inline-flex sm:px-5">
         <PackageCheck size={17} /> <span className="hidden sm:inline">Ask TYORA</span>
       </Link>
     </main>

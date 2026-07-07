@@ -279,7 +279,7 @@ export default function NewIdeaClient() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1560px] gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[250px_minmax(0,1fr)_330px] lg:px-6">
+      <div className="mx-auto grid max-w-[1560px] gap-3 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 lg:grid-cols-[250px_minmax(0,1fr)_330px] lg:px-6">
         <aside className="hidden self-start rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_14px_44px_rgba(15,23,42,0.08)] lg:sticky lg:top-20 lg:block">
           <p className="text-xs font-semibold uppercase text-[#8b93a1]">Join the discussion</p>
           <h1 className="mt-2 text-xl font-semibold">Start a Discussion</h1>
@@ -307,7 +307,7 @@ export default function NewIdeaClient() {
           <p className="mt-5 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">FREE expert review within 8 working hours.</p>
         </aside>
 
-        <form onSubmit={submit} onPaste={onPaste} className={`${panelClass} min-w-0 p-4 sm:p-6 lg:p-7`}>
+        <form onSubmit={submit} onPaste={onPaste} className={`${panelClass} min-w-0 p-3.5 sm:p-6 lg:p-7`}>
           {published ? (
             <div className="grid min-h-[560px] place-items-center text-center">
               <div>
@@ -320,22 +320,22 @@ export default function NewIdeaClient() {
             </div>
           ) : (
           <>
-          <div className="mb-5 lg:hidden">
-            <div className="grid grid-cols-4 gap-2 text-[11px] font-semibold text-[#69707d]">
+          <div className="mb-3 lg:hidden">
+            <div className="grid grid-cols-4 gap-1.5 text-[10px] font-semibold text-[#69707d]">
               {mobileSteps.map((item, index) => (
-                <button key={item} type="button" onClick={() => setStep(index as Step)} className={cn("min-w-0 rounded-full px-2 py-2", step === index ? "bg-[#2563eb] text-white" : "bg-white ring-1 ring-[#e4e8ef]")}>{index + 1}. {item}</button>
+                <button key={item} type="button" onClick={() => setStep(index as Step)} className={cn("min-w-0 rounded-full px-1.5 py-1.5", step === index ? "bg-[#2563eb] text-white" : "bg-white ring-1 ring-[#e4e8ef]")}>{index + 1}. {item}</button>
               ))}
             </div>
           </div>
 
-          <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]"><Sparkles size={14} /> {usedText}</p>
+          <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-[11px] font-semibold text-[#315fbd] sm:text-xs"><Sparkles size={14} /> {usedText}</p>
 
           {step === 0 ? (
-            <section className="mt-5">
+            <section className="mt-4 sm:mt-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Start a Discussion</h2>
-                  <p className="mt-3 max-w-2xl text-base leading-7 text-[#59616e]">
+                  <h2 className="text-2xl font-semibold leading-tight sm:text-4xl">Start a Discussion</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e] sm:mt-3 sm:text-base sm:leading-7">
                     Share your idea with founders. Get FREE manufacturing feedback within 8 working hours.
                   </p>
                 </div>
@@ -343,7 +343,7 @@ export default function NewIdeaClient() {
                   Estimated time <span className="ml-1 text-[#101216]">1 minute</span>
                 </p>
               </div>
-              <div className="mt-7 grid gap-4">
+              <div className="mt-5 grid gap-3 sm:mt-7 sm:gap-4">
                 <label className="grid gap-2 text-sm font-semibold">Product name
                   <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Magnetic phone stand" className={inputClass} />
                 </label>
