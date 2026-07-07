@@ -26,6 +26,9 @@ type UserRow = {
   joinedAt: Date;
 };
 
+const MAX_INLINE_IDEA_IMAGE_LENGTH = 180000;
+const MAX_INLINE_AVATAR_LENGTH = 120000;
+
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
   try {
@@ -33,6 +36,24 @@ function parseJson<T>(value: unknown, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+function safePublicImageUrl(value: unknown, maxInlineLength = MAX_INLINE_IDEA_IMAGE_LENGTH) {
+  if (typeof value !== "string") return null;
+  const url = value.trim();
+  if (!url) return null;
+  if (url.startsWith("data:image/")) {
+    return url.length <= maxInlineLength && url.includes(";base64,") ? url : null;
+  }
+  if (url.startsWith("https://") || url.startsWith("http://") || url.startsWith("/")) return url.slice(0, 2048);
+  return null;
+}
+
+function safePublicImageUrls(value: unknown) {
+  const parsed = parseJson(value, []);
+  return Array.isArray(parsed)
+    ? parsed.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
+    : [];
 }
 
 function iso(value: Date | string | null | undefined) {
@@ -62,7 +83,7 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
     description: row.description,
     category: row.category,
     country: row.country,
-    imageUrls: parseJson(row.imageUrlsJson, []),
+    imageUrls: safePublicImageUrls(row.imageUrlsJson),
     questions: normalizeQuestions(parseJson(row.questionsJson, [])),
     otherQuestion: row.otherQuestion || undefined,
     visibility: normalizeVisibility(row.visibility),
@@ -189,12 +210,9 @@ function safeProfileString(value: unknown, maxLength: number) {
 }
 
 function safeAvatarUrl(value: unknown) {
-  const avatar = safeProfileString(value, 450000);
+  const avatar = safeProfileString(value, MAX_INLINE_AVATAR_LENGTH);
   if (!avatar) return null;
-  if (avatar.startsWith("data:image/") || avatar.startsWith("https://") || avatar.startsWith("http://") || avatar.startsWith("/")) {
-    return avatar;
-  }
-  return null;
+  return safePublicImageUrl(avatar, MAX_INLINE_AVATAR_LENGTH);
 }
 
 export async function updateCommunityProfile(userId: string, input: unknown) {
@@ -289,7 +307,7 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
   }
 
   const imageUrls = Array.isArray(data.imageUrls)
-    ? data.imageUrls.filter((item): item is string => typeof item === "string").slice(0, 5)
+    ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
     : [];
   if (imageUrls.length > 5) throw new Error("Upload a maximum of 5 images.");
 

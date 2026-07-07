@@ -11,6 +11,8 @@ type CommunityImageProps = {
   initialsClassName?: string;
 };
 
+const MAX_INLINE_IMAGE_LENGTH = 180000;
+
 function initialsFor(value: string) {
   const words = value.trim().split(/\s+/).filter(Boolean);
   if (words.length >= 2) return `${words[0][0]}${words[1][0]}`.toUpperCase();
@@ -20,7 +22,8 @@ function initialsFor(value: string) {
 function canRenderImage(src?: string) {
   if (!src) return false;
   const value = src.trim();
-  return value.startsWith("https://") || value.startsWith("http://") || value.startsWith("/") || value.startsWith("data:image/");
+  if (value.startsWith("data:image/")) return value.length <= MAX_INLINE_IMAGE_LENGTH && value.includes(";base64,");
+  return value.startsWith("https://") || value.startsWith("http://") || value.startsWith("/");
 }
 
 export default function CommunityImage({

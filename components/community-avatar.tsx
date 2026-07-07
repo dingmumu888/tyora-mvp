@@ -10,6 +10,8 @@ type CommunityAvatarProps = {
   textClassName?: string;
 };
 
+const MAX_INLINE_AVATAR_LENGTH = 120000;
+
 function initialsFor(name: string) {
   const words = name.trim().split(/\s+/).filter(Boolean);
   if (words.length >= 2) return `${words[0][0]}${words[1][0]}`.toUpperCase();
@@ -19,7 +21,8 @@ function initialsFor(name: string) {
 function canRender(src?: string) {
   if (!src) return false;
   const value = src.trim();
-  return value.startsWith("data:image/") || value.startsWith("https://") || value.startsWith("http://") || value.startsWith("/");
+  if (value.startsWith("data:image/")) return value.length <= MAX_INLINE_AVATAR_LENGTH && value.includes(";base64,");
+  return value.startsWith("https://") || value.startsWith("http://") || value.startsWith("/");
 }
 
 export default function CommunityAvatar({ name, src, className, textClassName }: CommunityAvatarProps) {

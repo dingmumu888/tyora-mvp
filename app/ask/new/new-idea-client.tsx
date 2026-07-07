@@ -68,6 +68,7 @@ const nextSteps = [
   ["You decide whether to build.", PackageCheck]
 ] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
+const MAX_INLINE_IMAGE_LENGTH = 180000;
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -131,7 +132,12 @@ export default function NewIdeaClient() {
     const selected = Array.from(files).filter((file) => file.type.startsWith("image/")).slice(0, 5 - imagePreviews.length);
     if (selected.length === 0) return;
     try {
-      const nextPreviews = await Promise.all(selected.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) })));
+      const nextPreviews = (await Promise.all(selected.map(async (file) => ({ name: file.name, url: await fileToDataUrl(file) }))))
+        .filter((image) => image.url.length <= MAX_INLINE_IMAGE_LENGTH);
+      if (nextPreviews.length === 0) {
+        setMessage("Please use a smaller image. Large photos are not supported yet.");
+        return;
+      }
       setImagePreviews((current) => [...current, ...nextPreviews].slice(0, 5));
       setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...nextPreviews.map((image) => image.url)].slice(0, 5) }));
       if (Array.from(files).length + imagePreviews.length > 5) {
