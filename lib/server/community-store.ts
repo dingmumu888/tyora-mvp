@@ -285,6 +285,145 @@ export async function getCommunityIdeaBySlug(slug: string, includeHidden = false
   return ideaToCommunityIdea(row);
 }
 
+export async function getCommunityUserActivity(userId: string) {
+  const user = await prisma.communityUser.findUnique({ where: { id: userId } });
+  if (!user) return null;
+
+  const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas] = await Promise.all([
+    prisma.communityIdea.findMany({
+      where: { authorId: userId, hidden: false },
+      orderBy: { updatedAt: "desc" },
+      include: ideaInclude
+    }),
+    prisma.communityComment.findMany({
+      where: { authorId: userId, hidden: false, idea: { hidden: false, visibility: "Public" } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: {
+        idea: {
+          include: ideaInclude
+        }
+      }
+    }),
+    prisma.communityReaction.findMany({
+      where: { userId, ideaId: { not: null }, idea: { hidden: false, visibility: "Public" } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: {
+        idea: {
+          include: ideaInclude
+        }
+      }
+    }),
+    prisma.communityComment.findMany({
+      where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId, hidden: false } },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+      include: {
+        author: true,
+        idea: true
+      }
+    }),
+    prisma.communityReaction.findMany({
+      where: { userId: { not: userId }, ideaId: { not: null }, idea: { authorId: userId, hidden: false } },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+      include: {
+        user: true,
+        idea: true
+      }
+    }),
+    prisma.communityIdea.findMany({
+      where: { authorId: userId, hidden: false, review: { isNot: null } },
+      orderBy: { updatedAt: "desc" },
+      take: 25,
+      include: {
+        review: true,
+        author: true,
+        comments: { include: { author: true, reactions: true } },
+        reactions: true
+      }
+    })
+  ]);
+
+  const receivedLikes = receivedReactions.filter((reaction) => reaction.type === "Like").length;
+  const receivedInterested = receivedReactions.filter((reaction) => reaction.type === "Interested").length;
+  const notifications = [
+    ...receivedComments.map((comment) => ({
+      id: `comment-${comment.id}`,
+      type: "comment" as const,
+      title: `${comment.author.name} commented on your idea`,
+      body: comment.body,
+      href: `/ask/${comment.idea.slug}`,
+      createdAt: iso(comment.createdAt)
+    })),
+    ...receivedReactions.map((reaction) => ({
+      id: `reaction-${reaction.id}`,
+      type: reaction.type === "Interested" ? "interested" as const : "like" as const,
+      title: `${reaction.user.name} ${reaction.type === "Interested" ? "is interested in" : "liked"} your idea`,
+      body: reaction.idea?.title || "Your idea",
+      href: reaction.idea ? `/ask/${reaction.idea.slug}` : "/ask",
+      createdAt: iso(reaction.createdAt)
+    })),
+    ...reviewedIdeas.map((idea) => ({
+      id: `review-${idea.id}`,
+      type: "review" as const,
+      title: "TYORA reviewed your idea",
+      body: idea.title,
+      href: `/ask/${idea.slug}`,
+      createdAt: iso(idea.review?.updatedAt || idea.updatedAt)
+    })),
+    ...ideas
+      .filter((idea) => idea.status !== "Discussing")
+      .map((idea) => ({
+        id: `status-${idea.id}`,
+        type: "status" as const,
+        title: `Your idea status is ${idea.status}`,
+        body: idea.title,
+        href: `/ask/${idea.slug}`,
+        createdAt: iso(idea.updatedAt)
+      }))
+  ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()).slice(0, 40);
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      name: user.name,
+      avatar: safePublicImageUrl(user.avatar, MAX_INLINE_AVATAR_LENGTH) || undefined,
+      bio: user.bio || undefined,
+      profileCompleted: user.profileCompleted,
+      country: user.country || undefined,
+      joinedAt: iso(user.joinedAt)
+    },
+    stats: {
+      ideasPosted: ideas.length,
+      commentsMade: comments.length,
+      likedIdeas: reactions.filter((reaction) => reaction.type === "Like").length,
+      interestedIdeas: reactions.filter((reaction) => reaction.type === "Interested").length,
+      receivedComments: receivedComments.length,
+      receivedLikes,
+      receivedInterested,
+      notifications: notifications.length
+    },
+    ideas: ideas.map(ideaToCommunityIdea),
+    comments: comments.map((comment) => ({
+      id: comment.id,
+      body: comment.body,
+      createdAt: iso(comment.createdAt),
+      idea: ideaToCommunityIdea(comment.idea)
+    })),
+    likedIdeas: reactions
+      .filter((reaction) => reaction.type === "Like" && reaction.idea)
+      .map((reaction) => ({ id: reaction.id, createdAt: iso(reaction.createdAt), idea: ideaToCommunityIdea(reaction.idea) })),
+    interestedIdeas: reactions
+      .filter((reaction) => reaction.type === "Interested" && reaction.idea)
+      .map((reaction) => ({ id: reaction.id, createdAt: iso(reaction.createdAt), idea: ideaToCommunityIdea(reaction.idea) })),
+    notifications
+  };
+}
+
 export async function countReviewsUsedToday(userId: string) {
   const start = new Date();
   start.setHours(0, 0, 0, 0);

@@ -286,9 +286,9 @@ export default function Home() {
             <Link href="/ask/new" className={`hidden h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:inline-flex ${primaryButton}`}>
               <Upload size={15} /> <span className="hidden sm:inline">Start a Discussion</span>
             </Link>
-            <button className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] md:inline-flex" aria-label="Notifications">
+            <Link href="/me#notifications" className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] md:inline-flex" aria-label="Notifications">
               <Bell size={15} />
-            </button>
+            </Link>
           </div>
         </div>
       </header>

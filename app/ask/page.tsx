@@ -314,9 +314,9 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
               <Plus size={16} /> <span className="hidden sm:inline">Start a Discussion</span>
             </Link>
-            <button className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] bg-white md:inline-flex" aria-label="Notifications">
+            <Link href="/me#notifications" className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] bg-white md:inline-flex" aria-label="Notifications">
               <Bell size={16} />
-            </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -337,11 +337,32 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             </section>
 
             <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">
-              {["Discover Ideas", "Following", "My Discussions", "My Projects", "Notifications"].map((item) => (
-                <Link key={item} href="/ask" className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8] hover:text-[#101216]">
+              {[
+                ["Discover Ideas", "/ask"],
+                ["Start a Discussion", "/ask/new"],
+                ["Newest Ideas", "/ask?sort=newest"],
+                ["Latest TYORA Reply", "/ask?sort=latest-tyora-reply"]
+              ].map(([item, href]) => (
+                <Link key={item} href={href} className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8] hover:text-[#101216]">
                   {item}<ChevronRight size={14} />
                 </Link>
               ))}
+            </section>
+
+            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">
+              <p className="px-3 text-xs font-semibold uppercase text-[#8b93a1]">My TYORA</p>
+              <div className="mt-2 grid gap-1">
+                {[
+                  ["My Discussions", "/me#discussions"],
+                  ["My Comments", "/me#comments"],
+                  ["Liked Ideas", "/me#liked"],
+                  ["Notifications", "/me#notifications"]
+                ].map(([label, href]) => (
+                  <Link key={label} href={href} className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8] hover:text-[#101216]">
+                    {label}<ChevronRight size={14} />
+                  </Link>
+                ))}
+              </div>
             </section>
 
             <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">

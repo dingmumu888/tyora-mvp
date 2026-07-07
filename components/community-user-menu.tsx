@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { Settings, UserRound } from "lucide-react";
+import { Bell, Heart, LogOut, MessageCircle, PenLine, Settings } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityProfileModal, { CommunitySessionUser } from "@/components/community-profile-modal";
 import EmailLogin from "@/components/email-login";
@@ -60,6 +61,13 @@ export default function CommunityUserMenu({
     return () => window.removeEventListener("pointerdown", onPointerDown);
   }, []);
 
+  async function logout() {
+    await fetch("/api/community/logout", { method: "POST" }).catch(() => undefined);
+    setUser(null);
+    setMenuOpen(false);
+    window.dispatchEvent(new CustomEvent("tyora:community-logout"));
+  }
+
   if (!user) {
     return (
       <EmailLogin className={loginClassName} openSignal={loginOpenSignal} onSuccess={loginOnSuccess}>
@@ -89,6 +97,23 @@ export default function CommunityUserMenu({
               <p className="truncate text-xs text-[#69707d]">@{user.username}</p>
             </div>
           </div>
+          <div className="mt-2 grid gap-1">
+            {[
+              ["My Discussions", "/me#discussions", PenLine],
+              ["My Comments", "/me#comments", MessageCircle],
+              ["Liked Ideas", "/me#liked", Heart],
+              ["Notifications", "/me#notifications", Bell]
+            ].map(([label, href, Icon]) => (
+              <Link
+                key={label as string}
+                href={href as string}
+                onClick={() => setMenuOpen(false)}
+                className="flex w-full items-center gap-2 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold text-[#59616e] transition hover:bg-[#f6f7fb] hover:text-[#101216]"
+              >
+                <Icon size={16} /> {label as string}
+              </Link>
+            ))}
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -99,9 +124,13 @@ export default function CommunityUserMenu({
           >
             <Settings size={16} /> Profile Settings
           </button>
-          <div className="mt-1 flex items-center gap-2 rounded-2xl px-3 py-2 text-xs text-[#8b93a1]">
-            <UserRound size={14} /> Community identity
-          </div>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="mt-1 flex w-full items-center gap-2 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold text-[#9a3412] transition hover:bg-[#fff7ed]"
+          >
+            <LogOut size={16} /> Log out
+          </button>
         </div>
       ) : null}
 
