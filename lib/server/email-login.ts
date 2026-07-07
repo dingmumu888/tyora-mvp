@@ -68,7 +68,10 @@ function safeEqual(left: string, right: string) {
 }
 
 function sender() {
-  return process.env.RESEND_FROM || DEFAULT_FROM;
+  const configured = process.env.RESEND_FROM || DEFAULT_FROM;
+  const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
+  if (isProduction && configured.includes("onboarding@resend.dev")) return DEFAULT_FROM;
+  return configured;
 }
 
 function shouldUseTestSender() {
