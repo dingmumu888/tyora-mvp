@@ -17,6 +17,23 @@ export type EmailLoginStage =
 
 type EmailLoginTrace = (stage: EmailLoginStage, data?: Record<string, unknown>) => void;
 
+export class ResendEmailError extends Error {
+  status: number;
+  statusText: string;
+  responseBody: string;
+  errorCode: string | null;
+
+  constructor(status: number, statusText: string, responseBody: string) {
+    const errorCode = parseResendErrorCode(responseBody);
+    super(`Unable to send login code. Resend status=${status} ${statusText}; code=${errorCode || "unknown"}; response=${responseBody}`);
+    this.name = "ResendEmailError";
+    this.status = status;
+    this.statusText = statusText;
+    this.responseBody = responseBody;
+    this.errorCode = errorCode;
+  }
+}
+
 function normalizeEmail(value: unknown) {
   if (typeof value !== "string") return "";
   return value.trim().toLowerCase().slice(0, 254);
@@ -24,6 +41,16 @@ function normalizeEmail(value: unknown) {
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function parseResendErrorCode(responseBody: string) {
+  try {
+    const payload = JSON.parse(responseBody) as { error?: { code?: unknown }; code?: unknown };
+    const code = payload.error?.code ?? payload.code;
+    return typeof code === "string" ? code : null;
+  } catch {
+    return null;
+  }
 }
 
 function authSecret() {
@@ -54,6 +81,7 @@ export function getEmailLoginDebugContext() {
     hasAuthOrigin: Boolean(process.env.AUTH_ORIGIN),
     authOrigin: process.env.AUTH_ORIGIN || null,
     configuredSender: sender(),
+    environment: process.env.VERCEL_ENV || process.env.NODE_ENV || null,
     resendUseTestSender: process.env.RESEND_USE_TEST_SENDER || null,
     shouldUseTestSender: shouldUseTestSender(),
     actualSender: shouldUseTestSender() ? FALLBACK_FROM : sender()
@@ -101,7 +129,7 @@ async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTra
 
   if (!response.ok) {
     const responseText = await response.text().catch(() => "");
-    throw new Error(`Unable to send login code. Resend status=${response.status} ${response.statusText}; response=${responseText}`);
+    throw new ResendEmailError(response.status, response.statusText, responseText);
   }
 }
 
