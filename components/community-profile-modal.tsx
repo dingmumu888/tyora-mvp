@@ -23,6 +23,9 @@ type CommunityProfileModalProps = {
   onSaved?: (user: CommunitySessionUser) => void;
 };
 
+const AVATAR_SIZE = 320;
+const AVATAR_QUALITY = 0.84;
+
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -30,6 +33,48 @@ function fileToDataUrl(file: File) {
     reader.onerror = () => reject(new Error("Unable to read avatar."));
     reader.readAsDataURL(file);
   });
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("This image format is not supported by your browser."));
+    image.src = src;
+  });
+}
+
+async function cropAvatar(file: File) {
+  const source = await fileToDataUrl(file);
+  const image = await loadImage(source);
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Unable to prepare avatar.");
+
+  const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const sourceX = Math.max(0, (image.naturalWidth - sourceSize) / 2);
+  const sourceY = Math.max(0, (image.naturalHeight - sourceSize) / 2);
+
+  canvas.width = AVATAR_SIZE;
+  canvas.height = AVATAR_SIZE;
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+
+  return canvas.toDataURL("image/jpeg", AVATAR_QUALITY);
+}
+
+async function readJsonSafely(response: Response) {
+  const text = await response.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {
+      success: false,
+      message: response.ok ? "Unable to read profile response." : "Avatar is too large. Please try a smaller image."
+    };
+  }
 }
 
 export default function CommunityProfileModal({ open, user, mode = "setup", onClose, onSaved }: CommunityProfileModalProps) {
@@ -74,11 +119,16 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
   async function onAvatarChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setMessage("Please upload an image file.");
-      return;
+    setBusy(true);
+    setMessage("");
+    try {
+      setAvatar(await cropAvatar(file));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to prepare avatar.");
+    } finally {
+      setBusy(false);
+      event.target.value = "";
     }
-    setAvatar(await fileToDataUrl(file));
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
@@ -91,7 +141,7 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name, username, bio, avatar })
       });
-      const payload = await response.json();
+      const payload = await readJsonSafely(response);
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to save profile.");
       window.dispatchEvent(new CustomEvent("tyora:community-profile-updated", { detail: { user: payload.user } }));
       onSaved?.(payload.user);
@@ -136,7 +186,7 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
             <CommunityAvatar name={name || user.email} src={avatar} className="size-16 text-lg" />
             <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#59616e] transition hover:bg-[#f6f7fb]">
               <Camera size={16} /> Upload avatar
-              <input type="file" accept="image/*" className="sr-only" onChange={onAvatarChange} />
+              <input type="file" className="sr-only" onChange={onAvatarChange} />
             </label>
           </div>
 
