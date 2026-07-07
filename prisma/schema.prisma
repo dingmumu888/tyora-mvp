@@ -110,6 +110,7 @@ model CommunityUser {
   bio             String?
   profileCompleted Boolean           @default(false)
   country         String?
+  lastNotificationSeenAt DateTime?
   joinedAt        DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   ideas           CommunityIdea[]

@@ -3,6 +3,7 @@ import { Bell, Heart, MessageCircle, PackageCheck, PenLine, Send, Settings, Spar
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityImage from "@/components/community-image";
 import EmailLogin from "@/components/email-login";
+import MarkNotificationsRead from "@/components/mark-notifications-read";
 import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityUserActivity } from "@/lib/server/community-store";
 import { CommunityIdea } from "@/lib/community";
@@ -91,13 +92,14 @@ export default async function MyTyoraPage() {
     ["Received likes", stats.receivedLikes + stats.receivedInterested, Bell]
   ] as const;
   const topNotificationCards = [
-    ["Received comments", stats.receivedComments, Send],
-    ["Received likes", stats.receivedLikes + stats.receivedInterested, Bell],
-    ["TYORA reviews", ideas.filter((idea) => idea.review).length, PackageCheck]
+    ["Received comments", stats.receivedComments, stats.unreadReceivedComments, Send],
+    ["Received likes", stats.receivedLikes + stats.receivedInterested, stats.unreadReceivedReactions, Bell],
+    ["TYORA reviews", ideas.filter((idea) => idea.review).length, stats.unreadReviewedIdeas, PackageCheck]
   ] as const;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_42%,#f7f5f0_100%)] pb-28 text-[#101216] md:pb-12">
+      <MarkNotificationsRead />
       <header className="sticky top-0 z-30 border-b border-[#e4e8ef]/90 bg-white/88 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/ask" className="text-sm font-semibold">TYORA</Link>
@@ -147,9 +149,9 @@ export default async function MyTyoraPage() {
               </Link>
             </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {topNotificationCards.map(([label, value, Icon]) => (
+              {topNotificationCards.map(([label, value, unreadCount, Icon]) => (
                 <div key={label} className="relative rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
-                  {badgeCount(value) ? <span className="absolute right-3 top-3 rounded-full bg-[#ff385c] px-2 py-1 text-[10px] font-bold leading-none text-white">NEW {badgeCount(value)}</span> : null}
+                  {badgeCount(unreadCount) ? <span className="absolute right-3 top-3 rounded-full bg-[#ff385c] px-2 py-1 text-[10px] font-bold leading-none text-white">NEW {badgeCount(unreadCount)}</span> : null}
                   <Icon size={16} className="text-[#0f766e]" />
                   <p className="mt-2 text-2xl font-semibold">{value}</p>
                   <p className="text-sm text-[#69707d]">{label}</p>

@@ -42,13 +42,16 @@ export default function MobileBottomTabs() {
         if (active) setNotificationCount(0);
       }
     }
+    const clearNotificationCount = () => setNotificationCount(0);
     void loadNotificationCount();
     window.addEventListener("tyora:community-login", loadNotificationCount);
     window.addEventListener("tyora:community-profile-updated", loadNotificationCount);
+    window.addEventListener("tyora:community-notifications-read", clearNotificationCount);
     return () => {
       active = false;
       window.removeEventListener("tyora:community-login", loadNotificationCount);
       window.removeEventListener("tyora:community-profile-updated", loadNotificationCount);
+      window.removeEventListener("tyora:community-notifications-read", clearNotificationCount);
     };
   }, []);
 
@@ -56,6 +59,19 @@ export default function MobileBottomTabs() {
 
   const plusActive = pathname === "/ask/new";
   const notificationLabel = notificationCount > 99 ? "99+" : String(notificationCount);
+  async function markNotificationsRead() {
+    if (notificationCount <= 0) return;
+    setNotificationCount(0);
+    try {
+      await fetch("/api/community/notifications/read", { method: "POST" });
+      window.dispatchEvent(new CustomEvent("tyora:community-notifications-read"));
+    } catch {
+      void fetch("/api/community/session", { cache: "no-store" })
+        .then((response) => response.json())
+        .then((payload) => setNotificationCount(Number(payload.notificationCount || 0)))
+        .catch(() => setNotificationCount(0));
+    }
+  }
 
   return (
     <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[9990] rounded-[28px] border border-white/10 bg-[#07080a]/96 px-2 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
@@ -82,7 +98,7 @@ export default function MobileBottomTabs() {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
+            <Link key={tab.label} href={tab.href} onClick={tab.label === "Activity" ? () => void markNotificationsRead() : undefined} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               {tab.label === "Activity" && notificationCount > 0 ? (
                 <span className="absolute right-3 top-1 min-w-5 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-center text-[9px] font-bold leading-none text-white">
                   {notificationLabel}

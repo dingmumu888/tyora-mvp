@@ -23,6 +23,7 @@ type UserRow = {
   bio: string | null;
   profileCompleted: boolean;
   country: string | null;
+  lastNotificationSeenAt?: Date | null;
   joinedAt: Date;
 };
 
@@ -288,6 +289,7 @@ export async function getCommunityIdeaBySlug(slug: string, includeHidden = false
 export async function getCommunityUserActivity(userId: string) {
   const user = await prisma.communityUser.findUnique({ where: { id: userId } });
   if (!user) return null;
+  const lastSeenAt = user.lastNotificationSeenAt;
 
   const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas] = await Promise.all([
     prisma.communityIdea.findMany({
@@ -348,6 +350,14 @@ export async function getCommunityUserActivity(userId: string) {
 
   const receivedLikes = receivedReactions.filter((reaction) => reaction.type === "Like").length;
   const receivedInterested = receivedReactions.filter((reaction) => reaction.type === "Interested").length;
+  const isUnread = (value: Date | string | null | undefined) => {
+    if (!lastSeenAt || !value) return true;
+    return new Date(value).getTime() > lastSeenAt.getTime();
+  };
+  const unreadReceivedComments = receivedComments.filter((comment) => isUnread(comment.createdAt)).length;
+  const unreadReceivedReactions = receivedReactions.filter((reaction) => isUnread(reaction.createdAt)).length;
+  const unreadReviewedIdeas = reviewedIdeas.filter((idea) => isUnread(idea.review?.updatedAt || idea.updatedAt)).length;
+  const unreadStatusIdeas = ideas.filter((idea) => idea.status !== "Discussing" && isUnread(idea.updatedAt)).length;
   const notifications = [
     ...receivedComments.map((comment) => ({
       id: `comment-${comment.id}`,
@@ -405,7 +415,11 @@ export async function getCommunityUserActivity(userId: string) {
       receivedComments: receivedComments.length,
       receivedLikes,
       receivedInterested,
-      notifications: notifications.length
+      notifications: notifications.length,
+      unreadReceivedComments,
+      unreadReceivedReactions,
+      unreadReviewedIdeas,
+      unreadStatusIdeas
     },
     ideas: ideas.map(ideaToCommunityIdea),
     comments: comments.map((comment) => ({
@@ -425,22 +439,35 @@ export async function getCommunityUserActivity(userId: string) {
 }
 
 export async function getCommunityNotificationCount(userId: string) {
+  const user = await prisma.communityUser.findUnique({
+    where: { id: userId },
+    select: { lastNotificationSeenAt: true }
+  });
+  if (!user) return 0;
+  const after = user.lastNotificationSeenAt ? { gt: user.lastNotificationSeenAt } : undefined;
   const [receivedComments, receivedReactions, reviewedIdeas, statusIdeas] = await Promise.all([
     prisma.communityComment.count({
-      where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId, hidden: false } }
+      where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId, hidden: false }, ...(after ? { createdAt: after } : {}) }
     }),
     prisma.communityReaction.count({
-      where: { userId: { not: userId }, ideaId: { not: null }, idea: { authorId: userId, hidden: false } }
+      where: { userId: { not: userId }, ideaId: { not: null }, idea: { authorId: userId, hidden: false }, ...(after ? { createdAt: after } : {}) }
     }),
     prisma.communityIdea.count({
-      where: { authorId: userId, hidden: false, review: { isNot: null } }
+      where: { authorId: userId, hidden: false, review: after ? { is: { updatedAt: after } } : { isNot: null } }
     }),
     prisma.communityIdea.count({
-      where: { authorId: userId, hidden: false, status: { not: "Discussing" } }
+      where: { authorId: userId, hidden: false, status: { not: "Discussing" }, ...(after ? { updatedAt: after } : {}) }
     })
   ]);
 
   return receivedComments + receivedReactions + reviewedIdeas + statusIdeas;
+}
+
+export async function markCommunityNotificationsRead(userId: string) {
+  await prisma.communityUser.update({
+    where: { id: userId },
+    data: { lastNotificationSeenAt: new Date() }
+  });
 }
 
 export async function countReviewsUsedToday(userId: string) {
