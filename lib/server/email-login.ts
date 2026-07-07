@@ -20,15 +20,17 @@ type EmailLoginTrace = (stage: EmailLoginStage, data?: Record<string, unknown>) 
 export class ResendEmailError extends Error {
   status: number;
   statusText: string;
+  responseHeaders: Record<string, string>;
   responseBody: string;
   errorCode: string | null;
 
-  constructor(status: number, statusText: string, responseBody: string) {
+  constructor(status: number, statusText: string, responseHeaders: Record<string, string>, responseBody: string) {
     const errorCode = parseResendErrorCode(responseBody);
     super(`Unable to send login code. Resend status=${status} ${statusText}; code=${errorCode || "unknown"}; response=${responseBody}`);
     this.name = "ResendEmailError";
     this.status = status;
     this.statusText = statusText;
+    this.responseHeaders = responseHeaders;
     this.responseBody = responseBody;
     this.errorCode = errorCode;
   }
@@ -43,14 +45,26 @@ function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function parseResendErrorCode(responseBody: string) {
+function safeParseJson(value: string) {
   try {
-    const payload = JSON.parse(responseBody) as { error?: { code?: unknown }; code?: unknown };
-    const code = payload.error?.code ?? payload.code;
-    return typeof code === "string" ? code : null;
+    return JSON.parse(value) as unknown;
   } catch {
     return null;
   }
+}
+
+function parseResendErrorCode(responseBody: string) {
+  const payload = safeParseJson(responseBody) as { error?: { code?: unknown }; code?: unknown } | null;
+  const code = payload?.error?.code ?? payload?.code;
+  return typeof code === "string" ? code : null;
+}
+
+function responseHeaders(response: Response) {
+  const headers: Record<string, string> = {};
+  response.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  return headers;
 }
 
 function authSecret() {
@@ -125,15 +139,18 @@ async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTra
       text
     })
   });
+  const responseText = await response.text().catch((error) => `Unable to read Resend response body: ${error instanceof Error ? error.message : String(error)}`);
+  const headers = responseHeaders(response);
   trace?.("after_resend_fetch", {
     email,
     status: response.status,
-    ok: response.ok
+    ok: response.ok,
+    headers,
+    rawResponseBody: responseText
   });
 
   if (!response.ok) {
-    const responseText = await response.text().catch(() => "");
-    throw new ResendEmailError(response.status, response.statusText, responseText);
+    throw new ResendEmailError(response.status, response.statusText, headers, responseText);
   }
 }
 

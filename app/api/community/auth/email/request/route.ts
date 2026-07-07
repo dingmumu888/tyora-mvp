@@ -12,6 +12,7 @@ function serializeError(error: unknown) {
       resend: error instanceof ResendEmailError ? {
         httpStatus: error.status,
         statusText: error.statusText,
+        headers: error.responseHeaders,
         errorCode: error.errorCode,
         responseBody: error.responseBody
       } : null
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
         environment: debug.environment,
         resendUseTestSender: debug.resendUseTestSender,
         httpStatus: resend?.httpStatus ?? null,
+        headers: resend?.headers ?? null,
         errorCode: resend?.errorCode ?? null,
         responseBody: resend?.responseBody ?? null,
         lastStage,
