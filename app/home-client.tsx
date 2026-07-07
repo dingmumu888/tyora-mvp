@@ -234,7 +234,8 @@ export default function Home() {
 
   const canStartChat = Boolean(productName.trim());
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
-  const homeExamples = communityIdeas.length < 4 ? starterExamples.slice(0, 4 - communityIdeas.length) : [];
+  const homeFeedIdeas = communityIdeas.slice(0, 3);
+  const homeExamples = homeFeedIdeas.length < 3 ? starterExamples.slice(0, 3 - homeFeedIdeas.length) : [];
   const hasCommunityStats = communityIdeas.length > 0;
   const communityStats = [
     ["Ideas Shared", communityIdeas.length],
@@ -421,7 +422,7 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  {communityIdeas.slice(0, 6).map((idea) => (
+                  {homeFeedIdeas.map((idea) => (
                 <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid grid-cols-[92px_1fr] gap-2.5 rounded-[12px] border border-[#e1e6ee] bg-white p-2 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[132px_1fr]">
                   <div className="flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
                     <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-2xl object-cover" />
@@ -496,6 +497,9 @@ export default function Home() {
                       </div>
                     </Link>
                   ))}
+                  <Link href="/ask" className="inline-flex h-11 items-center justify-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#2563eb] shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5 hover:border-[#bfdbfe] hover:bg-[#f8fbff]">
+                    View all ideas in Ideas
+                  </Link>
                 </>
               )}
             </div>

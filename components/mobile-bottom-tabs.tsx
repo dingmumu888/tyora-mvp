@@ -35,20 +35,20 @@ export default function MobileBottomTabs() {
   const plusActive = pathname === "/ask/new";
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#07080a]/96 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 text-white shadow-[0_-18px_50px_rgba(0,0,0,0.28)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
-      <div className="mx-auto grid max-w-md grid-cols-5 items-end gap-1">
+    <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[9990] rounded-[28px] border border-white/10 bg-[#07080a]/96 px-2 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
+      <div className="mx-auto grid max-w-md grid-cols-5 items-center gap-1">
         {tabs.slice(0, 2).map((tab) => {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition ${active ? "text-white" : "text-white/48"}`}>
+            <Link key={tab.label} href={tab.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
               <span>{tab.label}</span>
             </Link>
           );
         })}
 
-        <Link href="/ask/new" className="mx-auto -mt-4 flex flex-col items-center gap-1" aria-label="Start a discussion">
+        <Link href="/ask/new" className="mx-auto -mt-5 flex flex-col items-center gap-1 active:scale-95" aria-label="Start a discussion">
           <span className={`flex size-14 items-center justify-center rounded-2xl shadow-2xl transition ${plusActive ? "bg-white text-[#101216] shadow-white/20" : "bg-[#2563eb] text-white shadow-[#2563eb]/30"}`}>
             <Plus size={30} strokeWidth={2.8} />
           </span>
@@ -59,7 +59,7 @@ export default function MobileBottomTabs() {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition ${active ? "text-white" : "text-white/48"}`}>
+            <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               {tab.label === "Activity" ? <span className="absolute right-5 top-1 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">•</span> : null}
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
               <span>{tab.label}</span>
