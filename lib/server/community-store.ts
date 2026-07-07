@@ -66,7 +66,7 @@ function userPublic(user: UserRow) {
     id: user.id,
     username: user.username,
     name: user.name,
-    avatar: user.avatar || undefined,
+    avatar: safePublicImageUrl(user.avatar, MAX_INLINE_AVATAR_LENGTH) || undefined,
     bio: user.bio || undefined,
     profileCompleted: Boolean(user.profileCompleted),
     country: user.country || undefined
