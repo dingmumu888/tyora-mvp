@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 const COOKIE_NAME = "tyora_community_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const SESSION_REFRESH_THRESHOLD_SECONDS = 60 * 60 * 24 * 14;
 
 function secret() {
   return process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || "tyora-community-dev-session";
@@ -33,6 +34,15 @@ export type CommunitySession = {
   name: string;
 };
 
+type CommunitySessionPayload = CommunitySession & {
+  iat?: number;
+  exp?: number;
+};
+
+export type ActiveCommunitySession = CommunitySession & {
+  expiresAt: number;
+};
+
 export function createCommunitySessionToken(session: CommunitySession) {
   const now = Math.floor(Date.now() / 1000);
   const payload = encode({
@@ -43,18 +53,19 @@ export function createCommunitySessionToken(session: CommunitySession) {
   return `${payload}.${sign(payload)}`;
 }
 
-export function readCommunitySessionToken(token?: string): CommunitySession | null {
+export function readCommunitySessionToken(token?: string): ActiveCommunitySession | null {
   if (!token || !token.includes(".")) return null;
   const [payload, signature] = token.split(".");
   if (!payload || !signature || !safeEqual(signature, sign(payload))) return null;
 
   try {
-    const session = decode<CommunitySession & { exp?: number }>(payload);
+    const session = decode<CommunitySessionPayload>(payload);
     if (!session.exp || session.exp <= Math.floor(Date.now() / 1000)) return null;
     return {
       userId: session.userId,
       email: session.email,
-      name: session.name
+      name: session.name,
+      expiresAt: session.exp
     };
   } catch {
     return null;
@@ -82,6 +93,18 @@ export function setCommunitySessionCookie(response: NextResponse, session: Commu
     path: "/",
     maxAge: SESSION_TTL_SECONDS
   });
+  return response;
+}
+
+export function shouldRefreshCommunitySession(session: ActiveCommunitySession) {
+  const now = Math.floor(Date.now() / 1000);
+  return session.expiresAt - now <= SESSION_REFRESH_THRESHOLD_SECONDS;
+}
+
+export function refreshCommunitySessionCookieIfNeeded(response: NextResponse, session: ActiveCommunitySession) {
+  if (shouldRefreshCommunitySession(session)) {
+    return setCommunitySessionCookie(response, session);
+  }
   return response;
 }
 

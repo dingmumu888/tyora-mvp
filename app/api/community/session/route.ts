@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { getCommunitySession } from "@/lib/server/community-auth";
+import { getCommunitySession, refreshCommunitySessionCookieIfNeeded } from "@/lib/server/community-auth";
 import { getCommunityUser, updateCommunityProfile } from "@/lib/server/community-store";
 
 export async function GET() {
   const session = await getCommunitySession();
   const user = session ? await getCommunityUser(session.userId) : null;
-  return NextResponse.json({ authenticated: Boolean(user), user });
+  const response = NextResponse.json({ authenticated: Boolean(user), user });
+  return session && user ? refreshCommunitySessionCookieIfNeeded(response, session) : response;
 }
 
 export async function PUT(request: Request) {
@@ -16,7 +17,7 @@ export async function PUT(request: Request) {
 
   try {
     const user = await updateCommunityProfile(session.userId, await request.json().catch(() => ({})));
-    return NextResponse.json({ success: true, user });
+    return refreshCommunitySessionCookieIfNeeded(NextResponse.json({ success: true, user }), session);
   } catch (error) {
     return NextResponse.json({
       success: false,

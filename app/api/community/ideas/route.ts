@@ -1,5 +1,5 @@
 import { CommunityFeedSort } from "@/lib/community";
-import { getCommunitySession } from "@/lib/server/community-auth";
+import { getCommunitySession, refreshCommunitySessionCookieIfNeeded } from "@/lib/server/community-auth";
 import { createCommunityIdea, countReviewsUsedToday, getCommunityIdeas } from "@/lib/server/community-store";
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     if (used >= 3) {
       return fail("Today's FREE Expert Reviews: 3 / 3 used. Community discussion is unlimited.", 429);
     }
-    return ok(await createCommunityIdea(await request.json(), session.userId));
+    return refreshCommunitySessionCookieIfNeeded(ok(await createCommunityIdea(await request.json(), session.userId)), session);
   } catch (error) {
     return fail(messageFromError(error, "Unable to create idea."), 400);
   }
