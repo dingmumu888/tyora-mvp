@@ -5,6 +5,44 @@ export type EditableCard = {
   description: string;
 };
 
+export type SourcePageContent = {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  statLabel: string;
+  secondaryStatValue: string;
+  secondaryStatLabel: string;
+  sampleNote: string;
+  disclaimer: string;
+  successTitle: string;
+  successBody: string;
+  supportCards: EditableCard[];
+};
+
+export type MobileTabsContent = {
+  community: string;
+  source: string;
+  create: string;
+  build: string;
+  profile: string;
+  startDiscussion: string;
+  startDiscussionSubtitle: string;
+  sourceProduct: string;
+  sourceProductSubtitle: string;
+};
+
+export type ModuleVisibility = {
+  source: boolean;
+  journeys: boolean;
+  successStories: boolean;
+  build: boolean;
+  pricing: boolean;
+  founder: boolean;
+  faq: boolean;
+  finalCta: boolean;
+};
+
 export type VideoSettings = {
   title: string;
   subtitle: string;
@@ -93,6 +131,9 @@ export type SiteContent = {
   helpCards: EditableCard[];
   pricing: PricingPlan[];
   cases: CaseStudy[];
+  sourcePage: SourcePageContent;
+  mobileTabs: MobileTabsContent;
+  moduleVisibility: ModuleVisibility;
 };
 
 export type MediaType = "image" | "video" | "pdf";
@@ -258,6 +299,46 @@ export const defaultContent: SiteContent = {
     { title: "Factory matching", description: "Find manufacturing partners in China that fit the product, category, and project stage." },
     { title: "Managed production support", description: "Get help with samples, factory communication, production follow-up, quality checks, and shipping." }
   ],
+  sourcePage: {
+    eyebrow: "Source This Product",
+    title: "Found a product? Let TYORA check China supplier options.",
+    subtitle: "Upload a reference image or product link. TYORA will help check supplier options and estimated China pricing.",
+    ctaText: "Get FREE Supplier Check",
+    statLabel: "Supplier checks requested",
+    secondaryStatValue: "FREE",
+    secondaryStatLabel: "Initial supplier check",
+    sampleNote: "Sample support is free. You only pay sample cost and international shipping.",
+    disclaimer: "No exact price or supplier is guaranteed before supplier confirmation. TYORA will confirm sample cost and international shipping before payment.",
+    successTitle: "Source request received.",
+    successBody: "TYORA will review supplier options and estimated China pricing.",
+    supportCards: [
+      { title: "Find supplier options", description: "We look for China suppliers that match the product reference." },
+      { title: "Check estimated pricing", description: "Pricing depends on material, quantity, packaging and supplier response." },
+      { title: "Sample support", description: "Sample support is free. You only pay sample cost and international shipping." },
+      { title: "Two service paths", description: "Factory introduction or managed sourcing with quality and shipping support." }
+    ]
+  },
+  mobileTabs: {
+    community: "Community",
+    source: "Source",
+    create: "Post",
+    build: "Build",
+    profile: "Profile",
+    startDiscussion: "Start Discussion",
+    startDiscussionSubtitle: "Share a product idea with the community.",
+    sourceProduct: "Source Product",
+    sourceProductSubtitle: "Upload a product reference for supplier check."
+  },
+  moduleVisibility: {
+    source: true,
+    journeys: true,
+    successStories: true,
+    build: true,
+    pricing: true,
+    founder: true,
+    faq: true,
+    finalCta: true
+  },
   pricing: [
     {
       id: "manufacturing-review",
@@ -494,6 +575,53 @@ function normalizeCards(value: unknown, fallback: EditableCard[]) {
       description: stringValue(item.description, fb.description)
     };
   });
+}
+
+function normalizeSourcePage(value: unknown): SourcePageContent {
+  const item = value && typeof value === "object" ? (value as Partial<SourcePageContent>) : {};
+  return {
+    eyebrow: stringValue(item.eyebrow, defaultContent.sourcePage.eyebrow),
+    title: stringValue(item.title, defaultContent.sourcePage.title),
+    subtitle: stringValue(item.subtitle, defaultContent.sourcePage.subtitle),
+    ctaText: stringValue(item.ctaText, defaultContent.sourcePage.ctaText),
+    statLabel: stringValue(item.statLabel, defaultContent.sourcePage.statLabel),
+    secondaryStatValue: stringValue(item.secondaryStatValue, defaultContent.sourcePage.secondaryStatValue),
+    secondaryStatLabel: stringValue(item.secondaryStatLabel, defaultContent.sourcePage.secondaryStatLabel),
+    sampleNote: stringValue(item.sampleNote, defaultContent.sourcePage.sampleNote),
+    disclaimer: stringValue(item.disclaimer, defaultContent.sourcePage.disclaimer),
+    successTitle: stringValue(item.successTitle, defaultContent.sourcePage.successTitle),
+    successBody: stringValue(item.successBody, defaultContent.sourcePage.successBody),
+    supportCards: normalizeCards(item.supportCards, defaultContent.sourcePage.supportCards)
+  };
+}
+
+function normalizeMobileTabs(value: unknown): MobileTabsContent {
+  const item = value && typeof value === "object" ? (value as Partial<MobileTabsContent>) : {};
+  return {
+    community: stringValue(item.community, defaultContent.mobileTabs.community),
+    source: stringValue(item.source, defaultContent.mobileTabs.source),
+    create: stringValue(item.create, defaultContent.mobileTabs.create),
+    build: stringValue(item.build, defaultContent.mobileTabs.build),
+    profile: stringValue(item.profile, defaultContent.mobileTabs.profile),
+    startDiscussion: stringValue(item.startDiscussion, defaultContent.mobileTabs.startDiscussion),
+    startDiscussionSubtitle: stringValue(item.startDiscussionSubtitle, defaultContent.mobileTabs.startDiscussionSubtitle),
+    sourceProduct: stringValue(item.sourceProduct, defaultContent.mobileTabs.sourceProduct),
+    sourceProductSubtitle: stringValue(item.sourceProductSubtitle, defaultContent.mobileTabs.sourceProductSubtitle)
+  };
+}
+
+function normalizeModuleVisibility(value: unknown): ModuleVisibility {
+  const item = value && typeof value === "object" ? (value as Partial<ModuleVisibility>) : {};
+  return {
+    source: typeof item.source === "boolean" ? item.source : defaultContent.moduleVisibility.source,
+    journeys: typeof item.journeys === "boolean" ? item.journeys : defaultContent.moduleVisibility.journeys,
+    successStories: typeof item.successStories === "boolean" ? item.successStories : defaultContent.moduleVisibility.successStories,
+    build: typeof item.build === "boolean" ? item.build : defaultContent.moduleVisibility.build,
+    pricing: typeof item.pricing === "boolean" ? item.pricing : defaultContent.moduleVisibility.pricing,
+    founder: typeof item.founder === "boolean" ? item.founder : defaultContent.moduleVisibility.founder,
+    faq: typeof item.faq === "boolean" ? item.faq : defaultContent.moduleVisibility.faq,
+    finalCta: typeof item.finalCta === "boolean" ? item.finalCta : defaultContent.moduleVisibility.finalCta
+  };
 }
 
 function normalizeVideo(value: unknown): VideoSettings {
@@ -750,7 +878,10 @@ export function normalizeContent(value: unknown): SiteContent {
     journeySteps: normalizeCards(item.journeySteps, defaultContent.journeySteps),
     helpCards: normalizeCards(item.helpCards, defaultContent.helpCards),
     pricing: normalizePricing(item.pricing),
-    cases: normalizeCases(item.cases)
+    cases: normalizeCases(item.cases),
+    sourcePage: normalizeSourcePage(item.sourcePage),
+    mobileTabs: normalizeMobileTabs(item.mobileTabs),
+    moduleVisibility: normalizeModuleVisibility(item.moduleVisibility)
   };
 
   if (normalized.heroSubtitle === legacyContent.heroSubtitle) {

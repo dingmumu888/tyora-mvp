@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Loader2, RefreshCcw, Save, Search } from "lucide-react";
+import { ArrowUpRight, Loader2, RefreshCcw, Save, Search, Trash2 } from "lucide-react";
 import { SourceRequest, SourceStatus, sourceStatuses } from "@/lib/source";
 
 type ApiResponse<T> = {
@@ -38,6 +38,7 @@ export default function SourceAdminClient() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
   const [message, setMessage] = useState("");
 
   async function loadRequests() {
@@ -65,6 +66,17 @@ export default function SourceAdminClient() {
       return acc;
     }, {} as Record<SourceStatus, number>);
   }, [requests]);
+
+  const summaryCards = useMemo(() => {
+    return [
+      ["Total", requests.length],
+      ["New", counts.New || 0],
+      ["Checking", counts["Checking Supplier"] || 0],
+      ["Quoted", counts.Quoted || 0],
+      ["Samples", counts["Sample Requested"] || 0],
+      ["Completed", counts.Completed || 0]
+    ] as const;
+  }, [counts, requests.length]);
 
   const visibleRequests = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -108,6 +120,23 @@ export default function SourceAdminClient() {
     }
   }
 
+  async function deleteRequest(requestId: string) {
+    if (!window.confirm("Delete this source request? This is intended for test or spam records only.")) return;
+    setDeletingId(requestId);
+    setMessage("");
+    try {
+      const response = await fetch(`/api/source/${requestId}`, { method: "DELETE" });
+      const payload = (await response.json()) as ApiResponse<{ id: string }>;
+      if (!payload.success) throw new Error(payload.message || "Unable to delete source request.");
+      setRequests((current) => current.filter((request) => request.id !== requestId));
+      setMessage("Deleted.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to delete source request.");
+    } finally {
+      setDeletingId("");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f6f7fb] text-[#111318]">
       <header className="sticky top-0 z-30 border-b border-[#e3e7ee] bg-white/90 backdrop-blur-xl">
@@ -129,6 +158,15 @@ export default function SourceAdminClient() {
       </header>
 
       <section className="mx-auto grid max-w-7xl gap-4 px-4 py-5 sm:px-6 lg:px-8">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          {summaryCards.map(([label, value]) => (
+            <div key={label} className="rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm">
+              <p className="text-2xl font-semibold">{value}</p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#687284]">{label}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="grid gap-3 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {(["All", ...sourceStatuses] as Filter[]).map((status) => (
@@ -212,6 +250,9 @@ export default function SourceAdminClient() {
                   </label>
                   <button disabled={savingId === request.id} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#111318] px-4 text-sm font-semibold text-white disabled:opacity-60">
                     {savingId === request.id ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save
+                  </button>
+                  <button type="button" disabled={deletingId === request.id} onClick={() => void deleteRequest(request.id)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#fee2e2] bg-[#fff1f2] px-4 text-sm font-semibold text-[#be123c] disabled:opacity-60">
+                    {deletingId === request.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />} Delete test/spam
                   </button>
                 </form>
               </article>

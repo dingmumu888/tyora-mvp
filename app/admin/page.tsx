@@ -66,6 +66,9 @@ type TabId =
   | "today"
   | "analytics"
   | "homepage"
+  | "sourceContent"
+  | "mobileTabs"
+  | "moduleVisibility"
   | "media"
   | "cases"
   | "video"
@@ -285,6 +288,7 @@ const osSections: Array<{
     title: "Community",
     items: [
       { href: "/admin/community", label: "Ideas" },
+      { href: "/admin/source", label: "Source Products" },
       { href: "/admin/community", label: "Comments" },
       { href: "/admin/community", label: "TYORA Reviews" },
       { href: "/admin/community", label: "Pinned Posts" },
@@ -311,6 +315,9 @@ const osSections: Array<{
     title: "Website",
     items: [
       { id: "homepage", label: "Homepage" },
+      { id: "sourceContent", label: "Source Page" },
+      { id: "mobileTabs", label: "Mobile Tabs" },
+      { id: "moduleVisibility", label: "Homepage Modules" },
       { id: "brand", label: "Navigation" },
       { id: "brand", label: "Footer" },
       { id: "video", label: "Brand Film" },
@@ -965,6 +972,130 @@ export default function AdminPage() {
                   onChange={(helpCards) => updateContent("helpCards", helpCards)}
                   t={t}
                 />
+              </div>
+            </Card>
+          ) : null}
+
+          {activeTab === "sourceContent" ? (
+            <Card className="p-5">
+              <div className="mb-5 flex items-center gap-2">
+                <Globe2 size={18} />
+                <h1 className="text-xl font-semibold">Source Page</h1>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Field label="Eyebrow">
+                  <Input value={content.sourcePage.eyebrow} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, eyebrow: event.target.value })} />
+                </Field>
+                <Field label="CTA Text">
+                  <Input value={content.sourcePage.ctaText} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, ctaText: event.target.value })} />
+                </Field>
+                <Field label="Title">
+                  <Textarea value={content.sourcePage.title} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, title: event.target.value })} />
+                </Field>
+                <Field label="Subtitle">
+                  <Textarea value={content.sourcePage.subtitle} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, subtitle: event.target.value })} />
+                </Field>
+                <Field label="Stat Label">
+                  <Input value={content.sourcePage.statLabel} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, statLabel: event.target.value })} />
+                </Field>
+                <Field label="Secondary Stat Value">
+                  <Input value={content.sourcePage.secondaryStatValue} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, secondaryStatValue: event.target.value })} />
+                </Field>
+                <Field label="Secondary Stat Label">
+                  <Input value={content.sourcePage.secondaryStatLabel} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, secondaryStatLabel: event.target.value })} />
+                </Field>
+                <Field label="Sample Note">
+                  <Input value={content.sourcePage.sampleNote} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, sampleNote: event.target.value })} />
+                </Field>
+                <Field label="Success Title">
+                  <Input value={content.sourcePage.successTitle} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, successTitle: event.target.value })} />
+                </Field>
+                <Field label="Success Body">
+                  <Input value={content.sourcePage.successBody} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, successBody: event.target.value })} />
+                </Field>
+                <Field label="Disclaimer">
+                  <Textarea value={content.sourcePage.disclaimer} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, disclaimer: event.target.value })} />
+                </Field>
+              </div>
+              <div className="mt-6">
+                <EditableCards
+                  title="Support Cards"
+                  cards={content.sourcePage.supportCards}
+                  onChange={(supportCards) => updateContent("sourcePage", { ...content.sourcePage, supportCards })}
+                  t={t}
+                />
+              </div>
+            </Card>
+          ) : null}
+
+          {activeTab === "mobileTabs" ? (
+            <Card className="p-5">
+              <div className="mb-5 flex items-center gap-2">
+                <Smartphone size={18} />
+                <h1 className="text-xl font-semibold">Mobile Tabs</h1>
+              </div>
+              <p className="mb-5 rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#69707d]">
+                Routes are fixed for safety. Edit labels and create-menu copy only.
+              </p>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Field label="Community Tab">
+                  <Input value={content.mobileTabs.community} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, community: event.target.value })} />
+                </Field>
+                <Field label="Source Tab">
+                  <Input value={content.mobileTabs.source} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, source: event.target.value })} />
+                </Field>
+                <Field label="Create Tab">
+                  <Input value={content.mobileTabs.create} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, create: event.target.value })} />
+                </Field>
+                <Field label="Build Tab">
+                  <Input value={content.mobileTabs.build} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, build: event.target.value })} />
+                </Field>
+                <Field label="Profile Fallback Label">
+                  <Input value={content.mobileTabs.profile} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, profile: event.target.value })} />
+                </Field>
+                <Field label="Start Discussion">
+                  <Input value={content.mobileTabs.startDiscussion} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, startDiscussion: event.target.value })} />
+                </Field>
+                <Field label="Start Discussion Subtitle">
+                  <Input value={content.mobileTabs.startDiscussionSubtitle} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, startDiscussionSubtitle: event.target.value })} />
+                </Field>
+                <Field label="Source Product">
+                  <Input value={content.mobileTabs.sourceProduct} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, sourceProduct: event.target.value })} />
+                </Field>
+                <Field label="Source Product Subtitle">
+                  <Input value={content.mobileTabs.sourceProductSubtitle} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, sourceProductSubtitle: event.target.value })} />
+                </Field>
+              </div>
+            </Card>
+          ) : null}
+
+          {activeTab === "moduleVisibility" ? (
+            <Card className="p-5">
+              <div className="mb-5 flex items-center gap-2">
+                <Eye size={18} />
+                <h1 className="text-xl font-semibold">Homepage Modules</h1>
+              </div>
+              <p className="mb-5 rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#69707d]">
+                Hide or show major homepage sections. Community feed always stays visible.
+              </p>
+              <div className="grid gap-3 lg:grid-cols-2">
+                {([
+                  ["source", "Source Products"],
+                  ["journeys", "Featured Journey"],
+                  ["successStories", "Products Built"],
+                  ["build", "Build / Brand Film"],
+                  ["pricing", "Pricing"],
+                  ["founder", "Founder"],
+                  ["faq", "FAQ"],
+                  ["finalCta", "Final CTA"]
+                ] as const).map(([key, label]) => (
+                  <Toggle
+                    key={key}
+                    label={label}
+                    checked={content.moduleVisibility[key]}
+                    onChange={(checked) => updateContent("moduleVisibility", { ...content.moduleVisibility, [key]: checked })}
+                  />
+                ))}
               </div>
             </Card>
           ) : null}

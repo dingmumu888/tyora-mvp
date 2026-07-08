@@ -144,3 +144,8 @@ export async function updateSourceRequest(id: string, input: unknown) {
   });
   return sourceToPublic(row);
 }
+
+export async function deleteSourceRequest(id: string) {
+  await prisma.sourceRequest.delete({ where: { id } });
+  return { id };
+}

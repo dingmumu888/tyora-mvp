@@ -6,6 +6,7 @@ import { Factory, Home, PackageSearch, Plus, UserRound, type LucideIcon } from "
 import { useEffect, useState } from "react";
 import CommunityAvatar from "@/components/community-avatar";
 import { CommunitySessionUser } from "@/components/community-profile-modal";
+import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
 type MobileTab = {
   label: string;
@@ -35,6 +36,8 @@ export default function MobileBottomTabs() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [user, setUser] = useState<CommunitySessionUser | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [content, setContent] = useState<SiteContent>(defaultContent);
+  const tabCopy = content.mobileTabs;
 
   useEffect(() => {
     const syncHash = () => setHash(window.location.hash);
@@ -42,6 +45,10 @@ export default function MobileBottomTabs() {
     window.addEventListener("hashchange", syncHash);
     return () => window.removeEventListener("hashchange", syncHash);
   }, [pathname]);
+
+  useEffect(() => {
+    void loadContent().then(setContent).catch(() => setContent(defaultContent));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -110,12 +117,12 @@ export default function MobileBottomTabs() {
     {createOpen ? (
       <div className="fixed inset-x-4 bottom-[calc(6.8rem+env(safe-area-inset-bottom))] z-[9991] grid gap-2 rounded-[24px] border border-[#e4e8ef] bg-white p-3 text-[#101216] shadow-[0_24px_70px_rgba(0,0,0,0.22)] md:hidden">
         <Link href="/ask/new" onClick={() => setCreateOpen(false)} className="rounded-2xl bg-[#101216] px-4 py-3 text-sm font-semibold text-white">
-          Start Discussion
-          <span className="mt-1 block text-xs font-medium text-white/70">Share a product idea with the community.</span>
+          {tabCopy.startDiscussion}
+          <span className="mt-1 block text-xs font-medium text-white/70">{tabCopy.startDiscussionSubtitle}</span>
         </Link>
         <Link href="/source" onClick={() => setCreateOpen(false)} className="rounded-2xl border border-[#dfe5ee] bg-[#f8fafc] px-4 py-3 text-sm font-semibold">
-          Source Product
-          <span className="mt-1 block text-xs font-medium text-[#687284]">Upload a product reference for supplier check.</span>
+          {tabCopy.sourceProduct}
+          <span className="mt-1 block text-xs font-medium text-[#687284]">{tabCopy.sourceProductSubtitle}</span>
         </Link>
       </div>
     ) : null}
@@ -127,7 +134,7 @@ export default function MobileBottomTabs() {
           return (
             <Link key={tab.label} href={tab.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
-              <span>{tab.label}</span>
+              <span>{tab.label === "Community" ? tabCopy.community : tab.label === "Source" ? tabCopy.source : tab.label}</span>
             </Link>
           );
         })}
@@ -136,7 +143,7 @@ export default function MobileBottomTabs() {
           <span className={`flex size-14 items-center justify-center rounded-2xl shadow-2xl transition ${plusActive || createOpen ? "bg-white text-[#101216] shadow-white/20" : "bg-[#2563eb] text-white shadow-[#2563eb]/30"}`}>
             <Plus size={30} strokeWidth={2.8} />
           </span>
-          <span className={`text-[11px] font-semibold ${plusActive || createOpen ? "text-white" : "text-white/48"}`}>Post</span>
+          <span className={`text-[11px] font-semibold ${plusActive || createOpen ? "text-white" : "text-white/48"}`}>{tabCopy.create}</span>
         </button>
 
         {tabs.slice(2, 3).map((tab) => {
@@ -145,7 +152,7 @@ export default function MobileBottomTabs() {
           return (
             <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
-              <span>{tab.label}</span>
+              <span>{tabCopy.build}</span>
             </Link>
           );
         })}
@@ -160,7 +167,7 @@ export default function MobileBottomTabs() {
           ) : (
             <UserRound size={20} />
           )}
-          <span className="max-w-12 truncate">{user ? user.name.split(" ")[0] : "Profile"}</span>
+          <span className="max-w-12 truncate">{user ? user.name.split(" ")[0] : tabCopy.profile}</span>
         </Link>
       </div>
     </nav>

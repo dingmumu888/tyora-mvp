@@ -268,6 +268,8 @@ export default function Home() {
     ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
     ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
   ] as const;
+  const moduleVisibility = displayContent.moduleVisibility;
+  const sourceCopy = displayContent.sourcePage;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-28 text-[#101216] md:pb-0">
@@ -645,25 +647,26 @@ export default function Home() {
         </div>
       </section>
 
+      {moduleVisibility.source ? (
       <section id="source-products" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(246,247,251,0.92),rgba(255,255,255,0.82))]">
         <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 lg:px-6 lg:py-9">
           <div className="grid gap-4 rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.07)] lg:grid-cols-[0.95fr_1.05fr] lg:p-6">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-                <SearchCheck size={14} /> Source This Product
+                <SearchCheck size={14} /> {sourceCopy.eyebrow}
               </p>
-              <h2 className="mt-3 text-3xl font-semibold leading-tight">Already found a product you want to source?</h2>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight">{sourceCopy.title}</h2>
               <p className="mt-3 max-w-xl text-sm leading-6 text-[#59616e]">
-                Upload a product photo or link. TYORA will help check supplier options and estimated China pricing before you decide whether to request samples or continue sourcing.
+                {sourceCopy.subtitle}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link href="/source" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
-                  Get FREE Supplier Check <ArrowRight size={16} />
+                  {sourceCopy.ctaText} <ArrowRight size={16} />
                 </Link>
                 <p className="flex items-center rounded-full bg-[#ecfdf5] px-3 py-2 text-xs font-semibold text-[#0f766e]">
-                  {sourceRequestCount} supplier checks requested
+                  {sourceRequestCount} {sourceCopy.statLabel.toLowerCase()}
                 </p>
-                <p className="flex items-center text-xs font-semibold text-[#69707d]">Sample support is free. You only pay sample cost and international shipping.</p>
+                <p className="flex items-center text-xs font-semibold text-[#69707d]">{sourceCopy.sampleNote}</p>
               </div>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
@@ -681,7 +684,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
+      {moduleVisibility.journeys ? (
       <section id="journeys" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))]">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-stretch">
@@ -728,7 +733,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
+      {moduleVisibility.successStories ? (
       <section id="success-stories" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[#f6f7fb]/80">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -777,7 +784,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
+      {moduleVisibility.build ? (
+      <>
       <section id="build" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[#f7f8fb]">
         <div className="mx-auto grid max-w-7xl gap-6 px-3 py-8 sm:px-5 lg:grid-cols-[1fr_360px] lg:items-center lg:px-6 lg:py-10">
           <div>
@@ -850,7 +860,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </>
+      ) : null}
 
+      {moduleVisibility.pricing ? (
       <section id="pricing" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
           <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{displayContent.pricingTitle}</h2>
@@ -942,7 +955,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
+      {moduleVisibility.founder ? (
       <section className="border-y border-[#eef1f4] bg-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-20">
           <div>
@@ -974,7 +989,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
+      {moduleVisibility.faq ? (
       <section id="faq" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <div className="mb-6 max-w-3xl">
@@ -996,7 +1013,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+      ) : null}
 
+      {moduleVisibility.finalCta ? (
       <section className="border-y border-[#eef1f4] bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-[2.5rem] font-semibold leading-tight tracking-normal lg:text-[4rem]">
@@ -1010,6 +1029,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      ) : null}
 
       <footer className="border-t border-[#eef1f4] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-[#59616e] sm:flex-row sm:items-center sm:justify-between">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, ClipboardCheck, Factory, ImagePlus, PackageSearch, ShieldCheck, Truck } from "lucide-react";
 import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
+import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
 type FormState = {
   productName: string;
@@ -36,11 +37,11 @@ const emptyForm: FormState = {
 const inputClass = "min-h-11 w-full rounded-2xl border border-[#dfe6ef] bg-white px-3 text-sm font-medium text-[#101216] outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10";
 const textareaClass = `${inputClass} min-h-28 resize-none py-3 leading-6`;
 
-const supportCards = [
-  { icon: Factory, title: "Find supplier options", body: "We look for China suppliers that match the product reference." },
-  { icon: ClipboardCheck, title: "Check estimated pricing", body: "Pricing depends on material, quantity, packaging and supplier response." },
-  { icon: Truck, title: "Sample support", body: "Sample support is free. You only pay sample cost and international shipping." },
-  { icon: ShieldCheck, title: "Two service paths", body: "Factory introduction or managed sourcing with quality and shipping support." }
+const supportIcons = [
+  Factory,
+  ClipboardCheck,
+  Truck,
+  ShieldCheck
 ] as const;
 
 function fileToDataUrl(file: File) {
@@ -53,12 +54,18 @@ function fileToDataUrl(file: File) {
 }
 
 export default function SourceClient() {
+  const [content, setContent] = useState<SiteContent>(defaultContent);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const [sourceRequestCount, setSourceRequestCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  const sourceCopy = content.sourcePage;
+
+  useEffect(() => {
+    void loadContent().then(setContent).catch(() => setContent(defaultContent));
+  }, []);
 
   useEffect(() => {
     fetch("/api/source/stats", { cache: "no-store" })
@@ -128,32 +135,34 @@ export default function SourceClient() {
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
         <div className="self-start rounded-[28px] border border-[#dfe6ef] bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] lg:sticky lg:top-24">
           <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-            <PackageSearch size={14} /> Source This Product
+            <PackageSearch size={14} /> {sourceCopy.eyebrow}
           </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">Found a product? Let TYORA check China supplier options.</h1>
+          <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">{sourceCopy.title}</h1>
           <p className="mt-4 text-base leading-7 text-[#59616e]">
-            Upload a reference image or product link. TYORA will help check supplier options and estimated China pricing.
+            {sourceCopy.subtitle}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <div className="rounded-2xl border border-[#dfe6ef] bg-[#f8fafc] p-3">
               <p className="text-2xl font-semibold">{sourceRequestCount}</p>
-              <p className="mt-1 text-xs font-semibold text-[#69707d]">Supplier checks requested</p>
+              <p className="mt-1 text-xs font-semibold text-[#69707d]">{sourceCopy.statLabel}</p>
             </div>
             <div className="rounded-2xl border border-[#dfe6ef] bg-[#f8fafc] p-3">
-              <p className="text-2xl font-semibold">FREE</p>
-              <p className="mt-1 text-xs font-semibold text-[#69707d]">Initial supplier check</p>
+              <p className="text-2xl font-semibold">{sourceCopy.secondaryStatValue}</p>
+              <p className="mt-1 text-xs font-semibold text-[#69707d]">{sourceCopy.secondaryStatLabel}</p>
             </div>
           </div>
           <div className="mt-5 grid gap-3">
-            {supportCards.map(({ icon: Icon, title, body }) => (
+            {sourceCopy.supportCards.map(({ title, description }, index) => {
+              const Icon = supportIcons[index] || Factory;
+              return (
               <div key={title} className="flex gap-3 rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#101216] text-white"><Icon size={17} /></span>
                 <span>
                   <span className="block text-sm font-semibold">{title}</span>
-                  <span className="mt-1 block text-sm leading-5 text-[#69707d]">{body}</span>
+                  <span className="mt-1 block text-sm leading-5 text-[#69707d]">{description}</span>
                 </span>
               </div>
-            ))}
+            );})}
           </div>
         </div>
 
@@ -222,15 +231,15 @@ export default function SourceClient() {
             {message ? <p className="rounded-2xl bg-[#fff1f2] p-3 text-sm font-semibold text-[#be123c]">{message}</p> : null}
             {submittedId ? (
               <div className="rounded-2xl bg-[#ecfdf5] p-4 text-sm text-[#0f766e]">
-                <p className="flex items-center gap-2 font-semibold"><CheckCircle2 size={16} /> Source request received.</p>
-                <p className="mt-1">TYORA will review supplier options and estimated China pricing. Request ID: {submittedId}</p>
+                <p className="flex items-center gap-2 font-semibold"><CheckCircle2 size={16} /> {sourceCopy.successTitle}</p>
+                <p className="mt-1">{sourceCopy.successBody} Request ID: {submittedId}</p>
               </div>
             ) : null}
 
             <button disabled={submitting} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] disabled:opacity-60">
-              {submitting ? "Submitting..." : "Get FREE Supplier Check"} <ArrowRight size={16} />
+              {submitting ? "Submitting..." : sourceCopy.ctaText} <ArrowRight size={16} />
             </button>
-            <p className="text-xs leading-5 text-[#69707d]">No exact price or supplier is guaranteed before supplier confirmation. TYORA will confirm sample cost and international shipping before payment.</p>
+            <p className="text-xs leading-5 text-[#69707d]">{sourceCopy.disclaimer}</p>
           </div>
         </form>
       </section>
