@@ -350,38 +350,26 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
-            <Link href="/ask/new" className="group relative block overflow-hidden rounded-[30px] border border-white/80 bg-[#101216] p-4 text-white shadow-[0_22px_58px_rgba(15,23,42,0.22)] sm:hidden">
-              <span className="absolute -right-10 -top-12 size-36 rounded-full bg-[#2563eb]/36 blur-2xl transition duration-300 group-hover:scale-110" />
-              <span className="absolute -bottom-14 left-10 size-40 rounded-full bg-[#14b8a6]/22 blur-2xl" />
-              <span className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/82 ring-1 ring-white/15">
-                <span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
-                Live ideas
-              </span>
-              <div className="relative z-10">
-                <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/82 ring-1 ring-white/12">
-                  <Users size={14} /> TYORA Community
-                </p>
-                <h1 className="mt-5 max-w-[300px] text-[2rem] font-semibold leading-[1.02] tracking-normal">
-                  Start a product discussion
-                </h1>
-                <p className="mt-3 max-w-[310px] text-sm leading-5 text-white/72">
-                  Share your idea. Get free manufacturing feedback from TYORA.
-                </p>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] font-semibold text-white/78">
-                  {["Phone stand", "Cost range", "MOQ", "Factory review"].map((item, index) => (
-                    <span
-                      key={item}
-                      className={cn(
-                        "rounded-2xl border border-white/10 bg-white/9 px-3 py-2 backdrop-blur",
-                        index === 1 ? "translate-y-2" : index === 2 ? "-translate-y-1" : ""
-                      )}
-                    >
-                      {item}
+            <Link href="/ask/new" className="group sticky top-2 z-30 block overflow-hidden rounded-[22px] border border-white/75 bg-white/88 p-3 text-[#101216] shadow-[0_16px_44px_rgba(15,23,42,0.13)] backdrop-blur-xl transition duration-[180ms] active:scale-[0.985] sm:hidden">
+              <span className="absolute -right-8 -top-12 size-28 rounded-full bg-[#dbeafe] blur-2xl transition duration-300 group-hover:scale-110" />
+              <span className="absolute -bottom-12 left-14 size-28 rounded-full bg-[#ccfbf1] blur-2xl" />
+              <div className="relative z-10 flex min-h-[104px] items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">
+                      <Users size={13} /> TYORA Community
                     </span>
-                  ))}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-semibold text-[#0f766e]">
+                      <span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
+                      Live ideas
+                    </span>
+                  </div>
+                  <h1 className="mt-3 line-clamp-2 text-[1.45rem] font-semibold leading-[1.05] tracking-normal">
+                    Start a product discussion
+                  </h1>
                 </div>
-                <span className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-[#101216] shadow-lg shadow-black/20">
-                  Start a Discussion <ArrowRight size={15} />
+                <span className="shrink-0 rounded-full bg-[#2563eb] px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#2563eb]/22">
+                  Start <ArrowRight size={14} className="inline" />
                 </span>
               </div>
             </Link>
