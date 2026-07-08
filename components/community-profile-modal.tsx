@@ -25,6 +25,7 @@ type CommunityProfileModalProps = {
 
 const AVATAR_SIZE = 320;
 const AVATAR_QUALITY = 0.84;
+const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -153,6 +154,10 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
     }
   }
 
+  function appendBioEmoji(emoji: string) {
+    setBio((current) => `${current}${current ? " " : ""}${emoji}`.slice(0, 180));
+  }
+
   if (!mounted || !open || !user || typeof document === "undefined" || !document.body) return null;
 
   return createPortal(
@@ -204,6 +209,13 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
             Short bio <span className="font-normal text-[#8b93a1]">optional</span>
             <textarea value={bio} onChange={(event) => setBio(event.target.value)} rows={3} maxLength={180} className="resize-none rounded-2xl border border-[#dfe3e8] bg-white px-3 py-3 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder="Building travel-friendly accessories." />
           </label>
+          <div className="flex flex-wrap gap-2">
+            {quickEmojis.map((emoji) => (
+              <button key={emoji} type="button" onClick={() => appendBioEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
+                {emoji}
+              </button>
+            ))}
+          </div>
 
           {message ? <p className="rounded-2xl bg-[#fff7ed] px-3 py-2 text-sm text-[#9a3412]">{message}</p> : null}
 

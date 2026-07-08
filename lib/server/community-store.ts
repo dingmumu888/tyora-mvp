@@ -610,6 +610,83 @@ export async function toggleCommunityReaction(slug: string, type: "Like" | "Inte
   return getCommunityIdeaBySlug(slug, true);
 }
 
+export async function getCommunityReactionState(slug: string, userId: string) {
+  const idea = await prisma.communityIdea.findUnique({ where: { slug }, select: { id: true, hidden: true } });
+  if (!idea || idea.hidden) throw new Error("Idea not found.");
+  const reactions = await prisma.communityReaction.findMany({
+    where: { ideaId: idea.id, userId },
+    select: { type: true }
+  });
+  return {
+    liked: reactions.some((reaction) => reaction.type === "Like"),
+    interested: reactions.some((reaction) => reaction.type === "Interested")
+  };
+}
+
+export async function updateCommunityIdeaOwner(slug: string, input: unknown, userId: string) {
+  const existing = await prisma.communityIdea.findUnique({ where: { slug } });
+  if (!existing || existing.hidden) throw new Error("Idea not found.");
+  if (existing.authorId !== userId) throw new Error("You can only edit your own discussion.");
+
+  const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
+  const title = typeof data.title === "string" ? data.title.trim().slice(0, 140) : existing.title;
+  const description = typeof data.description === "string" ? data.description.trim().slice(0, 5000) : existing.description;
+  const category = typeof data.category === "string" ? data.category.trim().slice(0, 120) : existing.category;
+  const imageUrls = Array.isArray(data.imageUrls)
+    ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
+    : safePublicImageUrls(existing.imageUrlsJson);
+
+  if (!title || !description || !category) throw new Error("Product name, category, and description are required.");
+
+  await prisma.communityIdea.update({
+    where: { slug },
+    data: {
+      title,
+      description,
+      category,
+      imageUrlsJson: JSON.stringify(imageUrls)
+    }
+  });
+
+  return getCommunityIdeaBySlug(slug, true);
+}
+
+export async function withdrawCommunityIdeaOwner(slug: string, userId: string) {
+  const existing = await prisma.communityIdea.findUnique({ where: { slug }, select: { id: true, authorId: true, hidden: true } });
+  if (!existing || existing.hidden) throw new Error("Idea not found.");
+  if (existing.authorId !== userId) throw new Error("You can only withdraw your own discussion.");
+
+  await prisma.communityIdea.update({
+    where: { slug },
+    data: { hidden: true }
+  });
+
+  return { slug };
+}
+
+export async function deleteCommunityCommentOwner(slug: string, commentId: string, userId: string) {
+  const comment = await prisma.communityComment.findUnique({
+    where: { id: commentId },
+    include: { idea: true }
+  });
+  if (!comment || comment.hidden || comment.idea.slug !== slug || comment.idea.hidden) throw new Error("Comment not found.");
+  if (comment.authorId !== userId) throw new Error("You can only delete your own comment.");
+
+  await prisma.communityComment.update({
+    where: { id: comment.id },
+    data: {
+      hidden: true,
+      body: "Comment deleted"
+    }
+  });
+  await prisma.communityIdea.update({
+    where: { id: comment.ideaId },
+    data: { updatedAt: new Date() }
+  });
+
+  return { id: comment.id };
+}
+
 export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   const existing = await prisma.communityIdea.findUnique({
     where: { slug },

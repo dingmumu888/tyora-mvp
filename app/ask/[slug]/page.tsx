@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Box, Clock, FileText, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Box, Clock, FileText, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import CommunityImage from "@/components/community-image";
 import CommunityAvatar from "@/components/community-avatar";
 import IdeaActions from "./idea-actions";
+import IdeaComments from "./idea-comments";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -155,25 +156,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             )}
           </section>
 
-          <section id="community-discussion" className="rounded-[18px] border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Community Discussion</h2>
-              <span className="inline-flex items-center gap-1 text-sm text-[#69707d]"><MessageCircle size={15} /> {idea.comments.length}</span>
-            </div>
-            <div className="mt-5 space-y-3">
-              {idea.comments.length === 0 ? <p className="rounded-2xl bg-[#f7f8fa] p-4 text-sm text-[#69707d]">No public comments yet.</p> : null}
-              {idea.comments.map((comment) => (
-                <article key={comment.id} className={`rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-4 ${comment.parentId ? "ml-6" : ""}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="inline-flex items-center gap-2 text-sm font-semibold"><CommunityAvatar name={comment.author.name} src={comment.author.avatar} className="size-7 border-0 text-[10px]" /> {comment.author.name}</p>
-                    <span className="text-xs text-[#8b93a1]">{timeLabel(comment.createdAt)}</span>
-                  </div>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{comment.body}</p>
-                  <p className="mt-3 text-xs text-[#69707d]">{comment.likeCount} likes</p>
-                </article>
-              ))}
-            </div>
-          </section>
+          <IdeaComments slug={idea.slug} comments={idea.comments} />
 
           <section className="rounded-[18px] border border-dashed border-[#cfd5dc] bg-white p-5">
             <div className="flex items-center gap-2">

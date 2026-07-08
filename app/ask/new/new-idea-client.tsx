@@ -71,6 +71,7 @@ const nextSteps = [
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 const PRODUCT_IMAGE_SIZE = 800;
 const PRODUCT_IMAGE_QUALITY = 0.82;
+const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -159,6 +160,10 @@ export default function NewIdeaClient() {
         ? current.questions.filter((item) => item !== question)
         : [...current.questions, question]
     }));
+  }
+
+  function appendDescriptionEmoji(emoji: string) {
+    setForm((current) => ({ ...current, description: `${current.description}${current.description ? " " : ""}${emoji}` }));
   }
 
   async function setImages(files: FileList | File[]) {
@@ -355,6 +360,13 @@ export default function NewIdeaClient() {
                   className="min-h-48 resize-none rounded-[18px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10"
                 />
               </label>
+              <div className="flex flex-wrap gap-2">
+                {quickEmojis.map((emoji) => (
+                  <button key={emoji} type="button" onClick={() => appendDescriptionEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
+                    {emoji}
+                  </button>
+                ))}
+              </div>
               <label
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={onDrop}
@@ -478,6 +490,13 @@ export default function NewIdeaClient() {
                 <label className="grid gap-2 text-sm font-semibold">Description <span className="font-normal text-[#8b93a1]">optional</span>
                   <textarea rows={7} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What inspired it? Who is it for? What should founders and TYORA pay attention to?" className="min-h-44 resize-none rounded-[18px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
+                <div className="flex flex-wrap gap-2">
+                  {quickEmojis.map((emoji) => (
+                    <button key={emoji} type="button" onClick={() => appendDescriptionEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm font-semibold">Category <span className="font-normal text-[#8b93a1]">optional</span>
                     <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone accessories" className={inputClass} />
