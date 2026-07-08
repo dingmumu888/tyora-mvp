@@ -624,7 +624,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-3 grid gap-3 xl:hidden">
+            <div className="mt-3 hidden gap-3 sm:grid xl:hidden">
               <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-semibold">Live Activity</h2>
@@ -1105,7 +1105,7 @@ export default function Home() {
       </section>
       ) : null}
 
-      <footer className="border-t border-[#eef1f4] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <footer className="hidden border-t border-[#eef1f4] px-4 py-6 sm:block sm:px-6 lg:px-8 lg:py-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-[#59616e] sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-semibold text-[#101216]">{displayContent.brandName}</p>
