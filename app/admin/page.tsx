@@ -1016,6 +1016,9 @@ export default function AdminPage() {
                 <Field label="Disclaimer">
                   <Textarea value={content.sourcePage.disclaimer} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, disclaimer: event.target.value })} />
                 </Field>
+                <Field label="Charge Section Title">
+                  <Input value={content.sourcePage.chargeTitle} onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, chargeTitle: event.target.value })} />
+                </Field>
               </div>
               <div className="mt-6">
                 <EditableCards
@@ -1024,6 +1027,58 @@ export default function AdminPage() {
                   onChange={(supportCards) => updateContent("sourcePage", { ...content.sourcePage, supportCards })}
                   t={t}
                 />
+              </div>
+              <div className="mt-6">
+                <EditableCards
+                  title="Charging Cards"
+                  cards={content.sourcePage.chargeCards}
+                  onChange={(chargeCards) => updateContent("sourcePage", { ...content.sourcePage, chargeCards })}
+                  t={t}
+                />
+              </div>
+              <div className="mt-6 rounded-2xl border border-[#e8ebef] bg-[#fbfcfe] p-4">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold">Source Trust Toast</h2>
+                    <p className="mt-1 text-sm text-[#69707d]">Generic activity prompts only. Do not use names, countries, or fake exact numbers.</p>
+                  </div>
+                  <Toggle
+                    checked={content.sourcePage.trustToastEnabled}
+                    onChange={(trustToastEnabled) => updateContent("sourcePage", { ...content.sourcePage, trustToastEnabled })}
+                    label="Enabled"
+                  />
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Field label="Toast Messages">
+                    <Textarea
+                      value={content.sourcePage.trustToastMessages.join("\n")}
+                      onChange={(event) => updateContent("sourcePage", {
+                        ...content.sourcePage,
+                        trustToastMessages: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean)
+                      })}
+                    />
+                  </Field>
+                  <div className="grid gap-4">
+                    <Field label="Minimum Seconds">
+                      <Input
+                        type="number"
+                        min={5}
+                        max={600}
+                        value={content.sourcePage.trustToastMinSeconds}
+                        onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, trustToastMinSeconds: Number(event.target.value) })}
+                      />
+                    </Field>
+                    <Field label="Maximum Seconds">
+                      <Input
+                        type="number"
+                        min={5}
+                        max={600}
+                        value={content.sourcePage.trustToastMaxSeconds}
+                        onChange={(event) => updateContent("sourcePage", { ...content.sourcePage, trustToastMaxSeconds: Number(event.target.value) })}
+                      />
+                    </Field>
+                  </div>
+                </div>
               </div>
             </Card>
           ) : null}

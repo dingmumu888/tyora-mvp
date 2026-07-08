@@ -60,6 +60,7 @@ export default function SourceClient() {
   const [message, setMessage] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const [sourceRequestCount, setSourceRequestCount] = useState(0);
+  const [trustToast, setTrustToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const sourceCopy = content.sourcePage;
 
@@ -73,6 +74,29 @@ export default function SourceClient() {
       .then((payload) => setSourceRequestCount(Number(payload.data?.total || 0)))
       .catch(() => setSourceRequestCount(0));
   }, []);
+
+  useEffect(() => {
+    if (!sourceCopy.trustToastEnabled || sourceCopy.trustToastMessages.length === 0) return;
+    let active = true;
+    let timer: number;
+    const min = Math.max(5, sourceCopy.trustToastMinSeconds);
+    const max = Math.max(min, sourceCopy.trustToastMaxSeconds);
+    const schedule = () => {
+      const delay = (min + Math.random() * (max - min)) * 1000;
+      timer = window.setTimeout(() => {
+        if (!active) return;
+        const messageIndex = Math.floor(Math.random() * sourceCopy.trustToastMessages.length);
+        setTrustToast(sourceCopy.trustToastMessages[messageIndex]);
+        window.setTimeout(() => active && setTrustToast(""), 5200);
+        schedule();
+      }, delay);
+    };
+    schedule();
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [sourceCopy.trustToastEnabled, sourceCopy.trustToastMaxSeconds, sourceCopy.trustToastMessages, sourceCopy.trustToastMinSeconds]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -128,7 +152,7 @@ export default function SourceClient() {
             <Link href="/source" className="rounded-full bg-[#101216] px-3 py-2 text-white">Source Products</Link>
             <Link href="/ask/new" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Ask TYORA</Link>
           </nav>
-          <Link href="/ask/new" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">Start a Discussion</Link>
+          <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">{sourceCopy.ctaText}</Link>
         </div>
       </header>
 
@@ -164,9 +188,21 @@ export default function SourceClient() {
               </div>
             );})}
           </div>
+          <div className="mt-5 rounded-3xl border border-[#dfe6ef] bg-[#f8fafc] p-4">
+            <h2 className="text-base font-semibold">{sourceCopy.chargeTitle}</h2>
+            <div className="mt-3 grid gap-2">
+              {sourceCopy.chargeCards.map((card) => (
+                <div key={card.title} className="rounded-2xl bg-white p-3 shadow-sm shadow-[#101216]/4">
+                  <p className="text-sm font-semibold">{card.title}</p>
+                  <p className="mt-1 text-sm leading-5 text-[#69707d]">{card.description}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs leading-5 text-[#69707d]">{sourceCopy.sampleNote}</p>
+          </div>
         </div>
 
-        <form onSubmit={submit} className="rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-6">
+        <form id="source-form" onSubmit={submit} className="scroll-mt-24 rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-6">
           <div className="grid gap-4">
             <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-[#cfd8e6] bg-[#f8fafc] text-left transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
               {form.imageUrl ? (
@@ -243,6 +279,15 @@ export default function SourceClient() {
           </div>
         </form>
       </section>
+      {trustToast ? (
+        <div className="fixed inset-x-4 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-[9985] mx-auto max-w-sm rounded-2xl border border-[#dfe6ef] bg-white/95 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl md:inset-x-auto md:bottom-5 md:right-5">
+          <p className="flex items-start gap-2 text-sm font-semibold text-[#101216]">
+            <span className="mt-1 size-2 shrink-0 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.14)]" />
+            <span>{trustToast}</span>
+          </p>
+          <p className="mt-1 pl-4 text-xs text-[#69707d]">Supplier check activity</p>
+        </div>
+      ) : null}
     </main>
   );
 }

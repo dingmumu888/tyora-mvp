@@ -18,6 +18,12 @@ export type SourcePageContent = {
   successTitle: string;
   successBody: string;
   supportCards: EditableCard[];
+  chargeTitle: string;
+  chargeCards: EditableCard[];
+  trustToastEnabled: boolean;
+  trustToastMessages: string[];
+  trustToastMinSeconds: number;
+  trustToastMaxSeconds: number;
 };
 
 export type MobileTabsContent = {
@@ -316,7 +322,21 @@ export const defaultContent: SiteContent = {
       { title: "Check estimated pricing", description: "Pricing depends on material, quantity, packaging and supplier response." },
       { title: "Sample support", description: "Sample support is free. You only pay sample cost and international shipping." },
       { title: "Two service paths", description: "Factory introduction or managed sourcing with quality and shipping support." }
-    ]
+    ],
+    chargeTitle: "How TYORA charges if you continue",
+    chargeCards: [
+      { title: "Free supplier check", description: "We check supplier options and estimated China pricing for free." },
+      { title: "Factory introduction", description: "If you want to talk directly with a matched factory, TYORA charges a one-time introduction fee." },
+      { title: "Managed sourcing", description: "TYORA manages supplier communication, sample follow-up, quality checks and shipping support. Service fee is charged as a percentage of the order value." }
+    ],
+    trustToastEnabled: true,
+    trustToastMessages: [
+      "Someone requested a supplier check",
+      "A new product sourcing request was submitted",
+      "Another buyer is checking China supplier options"
+    ],
+    trustToastMinSeconds: 10,
+    trustToastMaxSeconds: 50
   },
   mobileTabs: {
     community: "Community",
@@ -559,6 +579,22 @@ function stringValue(value: unknown, fallback: string) {
   return typeof value === "string" ? value : fallback;
 }
 
+function booleanValue(value: unknown, fallback: boolean) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function numberValue(value: unknown, fallback: number, min: number, max: number) {
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(numeric)));
+}
+
+function stringListValue(value: unknown, fallback: string[]) {
+  if (!Array.isArray(value)) return fallback;
+  const next = value.map((item) => String(item).trim()).filter(Boolean).slice(0, 8);
+  return next.length ? next : fallback;
+}
+
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -579,6 +615,8 @@ function normalizeCards(value: unknown, fallback: EditableCard[]) {
 
 function normalizeSourcePage(value: unknown): SourcePageContent {
   const item = value && typeof value === "object" ? (value as Partial<SourcePageContent>) : {};
+  const minSeconds = numberValue(item.trustToastMinSeconds, defaultContent.sourcePage.trustToastMinSeconds, 5, 600);
+  const maxSeconds = numberValue(item.trustToastMaxSeconds, defaultContent.sourcePage.trustToastMaxSeconds, 5, 600);
   return {
     eyebrow: stringValue(item.eyebrow, defaultContent.sourcePage.eyebrow),
     title: stringValue(item.title, defaultContent.sourcePage.title),
@@ -591,7 +629,13 @@ function normalizeSourcePage(value: unknown): SourcePageContent {
     disclaimer: stringValue(item.disclaimer, defaultContent.sourcePage.disclaimer),
     successTitle: stringValue(item.successTitle, defaultContent.sourcePage.successTitle),
     successBody: stringValue(item.successBody, defaultContent.sourcePage.successBody),
-    supportCards: normalizeCards(item.supportCards, defaultContent.sourcePage.supportCards)
+    supportCards: normalizeCards(item.supportCards, defaultContent.sourcePage.supportCards),
+    chargeTitle: stringValue(item.chargeTitle, defaultContent.sourcePage.chargeTitle),
+    chargeCards: normalizeCards(item.chargeCards, defaultContent.sourcePage.chargeCards),
+    trustToastEnabled: booleanValue(item.trustToastEnabled, defaultContent.sourcePage.trustToastEnabled),
+    trustToastMessages: stringListValue(item.trustToastMessages, defaultContent.sourcePage.trustToastMessages),
+    trustToastMinSeconds: Math.min(minSeconds, maxSeconds),
+    trustToastMaxSeconds: Math.max(minSeconds, maxSeconds)
   };
 }
 
