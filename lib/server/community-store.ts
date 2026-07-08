@@ -658,6 +658,36 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   return getCommunityIdeaBySlug(slug, true);
 }
 
+export async function deleteCommunityIdeaAdmin(slug: string) {
+  const existing = await prisma.communityIdea.findUnique({
+    where: { slug },
+    select: { id: true }
+  });
+  if (!existing) throw new Error("Idea not found.");
+
+  await prisma.$transaction(async (tx) => {
+    const comments = await tx.communityComment.findMany({
+      where: { ideaId: existing.id },
+      select: { id: true }
+    });
+    const commentIds = comments.map((comment) => comment.id);
+
+    await tx.communityReaction.deleteMany({
+      where: {
+        OR: [
+          { ideaId: existing.id },
+          ...(commentIds.length ? [{ commentId: { in: commentIds } }] : [])
+        ]
+      }
+    });
+    await tx.communityComment.deleteMany({ where: { ideaId: existing.id } });
+    await tx.tyoraReview.deleteMany({ where: { ideaId: existing.id } });
+    await tx.communityIdea.delete({ where: { id: existing.id } });
+  });
+
+  return { slug };
+}
+
 function stringOrNull(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, 3000) : null;
 }

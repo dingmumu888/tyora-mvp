@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Loader2, MessageSquare, Save, X } from "lucide-react";
+import { Loader2, MessageSquare, Save, Trash2, X } from "lucide-react";
 import { CommunityIdea } from "@/lib/community";
 
 type QueueFilter = "needs-reply" | "replied" | "pinned" | "hidden" | "all";
@@ -43,6 +43,7 @@ export default function CommunityAdminClient() {
   const [replyingTo, setReplyingTo] = useState<CommunityIdea | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
+  const [deleting, setDeleting] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/community")
@@ -87,6 +88,24 @@ export default function CommunityAdminClient() {
       }
     } finally {
       setSaving("");
+    }
+  }
+
+  async function deleteIdea(idea: CommunityIdea) {
+    const confirmed = window.confirm(`Permanently delete "${idea.title}"?\n\nThis cannot be undone.`);
+    if (!confirmed) return;
+
+    setDeleting(idea.slug);
+    try {
+      const response = await fetch(`/api/admin/community/${idea.slug}`, { method: "DELETE" });
+      const payload = await response.json();
+      if (!payload.success) throw new Error(payload.message || "Unable to delete post.");
+      setIdeas((current) => current.filter((item) => item.id !== idea.id));
+      if (replyingTo?.id === idea.id) setReplyingTo(null);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to delete post.");
+    } finally {
+      setDeleting("");
     }
   }
 
@@ -149,9 +168,20 @@ export default function CommunityAdminClient() {
                         <p className="mt-3 text-sm leading-6 text-[#69707d]">No TYORA reply yet. Open the reply box and write one clear, helpful response.</p>
                       )}
                     </div>
-                    <button type="button" onClick={() => setReplyingTo(idea)} className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white transition hover:bg-[#24272d]">
-                      <MessageSquare size={15} /> Reply
-                    </button>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <button type="button" onClick={() => setReplyingTo(idea)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white transition hover:bg-[#24272d]">
+                        <MessageSquare size={15} /> Reply
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void deleteIdea(idea)}
+                        disabled={deleting === idea.slug}
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#fecdd3] bg-[#fff1f2] px-4 text-sm font-semibold text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60"
+                      >
+                        {deleting === idea.slug ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />}
+                        Delete spam / violation
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>
