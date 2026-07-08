@@ -157,14 +157,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/community/ideas?sort=trending")
+    fetch("/api/community/ideas?sort=trending&limit=12")
       .then((response) => response.json())
       .then((payload) => setCommunityIdeas(payload.data || []))
       .catch(() => setCommunityIdeas([]));
   }, []);
 
   useEffect(() => {
-    fetch("/api/source/stats", { cache: "no-store" })
+    fetch("/api/source/stats")
       .then((response) => response.json())
       .then((payload) => setSourceRequestCount(Number(payload.data?.total || 0)))
       .catch(() => setSourceRequestCount(0));

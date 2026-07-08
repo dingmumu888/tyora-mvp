@@ -4,8 +4,14 @@ import { createCommunityIdea, countReviewsUsedToday, getCommunityIdeas } from "@
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
 
 export async function GET(request: Request) {
-  const sort = new URL(request.url).searchParams.get("sort") as CommunityFeedSort | null;
-  return ok(await getCommunityIdeas(sort || "newest"));
+  const params = new URL(request.url).searchParams;
+  const sort = params.get("sort") as CommunityFeedSort | null;
+  const limit = Number(params.get("limit") || 50);
+  return ok(await getCommunityIdeas(sort || "newest", false, limit), {
+    headers: {
+      "Cache-Control": "public, max-age=30, s-maxage=60, stale-while-revalidate=120"
+    }
+  });
 }
 
 export async function POST(request: Request) {

@@ -288,7 +288,9 @@ export async function updateCommunityProfile(userId: string, input: unknown) {
   };
 }
 
-export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", includeHidden = false) {
+export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", includeHidden = false, limit = 50) {
+  const requestedLimit = Number.isFinite(limit) ? Math.round(limit) : 50;
+  const safeLimit = Math.min(50, Math.max(1, requestedLimit));
   const orderBy =
     sort === "recently-active" || sort === "latest-comments"
       ? { updatedAt: "desc" as const }
@@ -301,7 +303,7 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
   const rows = await prisma.communityIdea.findMany({
     where: includeHidden ? {} : { hidden: false, visibility: "Public" },
     orderBy,
-    take: 50,
+    take: sort === "trending" ? 50 : safeLimit,
     include: ideaInclude
   });
   const ideas = rows.map(ideaToCommunityIdea);
@@ -315,7 +317,7 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
     const hotScore = right.hotScore - left.hotScore;
     if (hotScore) return hotScore;
     return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
-  });
+  }).slice(0, safeLimit);
 }
 
 export async function getCommunityIdeaBySlug(slug: string, includeHidden = false) {
