@@ -274,7 +274,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-28 text-[#101216] md:pb-0">
-      <header className="sticky top-0 z-40 overflow-hidden border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur">
+      <header className="hidden overflow-hidden border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur md:sticky md:top-0 md:z-40 md:block">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a href="#" className="flex items-center gap-2 font-semibold">
             {displayContent.logoImage ? (
@@ -350,6 +350,42 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
+            <Link href="/ask/new" className="group relative block overflow-hidden rounded-[30px] border border-white/80 bg-[#101216] p-4 text-white shadow-[0_22px_58px_rgba(15,23,42,0.22)] sm:hidden">
+              <span className="absolute -right-10 -top-12 size-36 rounded-full bg-[#2563eb]/36 blur-2xl transition duration-300 group-hover:scale-110" />
+              <span className="absolute -bottom-14 left-10 size-40 rounded-full bg-[#14b8a6]/22 blur-2xl" />
+              <span className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/82 ring-1 ring-white/15">
+                <span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
+                Live ideas
+              </span>
+              <div className="relative z-10">
+                <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/82 ring-1 ring-white/12">
+                  <Users size={14} /> TYORA Community
+                </p>
+                <h1 className="mt-5 max-w-[300px] text-[2rem] font-semibold leading-[1.02] tracking-normal">
+                  Start a product discussion
+                </h1>
+                <p className="mt-3 max-w-[310px] text-sm leading-5 text-white/72">
+                  Share your idea. Get free manufacturing feedback from TYORA.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] font-semibold text-white/78">
+                  {["Phone stand", "Cost range", "MOQ", "Factory review"].map((item, index) => (
+                    <span
+                      key={item}
+                      className={cn(
+                        "rounded-2xl border border-white/10 bg-white/9 px-3 py-2 backdrop-blur",
+                        index === 1 ? "translate-y-2" : index === 2 ? "-translate-y-1" : ""
+                      )}
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                <span className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-[#101216] shadow-lg shadow-black/20">
+                  Start a Discussion <ArrowRight size={15} />
+                </span>
+              </div>
+            </Link>
+
             <div className="hidden rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:block sm:p-4">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
@@ -598,30 +634,8 @@ export default function Home() {
                       </div>
                     </Link>
                   ))}
-                  <Link href="/ask" className="inline-flex h-11 items-center justify-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#2563eb] shadow-sm shadow-[#101216]/4 transition hover:-translate-y-0.5 hover:border-[#bfdbfe] hover:bg-[#f8fbff]">
-                    View all ideas in Ideas
-                  </Link>
                 </>
               )}
-            </div>
-
-            <div className="mt-2.5 rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:hidden">
-              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-                <Users size={14} /> Community is the product
-              </p>
-              <div className="mt-2 grid gap-2.5">
-                <div>
-                  <h2 className="text-[1.45rem] font-semibold leading-[1.08] tracking-normal">What are founders building next?</h2>
-                  <p className="mt-1.5 text-sm leading-5 text-[#59616e]">
-                    Share your idea. Get a FREE manufacturing review within 8 working hours.
-                  </p>
-                  <p className="mt-1.5 break-words text-xs font-semibold text-[#315fbd]">Founders are discussing product ideas with TYORA manufacturing experts.</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
-                  <Link href="/ask" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold"><SearchCheck size={16} /> Browse Ideas</Link>
-                </div>
-              </div>
             </div>
 
             <div className="mt-3 hidden gap-3 sm:grid xl:hidden">
