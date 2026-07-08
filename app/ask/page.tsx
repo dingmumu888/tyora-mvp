@@ -38,6 +38,7 @@ const categories = ["Phone Accessories", "Pet", "Home", "Office", "Kitchen", "Ou
 const topNav = [
   ["Discover Ideas", "/ask"],
   ["Ask TYORA", "/ask/new"],
+  ["Source Products", "/source"],
   ["Journeys", "/#journeys"],
   ["Success Stories", "/#success-stories"],
   ["Pricing", "/#pricing"]

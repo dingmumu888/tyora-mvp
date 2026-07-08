@@ -97,9 +97,15 @@ const buildSupportCards = [
   ["Factory path", "When a discussion is ready, TYORA can help identify the right manufacturing route.", SearchCheck],
   ["Project support", "Move from community feedback into samples, QC, production and shipping when needed.", PackageCheck]
 ] as const;
+const sourceProductSteps = [
+  { step: "1", title: "Upload reference", body: "Photo, link, material and target quantity.", icon: SearchCheck },
+  { step: "2", title: "TYORA checks options", body: "Supplier fit and estimated China pricing.", icon: ClipboardCheck },
+  { step: "3", title: "Choose next step", body: "Factory introduction or managed sourcing.", icon: PackageCheck }
+] as const;
 const topNavigation = [
   ["Discover Ideas", "/ask"],
   ["Ask TYORA", "/ask/new"],
+  ["Source Products", "/source"],
   ["Journeys", "/#journeys"],
   ["Success Stories", "/#success-stories"],
   ["Pricing", "/#pricing"]
@@ -628,6 +634,40 @@ export default function Home() {
               </div>
             </section>
           </aside>
+        </div>
+      </section>
+
+      <section id="source-products" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(246,247,251,0.92),rgba(255,255,255,0.82))]">
+        <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 lg:px-6 lg:py-9">
+          <div className="grid gap-4 rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.07)] lg:grid-cols-[0.95fr_1.05fr] lg:p-6">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
+                <SearchCheck size={14} /> Source This Product
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight">Already found a product you want to source?</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-[#59616e]">
+                Upload a product photo or link. TYORA will help check supplier options and estimated China pricing before you decide whether to request samples or continue sourcing.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href="/source" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
+                  Get FREE Supplier Check <ArrowRight size={16} />
+                </Link>
+                <p className="flex items-center text-xs font-semibold text-[#69707d]">Sample support is free. You only pay sample cost and international shipping.</p>
+              </div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {sourceProductSteps.map(({ step, title, body, icon: Icon }) => (
+                <div key={title} className="rounded-[18px] border border-[#e4e8ef] bg-[#f8fafc] p-4 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_12px_34px_rgba(37,99,235,0.11)]">
+                  <span className="flex size-9 items-center justify-center rounded-2xl bg-[#101216] text-sm font-semibold text-white">{step}</span>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Icon size={16} className="text-[#2563eb]" />
+                    <p className="text-sm font-semibold">{title}</p>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-[#69707d]">{body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

@@ -134,6 +134,29 @@ model EmailLoginCode {
   @@index([createdAt])
 }
 
+model SourceRequest {
+  id                 String   @id
+  productName        String
+  description        String
+  productLink        String?
+  material           String?
+  quantity           String
+  targetPrice        String?
+  destinationCountry String
+  email              String?
+  whatsapp           String?
+  needTypesJson      String   @default("[]")
+  imageUrl           String?
+  status             String   @default("New")
+  internalNotes      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([destinationCountry])
+}
+
 model CommunityIdea {
   id             String              @id
   slug           String              @unique
