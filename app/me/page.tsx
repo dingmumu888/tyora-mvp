@@ -116,21 +116,25 @@ export default async function MyTyoraPage() {
       <MarkNotificationsRead />
       <header className="sticky top-0 z-30 border-b border-[#e4e8ef]/90 bg-white/88 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/ask" className="text-sm font-semibold">TYORA</Link>
+          <Link href="/me" className="leading-tight">
+            <span className="block text-sm font-semibold text-[#101216]">My TYORA</span>
+            <span className="block text-xs font-medium text-[#69707d]">Profile & activity</span>
+          </Link>
           <nav className="hidden items-center gap-1 text-sm font-semibold text-[#59616e] md:flex">
             <a href="#notifications" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Activity Inbox</a>
             <a href="#discussions" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">My Discussions</a>
             <a href="#comments" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">My Comments</a>
             <a href="#liked" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Following</a>
           </nav>
-          <Link href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#2563eb] px-4 text-sm font-semibold text-white">
-            <PenLine size={15} /> Start a Discussion
+          <Link href="#profile" className="inline-flex items-center gap-2 rounded-full border border-[#dfe6ef] bg-white px-2 py-1.5 shadow-sm shadow-[#101216]/5" aria-label="Profile summary">
+            <CommunityAvatar name={user.name} src={user.avatar} className="size-8 text-xs" />
+            <span className="hidden max-w-28 truncate pr-2 text-sm font-semibold text-[#101216] sm:block">{user.name}</span>
           </Link>
         </div>
       </header>
 
       <div className="mx-auto grid max-w-7xl gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[290px_1fr] lg:px-8">
-        <aside className="self-start rounded-[22px] border border-[#dfe6ef] bg-white p-5 shadow-[0_16px_48px_rgba(15,23,42,0.08)] lg:sticky lg:top-20">
+        <aside id="profile" className="scroll-mt-24 self-start rounded-[22px] border border-[#dfe6ef] bg-white p-5 shadow-[0_16px_48px_rgba(15,23,42,0.08)] lg:sticky lg:top-20">
           <div className="flex items-center gap-3">
             <CommunityAvatar name={user.name} src={user.avatar} className="size-14 text-lg" />
             <div className="min-w-0">
