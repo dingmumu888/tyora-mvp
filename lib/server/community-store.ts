@@ -80,10 +80,11 @@ function hotSignals(row: any) {
     .sort((left, right) => right - left)[0];
   const protectedUntil = latestSignalAt ? new Date(latestSignalAt + HOT_PROTECTION_MS) : null;
 
+  const isHot = score >= HOT_SCORE_THRESHOLD;
   return {
     hotScore: score,
-    isHot: score >= HOT_SCORE_THRESHOLD,
-    hotUntil: protectedUntil && protectedUntil.getTime() > now ? protectedUntil.toISOString() : undefined
+    isHot,
+    hotUntil: isHot && protectedUntil && protectedUntil.getTime() > now ? protectedUntil.toISOString() : undefined
   };
 }
 
