@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, Heart, MessageCircle, PackageCheck, PenLine, Send, Settings, Sparkles, ThumbsUp } from "lucide-react";
+import { Bell, CalendarDays, Heart, MapPin, MessageCircle, PackageCheck, PenLine, Send, Sparkles, ThumbsUp, UserRound } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityImage from "@/components/community-image";
 import EmailLogin from "@/components/email-login";
@@ -96,6 +96,20 @@ export default async function MyTyoraPage() {
     ["Received likes", stats.receivedLikes + stats.receivedInterested, stats.unreadReceivedReactions, Bell],
     ["TYORA reviews", ideas.filter((idea) => idea.review).length, stats.unreadReviewedIdeas, PackageCheck]
   ] as const;
+  const totalUnread =
+    stats.unreadReceivedComments + stats.unreadReceivedReactions + stats.unreadReviewedIdeas;
+  const profileMeta = [
+    ["Product Creator", UserRound],
+    [user.country || "Global", MapPin],
+    [`Joined ${new Date(user.joinedAt).getFullYear()}`, CalendarDays]
+  ] as const;
+  const compactStats = [
+    ["Posts", stats.ideasPosted],
+    ["Comments", stats.commentsMade],
+    ["Likes", stats.likedIdeas],
+    ["I'd Buy", stats.interestedIdeas],
+    ["Reviews", ideas.filter((idea) => idea.review).length]
+  ] as const;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_42%,#f7f5f0_100%)] pb-28 text-[#101216] md:pb-12">
@@ -104,10 +118,10 @@ export default async function MyTyoraPage() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/ask" className="text-sm font-semibold">TYORA</Link>
           <nav className="hidden items-center gap-1 text-sm font-semibold text-[#59616e] md:flex">
+            <a href="#notifications" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Activity Inbox</a>
             <a href="#discussions" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">My Discussions</a>
             <a href="#comments" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">My Comments</a>
-            <a href="#liked" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Liked Ideas</a>
-            <a href="#notifications" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Notifications</a>
+            <a href="#liked" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Following</a>
           </nav>
           <Link href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#2563eb] px-4 text-sm font-semibold text-white">
             <PenLine size={15} /> Start a Discussion
@@ -124,29 +138,40 @@ export default async function MyTyoraPage() {
               <p className="truncate text-sm text-[#69707d]">@{user.username}</p>
             </div>
           </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {profileMeta.map(([label, Icon]) => (
+              <span key={label} className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f7ff] px-3 py-1.5 text-xs font-semibold text-[#315fbd]">
+                <Icon size={13} />
+                {label}
+              </span>
+            ))}
+          </div>
           {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]">Set up your profile so founders know who they're talking to.</p>}
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {statCards.slice(0, 4).map(([label, value, Icon]) => (
-              <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
-                <Icon size={15} className="text-[#2563eb]" />
-                <p className="mt-2 text-lg font-semibold">{value}</p>
-                <p className="text-xs text-[#69707d]">{label}</p>
+          <div className="mt-4 grid grid-cols-5 gap-1 rounded-[18px] bg-[#f7f8fa] p-2">
+            {compactStats.map(([label, value]) => (
+              <div key={label} className="rounded-2xl bg-white px-2 py-2 text-center shadow-sm shadow-[#101216]/3">
+                <p className="text-base font-semibold">{value}</p>
+                <p className="mt-0.5 text-[10px] font-medium text-[#69707d]">{label}</p>
               </div>
             ))}
           </div>
-          <Link href="/ask" className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Back to community</Link>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Link href="/ask" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Community</Link>
+            <Link href="/ask/new" className="inline-flex h-10 items-center justify-center rounded-full bg-[#101216] px-3 text-sm font-semibold text-white">New post</Link>
+          </div>
         </aside>
 
         <div className="grid gap-4">
-          <section className="rounded-[22px] border border-[#dfe6ef] bg-white p-5 shadow-[0_16px_48px_rgba(15,23,42,0.07)]">
+          <section id="notifications" className="scroll-mt-24 rounded-[22px] border border-[#dfe6ef] bg-white p-5 shadow-[0_16px_48px_rgba(15,23,42,0.07)]">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#315fbd]">My TYORA</p>
-                <h2 className="mt-1 text-3xl font-semibold">Your creator activity</h2>
+                <h2 className="mt-1 text-3xl font-semibold">Activity inbox</h2>
+                <p className="mt-2 text-sm leading-6 text-[#59616e]">Comments, likes, TYORA reviews, and status updates from your community activity.</p>
               </div>
-              <Link href="/me#notifications" className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-4 py-2 text-sm font-semibold text-[#315fbd]">
-                <Bell size={15} /> {stats.notifications} notifications
-              </Link>
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-4 py-2 text-sm font-semibold text-[#315fbd]">
+                <Bell size={15} /> {badgeCount(totalUnread) || "0"} new
+              </span>
             </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {topNotificationCards.map(([label, value, unreadCount, Icon]) => (
@@ -157,6 +182,20 @@ export default async function MyTyoraPage() {
                   <p className="text-sm text-[#69707d]">{label}</p>
                 </div>
               ))}
+            </div>
+            <div className="mt-3 grid gap-2">
+              {notifications.length ? notifications.slice(0, 4).map((item) => (
+                <Link key={item.id} href={item.href} className="flex gap-3 rounded-[18px] border border-[#e4e8ef] bg-[#fbfcfe] p-4 transition hover:border-[#93c5fd]">
+                  <span className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f2f7ff] text-[#315fbd]">
+                    <Bell size={15} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[#101216]">{item.title}</span>
+                    <span className="mt-1 line-clamp-2 block text-sm leading-5 text-[#59616e]">{item.body}</span>
+                    <span className="mt-1 block text-xs text-[#8b93a1]">{timeAgo(item.createdAt)}</span>
+                  </span>
+                </Link>
+              )) : <EmptyState title="No new activity yet. Replies, likes, TYORA reviews, and status updates will appear here." />}
             </div>
           </section>
 
@@ -181,28 +220,11 @@ export default async function MyTyoraPage() {
           </section>
 
           <section id="liked" className="scroll-mt-24 rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-xl font-semibold">Liked Ideas</h2>
+            <h2 className="text-xl font-semibold">Following / Interested Ideas</h2>
+            <p className="mt-1 text-sm text-[#69707d]">Ideas you liked or marked as something you'd buy.</p>
             <div className="mt-3 grid gap-2">
               {likedIdeas.length ? likedIdeas.map((item) => <IdeaRow key={item.id} idea={item.idea} meta={`Liked ${timeAgo(item.createdAt)}`} />) : <EmptyState title="Ideas you love will appear here." />}
               {interestedIdeas.length ? interestedIdeas.map((item) => <IdeaRow key={item.id} idea={item.idea} meta={`I'd Buy ${timeAgo(item.createdAt)}`} />) : null}
-            </div>
-          </section>
-
-          <section id="notifications" className="scroll-mt-24 rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-xl font-semibold">Notifications</h2>
-            <div className="mt-3 grid gap-2">
-              {notifications.length ? notifications.map((item) => (
-                <Link key={item.id} href={item.href} className="flex gap-3 rounded-[18px] border border-[#e4e8ef] bg-[#fbfcfe] p-4 transition hover:border-[#93c5fd]">
-                  <span className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f2f7ff] text-[#315fbd]">
-                    <Bell size={15} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-[#101216]">{item.title}</span>
-                    <span className="mt-1 line-clamp-2 block text-sm leading-5 text-[#59616e]">{item.body}</span>
-                    <span className="mt-1 block text-xs text-[#8b93a1]">{timeAgo(item.createdAt)}</span>
-                  </span>
-                </Link>
-              )) : <EmptyState title="Comments, likes, TYORA reviews, and status updates will appear here." />}
             </div>
           </section>
         </div>
