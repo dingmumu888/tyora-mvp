@@ -112,6 +112,9 @@ export default function BuildClient() {
                 WhatsApp TYORA
               </a>
             </div>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[#59616e]">
+              Choose factory introduction or managed sourcing when you are ready to continue.
+            </p>
           </div>
 
           <Card className="overflow-hidden rounded-3xl border-[#e1e7f0] bg-white p-2 shadow-[0_20px_70px_rgba(15,23,42,0.12)]">

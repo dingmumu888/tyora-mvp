@@ -146,6 +146,21 @@ function ideaViews(idea: CommunityIdea) {
   return Math.max(idea.likeCount * 18 + idea.comments.length * 24 + idea.interestedCount * 30, 37);
 }
 
+function isHomepageReadyIdea(idea: CommunityIdea) {
+  const title = idea.title.trim();
+  const description = idea.description.trim();
+  const searchable = `${title} ${description} ${idea.category} ${idea.country}`.toLowerCase();
+  const genericTestTitles = new Set(["phone case", "iphone case"]);
+
+  if (genericTestTitles.has(title.toLowerCase())) return false;
+  if (/[\u3400-\u9fff]/.test(searchable)) return false;
+  if (/[~]{5,}/.test(searchable)) return false;
+  if (title.length < 4 || description.length < 24) return false;
+  if ((searchable.match(/[a-z]/g) || []).length < 18) return false;
+
+  return true;
+}
+
 function HotBadge({ idea }: { idea: CommunityIdea }) {
   if (!idea.isHot) return null;
   return (
@@ -180,7 +195,7 @@ export default function Home() {
   useEffect(() => {
     fetch("/api/community/ideas?sort=trending&limit=12")
       .then((response) => response.json())
-      .then((payload) => setCommunityIdeas(payload.data || []))
+      .then((payload) => setCommunityIdeas((payload.data || []).filter(isHomepageReadyIdea)))
       .catch(() => setCommunityIdeas([]));
   }, []);
 
@@ -382,6 +397,9 @@ export default function Home() {
                     Share your idea. Get a FREE manufacturing review within 8 working hours.
                   </p>
                   <p className="mt-1.5 max-w-[340px] break-words text-xs font-semibold text-[#315fbd] sm:mt-2 sm:max-w-3xl sm:text-sm">Founders are discussing product ideas with TYORA manufacturing experts.</p>
+                  <p className="mt-1.5 hidden max-w-3xl text-sm font-medium leading-6 text-[#59616e] sm:block">
+                    Get manufacturability, cost, MOQ and supplier direction before you spend money on samples.
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2 sm:gap-3">
                   <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:h-12 sm:px-5 ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
