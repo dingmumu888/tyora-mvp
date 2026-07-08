@@ -37,6 +37,7 @@ export default function MobileBottomTabs() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [user, setUser] = useState<CommunitySessionUser | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingText, setEditingText] = useState(false);
   const [content, setContent] = useState<SiteContent>(defaultContent);
   const tabCopy = content.mobileTabs;
 
@@ -87,7 +88,34 @@ export default function MobileBottomTabs() {
     };
   }, []);
 
-  if (!shouldShow(pathname)) return null;
+  useEffect(() => {
+    function isTextEditor(target: EventTarget | null) {
+      if (!(target instanceof HTMLElement)) return false;
+      return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+    }
+
+    function onFocusIn(event: FocusEvent) {
+      if (!isTextEditor(event.target)) return;
+      setCreateOpen(false);
+      setEditingText(true);
+    }
+
+    function onFocusOut() {
+      window.setTimeout(() => {
+        if (isTextEditor(document.activeElement)) return;
+        setEditingText(false);
+      }, 120);
+    }
+
+    window.addEventListener("focusin", onFocusIn);
+    window.addEventListener("focusout", onFocusOut);
+    return () => {
+      window.removeEventListener("focusin", onFocusIn);
+      window.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
+
+  if (!shouldShow(pathname) || editingText) return null;
 
   const plusActive = pathname === "/ask/new";
   const notificationLabel = notificationCount > 99 ? "99+" : String(notificationCount);
