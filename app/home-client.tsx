@@ -273,7 +273,7 @@ export default function Home() {
   const sourceCopy = displayContent.sourcePage;
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-28 text-[#101216] md:pb-0">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-52 text-[#101216] md:pb-0">
       <header className="hidden overflow-hidden border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur md:sticky md:top-0 md:z-40 md:block">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a href="#" className="flex items-center gap-2 font-semibold">
@@ -350,30 +350,6 @@ export default function Home() {
           </aside>
 
           <div className="min-w-0">
-            <Link href="/ask/new" className="group sticky top-2 z-30 block overflow-hidden rounded-[22px] border border-white/75 bg-white/88 p-3 text-[#101216] shadow-[0_16px_44px_rgba(15,23,42,0.13)] backdrop-blur-xl transition duration-[180ms] active:scale-[0.985] sm:hidden">
-              <span className="absolute -right-8 -top-12 size-28 rounded-full bg-[#dbeafe] blur-2xl transition duration-300 group-hover:scale-110" />
-              <span className="absolute -bottom-12 left-14 size-28 rounded-full bg-[#ccfbf1] blur-2xl" />
-              <div className="relative z-10 flex min-h-[104px] items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">
-                      <Users size={13} /> TYORA Community
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-semibold text-[#0f766e]">
-                      <span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse" />
-                      Live ideas
-                    </span>
-                  </div>
-                  <h1 className="mt-3 line-clamp-2 text-[1.45rem] font-semibold leading-[1.05] tracking-normal">
-                    Start a product discussion
-                  </h1>
-                </div>
-                <span className="shrink-0 rounded-full bg-[#2563eb] px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#2563eb]/22">
-                  Start <ArrowRight size={14} className="inline" />
-                </span>
-              </div>
-            </Link>
-
             <div className="hidden rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:block sm:p-4">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
                 <Users size={14} /> Community is the product
@@ -1131,6 +1107,28 @@ export default function Home() {
         <MessageCircle size={18} />
         {t.startWhatsAppChat}
       </a>
+
+      <Link
+        href="/ask/new"
+        className="group fixed inset-x-4 bottom-[calc(6.35rem+env(safe-area-inset-bottom))] z-[9980] mx-auto block max-w-md overflow-hidden rounded-[22px] border border-white/75 bg-white/90 p-3 text-[#101216] shadow-[0_18px_48px_rgba(15,23,42,0.18)] backdrop-blur-xl transition duration-[180ms] active:scale-[0.985] sm:hidden"
+        aria-label="Start a product discussion"
+      >
+        <span className="absolute -right-8 -top-12 size-24 rounded-full bg-[#dbeafe] blur-2xl transition duration-300 group-hover:scale-110" />
+        <span className="absolute -bottom-12 left-16 size-24 rounded-full bg-[#ccfbf1] blur-2xl" />
+        <span className="relative z-10 flex min-h-[76px] items-center justify-between gap-3">
+          <span className="min-w-0">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">
+              <Users size={13} /> TYORA Community
+            </span>
+            <span className="mt-2 block line-clamp-2 text-[1.15rem] font-semibold leading-[1.05] tracking-normal">
+              Start a product discussion
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-[#2563eb] px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#2563eb]/22">
+            Start <ArrowRight size={14} className="inline" />
+          </span>
+        </span>
+      </Link>
 
       <AnimatePresence>
         {videoModalOpen ? (
