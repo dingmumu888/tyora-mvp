@@ -326,7 +326,6 @@ export default function NewIdeaClient() {
               <Sparkles size={14} className="text-[#2563eb]" />
               Publish idea
             </p>
-            <span className="text-xs font-semibold text-[#8b93a1]">TYORA Community</span>
           </div>
 
           <div className="mb-3 lg:hidden">

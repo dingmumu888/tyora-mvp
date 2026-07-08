@@ -94,10 +94,10 @@ export default function BuildClient() {
               TYORA Build
             </p>
             <h1 className="mt-4 max-w-3xl text-[2.25rem] font-semibold leading-[1.05] tracking-normal sm:text-5xl">
-              Build the product after the community proves it is worth building.
+              Turn your product idea into factory-ready production.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#59616e]">
-              Move from idea discussion into manufacturing review, factory fit, samples, quality control and shipping support.
+              TYORA helps with supplier fit, samples, QC, shipping and factory communication.
             </p>
             <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-[#69707d]">
               {["Factory introduction", "Managed sourcing", "Sample support", "QC and shipping"].map((item) => (
@@ -106,7 +106,7 @@ export default function BuildClient() {
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/ask/new" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
-                Start from a discussion <ArrowRight size={16} />
+                Start Building <ArrowRight size={16} />
               </Link>
               <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")} className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold">
                 WhatsApp TYORA

@@ -399,6 +399,11 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="mt-2.5 rounded-[18px] border border-[#dbeafe] bg-white/92 p-3 shadow-sm shadow-[#101216]/4 sm:hidden">
+              <p className="text-sm font-semibold leading-5 text-[#101216]">Share product ideas. TYORA reviews manufacturability, cost, MOQ and supplier path.</p>
+              <Link href="/ask/new" className="mt-2 inline-flex text-sm font-semibold text-[#2563eb]">Start a discussion <ArrowRight size={14} className="ml-1 mt-0.5" /></Link>
+            </div>
+
             <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-1">
               {["Trending", "Newest", "Most Discussed", "Latest TYORA Reply", "Recently Uploaded"].map((item, index) => (
                 <Link key={item} href="/ask" className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold", index === 0 ? "bg-[#2563eb] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]")}>{item}</Link>
@@ -408,7 +413,7 @@ export default function Home() {
             <div className="mt-2.5 grid gap-2">
               {communityIdeas.length === 0 ? (
                 <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-3 shadow-sm shadow-[#101216]/4 sm:p-4">
-                  <div className="grid gap-2.5 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div className="hidden gap-2.5 sm:grid lg:grid-cols-[1fr_auto] lg:items-center">
                     <div>
                       <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Starter community</p>
                       <h2 className="mt-2 text-xl font-semibold leading-tight sm:text-2xl">Be the first founder to start a discussion.</h2>
@@ -489,6 +494,9 @@ export default function Home() {
                       </Link>
                     ))}
                   </div>
+                  <Link href="/ask/new" className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f2f7ff] px-4 py-3 text-sm font-semibold text-[#2563eb] sm:hidden">
+                    Start your own discussion <ArrowRight size={15} />
+                  </Link>
                 </div>
               ) : (
                 <>
