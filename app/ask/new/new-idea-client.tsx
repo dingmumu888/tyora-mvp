@@ -29,6 +29,7 @@ type ImagePreview = { name: string; url: string };
 
 const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Go Live"] as const;
 const mobileSteps = ["Idea", "Show", "Understand", "Live"] as const;
+const defaultQuestions: CommunityQuestion[] = ["Can this be manufactured?", "Estimated Cost?", "Material Suggestion?"];
 const visibilityOptions = [
   {
     value: "Public",
@@ -204,10 +205,7 @@ export default function NewIdeaClient() {
       if (!oneSentence.trim()) return setMessage("Please describe your idea in one sentence."), false;
     }
     if (target === 2) {
-      if (!form.description.trim()) return setMessage("Please add a short description for TYORA."), false;
-      if (!form.category.trim()) return setMessage("Please choose a category."), false;
-      if (!form.country.trim()) return setMessage("Please add your country."), false;
-      if (form.questions.length === 0) return setMessage("Please choose at least one question for TYORA."), false;
+      return true;
     }
     return true;
   }
@@ -237,7 +235,10 @@ export default function NewIdeaClient() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
-          description: form.description.trim() || oneSentence.trim()
+          description: form.description.trim() || oneSentence.trim(),
+          category: form.category.trim() || "Concept",
+          country: form.country.trim() || "Not specified",
+          questions: form.questions.length ? form.questions : defaultQuestions
         })
       });
       const payload = await response.json();
@@ -259,7 +260,7 @@ export default function NewIdeaClient() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_34%,#f7f5f0_100%)] pb-28 text-[#101216] md:pb-12">
-      <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl">
+      <header className="hidden border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl md:sticky md:top-0 md:z-40 md:block">
         <div className="mx-auto flex h-16 max-w-[1560px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/ask" className="flex items-center gap-2 text-sm font-semibold">
             <span className="flex size-8 items-center justify-center rounded-xl bg-[#101216] text-white"><Sparkles size={15} /></span>
@@ -320,11 +321,21 @@ export default function NewIdeaClient() {
             </div>
           ) : (
           <>
+          <div className="mb-3 flex items-center justify-between lg:hidden">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#101216] shadow-sm ring-1 ring-[#e4e8ef]">
+              <Sparkles size={14} className="text-[#2563eb]" />
+              Publish idea
+            </p>
+            <span className="text-xs font-semibold text-[#8b93a1]">TYORA Community</span>
+          </div>
+
           <div className="mb-3 lg:hidden">
-            <div className="grid grid-cols-4 gap-1.5 text-[10px] font-semibold text-[#69707d]">
-              {mobileSteps.map((item, index) => (
-                <button key={item} type="button" onClick={() => setStep(index as Step)} className={cn("min-w-0 rounded-full px-1.5 py-1.5", step === index ? "bg-[#2563eb] text-white" : "bg-white ring-1 ring-[#e4e8ef]")}>{index + 1}. {item}</button>
-              ))}
+            <div className="flex items-center justify-between text-xs font-semibold text-[#69707d]">
+              <span>Step {step + 1} of {steps.length}</span>
+              <span className="text-[#315fbd]">{mobileSteps[step]}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e8edf5]">
+              <div className="h-full rounded-full bg-[#2563eb] transition-all duration-[180ms]" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
             </div>
           </div>
 
@@ -336,7 +347,7 @@ export default function NewIdeaClient() {
                 <div>
                   <h2 className="text-2xl font-semibold leading-tight sm:text-4xl">Start a Discussion</h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e] sm:mt-3 sm:text-base sm:leading-7">
-                    Share your idea with founders. Get FREE manufacturing feedback within 8 working hours.
+                    Share an idea. Get free manufacturing feedback.
                   </p>
                 </div>
                 <p className="w-fit whitespace-nowrap rounded-2xl bg-[#f7f8fa] px-3 py-2 text-xs font-semibold text-[#59616e]">
@@ -357,7 +368,7 @@ export default function NewIdeaClient() {
           {step === 1 ? (
             <section className="mt-5">
               <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Show us your idea</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Sketches, screenshots, reference products, or AI images are all okay. You can also paste screenshots with Ctrl + V.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Add images if you have them. Sketches, screenshots, reference products, or AI images are all okay.</p>
               <label
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={onDrop}
@@ -390,21 +401,21 @@ export default function NewIdeaClient() {
           {step === 2 ? (
             <section className="mt-5">
               <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Help TYORA understand your idea</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Tell the story behind the product. A few honest details are better than a polished brief.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">Add details if you have them. TYORA can still review a rough idea.</p>
               <div className="mt-6 grid gap-4">
-                <label className="grid gap-2 text-sm font-semibold">Description
+                <label className="grid gap-2 text-sm font-semibold">Description <span className="font-normal text-[#8b93a1]">optional</span>
                   <textarea rows={7} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What inspired it? Who is it for? What should founders and TYORA pay attention to?" className="min-h-44 resize-none rounded-[18px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-semibold">Category
+                  <label className="grid gap-2 text-sm font-semibold">Category <span className="font-normal text-[#8b93a1]">optional</span>
                     <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone accessories" className={inputClass} />
                   </label>
-                  <label className="grid gap-2 text-sm font-semibold">Country
+                  <label className="grid gap-2 text-sm font-semibold">Country <span className="font-normal text-[#8b93a1]">optional</span>
                     <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="United States" className={inputClass} />
                   </label>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Question type</p>
+                  <p className="text-sm font-semibold">Question type <span className="font-normal text-[#8b93a1]">optional</span></p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     {communityQuestions.map((question) => (
                       <label key={question} className={cn("flex cursor-pointer items-center gap-3 rounded-[12px] border px-3 py-3 text-sm transition duration-[180ms]", form.questions.includes(question) ? "border-[#bfdbfe] bg-[#f2f7ff] text-[#1d4ed8]" : "border-[#e8ebef] bg-white text-[#59616e] hover:border-[#cbd5e1]")}>
@@ -520,7 +531,7 @@ export default function NewIdeaClient() {
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">This is your first version. Publish it, let founders react, and let TYORA help clarify the manufacturing path.</p>
               <div className="mt-6 rounded-[20px] border border-[#e4e8ef] bg-[#fbfcff] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
-                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Category"}</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Concept"}</span>
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.visibility}</span>
                   <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">FREE review</span>
                 </div>
@@ -535,9 +546,9 @@ export default function NewIdeaClient() {
                   </div>
                 ) : null}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {form.questions.length > 0 ? form.questions.map((question) => (
+                  {(form.questions.length ? form.questions : defaultQuestions).map((question) => (
                     <span key={question} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#59616e] ring-1 ring-[#e8ebef]">{question}</span>
-                  )) : <span className="text-sm text-[#8b93a1]">No question selected yet.</span>}
+                  ))}
                 </div>
               </div>
             </section>
@@ -550,9 +561,11 @@ export default function NewIdeaClient() {
           ) : null}
 
           <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <button type="button" onClick={() => setStep((current) => Math.max(current - 1, 0) as Step)} className="h-11 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold text-[#59616e] transition duration-[180ms] hover:bg-[#f6f7fb]" disabled={step === 0}>
-              Back
-            </button>
+            {step > 0 ? (
+              <button type="button" onClick={() => setStep((current) => Math.max(current - 1, 0) as Step)} className="h-11 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold text-[#59616e] transition duration-[180ms] hover:bg-[#f6f7fb]">
+                Back
+              </button>
+            ) : <span className="hidden sm:block" />}
             {step < 3 ? (
               <button type="button" onClick={continueStep} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold ${primaryButton}`}>
                 Next <ArrowRight size={16} />
