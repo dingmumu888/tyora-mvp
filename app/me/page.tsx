@@ -4,6 +4,7 @@ import CommunityAvatar from "@/components/community-avatar";
 import CommunityImage from "@/components/community-image";
 import EmailLogin from "@/components/email-login";
 import MarkNotificationsRead from "@/components/mark-notifications-read";
+import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
 import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityUserActivity } from "@/lib/server/community-store";
 import { CommunityIdea } from "@/lib/community";
@@ -162,6 +163,9 @@ export default async function MyTyoraPage() {
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Link href="/ask" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Community</Link>
             <Link href="/ask/new" className="inline-flex h-10 items-center justify-center rounded-full bg-[#101216] px-3 text-sm font-semibold text-white">New post</Link>
+          </div>
+          <div className="mt-2">
+            <MyTyoraLogoutButton />
           </div>
         </aside>
 
