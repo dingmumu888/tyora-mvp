@@ -14,7 +14,6 @@ import {
   Sparkles,
   X
 } from "lucide-react";
-import CommunityUserMenu from "@/components/community-user-menu";
 import { Card } from "@/components/ui/card";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
@@ -81,9 +80,8 @@ export default function BuildClient() {
             <Link href="/#pricing" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <CommunityUserMenu loginClassName="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold md:inline-flex" />
-            <Link href="/ask/new" className={`hidden h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:inline-flex ${primaryButton}`}>
-              Start a Discussion
+            <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
+              Start Building
             </Link>
           </div>
         </div>
