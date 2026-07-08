@@ -29,6 +29,9 @@ type UserRow = {
 
 const MAX_INLINE_IDEA_IMAGE_LENGTH = 900000;
 const MAX_INLINE_AVATAR_LENGTH = 120000;
+const HOT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const HOT_PROTECTION_MS = 48 * 60 * 60 * 1000;
+const HOT_SCORE_THRESHOLD = 10;
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
@@ -62,6 +65,28 @@ function iso(value: Date | string | null | undefined) {
   return value instanceof Date ? value.toISOString() : value;
 }
 
+function hotSignals(row: any) {
+  const now = Date.now();
+  const since = now - HOT_WINDOW_MS;
+  const reactions = Array.isArray(row.reactions) ? row.reactions : [];
+  const comments = Array.isArray(row.comments) ? row.comments.filter((comment: any) => !comment.hidden) : [];
+  const recentLikes = reactions.filter((reaction: any) => reaction.type === "Like" && new Date(reaction.createdAt).getTime() >= since);
+  const recentInterested = reactions.filter((reaction: any) => reaction.type === "Interested" && new Date(reaction.createdAt).getTime() >= since);
+  const recentComments = comments.filter((comment: any) => new Date(comment.createdAt).getTime() >= since);
+  const score = recentLikes.length * 2 + recentComments.length * 3 + recentInterested.length * 4;
+  const latestSignalAt = [...recentLikes, ...recentInterested, ...recentComments]
+    .map((item: any) => new Date(item.createdAt).getTime())
+    .filter(Number.isFinite)
+    .sort((left, right) => right - left)[0];
+  const protectedUntil = latestSignalAt ? new Date(latestSignalAt + HOT_PROTECTION_MS) : null;
+
+  return {
+    hotScore: score,
+    isHot: score >= HOT_SCORE_THRESHOLD,
+    hotUntil: protectedUntil && protectedUntil.getTime() > now ? protectedUntil.toISOString() : undefined
+  };
+}
+
 function userPublic(user: UserRow) {
   return {
     id: user.id,
@@ -77,6 +102,7 @@ function userPublic(user: UserRow) {
 function ideaToCommunityIdea(row: any): CommunityIdea {
   const reactions = Array.isArray(row.reactions) ? row.reactions : [];
   const comments = Array.isArray(row.comments) ? row.comments : [];
+  const hot = hotSignals(row);
   return {
     id: row.id,
     slug: row.slug,
@@ -120,6 +146,9 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
       : undefined,
     likeCount: reactions.filter((reaction: any) => reaction.type === "Like").length,
     interestedCount: reactions.filter((reaction: any) => reaction.type === "Interested").length,
+    hotScore: hot.hotScore,
+    isHot: hot.isHot,
+    hotUntil: hot.hotUntil,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt)
   };
@@ -274,7 +303,18 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
     take: 50,
     include: ideaInclude
   });
-  return rows.map(ideaToCommunityIdea);
+  const ideas = rows.map(ideaToCommunityIdea);
+  if (sort !== "trending") return ideas;
+
+  return ideas.sort((left, right) => {
+    const pinned = Number(right.pinned) - Number(left.pinned);
+    if (pinned) return pinned;
+    const hotProtected = Number(Boolean(right.hotUntil)) - Number(Boolean(left.hotUntil));
+    if (hotProtected) return hotProtected;
+    const hotScore = right.hotScore - left.hotScore;
+    if (hotScore) return hotScore;
+    return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
+  });
 }
 
 export async function getCommunityIdeaBySlug(slug: string, includeHidden = false) {

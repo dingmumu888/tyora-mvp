@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ClipboardCheck,
   Eye,
+  Flame,
   Heart,
   MessageCircle,
   PackageCheck,
@@ -115,6 +116,15 @@ function timeAgo(value: string) {
 
 function ideaViews(idea: CommunityIdea) {
   return Math.max(idea.likeCount * 18 + idea.comments.length * 24 + idea.interestedCount * 30, 37);
+}
+
+function HotBadge({ idea }: { idea: CommunityIdea }) {
+  if (!idea.isHot) return null;
+  return (
+    <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#ff385c] px-2.5 py-1 text-[10px] font-bold uppercase tracking-normal text-white shadow-[0_8px_22px_rgba(255,56,92,0.28)]">
+      <Flame size={11} fill="currentColor" /> Hot
+    </span>
+  );
 }
 
 export default function Home() {
@@ -423,7 +433,8 @@ export default function Home() {
               ) : (
                 <>
                   {homeFeedIdeas.map((idea) => (
-                <Link key={idea.id} href={`/ask/${idea.slug}`} className="grid grid-cols-[92px_1fr] gap-2.5 rounded-[12px] border border-[#e1e6ee] bg-white p-2 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[132px_1fr]">
+                <Link key={idea.id} href={`/ask/${idea.slug}`} className="relative grid grid-cols-[92px_1fr] gap-2.5 rounded-[12px] border border-[#e1e6ee] bg-white p-2 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_18px_42px_rgba(37,99,235,0.13)] sm:grid-cols-[132px_1fr]">
+                  <HotBadge idea={idea} />
                   <div className="flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold">
                     <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-2xl object-cover" />
                   </div>

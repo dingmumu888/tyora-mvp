@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Eye,
   Filter,
+  Flame,
   Heart,
   MessageCircle,
   Plus,
@@ -114,6 +115,15 @@ function coverTone(idea: CommunityIdea) {
   return tones[idea.title.length % tones.length];
 }
 
+function HotBadge({ idea }: { idea: CommunityIdea }) {
+  if (!idea.isHot) return null;
+  return (
+    <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#ff385c] px-2.5 py-1 text-[10px] font-bold uppercase tracking-normal text-white shadow-[0_8px_22px_rgba(255,56,92,0.28)]">
+      <Flame size={11} fill="currentColor" /> Hot
+    </span>
+  );
+}
+
 function activity(ideas: CommunityIdea[]) {
   const latestReviews = ideas.filter((idea) => idea.review).slice(0, 4);
   const latestComments = ideas.flatMap((idea) => idea.comments.map((comment) => ({ idea, comment }))).slice(-4).reverse();
@@ -128,7 +138,8 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
   const progress = statusProgress(idea.status);
 
   return (
-    <article className="group overflow-hidden rounded-[12px] border border-[#e1e6ee] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)]">
+    <article className="group relative overflow-hidden rounded-[12px] border border-[#e1e6ee] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)]">
+      <HotBadge idea={idea} />
       <div className="grid grid-cols-[96px_1fr] gap-0 sm:grid-cols-[132px_1fr]">
         <Link href={`/ask/${idea.slug}`} className={`relative block aspect-square overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
           <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" fallbackClassName="absolute inset-0 p-6" initialsClassName="bg-white/74" />

@@ -76,6 +76,9 @@ export type CommunityIdea = {
   review?: TyoraReview;
   likeCount: number;
   interestedCount: number;
+  hotScore: number;
+  isHot: boolean;
+  hotUntil?: string;
   createdAt: string;
   updatedAt: string;
 };
