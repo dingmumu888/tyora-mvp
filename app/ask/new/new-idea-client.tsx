@@ -217,10 +217,10 @@ export default function NewIdeaClient() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!validateStep(2)) {
-      setStep(2);
-      return;
-    }
+    setMessage("");
+    const ideaSummary = form.description.trim() || oneSentence.trim();
+    if (!form.title.trim()) return setMessage("Please add a product name.");
+    if (!ideaSummary) return setMessage("Please describe your idea.");
     if (!user) {
       setMessage("Log in with email to publish your discussion. Your draft will stay here.");
       setLoginPrompt((current) => current + 1);
@@ -235,7 +235,7 @@ export default function NewIdeaClient() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
-          description: form.description.trim() || oneSentence.trim(),
+          description: ideaSummary,
           category: form.category.trim() || "Concept",
           country: form.country.trim() || "Not specified",
           questions: form.questions.length ? form.questions : defaultQuestions
@@ -321,6 +321,79 @@ export default function NewIdeaClient() {
             </div>
           ) : (
           <>
+          <section className="lg:hidden">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#101216] shadow-sm ring-1 ring-[#e4e8ef]">
+                <Sparkles size={14} className="text-[#2563eb]" />
+                Quick post
+              </p>
+              <p className="text-xs font-semibold text-[#8b93a1]">1 minute</p>
+            </div>
+
+            <div className="mb-5">
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-[11px] font-semibold text-[#315fbd]"><Sparkles size={14} /> FREE TYORA review</p>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight">Start a Discussion</h2>
+              <p className="mt-2 text-sm leading-6 text-[#59616e]">Share the idea quickly. Put details, questions, material, quantity, or target cost in the description.</p>
+            </div>
+
+            <div className="grid gap-4">
+              <label className="grid gap-2 text-sm font-semibold">Product name
+                <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Magnetic phone stand" className={inputClass} />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold">Category
+                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone accessories" className={inputClass} />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold">Description
+                <textarea
+                  rows={8}
+                  value={form.description}
+                  onChange={(event) => {
+                    setForm({ ...form, description: event.target.value });
+                    setOneSentence(event.target.value);
+                  }}
+                  placeholder="What is it? Who is it for? Material, quantity, target price, questions, anything you want TYORA to review."
+                  className="min-h-48 resize-none rounded-[18px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10"
+                />
+              </label>
+              <label
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={onDrop}
+                className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-[22px] border border-dashed border-[#93b4f8] bg-[linear-gradient(135deg,#f8fbff,#fff,#f3f8ff)] px-4 text-center shadow-inner shadow-[#2563eb]/5 transition duration-[180ms] active:scale-[0.99]"
+              >
+                <span className="flex size-11 items-center justify-center rounded-2xl bg-white text-[#2563eb] shadow-sm"><ImagePlus size={21} /></span>
+                <span className="text-sm font-semibold">Upload product images</span>
+                <span className="text-xs text-[#8b93a1]">Optional · up to 5 · auto-cropped to 800 x 800</span>
+                <input type="file" multiple className="sr-only" onChange={(event) => setImages(event.target.files || [])} />
+              </label>
+              {imagePreviews.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {imagePreviews.map((image, index) => (
+                    <div key={image.name} className="group relative overflow-hidden rounded-2xl border border-[#e4e8ef] bg-white">
+                      <span className="absolute left-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded-full bg-white/92 text-[11px] font-semibold text-[#2563eb] shadow-sm">{index + 1}</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={image.url} alt={image.name} className="aspect-square w-full object-cover" />
+                      <button type="button" onClick={() => removeImage(image.name)} className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-white/92 text-[#59616e] shadow-sm" aria-label={`Remove ${image.name}`}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {message ? (
+              <p className={cn("mt-5 rounded-2xl px-4 py-3 text-sm leading-6", message === "Your idea is live." || message.startsWith("Logged in") ? "bg-[#ecfdf5] text-[#0f766e]" : "bg-[#fff7ed] text-[#9a3412]")}>
+                {message}
+              </p>
+            ) : null}
+
+            <button disabled={submitting} className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
+              {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+              {submitting ? "Publishing..." : "Start Discussion"}
+            </button>
+          </section>
+
+          <div className="hidden lg:block">
           <div className="mb-3 flex items-center justify-between lg:hidden">
             <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#101216] shadow-sm ring-1 ring-[#e4e8ef]">
               <Sparkles size={14} className="text-[#2563eb]" />
@@ -575,6 +648,7 @@ export default function NewIdeaClient() {
                 {submitting ? "Publishing..." : "Start Discussion"}
               </button>
             )}
+          </div>
           </div>
           </>
           )}
