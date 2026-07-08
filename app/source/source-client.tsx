@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, ReactNode, useRef, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, ClipboardCheck, Factory, ImagePlus, PackageSearch, ShieldCheck, Truck } from "lucide-react";
 import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
 
@@ -57,7 +57,15 @@ export default function SourceClient() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [submittedId, setSubmittedId] = useState("");
+  const [sourceRequestCount, setSourceRequestCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch("/api/source/stats", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => setSourceRequestCount(Number(payload.data?.total || 0)))
+      .catch(() => setSourceRequestCount(0));
+  }, []);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -126,6 +134,16 @@ export default function SourceClient() {
           <p className="mt-4 text-base leading-7 text-[#59616e]">
             Upload a reference image or product link. TYORA will help check supplier options and estimated China pricing.
           </p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-2xl border border-[#dfe6ef] bg-[#f8fafc] p-3">
+              <p className="text-2xl font-semibold">{sourceRequestCount}</p>
+              <p className="mt-1 text-xs font-semibold text-[#69707d]">Supplier checks requested</p>
+            </div>
+            <div className="rounded-2xl border border-[#dfe6ef] bg-[#f8fafc] p-3">
+              <p className="text-2xl font-semibold">FREE</p>
+              <p className="mt-1 text-xs font-semibold text-[#69707d]">Initial supplier check</p>
+            </div>
+          </div>
           <div className="mt-5 grid gap-3">
             {supportCards.map(({ icon: Icon, title, body }) => (
               <div key={title} className="flex gap-3 rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-3">

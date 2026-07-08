@@ -2,19 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Home, Lightbulb, Plus, User } from "lucide-react";
+import { Factory, Home, PackageSearch, Plus, UserRound, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import CommunityAvatar from "@/components/community-avatar";
+import { CommunitySessionUser } from "@/components/community-profile-modal";
 
-const tabs = [
-  { label: "Home", href: "/", icon: Home, match: (path: string) => path === "/" },
-  { label: "Ideas", href: "/ask", icon: Lightbulb, match: (path: string) => path === "/ask" || (path.startsWith("/ask/") && path !== "/ask/new") },
-  { label: "Activity", href: "/me#notifications", icon: Bell, match: (path: string, hash: string) => path === "/me" && hash === "#notifications" },
-  { label: "Me", href: "/me", icon: User, match: (path: string, hash: string) => path === "/me" && hash !== "#notifications" }
+type MobileTab = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  match: (path: string, hash: string) => boolean;
+};
+
+const tabs: MobileTab[] = [
+  { label: "Community", href: "/", icon: Home, match: (path, hash) => (path === "/" && hash !== "#source-products" && hash !== "#build") || path === "/ask" || (path.startsWith("/ask/") && path !== "/ask/new") },
+  { label: "Source", href: "/source", icon: PackageSearch, match: (path) => path === "/source" },
+  { label: "Build", href: "/#build", icon: Factory, match: (path, hash) => path === "/" && hash === "#build" },
+  { label: "Profile", href: "/me", icon: UserRound, match: (path) => path === "/me" }
 ];
 
 function shouldShow(pathname: string) {
   if (pathname === "/") return true;
   if (pathname === "/me") return true;
+  if (pathname === "/source") return true;
   if (pathname === "/ask" || pathname === "/ask/new" || pathname.startsWith("/ask/")) return true;
   return false;
 }
@@ -23,6 +33,8 @@ export default function MobileBottomTabs() {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
   const [notificationCount, setNotificationCount] = useState(0);
+  const [user, setUser] = useState<CommunitySessionUser | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     const syncHash = () => setHash(window.location.hash);
@@ -37,20 +49,32 @@ export default function MobileBottomTabs() {
       try {
         const response = await fetch("/api/community/session", { cache: "no-store" });
         const payload = await response.json();
-        if (active) setNotificationCount(Number(payload.notificationCount || 0));
+        if (active) {
+          setNotificationCount(Number(payload.notificationCount || 0));
+          setUser(payload.user || null);
+        }
       } catch {
-        if (active) setNotificationCount(0);
+        if (active) {
+          setNotificationCount(0);
+          setUser(null);
+        }
       }
     }
     const clearNotificationCount = () => setNotificationCount(0);
+    const clearUser = () => {
+      setUser(null);
+      setNotificationCount(0);
+    };
     void loadNotificationCount();
     window.addEventListener("tyora:community-login", loadNotificationCount);
     window.addEventListener("tyora:community-profile-updated", loadNotificationCount);
+    window.addEventListener("tyora:community-logout", clearUser);
     window.addEventListener("tyora:community-notifications-read", clearNotificationCount);
     return () => {
       active = false;
       window.removeEventListener("tyora:community-login", loadNotificationCount);
       window.removeEventListener("tyora:community-profile-updated", loadNotificationCount);
+      window.removeEventListener("tyora:community-logout", clearUser);
       window.removeEventListener("tyora:community-notifications-read", clearNotificationCount);
     };
   }, []);
@@ -74,6 +98,27 @@ export default function MobileBottomTabs() {
   }
 
   return (
+    <>
+    {createOpen ? (
+      <button
+        type="button"
+        aria-label="Close create menu"
+        className="fixed inset-0 z-[9988] bg-transparent md:hidden"
+        onClick={() => setCreateOpen(false)}
+      />
+    ) : null}
+    {createOpen ? (
+      <div className="fixed inset-x-4 bottom-[calc(6.8rem+env(safe-area-inset-bottom))] z-[9991] grid gap-2 rounded-[24px] border border-[#e4e8ef] bg-white p-3 text-[#101216] shadow-[0_24px_70px_rgba(0,0,0,0.22)] md:hidden">
+        <Link href="/ask/new" onClick={() => setCreateOpen(false)} className="rounded-2xl bg-[#101216] px-4 py-3 text-sm font-semibold text-white">
+          Start Discussion
+          <span className="mt-1 block text-xs font-medium text-white/70">Share a product idea with the community.</span>
+        </Link>
+        <Link href="/source" onClick={() => setCreateOpen(false)} className="rounded-2xl border border-[#dfe5ee] bg-[#f8fafc] px-4 py-3 text-sm font-semibold">
+          Source Product
+          <span className="mt-1 block text-xs font-medium text-[#687284]">Upload a product reference for supplier check.</span>
+        </Link>
+      </div>
+    ) : null}
     <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[9990] rounded-[28px] border border-white/10 bg-[#07080a]/96 px-2 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
       <div className="mx-auto grid max-w-md grid-cols-5 items-center gap-1">
         {tabs.slice(0, 2).map((tab) => {
@@ -87,29 +132,38 @@ export default function MobileBottomTabs() {
           );
         })}
 
-        <Link href="/ask/new" className="mx-auto -mt-5 flex flex-col items-center gap-1 active:scale-95" aria-label="Start a discussion">
-          <span className={`flex size-14 items-center justify-center rounded-2xl shadow-2xl transition ${plusActive ? "bg-white text-[#101216] shadow-white/20" : "bg-[#2563eb] text-white shadow-[#2563eb]/30"}`}>
+        <button type="button" onClick={() => setCreateOpen((value) => !value)} className="mx-auto -mt-5 flex flex-col items-center gap-1 active:scale-95" aria-label="Create">
+          <span className={`flex size-14 items-center justify-center rounded-2xl shadow-2xl transition ${plusActive || createOpen ? "bg-white text-[#101216] shadow-white/20" : "bg-[#2563eb] text-white shadow-[#2563eb]/30"}`}>
             <Plus size={30} strokeWidth={2.8} />
           </span>
-          <span className={`text-[11px] font-semibold ${plusActive ? "text-white" : "text-white/48"}`}>Post</span>
-        </Link>
+          <span className={`text-[11px] font-semibold ${plusActive || createOpen ? "text-white" : "text-white/48"}`}>Post</span>
+        </button>
 
-        {tabs.slice(2).map((tab) => {
+        {tabs.slice(2, 3).map((tab) => {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} onClick={tab.label === "Activity" ? () => void markNotificationsRead() : undefined} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
-              {tab.label === "Activity" && notificationCount > 0 ? (
-                <span className="absolute right-3 top-1 min-w-5 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-center text-[9px] font-bold leading-none text-white">
-                  {notificationLabel}
-                </span>
-              ) : null}
+            <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
               <span>{tab.label}</span>
             </Link>
           );
         })}
+        <Link href="/me" onClick={() => void markNotificationsRead()} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${tabs[3].match(pathname, hash) ? "bg-white/8 text-white" : "text-white/48"}`} aria-label="Profile and activity">
+          {notificationCount > 0 ? (
+            <span className="absolute right-3 top-1 min-w-5 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-center text-[9px] font-bold leading-none text-white">
+              {notificationLabel}
+            </span>
+          ) : null}
+          {user ? (
+            <CommunityAvatar name={user.name} src={user.avatar} className="size-6 border border-white/20 text-[9px]" />
+          ) : (
+            <UserRound size={20} />
+          )}
+          <span className="max-w-12 truncate">{user ? user.name.split(" ")[0] : "Profile"}</span>
+        </Link>
       </div>
     </nav>
+    </>
   );
 }

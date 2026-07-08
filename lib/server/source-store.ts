@@ -128,6 +128,11 @@ export async function getSourceRequests() {
   return rows.map(sourceToPublic);
 }
 
+export async function getSourceRequestStats() {
+  const total = await prisma.sourceRequest.count();
+  return { total };
+}
+
 export async function updateSourceRequest(id: string, input: unknown) {
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const row = await prisma.sourceRequest.update({

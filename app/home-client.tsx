@@ -145,6 +145,7 @@ export default function Home() {
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
+  const [sourceRequestCount, setSourceRequestCount] = useState(0);
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
@@ -159,6 +160,13 @@ export default function Home() {
       .then((response) => response.json())
       .then((payload) => setCommunityIdeas(payload.data || []))
       .catch(() => setCommunityIdeas([]));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/source/stats", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => setSourceRequestCount(Number(payload.data?.total || 0)))
+      .catch(() => setSourceRequestCount(0));
   }, []);
 
   const t = ui[language];
@@ -250,7 +258,7 @@ export default function Home() {
 
   const canStartChat = Boolean(productName.trim());
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
-  const homeFeedIdeas = communityIdeas.slice(0, 3);
+  const homeFeedIdeas = communityIdeas;
   const homeExamples = homeFeedIdeas.length < 3 ? starterExamples.slice(0, 3 - homeFeedIdeas.length) : [];
   const hasCommunityStats = communityIdeas.length > 0;
   const communityStats = [
@@ -652,6 +660,9 @@ export default function Home() {
                 <Link href="/source" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
                   Get FREE Supplier Check <ArrowRight size={16} />
                 </Link>
+                <p className="flex items-center rounded-full bg-[#ecfdf5] px-3 py-2 text-xs font-semibold text-[#0f766e]">
+                  {sourceRequestCount} supplier checks requested
+                </p>
                 <p className="flex items-center text-xs font-semibold text-[#69707d]">Sample support is free. You only pay sample cost and international shipping.</p>
               </div>
             </div>
@@ -767,7 +778,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-b border-[#dfe6ef] bg-[#f7f8fb]">
+      <section id="build" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[#f7f8fb]">
         <div className="mx-auto grid max-w-7xl gap-6 px-3 py-8 sm:px-5 lg:grid-cols-[1fr_360px] lg:items-center lg:px-6 lg:py-10">
           <div>
             <p className="w-fit rounded-full border border-[#e5e8ec] bg-white px-3 py-1 text-xs font-medium text-[#69707d]">
