@@ -175,6 +175,13 @@ export default function SourceClient() {
               <p className="mt-1 text-xs font-semibold text-[#69707d]">{sourceCopy.secondaryStatLabel}</p>
             </div>
           </div>
+          <div className="mt-4 rounded-3xl border border-[#cfe7df] bg-[#f2fbf7] p-4">
+            <p className="text-sm font-semibold text-[#0f766e]">Factory price transparency</p>
+            <h2 className="mt-1 text-xl font-semibold leading-tight">We do not add markup to product cost.</h2>
+            <p className="mt-2 text-sm leading-6 text-[#315f56]">
+              Supplier quotes are shown as factory pricing. TYORA earns only from agreed service fees if you continue with factory introduction or managed sourcing.
+            </p>
+          </div>
           <div className="mt-5 grid gap-3">
             {sourceCopy.supportCards.map(({ title, description }, index) => {
               const Icon = supportIcons[index] || Factory;

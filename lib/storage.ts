@@ -268,7 +268,7 @@ export const defaultContent: SiteContent = {
   pricingSubtitle: "Start with a manufacturing review, then decide whether you want TYORA to manage the project with you.",
   pricingProofA: "Start lean. Scale support when the project is ready.",
   pricingProofB:
-    "Whether you want factory recommendations or hands-on production support, TYORA gives you transparent guidance before you commit to manufacturing.",
+    "Whether you want factory recommendations or hands-on production support, TYORA gives you transparent guidance before you commit. Product costs are factory prices; TYORA charges service fees separately when support is needed.",
   trustBadges: [
     "US Founder-Focused",
     "China Manufacturing Network",
@@ -308,26 +308,26 @@ export const defaultContent: SiteContent = {
   sourcePage: {
     eyebrow: "Source This Product",
     title: "Found a product? Let TYORA check China supplier options.",
-    subtitle: "Upload a reference image or product link. TYORA will help check supplier options and estimated China pricing.",
+    subtitle: "Upload a reference image or product link. TYORA will help check supplier options and estimated China factory pricing.",
     ctaText: "Get FREE Supplier Check",
     statLabel: "Supplier checks requested",
     secondaryStatValue: "FREE",
     secondaryStatLabel: "Initial supplier check",
     sampleNote: "Sample support is free. You only pay sample cost and international shipping.",
-    disclaimer: "No exact price or supplier is guaranteed before supplier confirmation. TYORA will confirm sample cost and international shipping before payment.",
+    disclaimer: "No exact price or supplier is guaranteed before supplier confirmation. TYORA does not add markup to product cost; any paid work is quoted as a separate service fee before you continue.",
     successTitle: "Source request received.",
     successBody: "TYORA will review supplier options and estimated China pricing.",
     supportCards: [
       { title: "Find supplier options", description: "We look for China suppliers that match the product reference." },
-      { title: "Check estimated pricing", description: "Pricing depends on material, quantity, packaging and supplier response." },
+      { title: "Check factory pricing", description: "We show supplier pricing as factory price. TYORA does not add product markup." },
       { title: "Sample support", description: "Sample support is free. You only pay sample cost and international shipping." },
       { title: "Two service paths", description: "Factory introduction or managed sourcing with quality and shipping support." }
     ],
     chargeTitle: "How TYORA charges if you continue",
     chargeCards: [
-      { title: "Free supplier check", description: "We check supplier options and estimated China pricing for free." },
-      { title: "Factory introduction", description: "If you want to talk directly with a matched factory, TYORA charges a one-time introduction fee." },
-      { title: "Managed sourcing", description: "TYORA manages supplier communication, sample follow-up, quality checks and shipping support. Service fee is charged as a percentage of the order value." }
+      { title: "Free supplier check", description: "We check supplier options and estimated China factory pricing for free." },
+      { title: "Factory introduction", description: "If you want to talk directly with a matched factory, TYORA charges a one-time introduction fee. Product cost remains factory price." },
+      { title: "Managed sourcing", description: "TYORA manages supplier communication, sample follow-up, quality checks and shipping support. Product cost is not marked up; TYORA charges an agreed service fee." }
     ],
     trustToastEnabled: true,
     trustToastMessages: [
@@ -367,7 +367,7 @@ export const defaultContent: SiteContent = {
       priceLabel: "One-Time Project Kickoff Fee",
       price: "$149 USD",
       description:
-        "Best for founders who prefer to manage manufacturing themselves after factory introduction.",
+        "Best for founders who prefer to manage manufacturing themselves after factory introduction. Product cost stays between you and the factory.",
       ctaText: "Start Review",
       visible: true,
       order: 1,
@@ -386,7 +386,7 @@ export const defaultContent: SiteContent = {
         "Factory audit",
         "Shipping coordination"
       ],
-      bottomNote: "After we introduce the right factory, you work directly with them."
+      bottomNote: "After we introduce the right factory, you work directly with them. TYORA does not add markup to the product price."
     },
     {
       id: "full-project-management",
@@ -397,7 +397,7 @@ export const defaultContent: SiteContent = {
       price: "$149 USD",
       priceSuffix: "+\nCustom Service Fee",
       description:
-        "We manage the manufacturing process on your behalf.\n\nYou stay in control and approve the key decisions.",
+        "We manage the manufacturing process on your behalf.\n\nYou stay in control and approve the key decisions. Factory costs stay transparent; TYORA service fees are quoted separately.",
       highlightBanner: "We protect your time, your budget, and your product.",
       note: "Custom Service Fee\nQuoted before production begins.",
       ctaText: "Start Project",

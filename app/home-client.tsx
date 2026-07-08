@@ -103,6 +103,27 @@ const sourceProductSteps = [
   { step: "2", title: "TYORA checks options", body: "Supplier fit and estimated China pricing.", icon: ClipboardCheck },
   { step: "3", title: "Choose next step", body: "Factory introduction or managed sourcing.", icon: PackageCheck }
 ] as const;
+const founderPaths = [
+  {
+    title: "I have a product idea",
+    description: "Share it with the community and get free manufacturability, cost, MOQ and risk feedback.",
+    href: "/ask/new",
+    cta: "Start a Discussion",
+    icon: Users
+  },
+  {
+    title: "I found a product to source",
+    description: "Upload a reference product and TYORA will check China supplier options and estimated factory pricing.",
+    href: "/source",
+    cta: "Get Supplier Check",
+    icon: SearchCheck
+  }
+] as const;
+const transparencyPoints = [
+  "Factory price, no product markup.",
+  "TYORA only charges agreed service fees if you continue.",
+  "You can choose direct factory introduction or managed sourcing."
+] as const;
 const topNavigation = [
   ["Discover Ideas", "/ask"],
   ["Ask TYORA", "/ask/new"],
@@ -696,6 +717,46 @@ export default function Home() {
               </div>
             </section>
           </aside>
+        </div>
+      </section>
+
+      <section className="border-b border-[#dfe6ef] bg-white/72 md:bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(246,247,251,0.92))]">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 md:py-8 lg:px-8">
+          <div className="grid gap-3 lg:grid-cols-[0.85fr_1.15fr] lg:items-stretch">
+            <div className="rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.07)] md:p-5">
+              <p className="text-xs font-semibold uppercase text-[#69707d]">Choose your path</p>
+              <h2 className="mt-2 text-2xl font-semibold leading-tight md:text-3xl">Start with the problem you already have.</h2>
+              <p className="mt-3 text-sm leading-6 text-[#59616e]">
+                TYORA helps two kinds of buyers: founders validating new product ideas, and sellers who already found a product but need better China supplier options.
+              </p>
+              <div className="mt-4 grid gap-2">
+                {transparencyPoints.map((point) => (
+                  <p key={point} className="flex items-center gap-2 rounded-2xl bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#101216]">
+                    <Check size={15} className="shrink-0 text-[#0f766e]" />
+                    {point}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {founderPaths.map(({ title, description, href, cta, icon: Icon }) => (
+                <Link
+                  key={title}
+                  href={href}
+                  className="group rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.07)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_50px_rgba(37,99,235,0.12)] md:p-5"
+                >
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white">
+                    <Icon size={18} />
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#59616e]">{description}</p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#2563eb]">
+                    {cta} <ArrowRight size={15} className="transition group-hover:translate-x-0.5" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
