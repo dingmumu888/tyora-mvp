@@ -16,9 +16,9 @@ type MobileTab = {
 };
 
 const tabs: MobileTab[] = [
-  { label: "Community", href: "/", icon: Home, match: (path, hash) => (path === "/" && hash !== "#source-products" && hash !== "#build") || path === "/ask" || (path.startsWith("/ask/") && path !== "/ask/new") },
+  { label: "Community", href: "/", icon: Home, match: (path) => path === "/" || path === "/ask" || (path.startsWith("/ask/") && path !== "/ask/new") },
   { label: "Source", href: "/source", icon: PackageSearch, match: (path) => path === "/source" },
-  { label: "Build", href: "/#build", icon: Factory, match: (path, hash) => path === "/" && hash === "#build" },
+  { label: "Build", href: "/build", icon: Factory, match: (path) => path === "/build" },
   { label: "Profile", href: "/me", icon: UserRound, match: (path) => path === "/me" }
 ];
 
@@ -26,6 +26,7 @@ function shouldShow(pathname: string) {
   if (pathname === "/") return true;
   if (pathname === "/me") return true;
   if (pathname === "/source") return true;
+  if (pathname === "/build") return true;
   if (pathname === "/ask" || pathname === "/ask/new" || pathname.startsWith("/ask/")) return true;
   return false;
 }

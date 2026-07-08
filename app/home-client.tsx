@@ -648,7 +648,7 @@ export default function Home() {
       </section>
 
       {moduleVisibility.source ? (
-      <section id="source-products" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(246,247,251,0.92),rgba(255,255,255,0.82))]">
+      <section id="source-products" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(246,247,251,0.92),rgba(255,255,255,0.82))] md:block">
         <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 lg:px-6 lg:py-9">
           <div className="grid gap-4 rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.07)] lg:grid-cols-[0.95fr_1.05fr] lg:p-6">
             <div>
@@ -687,7 +687,7 @@ export default function Home() {
       ) : null}
 
       {moduleVisibility.journeys ? (
-      <section id="journeys" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))]">
+      <section id="journeys" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))] md:block">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-stretch">
             <div className="rounded-[18px] border border-[#dfe6ef] bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.07)]">
@@ -736,7 +736,7 @@ export default function Home() {
       ) : null}
 
       {moduleVisibility.successStories ? (
-      <section id="success-stories" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[#f6f7fb]/80">
+      <section id="success-stories" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[#f6f7fb]/80 md:block">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -788,7 +788,7 @@ export default function Home() {
 
       {moduleVisibility.build ? (
       <>
-      <section id="build" className="scroll-mt-20 border-b border-[#dfe6ef] bg-[#f7f8fb]">
+      <section id="build" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[#f7f8fb] md:block">
         <div className="mx-auto grid max-w-7xl gap-6 px-3 py-8 sm:px-5 lg:grid-cols-[1fr_360px] lg:items-center lg:px-6 lg:py-10">
           <div>
             <p className="w-fit rounded-full border border-[#e5e8ec] bg-white px-3 py-1 text-xs font-medium text-[#69707d]">
@@ -838,7 +838,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-b border-[#dfe6ef] bg-white/88">
+      <section className="hidden border-b border-[#dfe6ef] bg-white/88 md:block">
         <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 lg:px-6 lg:py-9">
           <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
@@ -864,7 +864,7 @@ export default function Home() {
       ) : null}
 
       {moduleVisibility.pricing ? (
-      <section id="pricing" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+      <section id="pricing" className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] md:block">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
           <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{displayContent.pricingTitle}</h2>
           <p className="mt-2 text-[#59616e]">{displayContent.pricingSubtitle}</p>
@@ -958,7 +958,7 @@ export default function Home() {
       ) : null}
 
       {moduleVisibility.founder ? (
-      <section className="border-y border-[#eef1f4] bg-white">
+      <section className="hidden border-y border-[#eef1f4] bg-white md:block">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-20">
           <div>
             <p className="text-sm font-medium text-[#69707d]">About TYORA</p>
@@ -992,7 +992,7 @@ export default function Home() {
       ) : null}
 
       {moduleVisibility.faq ? (
-      <section id="faq" className="border-y border-[#eef1f4] bg-[#fbfbfc]">
+      <section id="faq" className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] md:block">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <div className="mb-6 max-w-3xl">
             <p className="text-sm font-medium text-[#69707d]">FAQ</p>
@@ -1016,7 +1016,7 @@ export default function Home() {
       ) : null}
 
       {moduleVisibility.finalCta ? (
-      <section className="border-y border-[#eef1f4] bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+      <section className="hidden border-y border-[#eef1f4] bg-white px-4 py-16 sm:px-6 md:block lg:px-8 lg:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-[2.5rem] font-semibold leading-tight tracking-normal lg:text-[4rem]">
             Ready to build your product?
