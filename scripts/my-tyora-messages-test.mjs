@@ -4,23 +4,35 @@ import path from "node:path";
 const root = process.cwd();
 const myTyoraPath = path.join(root, "app/me/page.tsx");
 const messagesPath = path.join(root, "app/me/activity-messages.tsx");
+const summaryPath = path.join(root, "app/me/activity-summary.tsx");
 
 const myTyora = fs.readFileSync(myTyoraPath, "utf8");
 const messages = fs.existsSync(messagesPath) ? fs.readFileSync(messagesPath, "utf8") : "";
+const summary = fs.existsSync(summaryPath) ? fs.readFileSync(summaryPath, "utf8") : "";
 
 const checks = [
   {
-    label: "Profile stats are clickable links into their matching sections",
+    label: "Profile stats open activity panels instead of linking to page sections",
     pass:
-      myTyora.includes("compactStats.map(({ label, value, href })") &&
-      myTyora.includes("<Link key={label} href={href}")
+      myTyora.includes("<ActivitySummary") &&
+      summary.includes("setActiveView(view)") &&
+      summary.includes("type ActivityView = \"posts\" | \"comments\" | \"likes\" | \"interested\" | \"reviews\"")
   },
   {
-    label: "My TYORA uses one compact Messages entry instead of expanded inbox cards",
+    label: "My TYORA keeps the profile card compact and removes expanded activity sections",
     pass:
       myTyora.includes("<ActivityMessages") &&
+      !myTyora.includes('id="discussions"') &&
+      !myTyora.includes('id="comments"') &&
+      !myTyora.includes('id="liked"') &&
       !myTyora.includes("topNotificationCards") &&
       !myTyora.includes("Activity inbox")
+  },
+  {
+    label: "Activity panel images render fully instead of cropped",
+    pass:
+      summary.includes("object-contain") &&
+      !summary.includes("object-cover")
   },
   {
     label: "Messages panel groups comments, likes, interested, and TYORA reviews",
