@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, CalendarDays, Heart, MapPin, MessageCircle, PackageCheck, PenLine, Send, Sparkles, ThumbsUp, UserRound } from "lucide-react";
+import { CalendarDays, MapPin, Sparkles, UserRound } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityImage from "@/components/community-image";
 import EmailLogin from "@/components/email-login";
@@ -8,6 +8,7 @@ import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
 import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityUserActivity } from "@/lib/server/community-store";
 import { CommunityIdea } from "@/lib/community";
+import ActivityMessages from "./activity-messages";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -50,11 +51,6 @@ function IdeaRow({ idea, meta }: { idea: CommunityIdea; meta?: string }) {
   );
 }
 
-function badgeCount(value: number) {
-  if (value <= 0) return "";
-  return value > 99 ? "99+" : String(value);
-}
-
 function EmptyState({ title, cta }: { title: string; cta?: string }) {
   return (
     <div className="rounded-[18px] border border-dashed border-[#cfd8e6] bg-white/78 p-5 text-sm text-[#69707d]">
@@ -84,32 +80,19 @@ export default async function MyTyoraPage() {
   }
 
   const { user, stats, ideas, comments, likedIdeas, interestedIdeas, notifications } = activity;
-  const statCards = [
-    ["Ideas posted", stats.ideasPosted, PenLine],
-    ["Comments made", stats.commentsMade, MessageCircle],
-    ["Liked ideas", stats.likedIdeas, Heart],
-    ["I'd Buy", stats.interestedIdeas, ThumbsUp],
-    ["Received comments", stats.receivedComments, Send],
-    ["Received likes", stats.receivedLikes + stats.receivedInterested, Bell]
-  ] as const;
-  const topNotificationCards = [
-    ["Received comments", stats.receivedComments, stats.unreadReceivedComments, Send],
-    ["Received likes", stats.receivedLikes + stats.receivedInterested, stats.unreadReceivedReactions, Bell],
-    ["TYORA reviews", ideas.filter((idea) => idea.review).length, stats.unreadReviewedIdeas, PackageCheck]
-  ] as const;
   const totalUnread =
-    stats.unreadReceivedComments + stats.unreadReceivedReactions + stats.unreadReviewedIdeas;
+    stats.unreadReceivedComments + stats.unreadReceivedReactions + stats.unreadReviewedIdeas + stats.unreadStatusIdeas;
   const profileMeta = [
     ["Product Creator", UserRound],
     [user.country || "Global", MapPin],
     [`Joined ${new Date(user.joinedAt).getFullYear()}`, CalendarDays]
   ] as const;
   const compactStats = [
-    ["Posts", stats.ideasPosted],
-    ["Comments", stats.commentsMade],
-    ["Likes", stats.likedIdeas],
-    ["I'd Buy", stats.interestedIdeas],
-    ["Reviews", ideas.filter((idea) => idea.review).length]
+    { label: "Posts", value: stats.ideasPosted, href: "#discussions" },
+    { label: "Comments", value: stats.commentsMade, href: "#comments" },
+    { label: "Likes", value: stats.likedIdeas, href: "#liked" },
+    { label: "I'd Buy", value: stats.interestedIdeas, href: "#liked" },
+    { label: "Reviews", value: ideas.filter((idea) => idea.review).length, href: "#messages" }
   ] as const;
 
   return (
@@ -122,7 +105,7 @@ export default async function MyTyoraPage() {
             <span className="block text-xs font-medium text-[#69707d]">Profile & activity</span>
           </Link>
           <nav className="hidden items-center gap-1 text-sm font-semibold text-[#59616e] md:flex">
-            <a href="#notifications" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Activity Inbox</a>
+            <a href="#messages" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Messages</a>
             <a href="#discussions" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">My Discussions</a>
             <a href="#comments" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">My Comments</a>
             <a href="#liked" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Following</a>
@@ -153,13 +136,14 @@ export default async function MyTyoraPage() {
           </div>
           {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]">Set up your profile so founders know who they're talking to.</p>}
           <div className="mt-4 grid grid-cols-5 gap-1 rounded-[18px] bg-[#f7f8fa] p-2">
-            {compactStats.map(([label, value]) => (
-              <div key={label} className="rounded-2xl bg-white px-2 py-2 text-center shadow-sm shadow-[#101216]/3">
+            {compactStats.map(({ label, value, href }) => (
+              <Link key={label} href={href} className="rounded-2xl bg-white px-2 py-2 text-center shadow-sm shadow-[#101216]/3 transition hover:-translate-y-0.5 hover:text-[#315fbd] hover:shadow-md">
                 <p className="text-base font-semibold">{value}</p>
                 <p className="mt-0.5 text-[10px] font-medium text-[#69707d]">{label}</p>
-              </div>
+              </Link>
             ))}
           </div>
+          <ActivityMessages notifications={notifications} unreadCount={totalUnread} />
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Link href="/ask" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Community</Link>
             <Link href="/ask/new" className="inline-flex h-10 items-center justify-center rounded-full bg-[#101216] px-3 text-sm font-semibold text-white">New post</Link>
@@ -170,43 +154,6 @@ export default async function MyTyoraPage() {
         </aside>
 
         <div className="grid gap-4">
-          <section id="notifications" className="scroll-mt-24 rounded-[22px] border border-[#dfe6ef] bg-white p-5 shadow-[0_16px_48px_rgba(15,23,42,0.07)]">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[#315fbd]">My TYORA</p>
-                <h2 className="mt-1 text-3xl font-semibold">Activity inbox</h2>
-                <p className="mt-2 text-sm leading-6 text-[#59616e]">Comments, likes, TYORA reviews, and status updates from your community activity.</p>
-              </div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-4 py-2 text-sm font-semibold text-[#315fbd]">
-                <Bell size={15} /> {badgeCount(totalUnread) || "0"} new
-              </span>
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {topNotificationCards.map(([label, value, unreadCount, Icon]) => (
-                <div key={label} className="relative rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
-                  {badgeCount(unreadCount) ? <span className="absolute right-3 top-3 rounded-full bg-[#ff385c] px-2 py-1 text-[10px] font-bold leading-none text-white">NEW {badgeCount(unreadCount)}</span> : null}
-                  <Icon size={16} className="text-[#0f766e]" />
-                  <p className="mt-2 text-2xl font-semibold">{value}</p>
-                  <p className="text-sm text-[#69707d]">{label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 grid gap-2">
-              {notifications.length ? notifications.slice(0, 4).map((item) => (
-                <Link key={item.id} href={item.href} className="flex gap-3 rounded-[18px] border border-[#e4e8ef] bg-[#fbfcfe] p-4 transition hover:border-[#93c5fd]">
-                  <span className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f2f7ff] text-[#315fbd]">
-                    <Bell size={15} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-[#101216]">{item.title}</span>
-                    <span className="mt-1 line-clamp-2 block text-sm leading-5 text-[#59616e]">{item.body}</span>
-                    <span className="mt-1 block text-xs text-[#8b93a1]">{timeAgo(item.createdAt)}</span>
-                  </span>
-                </Link>
-              )) : <EmptyState title="No new activity yet. Replies, likes, TYORA reviews, and status updates will appear here." />}
-            </div>
-          </section>
-
           <section id="discussions" className="scroll-mt-24 rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
             <h2 className="text-xl font-semibold">My Discussions</h2>
             <div className="mt-3 grid gap-2">

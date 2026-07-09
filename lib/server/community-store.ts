@@ -558,6 +558,8 @@ export async function getCommunityUserActivity(userId: string) {
       title: `${comment.author.name} commented on your idea`,
       body: comment.body,
       href: `/ask/${comment.idea.slug}`,
+      ideaSlug: comment.idea.slug,
+      parentId: comment.id,
       createdAt: iso(comment.createdAt)
     })),
     ...receivedReactions.map((reaction) => ({
