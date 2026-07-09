@@ -50,6 +50,38 @@ const checks = [
     name: "sample wording avoids promising free samples",
     pass:
       source.includes("We can help with samples. You only pay sample cost and shipping.")
+  },
+  {
+    name: "mobile top navigation uses shorter Free Match CTA while main CTA stays full",
+    pass:
+      source.includes("Free Match") &&
+      source.includes("<span className=\"sm:hidden\">Free Match</span>") &&
+      source.includes("<span className=\"hidden sm:inline\">{ctaText}</span>")
+  },
+  {
+    name: "contact friction is reduced to one Email or WhatsApp field",
+    pass:
+      source.includes("contact: string") &&
+      source.includes("Email or WhatsApp") &&
+      source.includes("you@example.com or +1...") &&
+      source.includes("mapContactToPayload") &&
+      !source.includes("<Field label=\"Email\">") &&
+      !source.includes("<Field label=\"WhatsApp\">")
+  },
+  {
+    name: "scary post-CTA disclaimer is moved and softened",
+    pass:
+      !source.includes("No exact price or supplier is guaranteed before supplier confirmation.") &&
+      source.includes("Final price depends on supplier confirmation.")
+  },
+  {
+    name: "mobile pricing has short scan-friendly copy",
+    pass:
+      source.includes("mobilePrice: \"3%-5%\"") &&
+      source.includes("mobileMinimum: \"Minimum $199\"") &&
+      source.includes("mobilePrice: \"10%-15%\"") &&
+      source.includes("mobileMinimum: \"Minimum $499\"") &&
+      source.includes("Based on estimated order value.")
   }
 ];
 

@@ -15,8 +15,7 @@ type FormState = {
   quantity: string;
   targetPrice: string;
   destinationCountry: string;
-  email: string;
-  whatsapp: string;
+  contact: string;
   needTypes: SourceNeedType[];
   imageUrl: string;
 };
@@ -30,8 +29,7 @@ const emptyForm: FormState = {
   quantity: "",
   targetPrice: "",
   destinationCountry: "",
-  email: "",
-  whatsapp: "",
+  contact: "",
   needTypes: ["Find supplier"],
   imageUrl: ""
 };
@@ -50,11 +48,17 @@ const pricingOptions = [
   {
     title: "Supplier Introduction",
     price: "3%-5% of estimated order value, minimum $199",
+    mobilePrice: "3%-5%",
+    mobileMinimum: "Minimum $199",
+    mobileDescription: "Based on estimated order value.",
     description: "Get verified supplier contact and deal directly with the factory."
   },
   {
     title: "Managed Sourcing",
     price: "10%-15% of order value, minimum $499",
+    mobilePrice: "10%-15%",
+    mobileMinimum: "Minimum $499",
+    mobileDescription: "For negotiation, purchasing, inspection, and shipping coordination.",
     description: "TYORA helps negotiate, purchase, inspect, and coordinate shipping."
   }
 ];
@@ -66,6 +70,14 @@ function fileToDataUrl(file: File) {
     reader.onerror = () => reject(new Error("Unable to read image."));
     reader.readAsDataURL(file);
   });
+}
+
+function mapContactToPayload(contact: string) {
+  const trimmed = contact.trim();
+  if (trimmed.includes("@")) {
+    return { email: trimmed, whatsapp: "" };
+  }
+  return { email: "", whatsapp: trimmed };
 }
 
 export default function SourceClient() {
@@ -128,6 +140,8 @@ export default function SourceClient() {
   }
 
   function buildSourcePayload() {
+    const contactPayload = mapContactToPayload(form.contact);
+    const { contact: _contact, ...sourceFields } = form;
     const descriptionParts = [
       `Category: ${form.category}`,
       `Description: ${form.description || "Not provided"}`,
@@ -140,7 +154,8 @@ export default function SourceClient() {
     ].filter(Boolean).join("\n");
 
     return {
-      ...form,
+      ...sourceFields,
+      ...contactPayload,
       productName: form.productName || `${form.category} product reference`,
       description: descriptionParts,
       destinationCountry: form.destinationCountry || "Not specified",
@@ -157,7 +172,7 @@ export default function SourceClient() {
       if (!form.imageUrl) throw new Error("Please upload a product image.");
       if (!form.category.trim()) throw new Error("Please add a category.");
       if (!form.quantity.trim()) throw new Error("Please add the quantity needed.");
-      if (!form.email.trim() && !form.whatsapp.trim()) throw new Error("Please add Email or WhatsApp.");
+      if (!form.contact.trim()) throw new Error("Please add Email or WhatsApp.");
       const response = await fetch("/api/source", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -184,26 +199,29 @@ export default function SourceClient() {
             <Link href="/source" className="rounded-full bg-[#101216] px-3 py-2 text-white">Source Products</Link>
             <Link href="/ask/new" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Ask TYORA</Link>
           </nav>
-          <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">{ctaText}</Link>
+          <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-3 py-2 text-sm font-semibold sm:px-4">
+            <span className="sm:hidden">Free Match</span>
+            <span className="hidden sm:inline">{ctaText}</span>
+          </Link>
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[0.86fr_1.14fr] lg:px-8">
-        <div className="self-start rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.1)] lg:sticky lg:top-24 lg:p-6">
-          <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
+      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-3 sm:gap-5 sm:px-6 sm:py-5 lg:grid-cols-[0.86fr_1.14fr] lg:px-8">
+        <div className="self-start rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-5 lg:sticky lg:top-24 lg:p-6">
+          <p className="hidden items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd] sm:inline-flex">
             <PackageSearch size={14} /> {sourceCopy.eyebrow}
           </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+          <h1 className="text-4xl font-semibold leading-tight tracking-normal sm:mt-4 sm:text-5xl">
             <span className="hidden sm:inline">Found a product?<br />Let TYORA find China supplier options.</span>
             <span className="sm:hidden">Found a product?<br />Get a free China supplier quote.</span>
           </h1>
           <p className="mt-4 hidden text-base leading-7 text-[#59616e] sm:block">
             Free product match and factory-price quote first. Pay only if you want supplier contact or managed sourcing.
           </p>
-          <p className="mt-4 text-base leading-7 text-[#59616e] sm:hidden">
+          <p className="mt-3 text-base leading-7 text-[#59616e] sm:hidden">
             Upload a product photo, category, and quantity. We’ll check product match and factory pricing for free.
           </p>
-          <p className="mt-3 rounded-2xl bg-[#f2fbf7] px-4 py-3 text-sm font-semibold text-[#0f766e] sm:hidden">
+          <p className="mt-2 rounded-2xl bg-[#f2fbf7] px-4 py-2.5 text-sm font-semibold text-[#0f766e] sm:hidden">
             Factory price. No hidden markup. Service fee only if you continue.
           </p>
           <div className="mt-4 hidden rounded-3xl border border-[#cfe7df] bg-[#f2fbf7] p-4 sm:block">
@@ -241,14 +259,9 @@ export default function SourceClient() {
               </Field>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Email">
-                <input value={form.email} onChange={(event) => update("email", event.target.value)} className={inputClass} placeholder="you@example.com" />
-              </Field>
-              <Field label="WhatsApp">
-                <input value={form.whatsapp} onChange={(event) => update("whatsapp", event.target.value)} className={inputClass} placeholder="+1..." />
-              </Field>
-            </div>
+            <Field label="Email or WhatsApp">
+              <input value={form.contact} onChange={(event) => update("contact", event.target.value)} className={inputClass} placeholder="you@example.com or +1..." />
+            </Field>
 
             <details className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
               <summary className="cursor-pointer text-sm font-semibold">More details (optional)</summary>
@@ -299,7 +312,6 @@ export default function SourceClient() {
             <button disabled={submitting} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] disabled:opacity-60">
               {submitting ? "Submitting..." : ctaText} <ArrowRight size={16} />
             </button>
-            <p className="text-xs leading-5 text-[#69707d]">No exact price or supplier is guaranteed before supplier confirmation.</p>
           </div>
         </form>
       </section>
@@ -322,14 +334,28 @@ export default function SourceClient() {
             {pricingOptions.map((option) => (
               <div key={option.title} className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
                 <p className="text-sm font-semibold text-[#315fbd]">{option.title}</p>
-                <p className="mt-2 text-xl font-semibold">{option.price}</p>
-                <p className="mt-2 text-sm leading-6 text-[#69707d]">{option.description}</p>
+                {option.mobilePrice ? (
+                  <>
+                    <p className="mt-2 hidden text-xl font-semibold sm:block">{option.price}</p>
+                    <div className="mt-2 sm:hidden">
+                      <p className="text-2xl font-semibold">{option.mobilePrice}</p>
+                      <p className="mt-1 text-sm font-semibold text-[#101216]">{option.mobileMinimum}</p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-2 text-xl font-semibold">{option.price}</p>
+                )}
+                <p className="mt-2 text-sm leading-6 text-[#69707d]">
+                  <span className="sm:hidden">{option.mobileDescription || option.description}</span>
+                  <span className="hidden sm:inline">{option.description}</span>
+                </p>
               </div>
             ))}
           </div>
           <p className="mt-4 rounded-2xl bg-[#f8fafc] p-3 text-sm leading-6 text-[#59616e]">
             We can help with samples. You only pay sample cost and shipping.
           </p>
+          <p className="mt-2 text-xs leading-5 text-[#69707d]">Final price depends on supplier confirmation.</p>
         </div>
 
         <div className="rounded-[28px] border border-[#e7edf5] bg-white p-5 shadow-sm shadow-[#101216]/5">
