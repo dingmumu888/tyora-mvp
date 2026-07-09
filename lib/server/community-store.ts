@@ -462,17 +462,19 @@ export async function getCommunityIdeaBySlug(slug: string, includeHidden = false
   return ideaToCommunityIdea(row);
 }
 
-export async function getCommunityIdeaImage(slug: string, index: number, includeHidden = false) {
+export async function getCommunityIdeaImage(slug: string, index: number, options: { includeHidden?: boolean; viewerId?: string } = {}) {
   if (!Number.isInteger(index) || index < 0 || index > 4) return null;
   const row = await prisma.communityIdea.findUnique({
     where: { slug },
     select: {
       imageUrlsJson: true,
       hidden: true,
-      visibility: true
+      visibility: true,
+      authorId: true
     }
   });
-  if (!row || (!includeHidden && (row.hidden || row.visibility !== "Public"))) return null;
+  const canViewPrivate = Boolean(options.viewerId && row?.authorId === options.viewerId);
+  if (!row || (!options.includeHidden && (row.hidden || (row.visibility !== "Public" && !canViewPrivate)))) return null;
   const imageUrls = parseJson<unknown[]>(row.imageUrlsJson, []);
   if (!Array.isArray(imageUrls)) return null;
   const image = imageUrls[index];

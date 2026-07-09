@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityIdeaImage } from "@/lib/server/community-store";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string; index: string }> }) {
+  const session = await getCommunitySession();
   const { slug, index } = await params;
-  const image = await getCommunityIdeaImage(slug, Number(index));
+  const image = await getCommunityIdeaImage(slug, Number(index), { viewerId: session?.userId });
   if (!image) return new Response("Image not found.", { status: 404 });
 
   if ("redirectUrl" in image) {
