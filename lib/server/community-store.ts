@@ -131,6 +131,17 @@ function hotSignals(row: any) {
   };
 }
 
+function compareHomepageFeaturedIdeas(left: CommunityIdea, right: CommunityIdea) {
+  const featuredGap = Number(right.homepageFeatured) - Number(left.homepageFeatured);
+  if (featuredGap) return featuredGap;
+  if (left.homepageFeatured && right.homepageFeatured) {
+    const leftOrder = left.homepageFeaturedOrder ?? 99;
+    const rightOrder = right.homepageFeaturedOrder ?? 99;
+    if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+  }
+  return 0;
+}
+
 function userPublic(user: UserRow) {
   return {
     id: user.id,
@@ -162,6 +173,8 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
     hidden: Boolean(row.hidden),
     locked: Boolean(row.locked),
     pinned: Boolean(row.pinned),
+    homepageFeatured: Boolean(row.homepageFeatured),
+    homepageFeaturedOrder: typeof row.homepageFeaturedOrder === "number" ? row.homepageFeaturedOrder : undefined,
     author: userPublic(row.author),
     comments: comments
       .filter((comment: any) => !comment.hidden)
@@ -362,6 +375,8 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
   if (sort !== "trending") return ideas;
 
   return ideas.sort((left, right) => {
+    const homepageFeatured = compareHomepageFeaturedIdeas(left, right);
+    if (homepageFeatured) return homepageFeatured;
     const pinned = Number(right.pinned) - Number(left.pinned);
     if (pinned) return pinned;
     const hotProtected = Number(Boolean(right.hotUntil)) - Number(Boolean(left.hotUntil));
@@ -568,6 +583,7 @@ export async function getCommunityUserActivity(userId: string) {
       title: `${reaction.user.name} ${reaction.type === "Interested" ? "is interested in" : "liked"} your idea`,
       body: reaction.idea?.title || "Your idea",
       href: reaction.idea ? `/ask/${reaction.idea.slug}` : "/ask",
+      ideaSlug: reaction.idea?.slug,
       createdAt: iso(reaction.createdAt)
     })),
     ...reviewedIdeas.map((idea) => ({
@@ -576,6 +592,7 @@ export async function getCommunityUserActivity(userId: string) {
       title: "TYORA reviewed your idea",
       body: idea.title,
       href: `/ask/${idea.slug}`,
+      ideaSlug: idea.slug,
       createdAt: iso(idea.review?.updatedAt || idea.updatedAt)
     })),
     ...ideas
@@ -586,6 +603,7 @@ export async function getCommunityUserActivity(userId: string) {
         title: `Your idea status is ${idea.status}`,
         body: idea.title,
         href: `/ask/${idea.slug}`,
+        ideaSlug: idea.slug,
         createdAt: iso(idea.updatedAt)
       }))
   ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()).slice(0, 40);
@@ -884,15 +902,59 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   const review = data.review && typeof data.review === "object" && !Array.isArray(data.review)
     ? (data.review as Record<string, unknown>)
     : {};
+  const hidden = typeof data.hidden === "boolean" ? data.hidden : existing.hidden;
+  const homepageFeaturedRequested = typeof data.homepageFeatured === "boolean" ? data.homepageFeatured : existing.homepageFeatured;
+  const rawHomepageOrder = Number(data.homepageFeaturedOrder);
+  const requestedHomepageOrder = Number.isInteger(rawHomepageOrder) && rawHomepageOrder >= 1 && rawHomepageOrder <= 3
+    ? rawHomepageOrder
+    : existing.homepageFeaturedOrder;
+  let homepageFeatured = homepageFeaturedRequested && !hidden;
+  let homepageFeaturedOrder = homepageFeatured ? requestedHomepageOrder : null;
 
-  await prisma.communityIdea.update({
-    where: { slug },
-    data: {
-      status: normalizeStatus(data.status),
-      hidden: typeof data.hidden === "boolean" ? data.hidden : existing.hidden,
-      locked: typeof data.locked === "boolean" ? data.locked : existing.locked,
-      pinned: typeof data.pinned === "boolean" ? data.pinned : existing.pinned
+  if (homepageFeatured && existing.visibility !== "Public") {
+    throw new Error("Only public ideas can be featured on the homepage.");
+  }
+
+  if (homepageFeatured && !homepageFeaturedOrder) {
+    const selected = await prisma.communityIdea.findMany({
+      where: {
+        id: { not: existing.id },
+        homepageFeatured: true,
+        hidden: false,
+        visibility: "Public"
+      },
+      select: { homepageFeaturedOrder: true }
+    });
+    const used = new Set(selected.map((idea) => idea.homepageFeaturedOrder).filter((value): value is number => typeof value === "number"));
+    homepageFeaturedOrder = [1, 2, 3].find((slot) => !used.has(slot)) || null;
+    if (!homepageFeaturedOrder) throw new Error("Homepage already has 3 featured ideas. Choose an existing slot to replace.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (homepageFeatured && homepageFeaturedOrder) {
+      await tx.communityIdea.updateMany({
+        where: {
+          id: { not: existing.id },
+          homepageFeaturedOrder
+        },
+        data: {
+          homepageFeatured: false,
+          homepageFeaturedOrder: null
+        }
+      });
     }
+
+    await tx.communityIdea.update({
+      where: { slug },
+      data: {
+        status: normalizeStatus(data.status),
+        hidden,
+        locked: typeof data.locked === "boolean" ? data.locked : existing.locked,
+        pinned: typeof data.pinned === "boolean" ? data.pinned : existing.pinned,
+        homepageFeatured,
+        homepageFeaturedOrder
+      }
+    });
   });
 
   if (Object.keys(review).length > 0) {

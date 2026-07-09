@@ -72,6 +72,8 @@ export type CommunityIdea = {
   hidden: boolean;
   locked: boolean;
   pinned: boolean;
+  homepageFeatured: boolean;
+  homepageFeaturedOrder?: number;
   author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country">;
   comments: CommunityComment[];
   review?: TyoraReview;

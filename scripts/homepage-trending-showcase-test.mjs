@@ -8,8 +8,12 @@ const checks = [
     pass: source.includes("topShowcaseIdeas") && source.includes("homepageIdeaScore") && source.includes(".slice(0, 3)")
   },
   {
-    name: "homepage only uses starter examples when there are no real ideas",
-    pass: source.includes("communityIdeas.length === 0 ? starterExamples.slice(0, 3) : []")
+    name: "homepage does not filter real community posts out of the showcase request",
+    pass: !source.includes(".filter(isHomepageReadyIdea)")
+  },
+  {
+    name: "homepage showcase never uses starter examples as fake post cards",
+    pass: !source.includes("const homeExamples") && !source.includes("homeExamples.map")
   },
   {
     name: "starter/example showcase cards link to all ideas, not create idea",

@@ -172,6 +172,8 @@ model CommunityIdea {
   hidden         Boolean             @default(false)
   locked         Boolean             @default(false)
   pinned         Boolean             @default(false)
+  homepageFeatured Boolean           @default(false)
+  homepageFeaturedOrder Int?
   authorId       String
   author         CommunityUser       @relation(fields: [authorId], references: [id])
   comments       CommunityComment[]
@@ -185,6 +187,7 @@ model CommunityIdea {
   @@index([visibility])
   @@index([hidden])
   @@index([pinned])
+  @@index([homepageFeatured, homepageFeaturedOrder])
   @@index([createdAt])
   @@index([updatedAt])
 }

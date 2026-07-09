@@ -159,19 +159,9 @@ function homepageIdeaScore(idea: CommunityIdea) {
   return (idea.isHot ? 500 : 0) + idea.likeCount * 3 + idea.comments.length * 5 + idea.interestedCount * 2;
 }
 
-function isHomepageReadyIdea(idea: CommunityIdea) {
-  const title = idea.title.trim();
-  const description = idea.description.trim();
-  const searchable = `${title} ${description} ${idea.category} ${idea.country}`.toLowerCase();
-  const genericTestTitles = new Set(["phone case", "iphone case"]);
-
-  if (genericTestTitles.has(title.toLowerCase())) return false;
-  if (/[\u3400-\u9fff]/.test(searchable)) return false;
-  if (/[~]{5,}/.test(searchable)) return false;
-  if (title.length < 4 || description.length < 24) return false;
-  if ((searchable.match(/[a-z]/g) || []).length < 18) return false;
-
-  return true;
+function homepageFeaturedRank(idea: CommunityIdea) {
+  if (!idea.homepageFeatured) return 99;
+  return idea.homepageFeaturedOrder ?? 99;
 }
 
 function HotBadge({ idea }: { idea: CommunityIdea }) {
@@ -195,6 +185,7 @@ export default function Home() {
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
+  const [communityLoading, setCommunityLoading] = useState(true);
   const [liveActivity, setLiveActivity] = useState<CommunityActivityItem[]>([]);
   const [sourceRequestCount, setSourceRequestCount] = useState(0);
   const [mobileDiscussionCtaCollapsed, setMobileDiscussionCtaCollapsed] = useState(true);
@@ -219,8 +210,9 @@ export default function Home() {
   useEffect(() => {
     fetch("/api/community/ideas?sort=trending&limit=12")
       .then((response) => response.json())
-      .then((payload) => setCommunityIdeas((payload.data || []).filter(isHomepageReadyIdea)))
-      .catch(() => setCommunityIdeas([]));
+      .then((payload) => setCommunityIdeas(Array.isArray(payload.data) ? payload.data : []))
+      .catch(() => setCommunityIdeas([]))
+      .finally(() => setCommunityLoading(false));
   }, []);
 
   useEffect(() => {
@@ -340,6 +332,12 @@ export default function Home() {
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
   const topShowcaseIdeas = [...communityIdeas]
     .sort((left, right) => {
+      const featuredGap = Number(right.homepageFeatured) - Number(left.homepageFeatured);
+      if (featuredGap !== 0) return featuredGap;
+      if (left.homepageFeatured && right.homepageFeatured) {
+        const orderGap = homepageFeaturedRank(left) - homepageFeaturedRank(right);
+        if (orderGap !== 0) return orderGap;
+      }
       const scoreGap = homepageIdeaScore(right) - homepageIdeaScore(left);
       if (scoreGap !== 0) return scoreGap;
       const commentGap = right.comments.length - left.comments.length;
@@ -347,7 +345,6 @@ export default function Home() {
       return new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime();
     })
     .slice(0, 3);
-  const homeExamples = communityIdeas.length === 0 ? starterExamples.slice(0, 3) : [];
   const hasCommunityStats = communityIdeas.length > 0;
   const communityStats = [
     ["Ideas Shared", communityIdeas.length],
@@ -417,7 +414,7 @@ export default function Home() {
             <div className="mt-3 grid gap-2">
               {[
                 ["Founders Online", Math.max(communityIdeas.length * 3, 12), "bg-[#ecfdf5] text-[#0f766e]", "bg-[#14b8a6]"],
-                ["Discussions Today", Math.max(communityIdeas.length + homeExamples.length, 8), "bg-[#f2f7ff] text-[#315fbd]", "bg-[#2563eb]"],
+                ["Discussions Today", Math.max(communityIdeas.length, 8), "bg-[#f2f7ff] text-[#315fbd]", "bg-[#2563eb]"],
                 ["TYORA Replies Today", Math.max(communityIdeas.filter((item) => item.review).length, 5), "bg-[#fff7ed] text-[#c2410c]", "bg-[#f59e0b]"]
               ].map(([label, value, tone, dot]) => (
                 <div key={label} className={`flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-semibold ${tone}`}>
@@ -480,96 +477,29 @@ export default function Home() {
             </div>
 
             <div className="mt-2.5 grid gap-2">
-              {communityIdeas.length === 0 ? (
-                <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-3 shadow-sm shadow-[#101216]/4 sm:p-4">
-                  <div className="hidden gap-2.5 sm:grid lg:grid-cols-[1fr_auto] lg:items-center">
-                    <div>
-                      <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Starter community</p>
-                      <h2 className="mt-2 text-xl font-semibold leading-tight sm:text-2xl">Be the first founder to start a discussion.</h2>
-                      <p className="mt-1.5 max-w-2xl text-sm leading-5 text-[#59616e]">
-                        Share a product idea and get a free manufacturing review from TYORA.
-                      </p>
+              {topShowcaseIdeas.length === 0 ? (
+                <div className="grid gap-2">
+                  {communityLoading ? (
+                    [0, 1, 2].map((item) => (
+                      <div key={item} className="grid animate-pulse grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:p-2">
+                        <div className="aspect-square rounded-[20px] bg-[#eef3f8] sm:rounded-xl" />
+                        <div className="min-w-0 space-y-3 py-1">
+                          <div className="h-3 w-2/3 rounded-full bg-[#eef3f8]" />
+                          <div className="h-5 w-4/5 rounded-full bg-[#e5ebf3]" />
+                          <div className="h-4 w-full rounded-full bg-[#eef3f8]" />
+                          <div className="h-4 w-3/5 rounded-full bg-[#eef3f8]" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4">
+                      <p className="text-sm font-semibold text-[#101216]">No public discussions are available yet.</p>
+                      <p className="mt-1 text-sm text-[#59616e]">The showcase only displays real community posts.</p>
                     </div>
-                    <Link href="/ask/new" className={`hidden h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold sm:inline-flex ${primaryButton}`}>
-                      <Upload size={16} /> Start a Discussion
-                    </Link>
-                  </div>
-
-                  <div className="mt-3 grid gap-2">
-                    {starterExamples.map((example, index) => (
-                      <Link
-                        key={example.title}
-                        href="/ask"
-                        className="group grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[14px] sm:border-[#e4e8ef] sm:bg-[#fbfbfc] sm:p-2 sm:shadow-none"
-                      >
-                        <div className={cn(
-                          "relative flex aspect-square items-center justify-center rounded-[20px] bg-gradient-to-br shadow-inner shadow-white sm:rounded-xl",
-                          index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
-                        )}>
-                          <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
-                            {example.title.slice(0, 2).toUpperCase()}
-                          </span>
-                          <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase text-[#69707d] ring-1 ring-[#e8ebef] max-sm:hidden">
-                            Example
-                          </span>
-                        </div>
-                        <div className="min-w-0 py-0.5 sm:py-0">
-                          <div className="flex items-center gap-2 text-xs font-medium text-[#69707d] sm:hidden">
-                            <span>founder</span>
-                            <span className="size-1.5 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.1)]" />
-                            <span className="text-[#536174]">Ready for review</span>
-                            <span className="ml-auto">5 min ago</span>
-                            <MoreHorizontal size={16} className="text-[#9aa4b2]" />
-                          </div>
-                          <div className="hidden flex-wrap gap-2 text-xs text-[#69707d] sm:flex">
-                            <span className="rounded-full bg-white px-2 py-1 ring-1 ring-[#e8ebef]">{example.category}</span>
-                            <span>Demo prompt</span>
-                          </div>
-                          <h3 className="mt-1.5 line-clamp-1 text-[17px] font-semibold leading-tight text-[#111827] sm:text-lg">{example.title}</h3>
-                          <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#536174] sm:text-[#59616e]">{example.description}</p>
-                          <div className="mt-2 flex gap-1.5 sm:hidden">
-                            <span className="max-w-[112px] truncate rounded-full bg-[#edf4ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">{example.category}</span>
-                            <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-[11px] font-semibold text-[#667085]">Example</span>
-                          </div>
-                          <div className="mt-2 flex items-center gap-4 text-[13px] font-medium text-[#5f6b7a] sm:mt-1.5 sm:flex-wrap sm:gap-x-2.5 sm:gap-y-0.5 sm:text-[11px]">
-                            <span className="inline-flex items-center gap-1"><Heart size={15} className="sm:size-[13px]" /> {exampleMetrics[index].love}<span className="hidden sm:inline"> Love</span></span>
-                            <span className="inline-flex items-center gap-1"><MessageCircle size={15} className="sm:size-[13px]" /> {exampleMetrics[index].comments}<span className="hidden sm:inline"> Comments</span></span>
-                            <span className="inline-flex items-center gap-1 sm:hidden"><Eye size={15} /> {exampleMetrics[index].views}</span>
-                            <span className="hidden items-center gap-1 sm:inline-flex"><ShoppingBag size={13} /> {exampleMetrics[index].buy} I'd Buy</span>
-                            <span className="hidden items-center gap-1 sm:inline-flex"><Eye size={13} /> {exampleMetrics[index].views} Views</span>
-                            <span className="hidden text-[#315fbd] sm:inline">Last reply {exampleMetrics[index].reply}</span>
-                          </div>
-                          <div className="mt-2 flex items-center justify-between sm:hidden">
-                            <div className="flex -space-x-2">
-                              {exampleMetrics[index].avatars.map((avatar) => (
-                                <span key={`${example.title}-mobile-${avatar}`} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
-                                  {avatar}
-                                </span>
-                              ))}
-                            </div>
-                            <span className="size-3 rounded-full bg-[#14b8a6] shadow-[0_0_0_5px_rgba(20,184,166,0.12)]" />
-                          </div>
-                          <div className="mt-1.5 flex items-center justify-between max-sm:hidden">
-                            <div className="flex -space-x-2">
-                              {exampleMetrics[index].avatars.map((avatar) => (
-                                <span key={avatar} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
-                                  {avatar}
-                                </span>
-                              ))}
-                            </div>
-                            <span className="text-[11px] font-semibold text-[#8b93a1]">Founder + TYORA + makers</span>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                  <Link href="/ask/new" className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f2f7ff] px-4 py-3 text-sm font-semibold text-[#2563eb] sm:hidden">
-                    Start your own discussion <ArrowRight size={15} />
-                  </Link>
+                  )}
                 </div>
               ) : (
-                <>
-                  {topShowcaseIdeas.map((idea) => (
+                topShowcaseIdeas.map((idea) => (
                 <Link key={idea.id} href="/ask" className="group relative grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:border-[#e1e6ee] sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
                   <HotBadge idea={idea} />
                   <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold shadow-inner shadow-white sm:rounded-xl">
@@ -633,70 +563,7 @@ export default function Home() {
                     </div>
                   </div>
                 </Link>
-                  ))}
-                  {homeExamples.map((example, index) => (
-                    <Link key={example.title} href="/ask" className="group grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-dashed border-[#cdd6e2] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:bg-white/94 sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
-                      <div className={cn(
-                        "relative flex aspect-square items-center justify-center rounded-[20px] bg-gradient-to-br shadow-inner shadow-white sm:rounded-xl",
-                        index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
-                      )}>
-                        <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
-                          {example.title.slice(0, 2).toUpperCase()}
-                        </span>
-                        <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#69707d] ring-1 ring-[#e8ebef] max-sm:hidden">
-                          Example
-                        </span>
-                      </div>
-                      <div className="min-w-0 py-0.5 sm:py-0">
-                        <div className="flex items-center gap-2 text-xs font-medium text-[#69707d] sm:hidden">
-                          <span>founder</span>
-                          <span className="size-1.5 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.1)]" />
-                          <span className="text-[#536174]">Ready for review</span>
-                          <span className="ml-auto">{exampleMetrics[index].reply}</span>
-                          <MoreHorizontal size={16} className="text-[#9aa4b2]" />
-                        </div>
-                        <div className="hidden flex-wrap gap-2 text-xs text-[#69707d] sm:flex">
-                          <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{example.category}</span>
-                          <span className="inline-flex items-center gap-1 text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Ready for review</span>
-                        </div>
-                        <h3 className="mt-1.5 line-clamp-1 text-[17px] font-semibold leading-tight text-[#111827] sm:text-base">{example.title}</h3>
-                        <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#536174] sm:text-[13px] sm:text-[#59616e]">{example.description}</p>
-                        <div className="mt-2 flex gap-1.5 sm:hidden">
-                          <span className="max-w-[112px] truncate rounded-full bg-[#edf4ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">{example.category}</span>
-                          <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-[11px] font-semibold text-[#667085]">Example</span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-4 text-[13px] font-medium text-[#5f6b7a] sm:mt-1.5 sm:flex-wrap sm:gap-x-2.5 sm:gap-y-0.5 sm:text-[11px]">
-                          <span className="inline-flex items-center gap-1"><Heart size={15} className="sm:size-[13px]" /> {exampleMetrics[index].love}<span className="hidden sm:inline"> Love</span></span>
-                          <span className="inline-flex items-center gap-1"><MessageCircle size={15} className="sm:size-[13px]" /> {exampleMetrics[index].comments}<span className="hidden sm:inline"> Comments</span></span>
-                          <span className="inline-flex items-center gap-1 sm:hidden"><Eye size={15} /> {exampleMetrics[index].views}</span>
-                          <span className="hidden items-center gap-1 sm:inline-flex"><ShoppingBag size={13} /> {exampleMetrics[index].buy} I'd Buy</span>
-                          <span className="hidden items-center gap-1 sm:inline-flex"><Eye size={13} /> {exampleMetrics[index].views} Views</span>
-                          <span className="hidden text-[#315fbd] sm:inline">Last reply {exampleMetrics[index].reply}</span>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between sm:hidden">
-                          <div className="flex -space-x-2">
-                            {exampleMetrics[index].avatars.map((avatar) => (
-                              <span key={`${example.title}-feed-mobile-${avatar}`} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
-                                {avatar}
-                              </span>
-                            ))}
-                          </div>
-                          <span className="size-3 rounded-full bg-[#14b8a6] shadow-[0_0_0_5px_rgba(20,184,166,0.12)]" />
-                        </div>
-                        <div className="mt-1.5 flex items-center justify-between max-sm:hidden">
-                          <div className="flex -space-x-2">
-                            {exampleMetrics[index].avatars.map((avatar) => (
-                              <span key={avatar} className="flex size-6 items-center justify-center rounded-full border-2 border-white bg-[#101216] text-[9px] font-semibold text-white">
-                                {avatar}
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-[11px] font-semibold text-[#8b93a1]">Example activity</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </>
+                ))
               )}
             </div>
 

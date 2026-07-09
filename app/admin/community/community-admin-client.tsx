@@ -5,11 +5,12 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Loader2, MessageSquare, Save, Trash2, X } from "lucide-react";
 import { CommunityIdea } from "@/lib/community";
 
-type QueueFilter = "needs-reply" | "replied" | "pinned" | "hidden" | "all";
+type QueueFilter = "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
 
 const buckets: Array<[QueueFilter, string]> = [
   ["needs-reply", "Needs Reply"],
   ["replied", "Replied"],
+  ["featured", "Homepage Featured"],
   ["pinned", "Pinned"],
   ["hidden", "Hidden"],
   ["all", "All"]
@@ -56,6 +57,7 @@ export default function CommunityAdminClient() {
     return {
       "needs-reply": ideas.filter((idea) => !idea.review && !idea.hidden).length,
       replied: ideas.filter((idea) => idea.review && !idea.hidden).length,
+      featured: ideas.filter((idea) => idea.homepageFeatured && !idea.hidden).length,
       pinned: ideas.filter((idea) => idea.pinned && !idea.hidden).length,
       hidden: ideas.filter((idea) => idea.hidden).length,
       all: ideas.length
@@ -71,6 +73,8 @@ export default function CommunityAdminClient() {
       hidden: form.get("hidden") === "on",
       locked: form.get("locked") === "on",
       pinned: form.get("pinned") === "on",
+      homepageFeatured: form.get("homepageFeatured") === "on",
+      homepageFeaturedOrder: Number(form.get("homepageFeaturedOrder") || 0) || null,
       review: {
         additionalNotes: form.get("reply")
       }
@@ -82,10 +86,20 @@ export default function CommunityAdminClient() {
         body: JSON.stringify(body)
       });
       const payload = await response.json();
+      if (!payload.success) throw new Error(payload.message || "Unable to save idea.");
       if (payload.success) {
-        setIdeas((current) => current.map((item) => item.id === idea.id ? payload.data : item));
+        const updated = payload.data as CommunityIdea;
+        setIdeas((current) => current.map((item) => {
+          if (item.id === updated.id) return updated;
+          if (updated.homepageFeatured && item.homepageFeaturedOrder === updated.homepageFeaturedOrder) {
+            return { ...item, homepageFeatured: false, homepageFeaturedOrder: undefined };
+          }
+          return item;
+        }));
         setReplyingTo(null);
       }
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to save idea.");
     } finally {
       setSaving("");
     }
@@ -114,6 +128,7 @@ export default function CommunityAdminClient() {
   const filtered = ideas.filter((idea) => {
     if (active === "needs-reply") return !idea.review && !idea.hidden;
     if (active === "replied") return Boolean(idea.review) && !idea.hidden;
+    if (active === "featured") return idea.homepageFeatured && !idea.hidden;
     if (active === "pinned") return idea.pinned && !idea.hidden;
     if (active === "hidden") return idea.hidden;
     return true;
@@ -153,6 +168,13 @@ export default function CommunityAdminClient() {
                 <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
                   <div>
                     <p className="text-xs text-[#69707d]">{idea.id} · {idea.visibility} · {idea.author.name}</p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                      {idea.homepageFeatured ? (
+                        <span className="rounded-full bg-[#edf4ff] px-2.5 py-1 text-[#2563eb]">Homepage #{idea.homepageFeaturedOrder || "?"}</span>
+                      ) : null}
+                      {idea.pinned ? <span className="rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[#0f766e]">Pinned</span> : null}
+                      {idea.hidden ? <span className="rounded-full bg-[#fff1f2] px-2.5 py-1 text-[#be123c]">Hidden</span> : null}
+                    </div>
                     <h2 className="mt-2 text-2xl font-semibold">{idea.title}</h2>
                     <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{idea.description}</p>
                     <div className="mt-4 flex flex-wrap gap-2 text-xs text-[#69707d]">
@@ -213,6 +235,20 @@ export default function CommunityAdminClient() {
               <label className="flex items-center gap-2"><input name="hidden" type="checkbox" defaultChecked={replyingTo.hidden} /> Hide Post</label>
               <label className="flex items-center gap-2"><input name="locked" type="checkbox" defaultChecked={replyingTo.locked} /> Lock Comments</label>
               <label className="flex items-center gap-2"><input name="pinned" type="checkbox" defaultChecked={replyingTo.pinned} /> Pin Post</label>
+            </div>
+            <div className="mt-3 grid gap-3 rounded-[18px] border border-[#dbeafe] bg-[#f2f7ff] p-4 text-sm sm:grid-cols-[1fr_180px] sm:items-center">
+              <label className="flex items-center gap-2 font-semibold text-[#315fbd]">
+                <input name="homepageFeatured" type="checkbox" defaultChecked={replyingTo.homepageFeatured} />
+                Feature on homepage
+              </label>
+              <label className="grid gap-1 text-xs font-semibold uppercase tracking-normal text-[#536174]">
+                Showcase slot
+                <select name="homepageFeaturedOrder" defaultValue={replyingTo.homepageFeaturedOrder || 1} className="h-10 rounded-full border border-[#bfdbfe] bg-white px-3 text-sm font-semibold normal-case text-[#101216]">
+                  <option value="1">Homepage #1</option>
+                  <option value="2">Homepage #2</option>
+                  <option value="3">Homepage #3</option>
+                </select>
+              </label>
             </div>
             <div className="mt-5 flex justify-end gap-3">
               <button type="button" onClick={() => setReplyingTo(null)} className="inline-flex h-11 items-center justify-center rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold">Cancel</button>
