@@ -35,6 +35,20 @@ const checks = [
       !summary.includes("object-cover")
   },
   {
+    label: "Posts panel supports editing and deleting own posts",
+    pass:
+      summary.includes("Edit") &&
+      summary.includes("Delete") &&
+      summary.includes("method: \"PATCH\"") &&
+      summary.includes("method: \"DELETE\"")
+  },
+  {
+    label: "Likes panel supports canceling likes through reaction toggle",
+    pass:
+      summary.includes("Cancel like") &&
+      summary.includes("body: JSON.stringify({ type: \"Like\" })")
+  },
+  {
     label: "Messages panel groups comments, likes, interested, and TYORA reviews",
     pass:
       messages.includes('type ActivityFilter = "all" | "comment" | "like" | "interested" | "review"') &&
