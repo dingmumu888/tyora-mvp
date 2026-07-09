@@ -197,10 +197,20 @@ export default function Home() {
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
   const [liveActivity, setLiveActivity] = useState<CommunityActivityItem[]>([]);
   const [sourceRequestCount, setSourceRequestCount] = useState(0);
+  const [mobileDiscussionCtaCollapsed, setMobileDiscussionCtaCollapsed] = useState(true);
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
   }, []);
+
+  useEffect(() => {
+    const stored = window.sessionStorage.getItem("mobileDiscussionCtaCollapsed");
+    if (stored === "false") setMobileDiscussionCtaCollapsed(false);
+  }, []);
+
+  useEffect(() => {
+    window.sessionStorage.setItem("mobileDiscussionCtaCollapsed", String(mobileDiscussionCtaCollapsed));
+  }, [mobileDiscussionCtaCollapsed]);
 
   useEffect(() => {
     trackAnalyticsEvent("page_visit");
@@ -1235,27 +1245,44 @@ export default function Home() {
         {t.startWhatsAppChat}
       </a>
 
-      <Link
-        href="/ask/new"
-        className="group fixed inset-x-4 bottom-[calc(6.35rem+env(safe-area-inset-bottom))] z-[9980] mx-auto block max-w-md overflow-hidden rounded-[22px] border border-white/75 bg-white/90 p-3 text-[#101216] shadow-[0_18px_48px_rgba(15,23,42,0.18)] backdrop-blur-xl transition duration-[180ms] active:scale-[0.985] sm:hidden"
-        aria-label="Start a product discussion"
-      >
-        <span className="absolute -right-8 -top-12 size-24 rounded-full bg-[#dbeafe] blur-2xl transition duration-300 group-hover:scale-110" />
-        <span className="absolute -bottom-12 left-16 size-24 rounded-full bg-[#ccfbf1] blur-2xl" />
-        <span className="relative z-10 flex min-h-[76px] items-center justify-between gap-3">
-          <span className="min-w-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">
-              <Users size={13} /> TYORA Community
-            </span>
-            <span className="mt-2 block line-clamp-2 text-[1.15rem] font-semibold leading-[1.05] tracking-normal">
-              Start a product discussion
-            </span>
-          </span>
-          <span className="shrink-0 rounded-full bg-[#2563eb] px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#2563eb]/22">
-            Start <ArrowRight size={14} className="inline" />
-          </span>
-        </span>
-      </Link>
+      {mobileDiscussionCtaCollapsed ? (
+        <button
+          type="button"
+          aria-label="Expand start discussion"
+          onClick={() => setMobileDiscussionCtaCollapsed(false)}
+          className="fixed right-0 top-[48vh] z-[9980] flex min-h-24 w-11 -translate-y-1/2 items-center justify-center rounded-l-2xl border border-r-0 border-white/80 bg-white/92 px-2 text-xs font-semibold text-[#2563eb] shadow-[0_14px_36px_rgba(15,23,42,0.18)] backdrop-blur-xl transition duration-[180ms] active:scale-95 sm:hidden"
+          style={{ writingMode: "vertical-rl" }}
+        >
+          Start
+        </button>
+      ) : (
+        <div className="fixed right-3 top-[44vh] z-[9980] w-[calc(100vw-88px)] max-w-[260px] -translate-y-1/2 overflow-hidden rounded-2xl border border-white/75 bg-white/92 p-3 text-[#101216] shadow-[0_18px_44px_rgba(15,23,42,0.18)] backdrop-blur-xl transition duration-[180ms] sm:hidden">
+          <span className="pointer-events-none absolute -right-8 -top-10 size-20 rounded-full bg-[#dbeafe] blur-2xl" />
+          <div className="relative z-10 flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-semibold text-[#2563eb]">
+                <Users size={12} /> TYORA Community
+              </span>
+              <p className="mt-2 text-sm font-semibold leading-tight">Start a discussion</p>
+            </div>
+            <button
+              type="button"
+              aria-label="Collapse start discussion"
+              onClick={() => setMobileDiscussionCtaCollapsed(true)}
+              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f3f5f8] text-[#69707d]"
+            >
+              <X size={14} />
+            </button>
+          </div>
+          <Link
+            href="/ask/new"
+            className="relative z-10 mt-3 inline-flex h-9 items-center justify-center gap-1 rounded-full bg-[#2563eb] px-3 text-xs font-semibold text-white shadow-lg shadow-[#2563eb]/22"
+            aria-label="Start a product discussion"
+          >
+            Start <ArrowRight size={13} />
+          </Link>
+        </div>
+      )}
 
       <AnimatePresence>
         {videoModalOpen ? (
