@@ -93,6 +93,16 @@ function parseStoredDataImage(value: unknown) {
   }
 }
 
+function publicCommunityAvatar(value: unknown, userId: string) {
+  if (typeof value !== "string") return null;
+  const url = value.trim();
+  if (!url) return null;
+  if (DATA_IMAGE_PATTERN.test(url)) {
+    return `/api/community/users/${encodeURIComponent(userId)}/avatar`;
+  }
+  return safePublicImageUrl(url, MAX_INLINE_AVATAR_LENGTH);
+}
+
 function iso(value: Date | string | null | undefined) {
   if (!value) return new Date().toISOString();
   return value instanceof Date ? value.toISOString() : value;
@@ -126,7 +136,7 @@ function userPublic(user: UserRow) {
     id: user.id,
     username: user.username,
     name: user.name,
-    avatar: safePublicImageUrl(user.avatar, MAX_INLINE_AVATAR_LENGTH) || undefined,
+    avatar: publicCommunityAvatar(user.avatar, user.id) || undefined,
     bio: user.bio || undefined,
     profileCompleted: Boolean(user.profileCompleted),
     country: user.country || undefined
@@ -453,6 +463,18 @@ export async function getCommunityIdeaImage(slug: string, index: number, include
   const dataImage = parseStoredDataImage(image);
   if (dataImage) return dataImage;
   const publicUrl = safePublicImageUrl(image);
+  return publicUrl ? { redirectUrl: publicUrl } : null;
+}
+
+export async function getCommunityUserAvatar(userId: string) {
+  const row = await prisma.communityUser.findUnique({
+    where: { id: userId },
+    select: { avatar: true }
+  });
+  if (!row?.avatar) return null;
+  const dataImage = parseStoredDataImage(row.avatar);
+  if (dataImage) return dataImage;
+  const publicUrl = safePublicImageUrl(row.avatar, MAX_INLINE_AVATAR_LENGTH);
   return publicUrl ? { redirectUrl: publicUrl } : null;
 }
 

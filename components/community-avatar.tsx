@@ -33,7 +33,7 @@ export default function CommunityAvatar({ name, src, className, textClassName }:
     <span className={cn("relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white bg-[#101216] text-xs font-semibold text-white", className)}>
       {canRender(src) && !failed ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={name} className="size-full object-cover" onError={() => setFailed(true)} />
+        <img src={src} alt={name} loading="lazy" className="size-full object-cover" onError={() => setFailed(true)} />
       ) : (
         <span className={textClassName}>{initials}</span>
       )}
