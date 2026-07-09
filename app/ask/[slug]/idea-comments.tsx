@@ -15,6 +15,8 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
   const [user, setUser] = useState<SessionUser | null>(null);
   const [deletingId, setDeletingId] = useState("");
   const [message, setMessage] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const visibleComments = expanded ? comments : comments.slice(0, 5);
 
   useEffect(() => {
     function refreshSession() {
@@ -47,14 +49,14 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
   }
 
   return (
-    <section id="community-discussion" className="rounded-[18px] border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+    <section id="community-discussion" className="rounded-[20px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Community Discussion</h2>
+        <h2 className="text-lg font-semibold">Community Discussion</h2>
         <span className="inline-flex items-center gap-1 text-sm text-[#69707d]"><MessageCircle size={15} /> {comments.length}</span>
       </div>
-      <div className="mt-5 space-y-3">
+      <div className="mt-4 space-y-3">
         {comments.length === 0 ? <p className="rounded-2xl bg-[#f7f8fa] p-4 text-sm text-[#69707d]">No public comments yet.</p> : null}
-        {comments.map((comment) => {
+        {visibleComments.map((comment) => {
           const canDelete = user?.id === comment.author.id;
           return (
             <article key={comment.id} className={`rounded-2xl border border-[#eef1f4] bg-[#fbfbfc] p-4 ${comment.parentId ? "ml-6" : ""}`}>
@@ -75,6 +77,11 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
           );
         })}
       </div>
+      {!expanded && comments.length > 5 ? (
+        <button type="button" onClick={() => setExpanded(true)} className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dfe3e8] bg-white text-sm font-semibold text-[#2563eb]">
+          View more comments
+        </button>
+      ) : null}
       {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
     </section>
   );

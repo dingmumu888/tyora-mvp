@@ -7,9 +7,10 @@ import { WHATSAPP_URL } from "@/lib/whatsapp";
 import EmailLogin from "@/components/email-login";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
+type IdeaActionMode = "bar" | "comment" | "ready";
 const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
-export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
+export default function IdeaActions({ idea, mode = "bar" }: { idea: CommunityIdea; mode?: IdeaActionMode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [body, setBody] = useState("");
   const [reactionState, setReactionState] = useState({ liked: false, interested: false });
@@ -148,8 +149,61 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
     }
   }
 
+  if (mode === "comment") {
+    return (
+      <form onSubmit={postComment} className="rounded-[20px] border border-[#e8ebef] bg-white p-4 shadow-sm shadow-[#101216]/4">
+        <p className="text-sm font-semibold">Leave a reply</p>
+        <textarea
+          ref={commentRef}
+          value={body}
+          onChange={(event) => setBody(event.target.value)}
+          rows={4}
+          placeholder={user ? "Add a manufacturing question, answer, or practical note." : "Email login required to comment."}
+          className="mt-3 w-full resize-none rounded-2xl border border-[#dfe3e8] p-3 outline-none focus:border-[#101216]"
+        />
+        {user ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {quickEmojis.map((emoji) => (
+              <button key={emoji} type="button" onClick={() => appendCommentEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
+                {emoji}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {user ? (
+          <button className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} Comment
+          </button>
+        ) : (
+          <EmailLogin className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            <MessageCircle size={15} /> Email Login to Comment
+          </EmailLogin>
+        )}
+        {message ? <p className="mt-2 text-sm text-[#8a5a00]">{message}</p> : null}
+      </form>
+    );
+  }
+
+  if (mode === "ready") {
+    return (
+      <section id="continue" className="rounded-[24px] bg-[#101216] p-6 text-white shadow-xl shadow-[#101216]/15">
+        <h2 className="text-2xl font-semibold">Ready to build?</h2>
+        <p className="mt-3 text-sm leading-6 text-white/72">Continue This Project sends TYORA the Idea ID, Idea URL, Title, and Customer Name.</p>
+        {user ? (
+          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
+            Continue This Project →
+          </a>
+        ) : (
+          <EmailLogin className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
+            Email Login to Continue
+          </EmailLogin>
+        )}
+      </section>
+    );
+  }
+
   return (
-    <div id="continue" className="space-y-5">
+    <div className="space-y-3">
       {isOwner ? (
         <section className="rounded-[24px] border border-[#e8ebef] bg-white p-4 shadow-sm shadow-[#101216]/4">
           <p className="text-sm font-semibold">Your discussion</p>
@@ -187,51 +241,6 @@ export default function IdeaActions({ idea }: { idea: CommunityIdea }) {
           <Share2 size={16} /> Share
         </button>
       </div>
-
-      <form onSubmit={postComment} className="rounded-[24px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-        <p className="text-sm font-semibold">Community Discussion</p>
-        <textarea
-          ref={commentRef}
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          rows={4}
-          placeholder={user ? "Add a manufacturing question, answer, or practical note." : "Email login required to comment."}
-          className="mt-3 w-full resize-none rounded-2xl border border-[#dfe3e8] p-3 outline-none focus:border-[#101216]"
-        />
-        {user ? (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {quickEmojis.map((emoji) => (
-              <button key={emoji} type="button" onClick={() => appendCommentEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
-                {emoji}
-              </button>
-            ))}
-          </div>
-        ) : null}
-        {user ? (
-          <button className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-            {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} Comment
-          </button>
-        ) : (
-          <EmailLogin className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-            <MessageCircle size={15} /> Email Login to Comment
-          </EmailLogin>
-        )}
-        {message ? <p className="mt-2 text-sm text-[#8a5a00]">{message}</p> : null}
-      </form>
-
-      <section className="rounded-[24px] bg-[#101216] p-6 text-white shadow-xl shadow-[#101216]/15">
-        <h2 className="text-2xl font-semibold">Ready to build?</h2>
-        <p className="mt-3 text-sm leading-6 text-white/72">Continue This Project sends TYORA the Idea ID, Idea URL, Title, and Customer Name.</p>
-        {user ? (
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
-            Continue This Project →
-          </a>
-        ) : (
-          <EmailLogin className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
-            Email Login to Continue
-          </EmailLogin>
-        )}
-      </section>
 
       {editOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-[#101216]/45 px-4 backdrop-blur-sm">
