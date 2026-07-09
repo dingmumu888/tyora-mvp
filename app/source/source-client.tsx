@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, ClipboardCheck, Factory, ImagePlus, PackageSearch, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Factory, ImagePlus, PackageSearch, ShieldCheck } from "lucide-react";
 import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
 type FormState = {
+  category: string;
   productName: string;
   description: string;
   productLink: string;
@@ -21,6 +22,7 @@ type FormState = {
 };
 
 const emptyForm: FormState = {
+  category: "",
   productName: "",
   description: "",
   productLink: "",
@@ -37,12 +39,25 @@ const emptyForm: FormState = {
 const inputClass = "min-h-11 w-full rounded-2xl border border-[#dfe6ef] bg-white px-3 text-sm font-medium text-[#101216] outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10";
 const textareaClass = `${inputClass} min-h-28 resize-none py-3 leading-6`;
 
-const supportIcons = [
-  Factory,
-  ClipboardCheck,
-  Truck,
-  ShieldCheck
-] as const;
+const ctaText = "Get Free Product Match";
+
+const pricingOptions = [
+  {
+    title: "Free Product Match & Quote",
+    price: "Free",
+    description: "We check product match, supplier options, and estimated China factory pricing."
+  },
+  {
+    title: "Supplier Introduction",
+    price: "3%-5% of estimated order value, minimum $199",
+    description: "Get verified supplier contact and deal directly with the factory."
+  },
+  {
+    title: "Managed Sourcing",
+    price: "10%-15% of order value, minimum $499",
+    description: "TYORA helps negotiate, purchase, inspect, and coordinate shipping."
+  }
+];
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -59,20 +74,12 @@ export default function SourceClient() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [submittedId, setSubmittedId] = useState("");
-  const [sourceRequestCount, setSourceRequestCount] = useState(0);
   const [trustToast, setTrustToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const sourceCopy = content.sourcePage;
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/source/stats")
-      .then((response) => response.json())
-      .then((payload) => setSourceRequestCount(Number(payload.data?.total || 0)))
-      .catch(() => setSourceRequestCount(0));
   }, []);
 
   useEffect(() => {
@@ -120,16 +127,41 @@ export default function SourceClient() {
     update("imageUrl", dataUrl);
   }
 
+  function buildSourcePayload() {
+    const descriptionParts = [
+      `Category: ${form.category}`,
+      `Description: ${form.description || "Not provided"}`,
+      form.productName ? `Product name: ${form.productName}` : "",
+      form.productLink ? `Product link: ${form.productLink}` : "",
+      form.material ? `Material: ${form.material}` : "",
+      form.targetPrice ? `Target price: ${form.targetPrice}` : "",
+      form.destinationCountry ? `Destination country: ${form.destinationCountry}` : "",
+      form.needTypes.length > 0 ? `Other details: ${form.needTypes.join(", ")}` : ""
+    ].filter(Boolean).join("\n");
+
+    return {
+      ...form,
+      productName: form.productName || `${form.category} product reference`,
+      description: descriptionParts,
+      destinationCountry: form.destinationCountry || "Not specified",
+      needTypes: form.needTypes.length > 0 ? form.needTypes : ["Find supplier"]
+    };
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setMessage("");
     setSubmittedId("");
     try {
+      if (!form.imageUrl) throw new Error("Please upload a product image.");
+      if (!form.category.trim()) throw new Error("Please add a category.");
+      if (!form.quantity.trim()) throw new Error("Please add the quantity needed.");
+      if (!form.email.trim() && !form.whatsapp.trim()) throw new Error("Please add Email or WhatsApp.");
       const response = await fetch("/api/source", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(buildSourcePayload())
       });
       const payload = await response.json();
       if (!payload.success) throw new Error(payload.message || "Unable to submit source request.");
@@ -152,60 +184,34 @@ export default function SourceClient() {
             <Link href="/source" className="rounded-full bg-[#101216] px-3 py-2 text-white">Source Products</Link>
             <Link href="/ask/new" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Ask TYORA</Link>
           </nav>
-          <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">{sourceCopy.ctaText}</Link>
+          <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">{ctaText}</Link>
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-        <div className="self-start rounded-[28px] border border-[#dfe6ef] bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.1)] lg:sticky lg:top-24">
+      <section className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[0.86fr_1.14fr] lg:px-8">
+        <div className="self-start rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.1)] lg:sticky lg:top-24 lg:p-6">
           <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
             <PackageSearch size={14} /> {sourceCopy.eyebrow}
           </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">{sourceCopy.title}</h1>
-          <p className="mt-4 text-base leading-7 text-[#59616e]">
-            {sourceCopy.subtitle}
+          <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+            <span className="hidden sm:inline">Found a product?<br />Let TYORA find China supplier options.</span>
+            <span className="sm:hidden">Found a product?<br />Get a free China supplier quote.</span>
+          </h1>
+          <p className="mt-4 hidden text-base leading-7 text-[#59616e] sm:block">
+            Free product match and factory-price quote first. Pay only if you want supplier contact or managed sourcing.
           </p>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="rounded-2xl border border-[#dfe6ef] bg-[#f8fafc] p-3">
-              <p className="text-2xl font-semibold">{sourceRequestCount}</p>
-              <p className="mt-1 text-xs font-semibold text-[#69707d]">{sourceCopy.statLabel}</p>
-            </div>
-            <div className="rounded-2xl border border-[#dfe6ef] bg-[#f8fafc] p-3">
-              <p className="text-2xl font-semibold">{sourceCopy.secondaryStatValue}</p>
-              <p className="mt-1 text-xs font-semibold text-[#69707d]">{sourceCopy.secondaryStatLabel}</p>
-            </div>
-          </div>
-          <div className="mt-4 rounded-3xl border border-[#cfe7df] bg-[#f2fbf7] p-4">
-            <p className="text-sm font-semibold text-[#0f766e]">Factory price transparency</p>
-            <h2 className="mt-1 text-xl font-semibold leading-tight">We do not add markup to product cost.</h2>
+          <p className="mt-4 text-base leading-7 text-[#59616e] sm:hidden">
+            Upload a product photo, category, and quantity. We’ll check product match and factory pricing for free.
+          </p>
+          <p className="mt-3 rounded-2xl bg-[#f2fbf7] px-4 py-3 text-sm font-semibold text-[#0f766e] sm:hidden">
+            Factory price. No hidden markup. Service fee only if you continue.
+          </p>
+          <div className="mt-4 hidden rounded-3xl border border-[#cfe7df] bg-[#f2fbf7] p-4 sm:block">
+            <p className="text-sm font-semibold text-[#0f766e]">No hidden product markup. Service fee only.</p>
+            <h2 className="mt-1 text-xl font-semibold leading-tight">Send a product photo. Get a free factory-price quote.</h2>
             <p className="mt-2 text-sm leading-6 text-[#315f56]">
-              Supplier quotes are shown as factory pricing. TYORA earns only from agreed service fees if you continue with factory introduction or managed sourcing.
+              We check supplier options, factory pricing, samples, and sourcing support after you submit the product.
             </p>
-          </div>
-          <div className="mt-5 grid gap-3">
-            {sourceCopy.supportCards.map(({ title, description }, index) => {
-              const Icon = supportIcons[index] || Factory;
-              return (
-              <div key={title} className="flex gap-3 rounded-2xl border border-[#e7edf5] bg-[#fbfcfe] p-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#101216] text-white"><Icon size={17} /></span>
-                <span>
-                  <span className="block text-sm font-semibold">{title}</span>
-                  <span className="mt-1 block text-sm leading-5 text-[#69707d]">{description}</span>
-                </span>
-              </div>
-            );})}
-          </div>
-          <div className="mt-5 rounded-3xl border border-[#dfe6ef] bg-[#f8fafc] p-4">
-            <h2 className="text-base font-semibold">{sourceCopy.chargeTitle}</h2>
-            <div className="mt-3 grid gap-2">
-              {sourceCopy.chargeCards.map((card) => (
-                <div key={card.title} className="rounded-2xl bg-white p-3 shadow-sm shadow-[#101216]/4">
-                  <p className="text-sm font-semibold">{card.title}</p>
-                  <p className="mt-1 text-sm leading-5 text-[#69707d]">{card.description}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs leading-5 text-[#69707d]">{sourceCopy.sampleNote}</p>
           </div>
         </div>
 
@@ -227,31 +233,15 @@ export default function SourceClient() {
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(event) => void handleImage(event.target.files?.[0])} />
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Product name">
-                <input value={form.productName} onChange={(event) => update("productName", event.target.value)} className={inputClass} placeholder="Portable blender" />
-              </Field>
-              <Field label="Product link optional">
-                <input value={form.productLink} onChange={(event) => update("productLink", event.target.value)} className={inputClass} placeholder="https://..." />
-              </Field>
-            </div>
-
-            <Field label="Product description">
-              <textarea value={form.description} onChange={(event) => update("description", event.target.value)} className={textareaClass} placeholder="Tell us what this product is and what you want to improve or source." />
-            </Field>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Material if known">
-                <input value={form.material} onChange={(event) => update("material", event.target.value)} className={inputClass} placeholder="Plastic, stainless steel, silicone..." />
+              <Field label="Category">
+                <input value={form.category} onChange={(event) => update("category", event.target.value)} className={inputClass} placeholder="Kitchen, phone accessories, pet..." />
               </Field>
               <Field label="Quantity needed">
                 <input value={form.quantity} onChange={(event) => update("quantity", event.target.value)} className={inputClass} placeholder="500 pcs, 1,000 pcs..." />
               </Field>
-              <Field label="Target price optional">
-                <input value={form.targetPrice} onChange={(event) => update("targetPrice", event.target.value)} className={inputClass} placeholder="$2.50 / unit" />
-              </Field>
-              <Field label="Destination country">
-                <input value={form.destinationCountry} onChange={(event) => update("destinationCountry", event.target.value)} className={inputClass} placeholder="United States" />
-              </Field>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Email">
                 <input value={form.email} onChange={(event) => update("email", event.target.value)} className={inputClass} placeholder="you@example.com" />
               </Field>
@@ -260,16 +250,43 @@ export default function SourceClient() {
               </Field>
             </div>
 
-            <div>
-              <p className="text-sm font-semibold">What do you need?</p>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {sourceNeedTypes.map((type) => (
-                  <button key={type} type="button" onClick={() => toggleNeed(type)} className={`rounded-2xl border p-3 text-left text-sm font-semibold transition ${form.needTypes.includes(type) ? "border-[#2563eb] bg-[#f2f7ff] text-[#1d4ed8]" : "border-[#e1e6ee] bg-white text-[#59616e]"}`}>
-                    {type}
-                  </button>
-                ))}
+            <details className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
+              <summary className="cursor-pointer text-sm font-semibold">More details (optional)</summary>
+              <div className="mt-4 grid gap-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Product name">
+                    <input value={form.productName} onChange={(event) => update("productName", event.target.value)} className={inputClass} placeholder="Portable blender" />
+                  </Field>
+                  <Field label="Product link">
+                    <input value={form.productLink} onChange={(event) => update("productLink", event.target.value)} className={inputClass} placeholder="https://..." />
+                  </Field>
+                </div>
+                <Field label="Product description">
+                  <textarea value={form.description} onChange={(event) => update("description", event.target.value)} className={textareaClass} placeholder="Tell us what this product is and what you want to improve or source." />
+                </Field>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Material">
+                    <input value={form.material} onChange={(event) => update("material", event.target.value)} className={inputClass} placeholder="Plastic, stainless steel, silicone..." />
+                  </Field>
+                  <Field label="Target price">
+                    <input value={form.targetPrice} onChange={(event) => update("targetPrice", event.target.value)} className={inputClass} placeholder="$2.50 / unit" />
+                  </Field>
+                  <Field label="Destination country">
+                    <input value={form.destinationCountry} onChange={(event) => update("destinationCountry", event.target.value)} className={inputClass} placeholder="United States" />
+                  </Field>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">What do you need?</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {sourceNeedTypes.map((type) => (
+                      <button key={type} type="button" onClick={() => toggleNeed(type)} className={`rounded-2xl border p-3 text-left text-sm font-semibold transition ${form.needTypes.includes(type) ? "border-[#2563eb] bg-[#f2f7ff] text-[#1d4ed8]" : "border-[#e1e6ee] bg-white text-[#59616e]"}`}>
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            </details>
 
             {message ? <p className="rounded-2xl bg-[#fff1f2] p-3 text-sm font-semibold text-[#be123c]">{message}</p> : null}
             {submittedId ? (
@@ -280,11 +297,53 @@ export default function SourceClient() {
             ) : null}
 
             <button disabled={submitting} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] disabled:opacity-60">
-              {submitting ? "Submitting..." : sourceCopy.ctaText} <ArrowRight size={16} />
+              {submitting ? "Submitting..." : ctaText} <ArrowRight size={16} />
             </button>
-            <p className="text-xs leading-5 text-[#69707d]">{sourceCopy.disclaimer}</p>
+            <p className="text-xs leading-5 text-[#69707d]">No exact price or supplier is guaranteed before supplier confirmation.</p>
           </div>
         </form>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-4 px-4 pb-6 sm:px-6 lg:px-8">
+        <div className="rounded-[28px] border border-[#cfe7df] bg-white p-5 shadow-sm shadow-[#101216]/5">
+          <p className="text-sm font-semibold text-[#0f766e]">Factory price transparency</p>
+          <h2 className="mt-1 text-2xl font-semibold">We do not mark up product costs.</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#59616e]">
+            You pay the factory price plus a clear service fee only if you continue after the free quote.
+          </p>
+        </div>
+
+        <div className="rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">
+          <div className="flex items-center gap-2">
+            <Factory size={18} />
+            <h2 className="text-2xl font-semibold">How TYORA charges if you continue</h2>
+          </div>
+          <div className="mt-4 grid gap-3 lg:grid-cols-3">
+            {pricingOptions.map((option) => (
+              <div key={option.title} className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
+                <p className="text-sm font-semibold text-[#315fbd]">{option.title}</p>
+                <p className="mt-2 text-xl font-semibold">{option.price}</p>
+                <p className="mt-2 text-sm leading-6 text-[#69707d]">{option.description}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 rounded-2xl bg-[#f8fafc] p-3 text-sm leading-6 text-[#59616e]">
+            We can help with samples. You only pay sample cost and shipping.
+          </p>
+        </div>
+
+        <div className="rounded-[28px] border border-[#e7edf5] bg-white p-5 shadow-sm shadow-[#101216]/5">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={18} />
+            <h2 className="text-2xl font-semibold">Simple refund policy</h2>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-[#59616e]">
+            Supplier Intro fees are non-refundable after supplier contact is released. If the supplier becomes unavailable, we will help find a replacement supplier for free.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[#59616e]">
+            For Managed Sourcing, refunds depend on order status and costs already paid to factories, inspectors, or shipping providers.
+          </p>
+        </div>
       </section>
       {trustToast ? (
         <div className="fixed inset-x-4 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-[9985] mx-auto max-w-sm rounded-2xl border border-[#dfe6ef] bg-white/95 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl md:inset-x-auto md:bottom-5 md:right-5">
