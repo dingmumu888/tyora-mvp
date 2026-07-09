@@ -80,9 +80,9 @@ export default function BuildClient() {
             <Link href="/#pricing" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")} className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
               Start Building
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -105,12 +105,12 @@ export default function BuildClient() {
               ))}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/ask/new" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
-                Start Building <ArrowRight size={16} />
-              </Link>
-              <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")} className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold">
-                WhatsApp TYORA
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")} className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
+                Talk to TYORA <ArrowRight size={16} />
               </a>
+              <Link href="/ask/new" className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold">
+                Start from a discussion
+              </Link>
             </div>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-[#59616e]">
               Choose factory introduction or managed sourcing when you are ready to continue.
@@ -237,9 +237,14 @@ export default function BuildClient() {
         <section className="bg-white px-4 py-12 text-center sm:px-6 lg:px-8">
           <h2 className="mx-auto max-w-3xl text-[2.15rem] font-semibold leading-tight tracking-normal sm:text-5xl">Ready to build your product?</h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#59616e]">Start with a discussion, then move into a practical factory path when the idea is ready.</p>
-          <Link href="/ask/new" className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#101216] px-6 text-sm font-semibold text-white">
-            Start Building <ArrowRight size={16} />
-          </Link>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#101216] px-6 text-sm font-semibold text-white">
+              Talk to TYORA <ArrowRight size={16} />
+            </a>
+            <Link href="/ask/new" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-6 text-sm font-semibold">
+              Start from a discussion
+            </Link>
+          </div>
         </section>
       ) : null}
 

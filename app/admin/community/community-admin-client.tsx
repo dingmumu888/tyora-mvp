@@ -94,6 +94,8 @@ export default function CommunityAdminClient() {
   async function deleteIdea(idea: CommunityIdea) {
     const confirmed = window.confirm(`Permanently delete "${idea.title}"?\n\nThis cannot be undone.`);
     if (!confirmed) return;
+    const secondConfirmation = window.prompt(`Type DELETE to permanently delete "${idea.title}".`);
+    if (secondConfirmation !== "DELETE") return;
 
     setDeleting(idea.slug);
     try {

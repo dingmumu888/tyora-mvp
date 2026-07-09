@@ -32,6 +32,7 @@ const MAX_INLINE_AVATAR_LENGTH = 120000;
 const HOT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const HOT_PROTECTION_MS = 48 * 60 * 60 * 1000;
 const HOT_SCORE_THRESHOLD = 10;
+const DATA_IMAGE_PATTERN = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([a-zA-Z0-9+/=\s]+)$/;
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
@@ -54,10 +55,42 @@ function safePublicImageUrl(value: unknown, maxInlineLength = MAX_INLINE_IDEA_IM
 }
 
 function safePublicImageUrls(value: unknown) {
-  const parsed = parseJson(value, []);
+  const parsed = parseJson<unknown[]>(value, []);
   return Array.isArray(parsed)
     ? parsed.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
     : [];
+}
+
+function publicIdeaImageUrls(value: unknown, slug: string) {
+  const parsed = parseJson<unknown[]>(value, []);
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed
+    .map((item, index) => {
+      if (typeof item !== "string") return null;
+      const url = item.trim();
+      if (!url) return null;
+      if (DATA_IMAGE_PATTERN.test(url)) {
+        return `/api/community/ideas/${encodeURIComponent(slug)}/images/${index}`;
+      }
+      return safePublicImageUrl(url);
+    })
+    .filter((item): item is string => Boolean(item))
+    .slice(0, 5);
+}
+
+function parseStoredDataImage(value: unknown) {
+  if (typeof value !== "string") return null;
+  const match = value.trim().match(DATA_IMAGE_PATTERN);
+  if (!match) return null;
+  try {
+    return {
+      contentType: match[1],
+      body: Buffer.from(match[2].replace(/\s/g, ""), "base64")
+    };
+  } catch {
+    return null;
+  }
 }
 
 function iso(value: Date | string | null | undefined) {
@@ -111,7 +144,7 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
     description: row.description,
     category: row.category,
     country: row.country,
-    imageUrls: safePublicImageUrls(row.imageUrlsJson),
+    imageUrls: publicIdeaImageUrls(row.imageUrlsJson, row.slug),
     questions: normalizeQuestions(parseJson(row.questionsJson, [])),
     otherQuestion: row.otherQuestion || undefined,
     visibility: normalizeVisibility(row.visibility),
@@ -401,6 +434,26 @@ export async function getCommunityIdeaBySlug(slug: string, includeHidden = false
   });
   if (!row || (!includeHidden && (row.hidden || row.visibility !== "Public"))) return null;
   return ideaToCommunityIdea(row);
+}
+
+export async function getCommunityIdeaImage(slug: string, index: number, includeHidden = false) {
+  if (!Number.isInteger(index) || index < 0 || index > 4) return null;
+  const row = await prisma.communityIdea.findUnique({
+    where: { slug },
+    select: {
+      imageUrlsJson: true,
+      hidden: true,
+      visibility: true
+    }
+  });
+  if (!row || (!includeHidden && (row.hidden || row.visibility !== "Public"))) return null;
+  const imageUrls = parseJson<unknown[]>(row.imageUrlsJson, []);
+  if (!Array.isArray(imageUrls)) return null;
+  const image = imageUrls[index];
+  const dataImage = parseStoredDataImage(image);
+  if (dataImage) return dataImage;
+  const publicUrl = safePublicImageUrl(image);
+  return publicUrl ? { redirectUrl: publicUrl } : null;
 }
 
 export async function getCommunityUserActivity(userId: string) {
