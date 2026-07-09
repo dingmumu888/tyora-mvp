@@ -2,6 +2,7 @@
 
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Loader2, Mail, X } from "lucide-react";
 
 type Step = "email" | "code" | "success";
@@ -12,13 +13,16 @@ export default function EmailLogin({
   children = "Email Login",
   className,
   onSuccess,
-  openSignal
+  openSignal,
+  refreshOnSuccess = false
 }: {
   children?: ReactNode;
   className?: string;
   onSuccess?: () => void;
   openSignal?: number;
+  refreshOnSuccess?: boolean;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -111,7 +115,10 @@ export default function EmailLogin({
       setMessage("Logged in successfully.");
       window.dispatchEvent(new CustomEvent(loginSuccessEvent, { detail: { user: payload.user } }));
       onSuccess?.();
-      window.setTimeout(() => setOpen(false), 900);
+      window.setTimeout(() => {
+        setOpen(false);
+        if (refreshOnSuccess) router.refresh();
+      }, 900);
     } catch (error) {
       setMessageType("error");
       setMessage(error instanceof Error ? error.message : "Invalid or expired code.");

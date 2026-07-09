@@ -75,7 +75,7 @@ export default async function MyTyoraPage() {
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={20} /></div>
           <h1 className="mt-5 text-3xl font-semibold">Log in to view My TYORA</h1>
           <p className="mt-3 text-sm leading-6 text-[#59616e]">See your discussions, comments, liked ideas, and community notifications on this device.</p>
-          <EmailLogin className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20">
+          <EmailLogin refreshOnSuccess className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20">
             Email Login
           </EmailLogin>
         </section>
