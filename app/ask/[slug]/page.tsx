@@ -54,6 +54,11 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
   const idea = await getCommunityIdeaBySlug(slug);
   if (!idea) notFound();
   const expertReply = expertReplyText(idea);
+  const compactMeta = [
+    { value: idea.category, tone: "bg-[#edf4ff] text-[#2563eb]" },
+    { value: idea.country, tone: "bg-[#f4f6f8] text-[#667085]" },
+    ...idea.questions.slice(0, 2).map((question) => ({ value: question, tone: "bg-[#f4f6f8] text-[#667085]" }))
+  ].filter((item) => item.value && item.value !== "Not specified");
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_38%,#f7f5f0_100%)] pb-28 text-[#101216]">
@@ -69,7 +74,10 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
           <div className="flex items-center gap-3">
             <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-11 border-0 text-sm" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{idea.author.name}</p>
+              <p className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm font-semibold">
+                <span className="truncate">{idea.author.name}</span>
+                {compactMeta[0] ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${compactMeta[0].tone}`}>{compactMeta[0].value}</span> : null}
+              </p>
               <p className="text-xs text-[#8b93a1]">{timeLabel(idea.createdAt)} · {idea.visibility}</p>
             </div>
             <span className={`ml-auto rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</span>
@@ -82,28 +90,29 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             <IdeaImageGallery imageUrls={idea.imageUrls} title={idea.title} />
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full bg-[#edf4ff] px-3 py-1 text-xs font-semibold text-[#2563eb]">{idea.category}</span>
-            <span className="rounded-full bg-[#f4f6f8] px-3 py-1 text-xs font-semibold text-[#667085]">{idea.country}</span>
-            {idea.questions.slice(0, 3).map((question) => (
-              <span key={question} className="rounded-full bg-[#f4f6f8] px-3 py-1 text-xs font-semibold text-[#667085]">{question}</span>
-            ))}
-          </div>
+          {compactMeta.length > 1 ? (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {compactMeta.slice(1).map((item) => (
+                <span key={item.value} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${item.tone}`}>{item.value}</span>
+              ))}
+            </div>
+          ) : null}
+
+          <IdeaActions idea={idea} mode="bar" compact />
         </section>
 
-        <section id="tyora-expert-review" className="rounded-[20px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
+        <section id="tyora-expert-review" className="rounded-[18px] border border-[#99f6e4] bg-white p-3 shadow-sm shadow-[#14b8a6]/10">
           <div className="flex items-center gap-2">
             <Sparkles size={18} className="text-[#14b8a6]" />
-            <h2 className="text-lg font-semibold">TYORA Expert Review</h2>
+            <h2 className="text-base font-semibold text-[#0f766e]">TYORA Expert Review</h2>
           </div>
           {idea.review ? (
-            <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-[#f7f8fa] p-4 text-sm leading-7 text-[#404650]">{expertReply || "TYORA has replied, but no public reply text is available yet."}</p>
+            <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-[#f0fdfa] p-3 text-sm leading-6 text-[#115e59]">{expertReply || "TYORA has replied, but no public reply text is available yet."}</p>
           ) : (
-            <p className="mt-3 rounded-2xl bg-[#f7f8fa] p-4 text-sm leading-6 text-[#69707d]">TYORA review will appear here after review.</p>
+            <p className="mt-2 rounded-2xl bg-[#f0fdfa] p-3 text-sm leading-6 text-[#0f766e]">TYORA review will appear here after review.</p>
           )}
         </section>
 
-        <IdeaActions idea={idea} mode="bar" />
         <IdeaComments slug={idea.slug} comments={idea.comments} />
         <IdeaActions idea={idea} mode="comment" />
         <IdeaActions idea={idea} mode="ready" />

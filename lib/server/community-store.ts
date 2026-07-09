@@ -172,6 +172,7 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
         parentId: comment.parentId || undefined,
         author: userPublic(comment.author),
         likeCount: (comment.reactions || []).filter((reaction: any) => reaction.type === "Like").length,
+        viewerLiked: false,
         createdAt: iso(comment.createdAt)
       })),
     review: row.review
@@ -749,6 +750,41 @@ export async function toggleCommunityReaction(slug: string, type: "Like" | "Inte
         ideaId: idea.id,
         userId,
         type
+      }
+    });
+  }
+  await prisma.communityIdea.update({
+    where: { id: idea.id },
+    data: { updatedAt: new Date() }
+  });
+  return getCommunityIdeaBySlug(slug, true);
+}
+
+export async function toggleCommunityCommentReaction(slug: string, commentId: string, userId: string) {
+  const idea = await prisma.communityIdea.findUnique({ where: { slug }, select: { id: true, hidden: true } });
+  if (!idea || idea.hidden) throw new Error("Idea not found.");
+  const comment = await prisma.communityComment.findFirst({
+    where: {
+      id: commentId,
+      ideaId: idea.id,
+      hidden: false
+    },
+    select: { id: true }
+  });
+  if (!comment) throw new Error("Comment not found.");
+
+  const existing = await prisma.communityReaction.findFirst({
+    where: { commentId: comment.id, userId, type: "Like" }
+  });
+  if (existing) {
+    await prisma.communityReaction.delete({ where: { id: existing.id } });
+  } else {
+    await prisma.communityReaction.create({
+      data: {
+        id: makeCommunityId("REACTION"),
+        commentId: comment.id,
+        userId,
+        type: "Like"
       }
     });
   }

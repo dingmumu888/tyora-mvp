@@ -40,6 +40,7 @@ export type CommunityComment = {
   parentId?: string;
   author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country">;
   likeCount: number;
+  viewerLiked?: boolean;
   createdAt: string;
 };
 

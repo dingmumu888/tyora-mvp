@@ -10,7 +10,7 @@ type SessionUser = { id: string; name: string; email: string; username: string }
 type IdeaActionMode = "bar" | "comment" | "ready";
 const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
-export default function IdeaActions({ idea, mode = "bar" }: { idea: CommunityIdea; mode?: IdeaActionMode }) {
+export default function IdeaActions({ idea, mode = "bar", compact = false }: { idea: CommunityIdea; mode?: IdeaActionMode; compact?: boolean }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [body, setBody] = useState("");
   const [reactionState, setReactionState] = useState({ liked: false, interested: false });
@@ -199,6 +199,85 @@ export default function IdeaActions({ idea, mode = "bar" }: { idea: CommunityIde
           </EmailLogin>
         )}
       </section>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div data-testid="compact-action-bar" className="mt-3 flex flex-wrap items-center gap-2 border-t border-[#edf0f4] pt-3 text-sm font-semibold text-[#59616e]">
+        {isOwner ? (
+          <>
+            <button type="button" onClick={() => setEditOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dfe3e8] bg-white px-3 text-xs transition hover:bg-[#f7f8fa]">
+              <Pencil size={14} /> Edit
+            </button>
+            <button type="button" disabled={busy === "withdraw"} onClick={() => void withdrawIdea()} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#fee2e2] bg-[#fff8f9] px-3 text-xs text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60">
+              {busy === "withdraw" ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />} Withdraw
+            </button>
+          </>
+        ) : null}
+        {user ? (
+          <button onClick={() => void react("Like")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.liked ? "bg-[#fff1f2] text-[#be123c]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
+            {busy === "Like" ? <Loader2 className="animate-spin" size={14} /> : <Heart size={14} />} {idea.likeCount} Like
+          </button>
+        ) : (
+          <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
+            <Heart size={14} /> {idea.likeCount} Like
+          </EmailLogin>
+        )}
+        {user ? (
+          <button onClick={() => void react("Interested")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.interested ? "bg-[#eff6ff] text-[#1d4ed8]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
+            {busy === "Interested" ? <Loader2 className="animate-spin" size={14} /> : <Star size={14} />} {idea.interestedCount} Interested
+          </button>
+        ) : (
+          <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
+            <Star size={14} /> {idea.interestedCount} Interested
+          </EmailLogin>
+        )}
+        <button onClick={() => navigator.share?.({ title: idea.title, url: window.location.href })} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
+          <Share2 size={14} /> Share
+        </button>
+
+        {editOpen ? (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-[#101216]/45 px-4 backdrop-blur-sm">
+            <form onSubmit={saveEdit} className="w-full max-w-lg rounded-[28px] bg-white p-5 shadow-2xl shadow-[#101216]/25">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b93a1]">Edit discussion</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-[#101216]">Update your idea</h2>
+                </div>
+                <button type="button" onClick={() => setEditOpen(false)} className="flex size-10 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#69707d]">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="mt-5 grid gap-3">
+                <label className="grid gap-2 text-sm font-semibold text-[#101216]">Product name
+                  <input value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-[#101216]">Category
+                  <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-[#101216]">Description
+                  <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {quickEmojis.map((emoji) => (
+                    <button key={emoji} type="button" onClick={() => appendEditEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setEditOpen(false)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e]">Cancel</button>
+                <button disabled={busy === "edit"} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
+                  {busy === "edit" ? <Loader2 className="animate-spin" size={15} /> : <Pencil size={15} />} Save
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
+      </div>
     );
   }
 
