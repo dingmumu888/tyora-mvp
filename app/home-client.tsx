@@ -47,6 +47,14 @@ import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { CommunityIdea } from "@/lib/community";
 
+type CommunityActivityItem = {
+  id: string;
+  type: "idea" | "comment" | "review" | "status";
+  label: string;
+  href: string;
+  createdAt: string;
+};
+
 const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
@@ -71,12 +79,6 @@ const exampleMetrics = [
   { love: 28, comments: 14, buy: 9, views: 483, reply: "5 min ago", avatars: ["AL", "TY", "JR"] },
   { love: 21, comments: 11, buy: 7, views: 356, reply: "9 min ago", avatars: ["SA", "TY", "MK"] },
   { love: 34, comments: 18, buy: 12, views: 621, reply: "12 min ago", avatars: ["MI", "TY", "LE"] }
-] as const;
-const fallbackActivity = [
-  ["Alex uploaded a new idea", "2 min ago", "bg-[#14b8a6]"],
-  ["TYORA replied to a mug project", "5 min ago", "bg-[#2563eb]"],
-  ["Sarah commented on material choice", "7 min ago", "bg-[#f59e0b]"],
-  ["Mike started manufacturing", "14 min ago", "bg-[#8b5cf6]"]
 ] as const;
 const featuredJourney = [
   ["Idea", "Founder shares a spill-proof mug concept", "Done"],
@@ -142,6 +144,13 @@ function timeAgo(value: string) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
+function activityDot(type: CommunityActivityItem["type"]) {
+  if (type === "idea") return "bg-[#14b8a6]";
+  if (type === "comment") return "bg-[#f59e0b]";
+  if (type === "review") return "bg-[#2563eb]";
+  return "bg-[#8b5cf6]";
+}
+
 function ideaViews(idea: CommunityIdea) {
   return Math.max(idea.likeCount * 18 + idea.comments.length * 24 + idea.interestedCount * 30, 37);
 }
@@ -182,6 +191,7 @@ export default function Home() {
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
+  const [liveActivity, setLiveActivity] = useState<CommunityActivityItem[]>([]);
   const [sourceRequestCount, setSourceRequestCount] = useState(0);
 
   useEffect(() => {
@@ -197,6 +207,25 @@ export default function Home() {
       .then((response) => response.json())
       .then((payload) => setCommunityIdeas((payload.data || []).filter(isHomepageReadyIdea)))
       .catch(() => setCommunityIdeas([]));
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function loadActivity() {
+      try {
+        const response = await fetch("/api/community/activity?limit=8", { cache: "no-store" });
+        const payload = await response.json();
+        if (active) setLiveActivity(Array.isArray(payload.data) ? payload.data : []);
+      } catch {
+        if (active) setLiveActivity([]);
+      }
+    }
+    void loadActivity();
+    const timer = window.setInterval(loadActivity, 30000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -658,18 +687,14 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
-                  {communityIdeas.length === 0 ? (
-                    fallbackActivity.slice(0, 3).map(([label, stamp, dot]) => (
-                      <p key={label} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-3">
-                        <span className="inline-flex items-center gap-2"><span className={`size-2 rounded-full ${dot}`} />{label}</span>
-                        <span className="shrink-0 text-xs text-[#8b93a1]">{stamp}</span>
-                      </p>
-                    ))
-                  ) : communityIdeas.slice(0, 2).map((idea) => (
-                    <p key={idea.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-3">
-                      <span>{idea.author.name} uploaded {idea.title}</span>
-                      <span className="shrink-0 text-xs text-[#8b93a1]">{timeAgo(idea.updatedAt || idea.createdAt)}</span>
-                    </p>
+                  {liveActivity.length === 0 ? (
+                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-[#8b93a1]">No live activity yet.</p>
+                  ) : null}
+                  {liveActivity.slice(0, 3).map((item) => (
+                    <Link key={item.id} href={item.href} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-3 transition hover:bg-[#eef3ff]">
+                      <span className="inline-flex min-w-0 items-center gap-2"><span className={`size-2 shrink-0 rounded-full ${activityDot(item.type)}`} /><span className="truncate">{item.label}</span></span>
+                      <span className="shrink-0 text-xs text-[#8b93a1]">{timeAgo(item.createdAt)}</span>
+                    </Link>
                   ))}
                 </div>
               </section>
@@ -691,15 +716,18 @@ export default function Home() {
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse shadow-[0_0_0_4px_rgba(20,184,166,0.12)]" /> LIVE</span>
               </div>
               <div className="mt-3 space-y-2">
-                {communityIdeas.length === 0 ? (
-                  fallbackActivity.map(([label, stamp, dot]) => (
-                    <p key={label} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">
-                      <span className="inline-flex items-center gap-2"><span className={`size-2 rounded-full ${dot}`} />{label}</span>
-                      <span className="shrink-0 text-[11px] text-[#8b93a1]">{stamp}</span>
-                    </p>
-                  ))
+                {liveActivity.length === 0 ? (
+                  <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#8b93a1]">No live activity yet.</p>
                 ) : null}
-                {communityIdeas.slice(0, 4).map((idea, index) => <p key={idea.id} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="inline-flex items-center gap-2"><span className={`size-2 rounded-full ${index % 3 === 0 ? "bg-[#14b8a6]" : index % 3 === 1 ? "bg-[#f59e0b]" : "bg-[#2563eb]"}`} />{idea.author.name} uploaded {idea.title}</span><span className="shrink-0 text-[11px] text-[#8b93a1]">{timeAgo(idea.updatedAt || idea.createdAt)}</span></p>)}
+                {liveActivity.slice(0, 4).map((item) => (
+                  <Link key={item.id} href={item.href} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e] transition hover:bg-[#eef3ff]">
+                    <span className="inline-flex min-w-0 items-center gap-2">
+                      <span className={`size-2 shrink-0 rounded-full ${activityDot(item.type)}`} />
+                      <span className="truncate">{item.label}</span>
+                    </span>
+                    <span className="shrink-0 text-[11px] text-[#8b93a1]">{timeAgo(item.createdAt)}</span>
+                  </Link>
+                ))}
               </div>
             </section>
             <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-sm shadow-[#101216]/4">

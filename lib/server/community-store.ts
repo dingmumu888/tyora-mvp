@@ -168,6 +168,14 @@ const ideaInclude = {
   reactions: true
 } as const;
 
+export type CommunityActivityItem = {
+  id: string;
+  type: "idea" | "comment" | "review" | "status";
+  label: string;
+  href: string;
+  createdAt: string;
+};
+
 export async function upsertCommunityUser(input: {
   googleId?: string | null;
   email: string;
@@ -318,6 +326,72 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
     if (hotScore) return hotScore;
     return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
   }).slice(0, safeLimit);
+}
+
+export async function getCommunityActivity(limit = 8): Promise<CommunityActivityItem[]> {
+  const safeLimit = Math.min(20, Math.max(1, Number.isFinite(limit) ? Math.round(limit) : 8));
+  const [ideas, comments, reviews, statusIdeas] = await Promise.all([
+    prisma.communityIdea.findMany({
+      where: { hidden: false, visibility: "Public" },
+      orderBy: { createdAt: "desc" },
+      take: safeLimit,
+      include: { author: true }
+    }),
+    prisma.communityComment.findMany({
+      where: { hidden: false, idea: { hidden: false, visibility: "Public" } },
+      orderBy: { createdAt: "desc" },
+      take: safeLimit,
+      include: { author: true, idea: true }
+    }),
+    prisma.tyoraReview.findMany({
+      where: { idea: { hidden: false, visibility: "Public" } },
+      orderBy: { updatedAt: "desc" },
+      take: safeLimit,
+      include: { idea: true }
+    }),
+    prisma.communityIdea.findMany({
+      where: {
+        hidden: false,
+        visibility: "Public",
+        status: { in: ["Project Started", "Manufacturing", "Shipping", "Completed"] }
+      },
+      orderBy: { updatedAt: "desc" },
+      take: safeLimit
+    })
+  ]);
+
+  return [
+    ...ideas.map((idea) => ({
+      id: `idea-${idea.id}`,
+      type: "idea" as const,
+      label: `${idea.author.name} uploaded ${idea.title}`,
+      href: `/ask/${idea.slug}`,
+      createdAt: iso(idea.createdAt)
+    })),
+    ...comments.map((comment) => ({
+      id: `comment-${comment.id}`,
+      type: "comment" as const,
+      label: `${comment.author.name} commented on ${comment.idea.title}`,
+      href: `/ask/${comment.idea.slug}#community-discussion`,
+      createdAt: iso(comment.createdAt)
+    })),
+    ...reviews.map((review) => ({
+      id: `review-${review.id}`,
+      type: "review" as const,
+      label: `TYORA replied to ${review.idea.title}`,
+      href: `/ask/${review.idea.slug}#tyora-expert-review`,
+      createdAt: iso(review.updatedAt)
+    })),
+    ...statusIdeas.map((idea) => ({
+      id: `status-${idea.id}-${idea.status}`,
+      type: "status" as const,
+      label: `${idea.title} moved to ${idea.status}`,
+      href: `/ask/${idea.slug}`,
+      createdAt: iso(idea.updatedAt)
+    }))
+  ]
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, safeLimit);
 }
 
 export async function getCommunityIdeaBySlug(slug: string, includeHidden = false) {
