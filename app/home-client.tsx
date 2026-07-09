@@ -155,6 +155,10 @@ function ideaViews(idea: CommunityIdea) {
   return Math.max(idea.likeCount * 18 + idea.comments.length * 24 + idea.interestedCount * 30, 37);
 }
 
+function homepageIdeaScore(idea: CommunityIdea) {
+  return (idea.isHot ? 500 : 0) + idea.likeCount * 3 + idea.comments.length * 5 + idea.interestedCount * 2;
+}
+
 function isHomepageReadyIdea(idea: CommunityIdea) {
   const title = idea.title.trim();
   const description = idea.description.trim();
@@ -324,8 +328,16 @@ export default function Home() {
 
   const canStartChat = Boolean(productName.trim());
   const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
-  const homeFeedIdeas = communityIdeas;
-  const homeExamples = homeFeedIdeas.length < 3 ? starterExamples.slice(0, 3 - homeFeedIdeas.length) : [];
+  const topShowcaseIdeas = [...communityIdeas]
+    .sort((left, right) => {
+      const scoreGap = homepageIdeaScore(right) - homepageIdeaScore(left);
+      if (scoreGap !== 0) return scoreGap;
+      const commentGap = right.comments.length - left.comments.length;
+      if (commentGap !== 0) return commentGap;
+      return new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime();
+    })
+    .slice(0, 3);
+  const homeExamples = communityIdeas.length === 0 ? starterExamples.slice(0, 3) : [];
   const hasCommunityStats = communityIdeas.length > 0;
   const communityStats = [
     ["Ideas Shared", communityIdeas.length],
@@ -477,7 +489,7 @@ export default function Home() {
                     {starterExamples.map((example, index) => (
                       <Link
                         key={example.title}
-                        href="/ask/new"
+                        href="/ask"
                         className="group grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[14px] sm:border-[#e4e8ef] sm:bg-[#fbfbfc] sm:p-2 sm:shadow-none"
                       >
                         <div className={cn(
@@ -547,8 +559,8 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  {homeFeedIdeas.map((idea) => (
-                <Link key={idea.id} href={`/ask/${idea.slug}`} className="group relative grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:border-[#e1e6ee] sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+                  {topShowcaseIdeas.map((idea) => (
+                <Link key={idea.id} href="/ask" className="group relative grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:border-[#e1e6ee] sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
                   <HotBadge idea={idea} />
                   <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold shadow-inner shadow-white sm:rounded-xl">
                     <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-[20px] object-cover transition duration-500 group-hover:scale-[1.025] sm:rounded-2xl" />
@@ -613,7 +625,7 @@ export default function Home() {
                 </Link>
                   ))}
                   {homeExamples.map((example, index) => (
-                    <Link key={example.title} href="/ask/new" className="group grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-dashed border-[#cdd6e2] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:bg-white/94 sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
+                    <Link key={example.title} href="/ask" className="group grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-dashed border-[#cdd6e2] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:bg-white/94 sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
                       <div className={cn(
                         "relative flex aspect-square items-center justify-center rounded-[20px] bg-gradient-to-br shadow-inner shadow-white sm:rounded-xl",
                         index === 0 ? "from-[#e9f7f3] via-white to-[#efe9ff]" : index === 1 ? "from-[#fff4e7] via-white to-[#e9f2ff]" : "from-[#edf7ff] via-white to-[#effaf3]"
