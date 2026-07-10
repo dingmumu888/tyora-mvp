@@ -180,7 +180,7 @@ export default function WorkOrdersAdminClient() {
                         {order.imageUrls.slice(0, 9).map((imageUrl, index) => (
                           <a key={`${order.id}-${index}`} href={imageUrl} target="_blank" rel="noreferrer" className="relative overflow-hidden rounded-xl bg-white">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={imageUrl} alt={`${order.title} ${index + 1}`} className="absolute inset-0 size-full object-cover" />
+                            <img src={imageUrl} alt={`${order.title} ${index + 1}`} className="absolute inset-0 size-full object-contain p-1" />
                             {index === 8 && order.imageUrls.length > 9 ? (
                               <span className="absolute inset-0 flex items-center justify-center bg-[#101216]/70 text-sm font-semibold text-white">
                                 +{order.imageUrls.length - 9} more images

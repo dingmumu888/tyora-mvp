@@ -85,10 +85,15 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
     "internalNotes",
     "slice(0, 9)",
     "grid-cols-3",
-    "more images"
+    "more images",
+    "object-contain"
   ].forEach((text) => {
     if (!client.includes(text)) failures.push(`Work orders client missing: ${text}`);
   });
+
+  if (client.includes("object-cover")) {
+    failures.push("Work order thumbnails should not crop uploaded product images with object-cover.");
+  }
 }
 
 const admin = read("app", "admin", "page.tsx");
