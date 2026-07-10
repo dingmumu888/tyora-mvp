@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 
 const source = readFileSync("app/source/source-client.tsx", "utf8");
+const sourceRoute = readFileSync("app/api/source/route.ts", "utf8");
 const processPagePath = "app/source/how-it-works/page.tsx";
 const processPage = existsSync(processPagePath) ? readFileSync(processPagePath, "utf8") : "";
 
@@ -126,6 +127,15 @@ const checks = [
       processPage.includes("actual cost") &&
       processPage.includes("order/customer ID") &&
       processPage.includes("future inspection and reorders")
+  },
+  {
+    name: "source API fills missing destination country from platform country headers",
+    pass:
+      sourceRoute.includes("withDetectedCountry") &&
+      sourceRoute.includes("x-vercel-ip-country") &&
+      sourceRoute.includes("cf-ipcountry") &&
+      sourceRoute.includes("Not specified") &&
+      sourceRoute.includes("Detected country:")
   }
 ];
 
