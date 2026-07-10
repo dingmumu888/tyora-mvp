@@ -26,6 +26,32 @@ const reviewFields = [
   ["additionalNotes", "Additional notes"]
 ] as const;
 
+function normalizeCommunityIdea(value: unknown): CommunityIdea {
+  const idea = value && typeof value === "object" && !Array.isArray(value) ? (value as Partial<CommunityIdea>) : {};
+  return {
+    ...(idea as CommunityIdea),
+    id: idea.id || "",
+    slug: idea.slug || "",
+    title: idea.title || "Untitled idea",
+    description: idea.description || "",
+    category: idea.category || "General",
+    country: idea.country || "Not specified",
+    imageUrls: Array.isArray(idea.imageUrls) ? idea.imageUrls : [],
+    questions: Array.isArray(idea.questions) ? idea.questions : [],
+    hidden: Boolean(idea.hidden),
+    locked: Boolean(idea.locked),
+    pinned: Boolean(idea.pinned),
+    homepageFeatured: Boolean(idea.homepageFeatured),
+    comments: Array.isArray(idea?.comments) ? idea.comments : [],
+    likeCount: Number(idea?.likeCount || 0),
+    interestedCount: Number(idea?.interestedCount || 0),
+    hotScore: Number(idea.hotScore || 0),
+    isHot: Boolean(idea.isHot),
+    createdAt: idea.createdAt || new Date().toISOString(),
+    updatedAt: idea.updatedAt || new Date().toISOString()
+  };
+}
+
 function existingReply(idea: CommunityIdea) {
   if (!idea.review) return "";
   if (idea.review.additionalNotes) return idea.review.additionalNotes;
@@ -49,7 +75,7 @@ export default function CommunityAdminClient() {
   useEffect(() => {
     fetch("/api/admin/community")
       .then((response) => response.json())
-      .then((payload) => setIdeas(payload.data || []))
+      .then((payload) => setIdeas((payload.data || []).map(normalizeCommunityIdea)))
       .finally(() => setLoading(false));
   }, []);
 
@@ -88,7 +114,7 @@ export default function CommunityAdminClient() {
       const payload = await response.json();
       if (!payload.success) throw new Error(payload.message || "Unable to save idea.");
       if (payload.success) {
-        const updated = payload.data as CommunityIdea;
+        const updated = normalizeCommunityIdea(payload.data);
         setIdeas((current) => current.map((item) => {
           if (item.id === updated.id) return updated;
           if (updated.homepageFeatured && item.homepageFeaturedOrder === updated.homepageFeaturedOrder) {
