@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Bell,
   ChevronRight,
   Eye,
   Filter,
@@ -323,9 +322,6 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             <CommunityUserMenu loginClassName="hidden rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold sm:inline-flex" />
             <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
               <Plus size={16} /> <span className="hidden sm:inline">Start a Discussion</span>
-            </Link>
-            <Link href="/me#notifications" className="hidden size-10 items-center justify-center rounded-full border border-[#dfe3e8] bg-white md:inline-flex" aria-label="Notifications">
-              <Bell size={16} />
             </Link>
           </div>
         </div>

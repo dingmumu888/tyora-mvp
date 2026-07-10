@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { Bell, Heart, LogOut, MessageCircle, PenLine, Settings } from "lucide-react";
+import { Heart, LogOut, MessageCircle, PenLine, Settings } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityProfileModal, { CommunitySessionUser } from "@/components/community-profile-modal";
 import EmailLogin from "@/components/email-login";
@@ -22,6 +22,7 @@ export default function CommunityUserMenu({
   const [user, setUser] = useState<CommunitySessionUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   async function refreshSession() {
@@ -29,8 +30,10 @@ export default function CommunityUserMenu({
       const response = await fetch("/api/community/session");
       const payload = await response.json();
       setUser(payload.user || null);
+      setNotificationCount(Number(payload.notificationCount || 0));
     } catch {
       setUser(null);
+      setNotificationCount(0);
     }
   }
 
@@ -64,8 +67,15 @@ export default function CommunityUserMenu({
   async function logout() {
     await fetch("/api/community/logout", { method: "POST" }).catch(() => undefined);
     setUser(null);
+    setNotificationCount(0);
     setMenuOpen(false);
     window.dispatchEvent(new CustomEvent("tyora:community-logout"));
+  }
+
+  async function markNotificationsRead() {
+    if (notificationCount <= 0) return;
+    setNotificationCount(0);
+    await fetch("/api/community/notifications/read", { method: "POST" }).catch(() => undefined);
   }
 
   if (!user) {
@@ -78,15 +88,20 @@ export default function CommunityUserMenu({
 
   return (
     <div ref={menuRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setMenuOpen((value) => !value)}
+      <Link
+        href="/me"
+        onClick={() => void markNotificationsRead()}
         className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-2.5 pr-3 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]"
         aria-label="Community profile menu"
       >
-        <CommunityAvatar name={user.name} src={user.avatar} className="size-7 text-[10px]" />
+        <span className="relative">
+          <CommunityAvatar name={user.name} src={user.avatar} className="size-7 text-[10px]" />
+          {notificationCount > 0 ? (
+            <span aria-label="Unread messages" className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-[#ff385c] ring-2 ring-white" />
+          ) : null}
+        </span>
         <span className="hidden max-w-28 truncate sm:inline">{user.name}</span>
-      </button>
+      </Link>
 
       {menuOpen ? (
         <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-3xl border border-[#e4e8ef] bg-white p-2 shadow-[0_22px_70px_rgba(16,18,22,0.16)]">
@@ -101,8 +116,7 @@ export default function CommunityUserMenu({
             {[
               ["My Discussions", "/me#discussions", PenLine],
               ["My Comments", "/me#comments", MessageCircle],
-              ["Liked Ideas", "/me#liked", Heart],
-              ["Notifications", "/me#notifications", Bell]
+              ["Liked Ideas", "/me#liked", Heart]
             ].map(([label, href, Icon]) => (
               <Link
                 key={label as string}
