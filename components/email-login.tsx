@@ -34,7 +34,7 @@ export default function EmailLogin({
   const codeInputRef = useRef<HTMLInputElement>(null);
 
   function closeModal() {
-    if (busy) return;
+    if (busy || step === "success") return;
     setOpen(false);
   }
 
@@ -112,12 +112,15 @@ export default function EmailLogin({
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Invalid or expired code.");
       setStep("success");
-      setMessage("Logged in successfully.");
+      setMessage("Login successful. Opening My TYORA...");
       window.dispatchEvent(new CustomEvent(loginSuccessEvent, { detail: { user: payload.user } }));
       onSuccess?.();
       window.setTimeout(() => {
         setOpen(false);
-        if (refreshOnSuccess) router.refresh();
+        if (refreshOnSuccess) {
+          router.replace("/me");
+          router.refresh();
+        }
       }, 900);
     } catch (error) {
       setMessageType("error");
@@ -167,11 +170,15 @@ export default function EmailLogin({
                 <CheckCircle2 size={26} />
               </div>
               <h2 id="tyora-email-login-title" className="mt-5 text-2xl font-semibold leading-tight">
-                Logged in successfully.
+                Login successful.
               </h2>
-              <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#59616e]">
-                You can continue discussing and building product ideas.
+              <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#59616e]" aria-live="polite">
+                Opening My TYORA...
               </p>
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-4 py-2 text-sm font-semibold text-[#2563eb]">
+                <Loader2 className="animate-spin" size={16} />
+                Loading profile
+              </div>
             </div>
           ) : (
             <>
