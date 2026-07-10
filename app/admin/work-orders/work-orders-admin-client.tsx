@@ -51,6 +51,12 @@ function whatsappHref(value?: string) {
   return normalized ? `https://wa.me/${normalized.replace(/^\+/, "")}` : "";
 }
 
+function imageGridClass(count: number) {
+  if (count <= 1) return "grid-cols-1";
+  if (count <= 4) return "grid-cols-2";
+  return "grid-cols-3";
+}
+
 export default function WorkOrdersAdminClient() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [filter, setFilter] = useState<Filter>("Needs Reply");
@@ -176,7 +182,7 @@ export default function WorkOrdersAdminClient() {
                 <article key={order.id} className="grid gap-4 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[190px_1fr_240px]">
                   <div className="overflow-hidden rounded-2xl bg-[#f4f6f9]">
                     {order.imageUrls.length ? (
-                      <div className="grid aspect-square grid-cols-3 gap-1 p-1">
+                      <div className={`grid aspect-square ${imageGridClass(order.imageUrls.length)} gap-1 p-1`}>
                         {order.imageUrls.slice(0, 9).map((imageUrl, index) => (
                           <a key={`${order.id}-${index}`} href={imageUrl} target="_blank" rel="noreferrer" className="relative overflow-hidden rounded-xl bg-white">
                             {/* eslint-disable-next-line @next/next/no-img-element */}

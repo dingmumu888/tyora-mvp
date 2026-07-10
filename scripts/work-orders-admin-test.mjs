@@ -85,6 +85,9 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
     "internalNotes",
     "slice(0, 9)",
     "grid-cols-3",
+    "grid-cols-1",
+    "grid-cols-2",
+    "imageGridClass",
     "more images",
     "object-contain"
   ].forEach((text) => {
