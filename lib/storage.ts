@@ -331,16 +331,9 @@ export const defaultContent: SiteContent = {
     ],
     trustToastEnabled: true,
     trustToastMessages: [
-      "United States buyer viewed Source",
-      "Canada buyer viewed Source",
-      "United Kingdom buyer viewed Source",
-      "Germany buyer viewed Source",
-      "France buyer viewed Source",
-      "Netherlands buyer viewed Source",
-      "Australia buyer viewed Source",
-      "Spain buyer viewed Source",
-      "Italy buyer viewed Source",
-      "Sweden buyer viewed Source"
+      "Common buyer region: United States",
+      "Common buyer region: Europe",
+      "Common buyer region: North America"
     ],
     trustToastMinSeconds: 60,
     trustToastMaxSeconds: 300

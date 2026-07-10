@@ -139,17 +139,18 @@ const checks = [
       sourceRoute.includes("Detected country:")
   },
   {
-    name: "source trust toast uses visitor copy and slow randomized timing",
+    name: "source trust toast uses three generic regional proof messages and slow randomized timing",
     pass:
       source.includes("Checking China supplier options") &&
       source.includes("Exploring factory pricing") &&
       source.includes("Comparing supplier options") &&
       !source.includes("Supplier check activity") &&
-      storage.includes("United States buyer viewed Source") &&
-      storage.includes("Germany buyer viewed Source") &&
-      storage.includes("United Kingdom buyer viewed Source") &&
+      storage.includes("Common buyer region: United States") &&
+      storage.includes("Common buyer region: Europe") &&
+      storage.includes("Common buyer region: North America") &&
       storage.includes("trustToastMinSeconds: 60") &&
       storage.includes("trustToastMaxSeconds: 300") &&
+      !storage.includes("buyer viewed Source") &&
       !storage.includes("Someone requested a supplier check") &&
       !storage.includes("A new product sourcing request was submitted")
   }
