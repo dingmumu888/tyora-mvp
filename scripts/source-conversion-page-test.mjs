@@ -1,6 +1,8 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const source = readFileSync("app/source/source-client.tsx", "utf8");
+const processPagePath = "app/source/how-it-works/page.tsx";
+const processPage = existsSync(processPagePath) ? readFileSync(processPagePath, "utf8") : "";
 
 const checks = [
   {
@@ -82,6 +84,35 @@ const checks = [
       source.includes("mobilePrice: \"10%-15%\"") &&
       source.includes("mobileMinimum: \"Minimum $499\"") &&
       source.includes("Based on estimated order value.")
+  },
+  {
+    name: "pricing cards link to full source process anchors",
+    pass:
+      source.includes("/source/how-it-works#supplier-introduction") &&
+      source.includes("/source/how-it-works#managed-sourcing") &&
+      source.includes("View full process")
+  },
+  {
+    name: "full process page exists with supplier introduction and managed sourcing sections",
+    pass:
+      processPage.includes("How TYORA Source Works") &&
+      processPage.includes("id=\"supplier-introduction\"") &&
+      processPage.includes("id=\"managed-sourcing\"")
+  },
+  {
+    name: "full process page explains transparent proof without hidden product markup",
+    pass:
+      processPage.includes("supplier quote screenshots") &&
+      processPage.includes("order payment screenshots") &&
+      processPage.includes("relevant order communication records")
+  },
+  {
+    name: "full process page explains reference sample at actual cost and retained matching",
+    pass:
+      processPage.includes("reference sample") &&
+      processPage.includes("actual cost") &&
+      processPage.includes("order/customer ID") &&
+      processPage.includes("future inspection and reorders")
   }
 ];
 

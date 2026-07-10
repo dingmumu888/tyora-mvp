@@ -51,7 +51,8 @@ const pricingOptions = [
     mobilePrice: "3%-5%",
     mobileMinimum: "Minimum $199",
     mobileDescription: "Based on estimated order value.",
-    description: "Get verified supplier contact and deal directly with the factory."
+    description: "Get verified supplier contact and deal directly with the factory.",
+    processHref: "/source/how-it-works#supplier-introduction"
   },
   {
     title: "Managed Sourcing",
@@ -59,7 +60,8 @@ const pricingOptions = [
     mobilePrice: "10%-15%",
     mobileMinimum: "Minimum $499",
     mobileDescription: "For negotiation, purchasing, inspection, and shipping coordination.",
-    description: "TYORA helps negotiate, purchase, inspect, and coordinate shipping."
+    description: "TYORA helps negotiate, purchase, inspect, and coordinate shipping.",
+    processHref: "/source/how-it-works#managed-sourcing"
   }
 ];
 
@@ -349,6 +351,11 @@ export default function SourceClient() {
                   <span className="sm:hidden">{option.mobileDescription || option.description}</span>
                   <span className="hidden sm:inline">{option.description}</span>
                 </p>
+                {option.processHref ? (
+                  <Link href={option.processHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#2563eb] hover:text-[#1d4ed8]">
+                    View full process <ArrowRight size={14} />
+                  </Link>
+                ) : null}
               </div>
             ))}
           </div>
