@@ -82,7 +82,10 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
     "Open original",
     "WhatsApp",
     "Email",
-    "internalNotes"
+    "internalNotes",
+    "slice(0, 9)",
+    "grid-cols-3",
+    "more images"
   ].forEach((text) => {
     if (!client.includes(text)) failures.push(`Work orders client missing: ${text}`);
   });
