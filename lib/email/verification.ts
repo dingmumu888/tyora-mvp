@@ -8,8 +8,8 @@ type VerificationEmailInput = {
 };
 
 export function renderVerificationEmail({ code }: VerificationEmailInput) {
-  const subject = "Your TYORA verification code";
-  const preheader = "Use this verification code to securely sign in to TYORA.";
+  const subject = `TYORA code: ${code}`;
+  const preheader = `Your TYORA login code is ${code}. Expires in 10 minutes.`;
   const html = EmailLayout({
     preheader,
     children: `${EmailHeader()}
@@ -35,6 +35,10 @@ ${EmailCodeCard({ code })}
 ${EmailFooter()}`
   });
   const text = [
+    `Your TYORA login code is ${code}.`,
+    "This code expires in 10 minutes.",
+    "If you did not request it, ignore this email.",
+    "",
     "TYORA",
     "Product Creator Community",
     "",
