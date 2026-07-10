@@ -36,6 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
+import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 import {
   CaseStudy,
   CaseStudyStatus,
@@ -826,6 +827,7 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <AdminViewCommunityLink className="hidden sm:inline-flex" />
             <Button variant="outline" className="hidden min-h-10 px-3 sm:inline-flex">
               <Plus size={15} /> Quick Action
             </Button>

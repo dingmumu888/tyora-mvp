@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Loader2, Mail, MessageCircle, RefreshCcw, Search } from "lucide-react";
 import { WorkOrder, WorkOrderStatus, WorkOrderType } from "@/lib/work-orders";
+import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -135,6 +136,7 @@ export default function WorkOrdersAdminClient() {
             <p className="mt-1 text-sm text-[#687284]">Ideas, private custom projects, source requests, and active projects in one queue.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <AdminViewCommunityLink />
             <Link href="/admin/community" className="rounded-full border border-[#dfe5ee] bg-white px-4 py-2 text-sm font-semibold">Advanced ideas</Link>
             <Link href="/admin/source" className="rounded-full border border-[#dfe5ee] bg-white px-4 py-2 text-sm font-semibold">Advanced source</Link>
             <button onClick={() => void loadOrders()} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">

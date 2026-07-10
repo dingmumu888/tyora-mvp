@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Loader2, MessageSquare, Save, Trash2, X } from "lucide-react";
 import { CommunityIdea } from "@/lib/community";
+import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 
 type QueueFilter = "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
 
@@ -172,7 +173,7 @@ export default function CommunityAdminClient() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href="/admin" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">Back to Today</Link>
-            <Link href="/ask" target="_blank" rel="noreferrer" className="rounded-full bg-[#101216] px-4 py-2 text-sm font-semibold text-white">View Community</Link>
+            <AdminViewCommunityLink />
           </div>
           </div>
         </header>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Loader2, RefreshCcw, Save, Search, Trash2 } from "lucide-react";
 import { SourceRequest, SourceStatus, sourceStatuses } from "@/lib/source";
+import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -155,6 +156,7 @@ export default function SourceAdminClient() {
             <p className="mt-1 text-sm text-[#687284]">Review supplier-check leads from /source.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <AdminViewCommunityLink />
             <Link href="/source" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe5ee] bg-white px-4 text-sm font-semibold">
               View public page <ArrowUpRight size={15} />
             </Link>
