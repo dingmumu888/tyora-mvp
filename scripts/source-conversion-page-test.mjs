@@ -99,9 +99,9 @@ const checks = [
       source.includes("View full process")
   },
   {
-    name: "source page shows anonymized sourcing activity without public replies",
+    name: "source page shows example private sourcing requests without public replies",
     pass:
-      source.includes("Recent anonymized sourcing activity") &&
+      source.includes("Example private sourcing requests") &&
       source.includes("Buyer details, product links, supplier contacts, and quotes are never shown publicly.") &&
       source.includes("Factory quote sent privately") &&
       source.includes("Supplier options found") &&

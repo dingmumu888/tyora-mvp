@@ -253,6 +253,7 @@ export default function SourceClient() {
           <nav className="hidden items-center gap-1 text-sm font-semibold text-[#59616e] md:flex">
             <Link href="/ask" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Discover Ideas</Link>
             <Link href="/source" className="rounded-full bg-[#101216] px-3 py-2 text-white">Source Products</Link>
+            <Link href="/custom" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Custom</Link>
             <Link href="/ask/new" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Ask TYORA</Link>
           </nav>
           <div className="flex items-center gap-2">
@@ -291,6 +292,15 @@ export default function SourceClient() {
             <p className="mt-2 text-sm leading-6 text-[#315f56]">
               We check supplier options, factory pricing, samples, and sourcing support after you submit the product.
             </p>
+          </div>
+          <div className="mt-3 rounded-3xl border border-[#dbeafe] bg-[#eff6ff] p-4">
+            <p className="text-sm font-semibold text-[#1d4ed8]">Need to create a new custom product instead?</p>
+            <p className="mt-2 text-sm leading-6 text-[#315fbd]">
+              If you have an AI design, sketch, or product idea that needs development, use the private Custom page.
+            </p>
+            <Link href="/custom" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#2563eb]">
+              Start a Private Custom Project <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
 
@@ -410,7 +420,7 @@ export default function SourceClient() {
         <div className="rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-[#315fbd]">Recent anonymized sourcing activity</p>
+              <p className="text-sm font-semibold text-[#315fbd]">Example private sourcing requests</p>
               <h2 className="mt-1 text-2xl font-semibold">Buyers are using TYORA for private supplier checks.</h2>
             </div>
             <p className="max-w-xl text-sm leading-6 text-[#69707d]">

@@ -49,17 +49,17 @@ const visibilityOptions = [
   },
   {
     value: "Private",
-    title: "Private Discussion",
+    title: "Private Custom Project",
     badge: "Private Project",
     badgeIcon: undefined,
     icon: LockKeyhole,
     intro: "Only you and TYORA can view this discussion.",
-    description: "Recommended for early-stage inventions, confidential ideas, or projects you are not ready to share publicly.",
+    description: "Only you and TYORA can view this custom project.",
     recommendation: "Maximum privacy.",
     benefits: [
       "Maximum privacy",
       "Only TYORA can review",
-      "Ideal for confidential ideas"
+      "Continue privately on WhatsApp"
     ]
   }
 ] as const;
@@ -149,7 +149,7 @@ export default function NewIdeaClient() {
     return () => window.removeEventListener("tyora:community-login", refreshSession);
   }, []);
 
-  const usedText = useMemo(() => "Today's FREE Expert Reviews: 0 / 3 Used", []);
+  const usedText = useMemo(() => "Every submitted idea gets an initial TYORA manufacturing review.", []);
   const inputClass = "h-12 rounded-[16px] border border-transparent bg-[#f8fafc] px-4 text-sm outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10";
   const panelClass = "rounded-[26px] border border-[#e1e7f0] bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)]";
 
@@ -319,7 +319,7 @@ export default function NewIdeaClient() {
               </div>
             ))}
           </div>
-          <p className="mt-5 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">FREE expert review within 8 working hours.</p>
+          <p className="mt-5 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">Every submitted idea gets an initial TYORA manufacturing review.</p>
         </aside>
 
         <form onSubmit={submit} onPaste={onPaste} className={`${panelClass} min-w-0 p-3.5 sm:p-6 lg:p-7`}>
@@ -590,7 +590,7 @@ export default function NewIdeaClient() {
                       <div>
                         <h4 className="font-semibold text-[#1d4ed8]">Choosing the right discussion type</h4>
                         <p className="mt-1">Community Discussions are visible to everyone and usually receive much more discussion and manufacturing feedback.</p>
-                        <p className="mt-1">Private Discussions are only visible to you and TYORA.</p>
+                        <p className="mt-1">Private Custom Projects are only visible to you and TYORA.</p>
                         <p className="mt-1">Choose whichever best fits your project.</p>
                         <button
                           type="button"
@@ -609,9 +609,9 @@ export default function NewIdeaClient() {
                                 <p className="mt-1">This is the recommended option for most creators.</p>
                               </div>
                               <div>
-                                <h5 className="font-semibold text-[#101216]">Why choose Private Discussion?</h5>
-                                <p className="mt-1">Private discussions are only visible to you and TYORA.</p>
-                                <p className="mt-1">If your project contains confidential technology or ideas you are not ready to share publicly, private discussions may be a better choice.</p>
+                                <h5 className="font-semibold text-[#101216]">Why choose Private Custom Project?</h5>
+                                <p className="mt-1">Private custom projects are only visible to you and TYORA.</p>
+                                <p className="mt-1">If your project contains confidential technology or ideas you are not ready to share publicly, private custom review may be a better choice.</p>
                                 <p className="mt-1">TYORA cannot provide legal advice regarding patents or intellectual property.</p>
                               </div>
                             </div>
@@ -695,8 +695,8 @@ export default function NewIdeaClient() {
             </div>
           </section>
           <section className="rounded-[22px] border border-[#dbeafe] bg-[#eff6ff] p-4 shadow-sm shadow-[#2563eb]/8">
-            <h2 className="text-lg font-semibold text-[#1d4ed8]">FREE expert review within 8 working hours.</h2>
-            <p className="mt-3 text-sm leading-6 text-[#315fbd]">Community discussion is unlimited. TYORA expert reviews are limited to 3 per account per day.</p>
+            <h2 className="text-lg font-semibold text-[#1d4ed8]">Every submitted idea gets an initial TYORA manufacturing review.</h2>
+            <p className="mt-3 text-sm leading-6 text-[#315fbd]">Public ideas help the community and SEO. Private Custom Projects stay between you and TYORA.</p>
           </section>
           <section className="rounded-[22px] border border-[#e4e8ef] bg-white p-4">
             <h2 className="text-lg font-semibold">Helpful tips</h2>

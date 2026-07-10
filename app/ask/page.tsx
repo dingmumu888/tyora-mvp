@@ -35,11 +35,10 @@ const tabs: Array<[CommunityFeedSort, string]> = [
 
 const categories = ["Phone Accessories", "Pet", "Home", "Office", "Kitchen", "Outdoor", "Electronics", "Fashion"];
 const topNav = [
-  ["Discover Ideas", "/ask"],
-  ["Ask TYORA", "/ask/new"],
-  ["Source Products", "/source"],
-  ["Journeys", "/#journeys"],
-  ["Success Stories", "/#success-stories"],
+  ["Ideas", "/ask"],
+  ["Post Idea", "/ask/new"],
+  ["Source", "/source"],
+  ["Custom", "/custom"],
   ["Pricing", "/#pricing"]
 ] as const;
 const statusSteps = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping"];
@@ -66,7 +65,7 @@ const earlyCommunityStats = [
   ["Free review", "Within 8 working hours"],
   ["Public discussion", "Open to browse"],
   ["No password", "Email code login"],
-  ["Build path", "When ready"]
+  ["Custom path", "Private when needed"]
 ] as const;
 
 const statusStyles: Record<CommunityStatus, string> = {

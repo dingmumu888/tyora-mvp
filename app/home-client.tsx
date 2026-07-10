@@ -109,7 +109,7 @@ const earlyCommunityStats = [
   ["Free review", "Within 8 working hours"],
   ["Public discussion", "Open to browse"],
   ["No password", "Email code login"],
-  ["Build path", "When ready"]
+  ["Custom path", "Private when needed"]
 ] as const;
 const buildSupportCards = [
   ["Manufacturing review", "Understand feasibility, materials, MOQ and cost before paying for samples.", ClipboardCheck],
@@ -135,19 +135,26 @@ const founderPaths = [
     href: "/source",
     cta: "Get Supplier Check",
     icon: SearchCheck
+  },
+  {
+    title: "Start a private custom project",
+    description: "Send AI designs, sketches, or confidential product ideas directly to TYORA for a private custom review.",
+    href: "/custom",
+    cta: "Open Custom",
+    icon: PackageCheck
   }
 ] as const;
 const transparencyPoints = [
   "Factory price, no product markup.",
   "TYORA only charges agreed service fees if you continue.",
-  "You can choose direct factory introduction or managed sourcing."
+  "You can choose public review, private custom support, or supplier sourcing."
 ] as const;
 const topNavigation = [
-  ["Discover Ideas", "/ask"],
-  ["Ask TYORA", "/ask/new"],
-  ["Source Products", "/source"],
-  ["Journeys", "/#journeys"],
-  ["Success Stories", "/#success-stories"]
+  ["Ideas", "/ask"],
+  ["Source", "/source"],
+  ["Custom", "/custom"],
+  ["Pricing", "/#pricing"],
+  ["My TYORA", "/me"]
 ] as const;
 
 function timeAgo(value: string) {
@@ -399,7 +406,7 @@ export default function Home() {
             {topNavigation.map(([label, href]) => (
               <Link key={label} href={href} className={cn(
                 "rounded-full px-3 py-2 text-sm font-medium transition hover:bg-[#f5f6f8] hover:text-[#101216]",
-                label === "Discover Ideas" ? "bg-[#2563eb] text-white hover:bg-[#1d4ed8] hover:text-white" : "text-[#59616e]"
+                label === "Ideas" ? "bg-[#2563eb] text-white hover:bg-[#1d4ed8] hover:text-white" : "text-[#59616e]"
               )}>
                 {label}
               </Link>
@@ -440,7 +447,7 @@ export default function Home() {
               <Upload size={15} /> Start a Discussion
             </Link>
             <Link href="/ask" className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Browse Ideas</Link>
-            <p className="mt-3 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">3 FREE Expert Reviews per day</p>
+            <p className="mt-3 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">Every public idea gets an initial TYORA manufacturing review.</p>
           </aside>
 
           <div className="min-w-0">
@@ -453,6 +460,9 @@ export default function Home() {
                   <h1 className="max-w-4xl text-[1.55rem] font-semibold leading-[1.08] tracking-normal sm:text-4xl lg:text-[2.65rem]">What are founders building next?</h1>
                   <p className="mt-1.5 max-w-[320px] text-sm leading-5 text-[#59616e] sm:mt-2 sm:max-w-3xl sm:text-base sm:leading-6">
                     Share your idea. Get a FREE manufacturing review within 8 working hours.
+                  </p>
+                  <p className="mt-1.5 max-w-[340px] text-xs font-semibold text-[#0f766e] sm:mt-2 sm:max-w-3xl sm:text-sm">
+                    Post publicly for a free manufacturing review, or send a private custom project to TYORA.
                   </p>
                   <p className="mt-1.5 max-w-[340px] break-words text-xs font-semibold text-[#315fbd] sm:mt-2 sm:max-w-3xl sm:text-sm">Founders are discussing product ideas with TYORA manufacturing experts.</p>
                   <p className="mt-1.5 hidden max-w-3xl text-sm font-medium leading-6 text-[#59616e] sm:block">
@@ -477,7 +487,10 @@ export default function Home() {
 
             <div className="mt-2.5 rounded-[18px] border border-[#dbeafe] bg-white/92 p-3 shadow-sm shadow-[#101216]/4 sm:hidden">
               <p className="text-sm font-semibold leading-5 text-[#101216]">Share product ideas. TYORA reviews manufacturability, cost, MOQ and supplier path.</p>
-              <Link href="/ask/new" className="mt-2 inline-flex text-sm font-semibold text-[#2563eb]">Start a discussion <ArrowRight size={14} className="ml-1 mt-0.5" /></Link>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Link href="/ask/new" className="inline-flex text-sm font-semibold text-[#2563eb]">Public Idea <ArrowRight size={14} className="ml-1 mt-0.5" /></Link>
+                <Link href="/custom" className="inline-flex text-sm font-semibold text-[#0f766e]">Private Custom <ArrowRight size={14} className="ml-1 mt-0.5" /></Link>
+              </div>
             </div>
 
             <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-1">
