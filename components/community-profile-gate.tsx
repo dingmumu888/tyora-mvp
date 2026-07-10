@@ -9,23 +9,28 @@ function skippedKey(userId: string) {
   return `${SKIP_PREFIX}${userId}`;
 }
 
-function wasSkipped(userId: string) {
+function safeSessionGet(key: string) {
   try {
-    if (typeof window === "undefined" || !window.sessionStorage) return false;
-    return window.sessionStorage.getItem(skippedKey(userId)) === "true";
+    return typeof window === "undefined" ? "" : window.sessionStorage.getItem(key) || "";
   } catch {
-    return false;
+    return "";
   }
 }
 
-function rememberSkipped(userId: string) {
+function safeSessionSet(key: string, value: string) {
   try {
-    if (typeof window !== "undefined" && window.sessionStorage) {
-      window.sessionStorage.setItem(skippedKey(userId), "true");
-    }
+    if (typeof window !== "undefined") window.sessionStorage.setItem(key, value);
   } catch {
     // Storage can be unavailable in locked-down desktop browsers. Skipping should never crash the app.
   }
+}
+
+function wasSkipped(userId: string) {
+  return safeSessionGet(skippedKey(userId)) === "true";
+}
+
+function rememberSkipped(userId: string) {
+  safeSessionSet(skippedKey(userId), "true");
 }
 
 export default function CommunityProfileGate() {

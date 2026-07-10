@@ -55,6 +55,22 @@ type CommunityActivityItem = {
   createdAt: string;
 };
 
+function safeSessionGet(key: string) {
+  try {
+    return window.sessionStorage.getItem(key) || "";
+  } catch {
+    return "";
+  }
+}
+
+function safeSessionSet(key: string, value: string) {
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch {
+    // Site data may be blocked in some browsers; this preference is optional.
+  }
+}
+
 const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
@@ -195,12 +211,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const stored = window.sessionStorage.getItem("mobileDiscussionCtaCollapsed");
+    const stored = safeSessionGet("mobileDiscussionCtaCollapsed");
     if (stored === "false") setMobileDiscussionCtaCollapsed(false);
   }, []);
 
   useEffect(() => {
-    window.sessionStorage.setItem("mobileDiscussionCtaCollapsed", String(mobileDiscussionCtaCollapsed));
+    safeSessionSet("mobileDiscussionCtaCollapsed", String(mobileDiscussionCtaCollapsed));
   }, [mobileDiscussionCtaCollapsed]);
 
   useEffect(() => {

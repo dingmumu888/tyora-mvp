@@ -81,32 +81,45 @@ function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
 }
 
+function storageGet(storage: Storage | undefined, key: string) {
+  try {
+    return storage?.getItem(key) || "";
+  } catch {
+    return "";
+  }
+}
+
+function storageSet(storage: Storage | undefined, key: string, value: string) {
+  try {
+    storage?.setItem(key, value);
+  } catch {
+    // Some browsers throw when site data is blocked. Analytics must never break the page.
+  }
+}
+
 function getVisitorId() {
-  const stored =
-    typeof localStorage !== "undefined" ? localStorage.getItem(VISITOR_STORAGE_KEY) || "" : "";
+  const stored = storageGet(typeof window === "undefined" ? undefined : window.localStorage, VISITOR_STORAGE_KEY);
   const existing = stored || getCookie(VISITOR_COOKIE);
   if (existing) return existing;
   const next = randomId("visitor");
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem(VISITOR_STORAGE_KEY, next);
-  }
+  storageSet(typeof window === "undefined" ? undefined : window.localStorage, VISITOR_STORAGE_KEY, next);
   setCookie(VISITOR_COOKIE, next);
   return next;
 }
 
 function getSessionId() {
-  if (typeof sessionStorage === "undefined") return randomId("session");
-  const existing = sessionStorage.getItem(SESSION_KEY);
+  if (typeof window === "undefined") return randomId("session");
+  const existing = storageGet(window.sessionStorage, SESSION_KEY);
   if (existing) return existing;
   const next = randomId("session");
-  sessionStorage.setItem(SESSION_KEY, next);
-  sessionStorage.setItem(SESSION_STARTED_KEY, String(Date.now()));
+  storageSet(window.sessionStorage, SESSION_KEY, next);
+  storageSet(window.sessionStorage, SESSION_STARTED_KEY, String(Date.now()));
   return next;
 }
 
 function getSessionDurationSeconds() {
-  if (typeof sessionStorage === "undefined") return 0;
-  const startedAt = Number(sessionStorage.getItem(SESSION_STARTED_KEY) || Date.now());
+  if (typeof window === "undefined") return 0;
+  const startedAt = Number(storageGet(window.sessionStorage, SESSION_STARTED_KEY) || Date.now());
   return Math.max(0, Math.round((Date.now() - startedAt) / 1000));
 }
 
