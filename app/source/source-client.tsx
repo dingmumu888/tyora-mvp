@@ -65,6 +65,33 @@ const pricingOptions = [
   }
 ];
 
+const recentSourceActivity = [
+  {
+    buyer: "US buyer",
+    category: "Kitchen products",
+    quantity: "500+ pcs",
+    status: "Factory quote sent privately"
+  },
+  {
+    buyer: "EU buyer",
+    category: "Pet accessories",
+    quantity: "1,000+ pcs",
+    status: "Supplier options found"
+  },
+  {
+    buyer: "UK buyer",
+    category: "Phone accessories",
+    quantity: "300+ pcs",
+    status: "Reference sample checking"
+  },
+  {
+    buyer: "CA buyer",
+    category: "Home storage",
+    quantity: "800+ pcs",
+    status: "Product match in progress"
+  }
+];
+
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -325,6 +352,31 @@ export default function SourceClient() {
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#59616e]">
             You pay the factory price plus a clear service fee only if you continue after the free quote.
           </p>
+        </div>
+
+        <div className="rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-[#315fbd]">Recent anonymized sourcing activity</p>
+              <h2 className="mt-1 text-2xl font-semibold">Buyers are using TYORA for private supplier checks.</h2>
+            </div>
+            <p className="max-w-xl text-sm leading-6 text-[#69707d]">
+              Buyer details, product links, supplier contacts, and quotes are never shown publicly.
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {recentSourceActivity.map((item) => (
+              <div key={`${item.buyer}-${item.category}`} className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
+                <p className="text-sm font-semibold text-[#101216]">{item.buyer}</p>
+                <p className="mt-2 text-sm leading-6 text-[#59616e]">
+                  {item.category} · {item.quantity}
+                </p>
+                <p className="mt-3 rounded-2xl bg-[#f2f7ff] px-3 py-2 text-xs font-semibold text-[#315fbd]">
+                  Status: {item.status}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">

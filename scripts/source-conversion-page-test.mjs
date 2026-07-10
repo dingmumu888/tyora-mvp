@@ -94,6 +94,18 @@ const checks = [
       source.includes("View full process")
   },
   {
+    name: "source page shows anonymized sourcing activity without public replies",
+    pass:
+      source.includes("Recent anonymized sourcing activity") &&
+      source.includes("Buyer details, product links, supplier contacts, and quotes are never shown publicly.") &&
+      source.includes("Factory quote sent privately") &&
+      source.includes("Supplier options found") &&
+      source.includes("Reference sample checking") &&
+      !source.includes("TYORA reply:") &&
+      !source.includes("Factory: ****") &&
+      !source.includes("Price: ****")
+  },
+  {
     name: "full process page exists with supplier introduction and managed sourcing sections",
     pass:
       processPage.includes("How TYORA Source Works") &&
