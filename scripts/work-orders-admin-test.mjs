@@ -79,7 +79,11 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
     "Custom",
     "Project",
     "Search product, customer, country, ID",
-    "Open original",
+    "workOrderActionLabel",
+    "Reply / Quote",
+    "Reply to idea",
+    "Review custom request",
+    "Follow up project",
     "WhatsApp",
     "Email",
     "internalNotes",
@@ -96,6 +100,10 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
 
   if (client.includes("object-cover")) {
     failures.push("Work order thumbnails should not crop uploaded product images with object-cover.");
+  }
+
+  if (client.includes("Open original")) {
+    failures.push("Work order primary action should describe the reply/follow-up action, not say Open original.");
   }
 }
 

@@ -58,6 +58,13 @@ function imageGridClass(count: number) {
   return "grid-cols-3";
 }
 
+function workOrderActionLabel(type: WorkOrderType) {
+  if (type === "Source") return "Reply / Quote";
+  if (type === "Idea") return "Reply to idea";
+  if (type === "Custom") return "Review custom request";
+  return "Follow up project";
+}
+
 export default function WorkOrdersAdminClient() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [filter, setFilter] = useState<Filter>("Needs Reply");
@@ -244,7 +251,7 @@ export default function WorkOrdersAdminClient() {
                       </a>
                     ) : null}
                     <Link href={order.adminHref} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-                      Open original <ArrowUpRight size={15} />
+                      {workOrderActionLabel(order.type)} <ArrowUpRight size={15} />
                     </Link>
                   </div>
                 </article>
