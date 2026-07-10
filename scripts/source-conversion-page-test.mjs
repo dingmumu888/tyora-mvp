@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 
 const source = readFileSync("app/source/source-client.tsx", "utf8");
 const sourceRoute = readFileSync("app/api/source/route.ts", "utf8");
+const storage = readFileSync("lib/storage.ts", "utf8");
 const processPagePath = "app/source/how-it-works/page.tsx";
 const processPage = existsSync(processPagePath) ? readFileSync(processPagePath, "utf8") : "";
 
@@ -136,6 +137,21 @@ const checks = [
       sourceRoute.includes("cf-ipcountry") &&
       sourceRoute.includes("Not specified") &&
       sourceRoute.includes("Detected country:")
+  },
+  {
+    name: "source trust toast uses visitor copy and slow randomized timing",
+    pass:
+      source.includes("Checking China supplier options") &&
+      source.includes("Exploring factory pricing") &&
+      source.includes("Comparing supplier options") &&
+      !source.includes("Supplier check activity") &&
+      storage.includes("United States buyer viewed Source") &&
+      storage.includes("Germany buyer viewed Source") &&
+      storage.includes("United Kingdom buyer viewed Source") &&
+      storage.includes("trustToastMinSeconds: 60") &&
+      storage.includes("trustToastMaxSeconds: 300") &&
+      !storage.includes("Someone requested a supplier check") &&
+      !storage.includes("A new product sourcing request was submitted")
   }
 ];
 

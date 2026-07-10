@@ -39,6 +39,14 @@ const textareaClass = `${inputClass} min-h-28 resize-none py-3 leading-6`;
 
 const ctaText = "Get Free Product Match";
 
+const trustToastSubtitles = [
+  "Checking China supplier options",
+  "Exploring factory pricing",
+  "Looking for product sourcing help",
+  "Comparing supplier options",
+  "Reviewing managed sourcing support"
+];
+
 const pricingOptions = [
   {
     title: "Free Product Match & Quote",
@@ -115,7 +123,7 @@ export default function SourceClient() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [submittedId, setSubmittedId] = useState("");
-  const [trustToast, setTrustToast] = useState("");
+  const [trustToast, setTrustToast] = useState<{ title: string; subtitle: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const sourceCopy = content.sourcePage;
 
@@ -134,8 +142,12 @@ export default function SourceClient() {
       timer = window.setTimeout(() => {
         if (!active) return;
         const messageIndex = Math.floor(Math.random() * sourceCopy.trustToastMessages.length);
-        setTrustToast(sourceCopy.trustToastMessages[messageIndex]);
-        window.setTimeout(() => active && setTrustToast(""), 5200);
+        const subtitleIndex = Math.floor(Math.random() * trustToastSubtitles.length);
+        setTrustToast({
+          title: sourceCopy.trustToastMessages[messageIndex],
+          subtitle: trustToastSubtitles[subtitleIndex]
+        });
+        window.setTimeout(() => active && setTrustToast(null), 5200);
         schedule();
       }, delay);
     };
@@ -434,9 +446,9 @@ export default function SourceClient() {
         <div className="fixed inset-x-4 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-[9985] mx-auto max-w-sm rounded-2xl border border-[#dfe6ef] bg-white/95 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl md:inset-x-auto md:bottom-5 md:right-5">
           <p className="flex items-start gap-2 text-sm font-semibold text-[#101216]">
             <span className="mt-1 size-2 shrink-0 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.14)]" />
-            <span>{trustToast}</span>
+            <span>{trustToast.title}</span>
           </p>
-          <p className="mt-1 pl-4 text-xs text-[#69707d]">Supplier check activity</p>
+          <p className="mt-1 pl-4 text-xs text-[#69707d]">{trustToast.subtitle}</p>
         </div>
       ) : null}
     </main>

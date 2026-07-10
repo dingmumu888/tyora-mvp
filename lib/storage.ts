@@ -331,12 +331,19 @@ export const defaultContent: SiteContent = {
     ],
     trustToastEnabled: true,
     trustToastMessages: [
-      "Someone requested a supplier check",
-      "A new product sourcing request was submitted",
-      "Another buyer is checking China supplier options"
+      "United States buyer viewed Source",
+      "Canada buyer viewed Source",
+      "United Kingdom buyer viewed Source",
+      "Germany buyer viewed Source",
+      "France buyer viewed Source",
+      "Netherlands buyer viewed Source",
+      "Australia buyer viewed Source",
+      "Spain buyer viewed Source",
+      "Italy buyer viewed Source",
+      "Sweden buyer viewed Source"
     ],
-    trustToastMinSeconds: 10,
-    trustToastMaxSeconds: 50
+    trustToastMinSeconds: 60,
+    trustToastMaxSeconds: 300
   },
   mobileTabs: {
     community: "Community",
