@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Factory, ImagePlus, PackageSearch, ShieldCheck } from "lucide-react";
+import CommunityUserMenu from "@/components/community-user-menu";
 import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
@@ -254,10 +255,15 @@ export default function SourceClient() {
             <Link href="/source" className="rounded-full bg-[#101216] px-3 py-2 text-white">Source Products</Link>
             <Link href="/ask/new" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Ask TYORA</Link>
           </nav>
-          <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-3 py-2 text-sm font-semibold sm:px-4">
-            <span className="sm:hidden">Free Match</span>
-            <span className="hidden sm:inline">{ctaText}</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <div className="hidden md:block">
+              <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
+            </div>
+            <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-3 py-2 text-sm font-semibold sm:px-4">
+              <span className="sm:hidden">Free Match</span>
+              <span className="hidden sm:inline">{ctaText}</span>
+            </Link>
+          </div>
         </div>
       </header>
 

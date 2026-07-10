@@ -4,6 +4,7 @@ import { ArrowLeft, MessageCircle, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import CommunityAvatar from "@/components/community-avatar";
+import CommunityUserMenu from "@/components/community-user-menu";
 import IdeaActions from "./idea-actions";
 import IdeaComments from "./idea-comments";
 import IdeaImageGallery from "./idea-image-gallery";
@@ -65,7 +66,12 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
       <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/88 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Link href="/ask" className="inline-flex items-center gap-2 text-sm font-semibold"><ArrowLeft size={16} /> Ask TYORA</Link>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</span>
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</span>
+            <div className="hidden md:block">
+              <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
+            </div>
+          </div>
         </div>
       </header>
 

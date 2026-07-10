@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowLeft, CheckCircle2, Factory, ShieldCheck } from "lucide-react";
+import CommunityUserMenu from "@/components/community-user-menu";
 
 export const metadata: Metadata = {
   title: "How TYORA Source Works | TYORA",
@@ -94,7 +95,12 @@ export default function SourceHowItWorksPage() {
           <Link href="/source" className="inline-flex items-center gap-2 text-sm font-semibold text-[#59616e] hover:text-[#101216]">
             <ArrowLeft size={16} /> Back to Source
           </Link>
-          <Link href="/" className="font-semibold">TYORA</Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="font-semibold">TYORA</Link>
+            <div className="hidden md:block">
+              <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
+            </div>
+          </div>
         </div>
       </header>
 

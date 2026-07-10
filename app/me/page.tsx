@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, MapPin, Sparkles, UserRound } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
+import CommunityUserMenu from "@/components/community-user-menu";
 import EmailLogin from "@/components/email-login";
 import MarkNotificationsRead from "@/components/mark-notifications-read";
 import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
@@ -61,10 +62,9 @@ export default async function MyTyoraPage() {
             <span className="block text-sm font-semibold text-[#101216]">My TYORA</span>
             <span className="block text-xs font-medium text-[#69707d]">Profile & activity</span>
           </Link>
-          <Link href="#profile" className="inline-flex items-center gap-2 rounded-full border border-[#dfe6ef] bg-white px-2 py-1.5 shadow-sm shadow-[#101216]/5" aria-label="Profile summary">
-            <CommunityAvatar name={user.name} src={user.avatar} className="size-8 text-xs" />
-            <span className="hidden max-w-28 truncate pr-2 text-sm font-semibold text-[#101216] sm:block">{user.name}</span>
-          </Link>
+          <div className="hidden md:block">
+            <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
+          </div>
         </div>
       </header>
 
