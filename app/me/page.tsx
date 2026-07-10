@@ -18,13 +18,40 @@ export const metadata = {
   description: "Your TYORA discussions, comments, liked ideas, and notifications."
 };
 
+const myTyoraDesktopNav = [
+  { label: "Home", href: "/" },
+  { label: "Source", href: "/source" },
+  { label: "Hot", href: "/" },
+  { label: "Build", href: "/build" },
+  { label: "Community", href: "/ask" }
+] as const;
+
 export default async function MyTyoraPage() {
   const session = await getCommunitySession();
   const activity = session ? await getCommunityUserActivity(session.userId) : null;
 
   if (!session || !activity) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_45%,#f7f5f0_100%)] px-4 pb-28 pt-16 text-[#101216] md:pb-16">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_45%,#f7f5f0_100%)] px-4 pb-28 pt-16 text-[#101216] md:pb-16 md:pt-0">
+        <header className="sticky top-0 z-30 -mx-4 mb-16 hidden border-b border-[#e4e8ef]/90 bg-white/88 backdrop-blur-xl md:block">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+            <Link href="/" className="leading-tight">
+              <span className="block text-sm font-semibold text-[#101216]">TYORA</span>
+              <span className="block text-xs font-medium text-[#69707d]">Product creator community</span>
+            </Link>
+            <nav className="hidden items-center gap-1 md:flex" aria-label="My TYORA desktop navigation">
+              {myTyoraDesktopNav.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-full px-3 py-2 text-sm font-semibold text-[#59616e] transition hover:bg-[#f2f7ff] hover:text-[#2563eb]"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </header>
         <section className="mx-auto max-w-xl rounded-[28px] border border-[#dfe6ef] bg-white p-7 text-center shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={20} /></div>
           <h1 className="mt-5 text-3xl font-semibold">Log in to view My TYORA</h1>
@@ -62,6 +89,17 @@ export default async function MyTyoraPage() {
             <span className="block text-sm font-semibold text-[#101216]">My TYORA</span>
             <span className="block text-xs font-medium text-[#69707d]">Profile & activity</span>
           </Link>
+          <nav className="hidden items-center gap-1 md:flex" aria-label="My TYORA desktop navigation">
+            {myTyoraDesktopNav.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-full px-3 py-2 text-sm font-semibold text-[#59616e] transition hover:bg-[#f2f7ff] hover:text-[#2563eb]"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
           <div className="hidden md:block">
             <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
           </div>
