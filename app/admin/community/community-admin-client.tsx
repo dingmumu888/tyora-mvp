@@ -172,7 +172,7 @@ export default function CommunityAdminClient() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href="/admin" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">Back to Today</Link>
-            <Link href="/ask" className="rounded-full bg-[#101216] px-4 py-2 text-sm font-semibold text-white">View Community</Link>
+            <Link href="/ask" target="_blank" rel="noreferrer" className="rounded-full bg-[#101216] px-4 py-2 text-sm font-semibold text-white">View Community</Link>
           </div>
           </div>
         </header>
