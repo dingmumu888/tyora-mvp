@@ -8,6 +8,8 @@ const customPagePath = path.join(root, "app", "custom", "page.tsx");
 const home = read("app", "home-client.tsx");
 const source = read("app", "source", "source-client.tsx");
 const newIdea = read("app", "ask", "new", "new-idea-client.tsx");
+const storage = read("lib", "storage.ts");
+const i18n = read("lib", "i18n.ts");
 
 const failures = [];
 
@@ -65,6 +67,44 @@ if (home.includes("3 FREE Expert Reviews per day")) {
 if (newIdea.includes("limited to 3 per account per day") || newIdea.includes("Today's FREE Expert Reviews: 0 / 3 Used")) {
   failures.push("New idea page still contains old 3-review limit copy.");
 }
+
+[
+  "Free Custom Review",
+  "Factory Introduction",
+  "Managed Custom Production",
+  "Repeat Order Management",
+  "5% of estimated first order value, minimum $499",
+  "15% of first order value, minimum $999",
+  "10% of repeat order value, minimum $399"
+].forEach((text) => {
+  if (!storage.includes(text)) failures.push(`Default pricing missing: ${text}`);
+});
+
+[
+  "免费定制评估",
+  "工厂介绍",
+  "全程定制生产",
+  "返单管理",
+  "首单预估金额的 5%，最低 $499",
+  "首单金额的 15%，最低 $999",
+  "返单金额的 10%，最低 $399"
+].forEach((text) => {
+  if (!i18n.includes(text)) failures.push(`Chinese pricing missing: ${text}`);
+});
+
+if (storage.includes("price: \"$149 USD\"") || i18n.includes("price: \"$149 USD\"")) {
+  failures.push("Old $149 custom pricing still exists.");
+}
+
+[
+  "hasLegacyCustomPricing",
+  "manufacturing-review",
+  "full-project-management",
+  "制造业回顾",
+  "全面项目管理"
+].forEach((text) => {
+  if (!storage.includes(text)) failures.push(`Legacy pricing migration missing: ${text}`);
+});
 
 if (failures.length) {
   console.error("Custom positioning checks failed:");

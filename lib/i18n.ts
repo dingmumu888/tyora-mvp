@@ -18,27 +18,55 @@ export const zhContent: SiteContent = {
   pricing: [
     {
       ...defaultContent.pricing[0],
-      name: "制造评估",
-      subtitle: "包含工厂匹配",
-      priceLabel: "一次性项目启动费",
-      price: "$149 USD",
-      description: "适合希望在工厂介绍后自行管理生产的创业者。",
-      features: ["制造可行性评估", "工厂匹配", "最多 5 家合适工厂推荐", "工厂信息和联系方式", "如果没有找到合适工厂，继续推荐工厂"],
-      exclusions: ["工厂沟通", "价格谈判", "样品检查", "生产跟进", "工厂审核", "发货协调"],
-      bottomNote: "我们介绍合适工厂后，你将直接与工厂合作。"
+      name: "免费定制评估",
+      subtitle: "先确认项目是否现实",
+      priceLabel: "初步可行性评估",
+      price: "免费",
+      description: "TYORA 会确认产品能不能做、MOQ、是否需要模具、模具成本范围、是否能先做样品，以及不改设计/材质/结构前提下的预算范围。",
+      ctaText: "开始免费评估",
+      features: ["产品是否能做", "基于工厂反馈确认 MOQ", "是否需要模具和模具成本范围", "是否能先做样品", "项目预算区间", "主要风险和下一步建议"],
+      exclusions: [],
+      bottomNote: "这是初步评估，不是最终生产报价。"
     },
     {
       ...defaultContent.pricing[1],
-      name: "全程项目管理",
-      subtitle: "我们成为你在中国的制造代表。",
+      name: "工厂介绍",
+      subtitle: "客户直接与工厂合作",
+      badge: undefined,
+      priceLabel: "一次性介绍费",
+      price: "首单预估金额的 5%，最低 $499",
+      priceSuffix: undefined,
+      description: "适合希望拿到工厂联系方式，并自己管理沟通、样品和生产的客户。",
+      highlightBanner: undefined,
+      note: undefined,
+      ctaText: "申请工厂介绍",
+      features: ["工厂匹配评估", "认证工厂联系方式", "工厂信息和沟通交接", "产品成本保持出厂价", "供应商短期失效时免费协助替换一次"],
+      exclusions: ["后续工厂沟通", "样品跟进", "生产监督", "质量检查", "发货协调"],
+      bottomNote: "TYORA 不在产品成本上加价。"
+    },
+    {
+      ...defaultContent.pricing[2],
+      name: "全程定制生产",
+      subtitle: "TYORA 跟进第一次定制订单",
       badge: "推荐",
-      priceLabel: "项目启动",
-      price: "$149 USD",
-      priceSuffix: "+\n定制服务费",
-      description: "我们代表你管理制造流程。\n\n你仍然掌控并审批关键决策。",
-      highlightBanner: "我们保护你的时间、预算和产品。",
-      note: "定制服务费\n生产开始前报价。",
-      features: ["包含制造评估的全部内容", "工厂沟通", "需求确认", "工厂验证（需要时）", "价格谈判", "样品检查", "生产跟进", "质量跟进", "发货协调"]
+      priceLabel: "第一次定制订单",
+      price: "首单金额的 15%，最低 $999",
+      description: "TYORA 帮客户对比工厂方案，跟进样品和模具，管理生产、质检和发货协调。",
+      highlightBanner: "选对工厂节省的成本，可能超过服务费。",
+      ctaText: "开始全程定制",
+      features: ["对比多个工厂方案", "推荐性价比最高的工厂", "工厂沟通", "样品和模具跟进", "价格谈判", "生产跟进", "质量检查", "发货协调", "TYORA 保留确认样品用于后续质检"],
+      bottomNote: "工厂成本透明。TYORA 不在产品成本上加价。"
+    },
+    {
+      ...defaultContent.pricing[3],
+      name: "返单管理",
+      subtitle: "同一个产品、同一个规格",
+      priceLabel: "后续返单",
+      price: "返单金额的 10%，最低 $399",
+      description: "适用于同产品、同规格、同工厂的后续返单。TYORA 使用第一次确认的样品作为质量参考。",
+      ctaText: "管理返单",
+      features: ["不再收第一次定制开发费", "用确认样品作为质检参考", "工厂返单沟通", "基础生产监督", "与保留样品进行质量对比", "发货协调"],
+      bottomNote: "如果设计、材质、包装、供应商或质量标准变化，TYORA 会重新评估价格。"
     }
   ],
   trustBadges: ["产品开发", "制造伙伴匹配", "样品管理", "质量检查", "生产跟进", "发货支持"],
@@ -131,8 +159,8 @@ export const ui = {
     positioningHeadlineB: "",
     positioningText:
       "TYORA supports product development from validation and planning to production, quality assurance, and delivery.",
-    pricingSubtitle: "Choose the level of support that's right for your project.",
-    pricingTitle: "Choose How You'd Like to Work With TYORA",
+    pricingSubtitle: "Start with a free custom review, then choose factory introduction, managed custom production, or repeat order management.",
+    pricingTitle: "Choose the right Custom support path",
     primaryGoal: "Primary goal",
     processVideoUrl: "Process video URL",
     production: "Production",
@@ -204,9 +232,9 @@ export const ui = {
       ["Transparent Decisions", "Stay in control while TYORA helps you understand the tradeoffs before each next step."]
     ],
     trustTitle: "Why US Product Founders Choose TYORA",
-    pricingProofA: "Choose the level of support that fits your project.",
+    pricingProofA: "First we confirm feasibility, MOQ, mold needs, sample path, and budget range.",
     pricingProofB:
-      "Whether you manage production yourself or prefer TYORA to manage everything, you'll always receive transparent advice and independent factory recommendations.",
+      "If you continue, TYORA charges a clear service fee. Product costs stay factory priced with no hidden markup.",
     videoSubtitle: "Watch how TYORA helps transform ideas into manufacturable products."
   },
   zh: {
@@ -272,8 +300,8 @@ export const ui = {
     positioningHeadlineB: "",
     positioningText:
       "TYORA 支持从产品验证、制造规划到生产、质量保障和交付的产品开发流程。",
-    pricingSubtitle: "选择适合你项目的支持级别。",
-    pricingTitle: "选择你希望如何与 TYORA 合作",
+    pricingSubtitle: "先免费评估，再选择工厂介绍、全程定制生产或返单管理。",
+    pricingTitle: "选择适合你项目阶段的 Custom 支持方式",
     primaryGoal: "核心目标",
     processVideoUrl: "流程视频链接",
     production: "生产",
@@ -336,8 +364,8 @@ export const ui = {
       ["全球支持", "全球物流协调。"]
     ],
     trustTitle: "为什么创业者选择 TYORA",
-    pricingProofA: "选择适合你项目的支持级别。",
-    pricingProofB: "无论你自行管理生产，还是希望 TYORA 全程管理，你都会获得透明建议和独立工厂推荐。",
+    pricingProofA: "先确认能不能做、MOQ、模具需求、样品路径和预算范围。",
+    pricingProofB: "如果继续推进，TYORA 按透明服务费收费，产品成本保持出厂价，不隐藏加价。",
     videoSubtitle: "了解 TYORA 如何帮助想法变成可制造产品。"
   }
 } as const;

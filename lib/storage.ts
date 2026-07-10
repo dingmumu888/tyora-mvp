@@ -264,11 +264,11 @@ export const defaultContent: SiteContent = {
   founderPhoto: "",
   founderText:
     "TYORA helps US founders turn early product ideas into production-ready plans. We review manufacturability, identify the right manufacturing path, coordinate with China-based partners, and help reduce the risk that comes with building a product overseas.",
-  pricingTitle: "Choose the support level that fits your launch",
-  pricingSubtitle: "Start with a manufacturing review, then decide whether you want TYORA to manage the project with you.",
-  pricingProofA: "Start lean. Scale support when the project is ready.",
+  pricingTitle: "Choose the right Custom support path",
+  pricingSubtitle: "Start with a free custom review, then choose factory introduction, managed custom production, or repeat order management.",
+  pricingProofA: "First we confirm feasibility, MOQ, mold needs, sample path, and budget range.",
   pricingProofB:
-    "Whether you want factory recommendations or hands-on production support, TYORA gives you transparent guidance before you commit. Product costs are factory prices; TYORA charges service fees separately when support is needed.",
+    "If you continue, TYORA charges a clear service fee. Product costs stay factory priced with no hidden markup.",
   trustBadges: [
     "US Founder-Focused",
     "China Manufacturing Network",
@@ -361,59 +361,99 @@ export const defaultContent: SiteContent = {
   },
   pricing: [
     {
-      id: "manufacturing-review",
-      name: "Manufacturing Review",
-      subtitle: "Factory Matching Included",
-      priceLabel: "One-Time Project Kickoff Fee",
-      price: "$149 USD",
+      id: "free-custom-review",
+      name: "Free Custom Review",
+      subtitle: "Before you spend money",
+      priceLabel: "Initial feasibility review",
+      price: "Free",
       description:
-        "Best for founders who prefer to manage manufacturing themselves after factory introduction. Product cost stays between you and the factory.",
-      ctaText: "Start Review",
+        "TYORA confirms whether the product can be made, MOQ, mold requirement, mold cost range, sample possibility, and estimated project budget before design or material changes.",
+      ctaText: "Start Free Review",
       visible: true,
       order: 1,
       features: [
-        "Manufacturing feasibility review",
-        "Factory matching",
-        "Up to 5 suitable factory recommendations",
-        "Factory information and contact details",
-        "Continued factory recommendations if no suitable factory is found"
+        "Can this product be made?",
+        "Confirmed MOQ from factory feedback",
+        "Mold requirement and mold cost range",
+        "Sample possibility before production",
+        "Estimated budget range",
+        "Main risks and suggested next step"
       ],
-      exclusions: [
-        "Factory communication",
-        "Price negotiation",
-        "Sample inspection",
-        "Production monitoring",
-        "Factory audit",
-        "Shipping coordination"
-      ],
-      bottomNote: "After we introduce the right factory, you work directly with them. TYORA does not add markup to the product price."
+      bottomNote: "This is an initial review, not a final production quote."
     },
     {
-      id: "full-project-management",
-      name: "Full Project Management",
-      subtitle: "We become your manufacturing representative in China.",
-      badge: "Recommended",
-      priceLabel: "Project Kickoff",
-      price: "$149 USD",
-      priceSuffix: "+\nCustom Service Fee",
+      id: "factory-introduction",
+      name: "Factory Introduction",
+      subtitle: "Work directly with the factory",
+      priceLabel: "One-time introduction fee",
+      price: "5% of estimated first order value, minimum $499",
       description:
-        "We manage the manufacturing process on your behalf.\n\nYou stay in control and approve the key decisions. Factory costs stay transparent; TYORA service fees are quoted separately.",
-      highlightBanner: "We protect your time, your budget, and your product.",
-      note: "Custom Service Fee\nQuoted before production begins.",
-      ctaText: "Start Project",
+        "For customers who want verified factory contact and prefer to manage communication, samples, and production directly.",
+      ctaText: "Request Introduction",
       visible: true,
       order: 2,
       features: [
-        "Everything in Manufacturing Review",
-        "Factory communication",
-        "Requirement confirmation",
-        "Factory verification (when required)",
-        "Price negotiation",
-        "Sample inspection",
-        "Production follow-up",
-        "Quality follow-up",
+        "Factory fit review",
+        "Verified factory contact",
+        "Factory information and communication handoff",
+        "Product cost remains factory priced",
+        "One free replacement if the supplier becomes unavailable shortly after release"
+      ],
+      exclusions: [
+        "Ongoing factory communication",
+        "Sample follow-up",
+        "Production monitoring",
+        "Quality inspection",
         "Shipping coordination"
-      ]
+      ],
+      bottomNote: "TYORA does not add markup to product cost."
+    },
+    {
+      id: "managed-custom-production",
+      name: "Managed Custom Production",
+      subtitle: "TYORA manages the first custom order",
+      badge: "Recommended",
+      priceLabel: "First custom order",
+      price: "15% of first order value, minimum $999",
+      description:
+        "TYORA compares factory options, follows sampling and mold work, manages production, quality checks, and shipping coordination.",
+      highlightBanner: "The right factory choice can save more than the service fee.",
+      ctaText: "Start Managed Custom",
+      visible: true,
+      order: 3,
+      features: [
+        "Factory option comparison",
+        "Best-value factory recommendation",
+        "Factory communication",
+        "Sampling and mold follow-up",
+        "Price negotiation",
+        "Production follow-up",
+        "Quality checks",
+        "Shipping coordination",
+        "Approved reference sample retained by TYORA"
+      ],
+      bottomNote: "Factory cost stays transparent. TYORA does not add product markup."
+    },
+    {
+      id: "repeat-order-management",
+      name: "Repeat Order Management",
+      subtitle: "For the same product and same specs",
+      priceLabel: "Repeat orders",
+      price: "10% of repeat order value, minimum $399",
+      description:
+        "For repeat orders of the same product, same specs, and same factory. TYORA uses the approved reference sample to help keep quality consistent.",
+      ctaText: "Manage Reorder",
+      visible: true,
+      order: 4,
+      features: [
+        "No new custom development fee",
+        "Approved sample used as quality reference",
+        "Factory reorder communication",
+        "Basic production supervision",
+        "Quality comparison against retained sample",
+        "Shipping coordination"
+      ],
+      bottomNote: "If design, material, packaging, supplier, or quality standard changes, TYORA will review pricing again."
     }
   ],
   cases: [
@@ -492,11 +532,11 @@ const previousDefaultContent = {
   founderTitle: "Meet Your Product Partner",
   founderText:
     "I help entrepreneurs transform product ideas into manufacturable products through trusted manufacturing partners in China. Every project is personally reviewed.",
-  pricingTitle: "Choose How You'd Like to Work With TYORA",
-  pricingSubtitle: "Choose the level of support that's right for your project.",
-  pricingProofA: "Choose the level of support that fits your project.",
+  pricingTitle: "Choose the right Custom support path",
+  pricingSubtitle: "Start with a free custom review, then choose factory introduction, managed custom production, or repeat order management.",
+  pricingProofA: "First we confirm feasibility, MOQ, mold needs, sample path, and budget range.",
   pricingProofB:
-    "Whether you manage production yourself or prefer TYORA to manage everything, you'll always receive transparent advice and independent factory recommendations.",
+    "If you continue, TYORA charges a clear service fee. Product costs stay factory priced with no hidden markup.",
   positioningHeadlineA: "How TYORA Helps",
   positioningHeadlineB: "",
   positioningText:
@@ -1033,9 +1073,17 @@ export function normalizeContent(value: unknown): SiteContent {
     normalized.pricingProofA = defaultContent.pricingProofA;
     normalized.pricingProofB = defaultContent.pricingProofB;
   }
+  const hasLegacyCustomPricing = normalized.pricing.some((plan) =>
+    ["manufacturing-review", "full-project-management"].includes(plan.id) ||
+    ["Manufacturing Review", "Full Project Management", "制造评估", "制造业回顾", "全程项目管理", "全面项目管理"].includes(plan.name) ||
+    plan.price === "$149 USD" ||
+    plan.price.includes("149美元")
+  );
+
   if (
     normalized.pricingTitle === "Product Development Support" ||
-    normalized.pricing.map((plan) => `${plan.name}|${plan.price.replace(/\d+% /g, "")}`).join("||") === legacyPricingTitles.join("||")
+    normalized.pricing.map((plan) => `${plan.name}|${plan.price.replace(/\d+% /g, "")}`).join("||") === legacyPricingTitles.join("||") ||
+    hasLegacyCustomPricing
   ) {
     normalized.pricingTitle = defaultContent.pricingTitle;
     normalized.pricingSubtitle = defaultContent.pricingSubtitle;
