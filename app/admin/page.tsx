@@ -285,23 +285,10 @@ const osSections: Array<{
 }> = [
   { title: "Today", items: [{ id: "today", label: "Today" }] },
   {
-    title: "Community",
+    title: "Operations",
     items: [
-      { href: "/admin/community", label: "Ideas" },
-      { href: "/admin/source", label: "Source Products" },
-      { href: "/admin/community", label: "Comments" },
-      { href: "/admin/community", label: "TYORA Reviews" },
-      { href: "/admin/community", label: "Pinned Posts" },
-      { href: "/admin/community", label: "Reported" }
-    ]
-  },
-  {
-    title: "Projects",
-    items: [
-      { id: "submissions", label: "Active Projects" },
-      { id: "submissions", label: "Manufacturing" },
-      { id: "submissions", label: "Shipping" },
-      { id: "submissions", label: "Completed" }
+      { href: "/admin/work-orders", label: "Work Orders" },
+      { id: "submissions", label: "Projects & Team" }
     ]
   },
   {
@@ -875,7 +862,7 @@ export default function AdminPage() {
                   {section.items.map((item) => item.href ? (
                     <Link key={`${section.title}-${item.label}`} href={item.href} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">
                       <span>{item.label}</span>
-                      {item.label === "Ideas" ? <span className="rounded-full bg-[#eef2ff] px-2 py-0.5 text-[11px] text-[#315fbd]">{communityIdeas.length}</span> : null}
+                      {item.label === "Work Orders" ? <span className="rounded-full bg-[#eef2ff] px-2 py-0.5 text-[11px] text-[#315fbd]">{communityIdeas.filter((idea) => !idea.review && !idea.hidden).length}</span> : null}
                     </Link>
                   ) : (
                     <button
