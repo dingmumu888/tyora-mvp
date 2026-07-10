@@ -40,13 +40,14 @@ const checks = [
       source.includes("<details")
   },
   {
-    name: "pricing and refund policy are explicit and short",
+    name: "pricing and service protection copy are explicit and short",
     pass:
       source.includes("Supplier Introduction") &&
       source.includes("3%-5% of estimated order value, minimum $199") &&
       source.includes("Managed Sourcing") &&
       source.includes("10%-15% of order value, minimum $499") &&
-      source.includes("Simple refund policy")
+      source.includes("Service protection") &&
+      !source.includes("Simple refund policy")
   },
   {
     name: "sample wording avoids promising free samples",

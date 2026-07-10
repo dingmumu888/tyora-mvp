@@ -368,13 +368,13 @@ export default function SourceClient() {
         <div className="rounded-[28px] border border-[#e7edf5] bg-white p-5 shadow-sm shadow-[#101216]/5">
           <div className="flex items-center gap-2">
             <ShieldCheck size={18} />
-            <h2 className="text-2xl font-semibold">Simple refund policy</h2>
+            <h2 className="text-2xl font-semibold">Service protection</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-[#59616e]">
-            Supplier Intro fees are non-refundable after supplier contact is released. If the supplier becomes unavailable, we will help find a replacement supplier for free.
+            Supplier Introduction fees are non-refundable after supplier contact is released, but we help find one free replacement if the supplier becomes unavailable shortly after release.
           </p>
           <p className="mt-2 text-sm leading-6 text-[#59616e]">
-            For Managed Sourcing, refunds depend on order status and costs already paid to factories, inspectors, or shipping providers.
+            Managed Sourcing refunds depend on order status and costs already paid to suppliers or third parties.
           </p>
         </div>
       </section>
