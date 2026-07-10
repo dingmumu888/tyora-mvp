@@ -43,6 +43,14 @@ const checks = [
       summary.includes("method: \"DELETE\"")
   },
   {
+    label: "Posts panel stays open after editing or deleting a post",
+    pass:
+      summary.includes("const [localIdeas, setLocalIdeas] = useState(ideas)") &&
+      summary.includes("setLocalIdeas((currentIdeas)") &&
+      summary.includes("setEditingIdea(null)") &&
+      !summary.includes("window.location.reload();")
+  },
+  {
     label: "Likes panel supports canceling likes through reaction toggle",
     pass:
       summary.includes("Cancel like") &&

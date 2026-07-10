@@ -120,12 +120,19 @@ export default function ActivitySummary({
   interestedIdeas: IdeaReaction[];
 }) {
   const [activeView, setActiveView] = useState<ActivityView | null>(null);
+  const [localIdeas, setLocalIdeas] = useState(ideas);
+  const [localLikedIdeas, setLocalLikedIdeas] = useState(likedIdeas);
   const [editingIdea, setEditingIdea] = useState<CommunityIdea | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({ title: "", category: "", description: "" });
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
-  const reviewedIdeas = useMemo(() => ideas.filter((idea) => idea.review), [ideas]);
+  const reviewedIdeas = useMemo(() => localIdeas.filter((idea) => idea.review), [localIdeas]);
   const activeItem = items.find((item) => item.view === activeView);
+  const activeItemValue =
+    activeView === "posts" ? localIdeas.length :
+      activeView === "likes" ? localLikedIdeas.length :
+        activeView === "reviews" ? reviewedIdeas.length :
+          activeItem?.value || 0;
 
   function openEdit(idea: CommunityIdea) {
     setEditingIdea(idea);
@@ -150,7 +157,10 @@ export default function ActivitySummary({
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to edit post.");
-      window.location.reload();
+      const updatedIdea = payload.data as CommunityIdea;
+      setLocalIdeas((currentIdeas) => currentIdeas.map((idea) => idea.slug === editingIdea.slug ? updatedIdea : idea));
+      setLocalLikedIdeas((currentIdeas) => currentIdeas.map((item) => item.idea.slug === editingIdea.slug ? { ...item, idea: updatedIdea } : item));
+      setEditingIdea(null);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to edit post.");
     } finally {
@@ -167,7 +177,8 @@ export default function ActivitySummary({
       const response = await fetch(`/api/community/ideas/${idea.slug}`, { method: "DELETE" });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to delete post.");
-      window.location.reload();
+      setLocalIdeas((currentIdeas) => currentIdeas.filter((item) => item.slug !== idea.slug));
+      setLocalLikedIdeas((currentIdeas) => currentIdeas.filter((item) => item.idea.slug !== idea.slug));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to delete post.");
     } finally {
@@ -186,7 +197,7 @@ export default function ActivitySummary({
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to cancel like.");
-      window.location.reload();
+      setLocalLikedIdeas((currentIdeas) => currentIdeas.filter((item) => item.idea.slug !== idea.slug));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to cancel like.");
     } finally {
@@ -219,7 +230,7 @@ export default function ActivitySummary({
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto p-4">
               <div className="space-y-3">
-                {activeView === "posts" && ideas.map((idea) => (
+                {activeView === "posts" && localIdeas.map((idea) => (
                   <IdeaCard key={idea.id} idea={idea}>
                     <button type="button" onClick={() => openEdit(idea)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dfe3e8] bg-white px-3 text-xs font-semibold text-[#101216] transition hover:bg-[#f7f8fa]">
                       <Pencil size={13} /> Edit
@@ -230,7 +241,7 @@ export default function ActivitySummary({
                   </IdeaCard>
                 ))}
                 {activeView === "comments" && comments.map((comment) => <CommentCard key={comment.id} comment={comment} />)}
-                {activeView === "likes" && likedIdeas.map((item) => (
+                {activeView === "likes" && localLikedIdeas.map((item) => (
                   <IdeaCard key={item.id} idea={item.idea} meta={`Liked ${timeAgo(item.createdAt)}`}>
                     <button type="button" disabled={busy === `like-${item.idea.slug}`} onClick={() => void cancelLike(item.idea)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#fecdd3] bg-[#fff1f2] px-3 text-xs font-semibold text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60">
                       {busy === `like-${item.idea.slug}` ? <Loader2 className="animate-spin" size={13} /> : null} Cancel like
@@ -240,7 +251,7 @@ export default function ActivitySummary({
                 {activeView === "interested" && interestedIdeas.map((item) => <IdeaCard key={item.id} idea={item.idea} meta={`I'd Buy ${timeAgo(item.createdAt)}`} />)}
                 {activeView === "reviews" && reviewedIdeas.map((idea) => <ReviewCard key={idea.id} idea={idea} />)}
               </div>
-              {activeItem?.value === 0 ? (
+              {activeItemValue === 0 ? (
                 <div className="rounded-[18px] border border-dashed border-[#cfd8e6] bg-white/80 p-5 text-sm text-[#69707d]">
                   <p className="font-semibold text-[#101216]">{emptyText[activeView]}</p>
                   {activeView === "posts" ? <Link href="/ask/new" className="mt-3 inline-flex rounded-full bg-[#101216] px-4 py-2 text-xs font-semibold text-white">Start a Discussion</Link> : null}
