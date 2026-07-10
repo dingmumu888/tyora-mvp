@@ -148,8 +148,7 @@ const topNavigation = [
   ["Ask TYORA", "/ask/new"],
   ["Source Products", "/source"],
   ["Journeys", "/#journeys"],
-  ["Success Stories", "/#success-stories"],
-  ["Pricing", "/#pricing"]
+  ["Success Stories", "/#success-stories"]
 ] as const;
 
 function timeAgo(value: string) {

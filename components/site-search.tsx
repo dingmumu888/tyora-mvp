@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SearchCheck } from "lucide-react";
+import { ArrowRight, SearchCheck } from "lucide-react";
 
 type CommunityIdeaResult = {
   slug: string;
@@ -95,6 +96,7 @@ function matches(item: SearchItem, query: string) {
 }
 
 export default function SiteSearch({ className = "" }: { className?: string }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [communityResults, setCommunityResults] = useState<SearchItem[]>([]);
@@ -134,19 +136,35 @@ export default function SiteSearch({ className = "" }: { className?: string }) {
 
   const showResults = focused && normalizedQuery.length > 0;
 
+  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const firstResult = results[0];
+    if (!firstResult) return;
+    setFocused(false);
+    router.push(firstResult.href);
+  }
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      <label className="flex h-10 w-full items-center gap-2 rounded-full border border-[#e1e5ea] bg-white px-3 text-sm text-[#59616e] transition focus-within:border-[#2563eb] focus-within:ring-4 focus-within:ring-[#2563eb]/10">
-        <SearchCheck size={15} className="shrink-0 text-[#8b93a1]" />
+      <form onSubmit={submitSearch} className="flex h-10 w-full items-center gap-1 rounded-full border border-[#bfdbfe] bg-[#eff6ff] p-1 text-sm text-[#1e3a8a] shadow-sm shadow-[#2563eb]/10 transition focus-within:border-[#2563eb] focus-within:ring-4 focus-within:ring-[#2563eb]/12">
+        <SearchCheck size={15} className="ml-2 shrink-0 text-[#2563eb]" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
           placeholder="Search"
-          className="min-w-0 flex-1 bg-transparent font-medium outline-none placeholder:text-[#8b93a1]"
+          className="min-w-0 flex-1 bg-transparent px-1 font-semibold outline-none placeholder:text-[#5f7fb8]"
           aria-label="Search TYORA"
         />
-      </label>
+        <button
+          type="submit"
+          aria-label="Open first search result"
+          disabled={results.length === 0}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/25 transition hover:bg-[#1d4ed8] disabled:bg-[#93b4ef] disabled:opacity-70"
+        >
+          <ArrowRight size={15} />
+        </button>
+      </form>
 
       {showResults ? (
         <div className="absolute right-0 top-12 z-50 w-[min(420px,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-[#dfe6ef] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">

@@ -34,11 +34,23 @@ const checks = [
       component.includes("href={item.href}")
   },
   {
-    label: "homepage header uses live site search instead of static placeholder",
+    label: "site search supports Enter and a colored submit button",
+    pass:
+      component.includes("useRouter") &&
+      component.includes("function submitSearch") &&
+      component.includes("<form") &&
+      component.includes("onSubmit={submitSearch}") &&
+      component.includes("type=\"submit\"") &&
+      component.includes("aria-label=\"Open first search result\"") &&
+      component.includes("bg-[#2563eb]")
+  },
+  {
+    label: "homepage header uses live site search and removes Pricing nav item",
     pass:
       home.includes("import SiteSearch") &&
       home.includes("<SiteSearch") &&
-      !home.includes("<SearchCheck size={15} /> Search")
+      !home.includes("<SearchCheck size={15} /> Search") &&
+      !home.includes("[\"Pricing\", \"/#pricing\"]")
   }
 ];
 
