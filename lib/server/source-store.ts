@@ -2,6 +2,7 @@ import { normalizeSourceNeedTypes, normalizeSourceStatus, SourceRequest } from "
 import { prisma } from "@/lib/server/db";
 
 const MAX_INLINE_SOURCE_IMAGE_LENGTH = 900000;
+const MAX_SOURCE_IMAGES = 9;
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
@@ -31,6 +32,29 @@ function safeImageUrl(value: unknown) {
   return null;
 }
 
+function sourceImageUrls(input: Record<string, unknown>) {
+  const rawImages = Array.isArray(input.imageUrls) ? input.imageUrls : [input.imageUrl];
+  return rawImages
+    .map((item) => safeImageUrl(item))
+    .filter((item): item is string => Boolean(item))
+    .slice(0, MAX_SOURCE_IMAGES);
+}
+
+function storedSourceImages(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return [];
+  const parsed = parseJson<unknown>(value, null);
+  const rawImages = Array.isArray(parsed) ? parsed : [value];
+  return rawImages
+    .map((item) => safeImageUrl(item))
+    .filter((item): item is string => Boolean(item))
+    .slice(0, MAX_SOURCE_IMAGES);
+}
+
+function serializeSourceImages(images: string[]) {
+  if (images.length <= 1) return images[0] || null;
+  return JSON.stringify(images.slice(0, MAX_SOURCE_IMAGES));
+}
+
 function sourceId() {
   return `SRC-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
@@ -53,6 +77,7 @@ function sourceToPublic(row: {
   createdAt: Date;
   updatedAt: Date;
 }): SourceRequest {
+  const imageUrls = storedSourceImages(row.imageUrl);
   return {
     id: row.id,
     productName: row.productName,
@@ -65,7 +90,8 @@ function sourceToPublic(row: {
     email: row.email || undefined,
     whatsapp: row.whatsapp || undefined,
     needTypes: normalizeSourceNeedTypes(parseJson(row.needTypesJson, [])),
-    imageUrl: safeImageUrl(row.imageUrl) || undefined,
+    imageUrl: imageUrls[0] || undefined,
+    imageUrls,
     status: normalizeSourceStatus(row.status),
     internalNotes: row.internalNotes || undefined,
     createdAt: iso(row.createdAt),
@@ -92,7 +118,7 @@ export function validateSourceRequestInput(input: unknown) {
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Please enter a valid email address.";
   if (productLink && !/^https?:\/\//i.test(productLink)) return "Product link must start with http:// or https://.";
   if (needTypes.length === 0) return "Select at least one sourcing need.";
-  if (!safeImageUrl(data.imageUrl)) return "Upload a valid product image.";
+  if (sourceImageUrls(data).length === 0) return "Upload a valid product image.";
 
   return null;
 }
@@ -101,6 +127,7 @@ export async function createSourceRequest(input: unknown) {
   const validationError = validateSourceRequestInput(input);
   if (validationError) throw new Error(validationError);
   const data = input as Record<string, unknown>;
+  const imageUrls = sourceImageUrls(data);
 
   const row = await prisma.sourceRequest.create({
     data: {
@@ -115,7 +142,7 @@ export async function createSourceRequest(input: unknown) {
       email: text(data.email, 254) || null,
       whatsapp: text(data.whatsapp, 80) || null,
       needTypesJson: JSON.stringify(normalizeSourceNeedTypes(data.needTypes)),
-      imageUrl: safeImageUrl(data.imageUrl),
+      imageUrl: serializeSourceImages(imageUrls),
       status: "New"
     }
   });

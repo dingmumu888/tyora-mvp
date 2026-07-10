@@ -2,6 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 
 const source = readFileSync("app/source/source-client.tsx", "utf8");
 const sourceRoute = readFileSync("app/api/source/route.ts", "utf8");
+const sourceStore = readFileSync("lib/server/source-store.ts", "utf8");
+const sourceTypes = readFileSync("lib/source.ts", "utf8");
+const sourceAdmin = readFileSync("app/admin/source/source-admin-client.tsx", "utf8");
 const storage = readFileSync("lib/storage.ts", "utf8");
 const processPagePath = "app/source/how-it-works/page.tsx";
 const processPage = existsSync(processPagePath) ? readFileSync(processPagePath, "utf8") : "";
@@ -153,6 +156,22 @@ const checks = [
       !storage.includes("buyer viewed Source") &&
       !storage.includes("Someone requested a supplier check") &&
       !storage.includes("A new product sourcing request was submitted")
+  },
+  {
+    name: "source form accepts and submits up to 9 product reference images",
+    pass:
+      sourceTypes.includes("imageUrls?: string[]") &&
+      source.includes("imageUrls: string[]") &&
+      source.includes("MAX_SOURCE_IMAGES = 9") &&
+      source.includes("multiple") &&
+      source.includes("handleImages") &&
+      source.includes("imageUrls: form.imageUrls") &&
+      source.includes("Upload up to 9 product images") &&
+      sourceStore.includes("sourceImageUrls") &&
+      sourceStore.includes("serializeSourceImages") &&
+      sourceStore.includes("slice(0, MAX_SOURCE_IMAGES)") &&
+      sourceAdmin.includes("sourceImagesFor") &&
+      sourceAdmin.includes("Reference images")
   }
 ];
 

@@ -17,7 +17,7 @@ type FormState = {
   destinationCountry: string;
   contact: string;
   needTypes: SourceNeedType[];
-  imageUrl: string;
+  imageUrls: string[];
 };
 
 const emptyForm: FormState = {
@@ -31,13 +31,14 @@ const emptyForm: FormState = {
   destinationCountry: "",
   contact: "",
   needTypes: ["Find supplier"],
-  imageUrl: ""
+  imageUrls: []
 };
 
 const inputClass = "min-h-11 w-full rounded-2xl border border-[#dfe6ef] bg-white px-3 text-sm font-medium text-[#101216] outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10";
 const textareaClass = `${inputClass} min-h-28 resize-none py-3 leading-6`;
 
 const ctaText = "Get Free Product Match";
+const MAX_SOURCE_IMAGES = 9;
 
 const trustToastSubtitles = [
   "Checking China supplier options",
@@ -170,14 +171,25 @@ export default function SourceClient() {
     });
   }
 
-  async function handleImage(file?: File) {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
+  async function handleImages(fileList?: FileList | null) {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) return;
+    if (files.some((file) => !file.type.startsWith("image/"))) {
       setMessage("Upload a product image file.");
       return;
     }
-    const dataUrl = await fileToDataUrl(file);
-    update("imageUrl", dataUrl);
+    const remainingSlots = MAX_SOURCE_IMAGES - form.imageUrls.length;
+    if (remainingSlots <= 0) {
+      setMessage(`Upload up to ${MAX_SOURCE_IMAGES} product images.`);
+      return;
+    }
+    const dataUrls = await Promise.all(files.slice(0, remainingSlots).map(fileToDataUrl));
+    update("imageUrls", [...form.imageUrls, ...dataUrls].slice(0, MAX_SOURCE_IMAGES));
+    setMessage(files.length > remainingSlots ? `Only ${MAX_SOURCE_IMAGES} images can be uploaded.` : "");
+  }
+
+  function removeImage(index: number) {
+    update("imageUrls", form.imageUrls.filter((_, imageIndex) => imageIndex !== index));
   }
 
   function buildSourcePayload() {
@@ -197,6 +209,8 @@ export default function SourceClient() {
     return {
       ...sourceFields,
       ...contactPayload,
+      imageUrl: form.imageUrls[0] || "",
+      imageUrls: form.imageUrls,
       productName: form.productName || `${form.category} product reference`,
       description: descriptionParts,
       destinationCountry: form.destinationCountry || "Not specified",
@@ -210,7 +224,7 @@ export default function SourceClient() {
     setMessage("");
     setSubmittedId("");
     try {
-      if (!form.imageUrl) throw new Error("Please upload a product image.");
+      if (form.imageUrls.length === 0) throw new Error("Please upload a product image.");
       if (!form.category.trim()) throw new Error("Please add a category.");
       if (!form.quantity.trim()) throw new Error("Please add the quantity needed.");
       if (!form.contact.trim()) throw new Error("Please add Email or WhatsApp.");
@@ -277,19 +291,40 @@ export default function SourceClient() {
         <form id="source-form" onSubmit={submit} className="scroll-mt-24 rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-6">
           <div className="grid gap-4">
             <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-[#cfd8e6] bg-[#f8fafc] text-left transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
-              {form.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={form.imageUrl} alt="Product reference" className="absolute inset-0 size-full object-cover" />
+              {form.imageUrls.length > 0 ? (
+                <span className="grid size-full grid-cols-3 gap-1 p-2">
+                  {form.imageUrls.slice(0, 9).map((imageUrl, index) => (
+                    <span key={`${imageUrl.slice(0, 32)}-${index}`} className="relative min-h-20 overflow-hidden rounded-2xl bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={imageUrl} alt={`Product reference ${index + 1}`} className="absolute inset-0 size-full object-cover" />
+                      <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-xs font-semibold text-white">{index + 1}</span>
+                    </span>
+                  ))}
+                  {form.imageUrls.length < MAX_SOURCE_IMAGES ? (
+                    <span className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed border-[#cfd8e6] bg-white/70 text-xs font-semibold text-[#2563eb]">
+                      Add more
+                    </span>
+                  ) : null}
+                </span>
               ) : (
                 <span className="flex flex-col items-center gap-3 text-center">
                   <span className="flex size-14 items-center justify-center rounded-2xl bg-white shadow-sm"><ImagePlus size={24} /></span>
-                  <span className="font-semibold">Upload product image</span>
-                  <span className="max-w-sm text-sm text-[#69707d]">Reference photos, screenshots, catalog images or supplier images are acceptable.</span>
+                  <span className="font-semibold">Upload product images</span>
+                  <span className="max-w-sm text-sm text-[#69707d]">Upload up to 9 product images, including detail photos, screenshots, catalog images, or supplier images.</span>
                   <span className="text-xs font-semibold text-[#2563eb]">Required</span>
                 </span>
               )}
             </button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(event) => void handleImage(event.target.files?.[0])} />
+            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(event) => void handleImages(event.target.files)} />
+            {form.imageUrls.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {form.imageUrls.map((imageUrl, index) => (
+                  <button key={`${imageUrl.slice(0, 32)}-remove-${index}`} type="button" onClick={() => removeImage(index)} className="rounded-full border border-[#dfe6ef] bg-white px-3 py-1.5 text-xs font-semibold text-[#59616e] hover:border-[#fecdd3] hover:bg-[#fff1f2] hover:text-[#be123c]">
+                    Remove image {index + 1}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Category">

@@ -32,6 +32,14 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function sourceImagesFor(request: SourceRequest) {
+  return request.imageUrls && request.imageUrls.length > 0
+    ? request.imageUrls
+    : request.imageUrl
+      ? [request.imageUrl]
+      : [];
+}
+
 export default function SourceAdminClient() {
   const [requests, setRequests] = useState<SourceRequest[]>([]);
   const [filter, setFilter] = useState<Filter>("All");
@@ -201,9 +209,15 @@ export default function SourceAdminClient() {
             {visibleRequests.map((request) => (
               <article key={request.id} className="grid gap-4 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[180px_1fr_340px]">
                 <div className="overflow-hidden rounded-2xl bg-[#f4f6f9]">
-                  {request.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={request.imageUrl} alt={request.productName} className="aspect-square size-full object-cover" />
+                  {sourceImagesFor(request).length > 0 ? (
+                    <div className="grid aspect-square grid-cols-3 gap-1 p-1">
+                      {sourceImagesFor(request).slice(0, 9).map((imageUrl, index) => (
+                        <a key={`${request.id}-${index}`} href={imageUrl} target="_blank" rel="noreferrer" className="relative overflow-hidden rounded-xl bg-white">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={imageUrl} alt={`${request.productName} reference ${index + 1}`} className="absolute inset-0 size-full object-cover" />
+                        </a>
+                      ))}
+                    </div>
                   ) : (
                     <div className="flex aspect-square items-center justify-center text-3xl font-semibold text-[#8a94a3]">{request.productName.slice(0, 2).toUpperCase()}</div>
                   )}
@@ -216,6 +230,7 @@ export default function SourceAdminClient() {
                     <span className={`rounded-full px-2 py-1 ring-1 ${statusTone[request.status]}`}>{request.status}</span>
                   </div>
                   <h2 className="mt-2 text-xl font-semibold">{request.productName}</h2>
+                  <p className="mt-1 text-xs font-semibold text-[#687284]">Reference images: {sourceImagesFor(request).length || 0}</p>
                   <p className="mt-2 text-sm leading-6 text-[#59616e]">{request.description || "No description provided."}</p>
                   <div className="mt-3 grid gap-2 text-sm text-[#394150] sm:grid-cols-2">
                     <p><span className="font-semibold">Quantity:</span> {request.quantity}</p>

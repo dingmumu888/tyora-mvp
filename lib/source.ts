@@ -31,6 +31,7 @@ export type SourceRequest = {
   whatsapp?: string;
   needTypes: SourceNeedType[];
   imageUrl?: string;
+  imageUrls?: string[];
   status: SourceStatus;
   internalNotes?: string;
   createdAt: string;
