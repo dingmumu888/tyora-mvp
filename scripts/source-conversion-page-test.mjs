@@ -171,7 +171,13 @@ const checks = [
       sourceStore.includes("serializeSourceImages") &&
       sourceStore.includes("slice(0, MAX_SOURCE_IMAGES)") &&
       sourceAdmin.includes("sourceImagesFor") &&
-      sourceAdmin.includes("Reference images")
+      sourceAdmin.includes("Reference images") &&
+      sourceAdmin.includes("sourceImageGridClass") &&
+      sourceAdmin.includes("grid-cols-1") &&
+      sourceAdmin.includes("grid-cols-2") &&
+      sourceAdmin.includes("grid-cols-3") &&
+      sourceAdmin.includes("object-contain") &&
+      !sourceAdmin.includes("object-cover")
   }
 ];
 

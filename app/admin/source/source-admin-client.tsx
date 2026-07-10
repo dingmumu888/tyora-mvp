@@ -41,6 +41,12 @@ function sourceImagesFor(request: SourceRequest) {
       : [];
 }
 
+function sourceImageGridClass(count: number) {
+  if (count <= 1) return "grid-cols-1";
+  if (count <= 4) return "grid-cols-2";
+  return "grid-cols-3";
+}
+
 export default function SourceAdminClient() {
   const [requests, setRequests] = useState<SourceRequest[]>([]);
   const [filter, setFilter] = useState<Filter>("All");
@@ -212,11 +218,11 @@ export default function SourceAdminClient() {
               <article key={request.id} className="grid gap-4 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[180px_1fr_340px]">
                 <div className="overflow-hidden rounded-2xl bg-[#f4f6f9]">
                   {sourceImagesFor(request).length > 0 ? (
-                    <div className="grid aspect-square grid-cols-3 gap-1 p-1">
+                    <div className={`grid aspect-square ${sourceImageGridClass(sourceImagesFor(request).length)} gap-1 p-1`}>
                       {sourceImagesFor(request).slice(0, 9).map((imageUrl, index) => (
                         <a key={`${request.id}-${index}`} href={imageUrl} target="_blank" rel="noreferrer" className="relative overflow-hidden rounded-xl bg-white">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={imageUrl} alt={`${request.productName} reference ${index + 1}`} className="absolute inset-0 size-full object-cover" />
+                          <img src={imageUrl} alt={`${request.productName} reference ${index + 1}`} className="absolute inset-0 size-full object-contain p-1" />
                         </a>
                       ))}
                     </div>
