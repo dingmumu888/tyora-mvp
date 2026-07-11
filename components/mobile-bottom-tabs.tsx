@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Factory, Home, PackageSearch, Plus, UserRound, type LucideIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import CommunityAvatar from "@/components/community-avatar";
 import { CommunitySessionUser } from "@/components/community-profile-modal";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
@@ -51,6 +51,20 @@ export default function MobileBottomTabs() {
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
   }, []);
+
+  function openSourceForm(event: MouseEvent<HTMLAnchorElement>) {
+    setCreateOpen(false);
+    if (pathname !== "/source") return;
+
+    event.preventDefault();
+    window.requestAnimationFrame(() => {
+      const sourceForm = document.getElementById("source-form");
+      if (!sourceForm) return;
+      window.history.replaceState(null, "", "/source#source-form");
+      setHash("#source-form");
+      sourceForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
 
   useEffect(() => {
     let active = true;
@@ -135,7 +149,7 @@ export default function MobileBottomTabs() {
           {tabCopy.startDiscussion}
           <span className="mt-1 block text-xs font-medium text-white/70">{tabCopy.startDiscussionSubtitle}</span>
         </Link>
-        <Link href="/source" onClick={() => setCreateOpen(false)} className="rounded-2xl border border-[#dfe5ee] bg-[#f8fafc] px-4 py-3 text-sm font-semibold">
+        <Link href="/source#source-form" onClick={openSourceForm} className="rounded-2xl border border-[#dfe5ee] bg-[#f8fafc] px-4 py-3 text-sm font-semibold">
           {tabCopy.sourceProduct}
           <span className="mt-1 block text-xs font-medium text-[#687284]">{tabCopy.sourceProductSubtitle}</span>
         </Link>
