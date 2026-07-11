@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import CommunityAvatar from "@/components/community-avatar";
@@ -122,15 +122,6 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
         <IdeaComments slug={idea.slug} comments={idea.comments} />
         <IdeaActions idea={idea} mode="comment" />
         <IdeaActions idea={idea} mode="ready" />
-
-        <section className="rounded-[20px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-          <h2 className="text-lg font-semibold">Live Activity</h2>
-          <div className="mt-4 space-y-2 text-sm text-[#59616e]">
-            <p className="flex items-center gap-2 rounded-2xl bg-[#f7f8fa] p-3"><CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-7 border-0 text-[10px]" /> {idea.author.name} started this discussion.</p>
-            {idea.review ? <p className="rounded-2xl bg-[#f7f8fa] p-3">TYORA expert review is available.</p> : <p className="rounded-2xl bg-[#f7f8fa] p-3">Waiting for TYORA expert review.</p>}
-            <p className="inline-flex items-center gap-2 rounded-2xl bg-[#f7f8fa] p-3"><MessageCircle size={15} /> {idea.comments.length} community comments.</p>
-          </div>
-        </section>
       </article>
     </main>
   );
