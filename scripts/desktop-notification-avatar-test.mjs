@@ -16,11 +16,11 @@ const checks = [
       menu.includes("aria-label=\"Unread messages\"")
   },
   {
-    label: "clicking avatar opens My TYORA and marks notifications read",
+    label: "clicking avatar opens My TYORA without clearing notifications before Messages is viewed",
     pass:
       menu.includes("href=\"/me\"") &&
-      menu.includes("markNotificationsRead") &&
-      menu.includes("/api/community/notifications/read") &&
+      !menu.includes("markNotificationsRead") &&
+      !menu.includes("/api/community/notifications/read") &&
       !menu.includes("setMenuOpen((value) => !value)")
   },
   {

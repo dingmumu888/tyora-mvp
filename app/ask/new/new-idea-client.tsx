@@ -2,6 +2,7 @@
 
 import { ChangeEvent, ClipboardEvent, DragEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   ChevronDown,
@@ -69,8 +70,8 @@ const nextSteps = [
   ["You decide whether to build.", PackageCheck]
 ] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const PRODUCT_IMAGE_SIZE = 800;
-const PRODUCT_IMAGE_QUALITY = 0.82;
+const PRODUCT_IMAGE_MAX_SIZE = 1600;
+const PRODUCT_IMAGE_QUALITY = 0.86;
 const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
 function fileToDataUrl(file: File) {
@@ -98,22 +99,20 @@ async function normalizeProductImage(file: File) {
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Unable to prepare image.");
 
-  const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
-  const sourceX = Math.max(0, (image.naturalWidth - sourceSize) / 2);
-  const sourceY = Math.max(0, (image.naturalHeight - sourceSize) / 2);
-
-  canvas.width = PRODUCT_IMAGE_SIZE;
-  canvas.height = PRODUCT_IMAGE_SIZE;
+  const scale = Math.min(1, PRODUCT_IMAGE_MAX_SIZE / image.naturalWidth, PRODUCT_IMAGE_MAX_SIZE / image.naturalHeight);
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
   context.fillStyle = "#f8fafc";
-  context.fillRect(0, 0, PRODUCT_IMAGE_SIZE, PRODUCT_IMAGE_SIZE);
+  context.fillRect(0, 0, canvas.width, canvas.height);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, PRODUCT_IMAGE_SIZE, PRODUCT_IMAGE_SIZE);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
   return canvas.toDataURL("image/jpeg", PRODUCT_IMAGE_QUALITY);
 }
 
 export default function NewIdeaClient() {
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -132,7 +131,7 @@ export default function NewIdeaClient() {
     imageUrls: [] as string[],
     questions: [] as CommunityQuestion[],
     otherQuestion: "",
-    visibility: "Public"
+    visibility: searchParams.get("visibility") === "private" ? "Private" : "Public"
   });
 
   useEffect(() => {
@@ -376,6 +375,25 @@ export default function NewIdeaClient() {
                   </button>
                 ))}
               </div>
+              <div aria-label="Mobile submission visibility" className="grid grid-cols-2 gap-2 rounded-[18px] bg-[#f4f6f8] p-1.5">
+                {visibilityOptions.map((option) => {
+                  const selected = form.visibility === option.value;
+                  const Icon = option.icon;
+                  return (
+                    <button
+                      key={`mobile-${option.value}`}
+                      type="button"
+                      onClick={() => setForm({ ...form, visibility: option.value })}
+                      className={cn(
+                        "inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] px-3 text-xs font-semibold transition",
+                        selected ? "bg-white text-[#1d4ed8] shadow-sm ring-1 ring-[#bfdbfe]" : "text-[#59616e]"
+                      )}
+                    >
+                      <Icon size={15} /> {option.value === "Public" ? "Public idea" : "Private project"}
+                    </button>
+                  );
+                })}
+              </div>
               <label
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={onDrop}
@@ -383,7 +401,7 @@ export default function NewIdeaClient() {
               >
                 <span className="flex size-11 items-center justify-center rounded-2xl bg-white text-[#2563eb] shadow-sm"><ImagePlus size={21} /></span>
                 <span className="text-sm font-semibold">Upload product images</span>
-                <span className="text-xs text-[#8b93a1]">Select up to 5 images at once · auto-cropped to 800 x 800</span>
+                <span className="text-xs text-[#8b93a1]">Select up to 5 images at once · resized without cropping</span>
                 <input type="file" accept="image/*" multiple className="sr-only" onChange={onImageInputChange} />
               </label>
               {imagePreviews.length > 0 ? (
@@ -470,7 +488,7 @@ export default function NewIdeaClient() {
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-white text-[#2563eb] shadow-sm"><ImagePlus size={22} /></span>
                 <span className="text-base font-semibold">Drag images here</span>
                 <span className="text-sm text-[#69707d]">or paste screenshots</span>
-                <span className="text-xs text-[#8b93a1]">Select up to 5 images at once · auto-cropped to 800 x 800</span>
+                <span className="text-xs text-[#8b93a1]">Select up to 5 images at once · resized without cropping</span>
                 <input type="file" accept="image/*" multiple className="sr-only" onChange={onImageInputChange} />
               </label>
               {imagePreviews.length > 0 ? (

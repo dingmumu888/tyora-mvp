@@ -153,7 +153,6 @@ const topNavigation = [
   ["Ideas", "/ask"],
   ["Source", "/source"],
   ["Custom", "/custom"],
-  ["Pricing", "/#pricing"],
   ["My TYORA", "/me"]
 ] as const;
 
@@ -523,7 +522,7 @@ export default function Home() {
                 </div>
               ) : (
                 topShowcaseIdeas.map((idea) => (
-                <Link key={idea.id} href="/ask" className="group relative grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:border-[#e1e6ee] sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
+                <Link key={idea.id} href={`/ask/${idea.slug}`} className="group relative grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:border-[#e1e6ee] sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
                   <HotBadge idea={idea} />
                   <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold shadow-inner shadow-white sm:rounded-xl">
                     <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-[20px] object-cover transition duration-500 group-hover:scale-[1.025] sm:rounded-2xl" />

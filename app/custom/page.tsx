@@ -171,10 +171,13 @@ export default function CustomPage() {
             ))}
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/ask/new?visibility=private" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white">
+              Start Private Custom Review <ArrowRight size={15} />
+            </Link>
             <Link href="/ask/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold">
               Post a public idea <ArrowRight size={15} />
             </Link>
-            <a href={WHATSAPP_URL} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white">
+            <a href={WHATSAPP_URL} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold">
               Continue on WhatsApp <MessageCircle size={15} />
             </a>
           </div>

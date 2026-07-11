@@ -36,6 +36,13 @@ const staticSearchItems: SearchItem[] = [
     type: "Source"
   },
   {
+    title: "Private Custom Project",
+    description: "Send an AI design, sketch, or confidential product idea to TYORA for a private manufacturing review.",
+    href: "/custom",
+    keywords: "custom private confidential ai design sketch manufacturability moq mold sample budget production",
+    type: "Page"
+  },
+  {
     title: "Service protection",
     description: "Source service protection, replacement supplier support, refund terms, and order status rules.",
     href: "/source#service-protection",

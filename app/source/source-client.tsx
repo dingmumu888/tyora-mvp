@@ -510,7 +510,7 @@ export default function SourceClient() {
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">
+        <section id="pricing" className="scroll-mt-24 rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">
           <div className="flex items-center gap-2">
             <Factory size={18} />
             <h2 className="text-2xl font-semibold">How TYORA charges if you continue</h2>
@@ -546,9 +546,9 @@ export default function SourceClient() {
             We can help with samples. You only pay sample cost and shipping.
           </p>
           <p className="mt-2 text-xs leading-5 text-[#69707d]">Final price depends on supplier confirmation.</p>
-        </div>
+        </section>
 
-        <div className="rounded-[28px] border border-[#e7edf5] bg-white p-5 shadow-sm shadow-[#101216]/5">
+        <section id="service-protection" className="scroll-mt-24 rounded-[28px] border border-[#e7edf5] bg-white p-5 shadow-sm shadow-[#101216]/5">
           <div className="flex items-center gap-2">
             <ShieldCheck size={18} />
             <h2 className="text-2xl font-semibold">Service protection</h2>
@@ -559,7 +559,7 @@ export default function SourceClient() {
           <p className="mt-2 text-sm leading-6 text-[#59616e]">
             Managed Sourcing refunds depend on order status and costs already paid to suppliers or third parties.
           </p>
-        </div>
+        </section>
       </section>
       {trustToast ? (
         <div className="fixed inset-x-4 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-[9985] mx-auto max-w-sm rounded-2xl border border-[#dfe6ef] bg-white/95 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl md:inset-x-auto md:bottom-5 md:right-5">

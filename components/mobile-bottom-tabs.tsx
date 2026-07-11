@@ -18,7 +18,7 @@ type MobileTab = {
 const tabs: MobileTab[] = [
   { label: "Community", href: "/", icon: Home, match: (path) => path === "/" || path === "/ask" || (path.startsWith("/ask/") && path !== "/ask/new") },
   { label: "Source", href: "/source", icon: PackageSearch, match: (path) => path === "/source" },
-  { label: "Build", href: "/build", icon: Factory, match: (path) => path === "/build" },
+  { label: "Custom", href: "/custom", icon: Factory, match: (path) => path === "/custom" || path === "/build" },
   { label: "Profile", href: "/me", icon: UserRound, match: (path) => path === "/me" }
 ];
 
@@ -26,6 +26,7 @@ function shouldShow(pathname: string) {
   if (pathname === "/") return true;
   if (pathname === "/me") return true;
   if (pathname === "/source") return true;
+  if (pathname === "/custom") return true;
   if (pathname === "/build") return true;
   if (pathname === "/ask" || pathname === "/ask/new" || pathname.startsWith("/ask/")) return true;
   return false;
@@ -181,7 +182,7 @@ export default function MobileBottomTabs() {
           return (
             <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
-              <span>{tabCopy.build}</span>
+              <span>{tab.label}</span>
             </Link>
           );
         })}
