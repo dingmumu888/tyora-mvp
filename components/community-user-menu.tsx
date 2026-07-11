@@ -72,12 +72,6 @@ export default function CommunityUserMenu({
     window.dispatchEvent(new CustomEvent("tyora:community-logout"));
   }
 
-  async function markNotificationsRead() {
-    if (notificationCount <= 0) return;
-    setNotificationCount(0);
-    await fetch("/api/community/notifications/read", { method: "POST" }).catch(() => undefined);
-  }
-
   if (!user) {
     return (
       <EmailLogin className={loginClassName} openSignal={loginOpenSignal} onSuccess={loginOnSuccess}>
@@ -90,7 +84,6 @@ export default function CommunityUserMenu({
     <div ref={menuRef} className="relative">
       <Link
         href="/me"
-        onClick={() => void markNotificationsRead()}
         className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-2.5 pr-3 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]"
         aria-label="Community profile menu"
       >

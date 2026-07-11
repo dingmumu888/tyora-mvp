@@ -5,10 +5,14 @@ const root = process.cwd();
 const myTyoraPath = path.join(root, "app/me/page.tsx");
 const messagesPath = path.join(root, "app/me/activity-messages.tsx");
 const summaryPath = path.join(root, "app/me/activity-summary.tsx");
+const userMenuPath = path.join(root, "components/community-user-menu.tsx");
+const mobileTabsPath = path.join(root, "components/mobile-bottom-tabs.tsx");
 
 const myTyora = fs.readFileSync(myTyoraPath, "utf8");
 const messages = fs.existsSync(messagesPath) ? fs.readFileSync(messagesPath, "utf8") : "";
 const summary = fs.existsSync(summaryPath) ? fs.readFileSync(summaryPath, "utf8") : "";
+const userMenu = fs.existsSync(userMenuPath) ? fs.readFileSync(userMenuPath, "utf8") : "";
+const mobileTabs = fs.existsSync(mobileTabsPath) ? fs.readFileSync(mobileTabsPath, "utf8") : "";
 
 const checks = [
   {
@@ -68,6 +72,28 @@ const checks = [
     pass:
       messages.includes("fetch(`/api/community/ideas/${slug}/comments`") &&
       messages.includes("parentId: activeReply.parentId")
+  },
+  {
+    label: "Profile avatar links do not mark notifications read before the Messages panel is visible",
+    pass:
+      !userMenu.includes("onClick={() => void markNotificationsRead()}") &&
+      !mobileTabs.includes("onClick={() => void markNotificationsRead()}") &&
+      !userMenu.includes("async function markNotificationsRead()")
+  },
+  {
+    label: "Mobile profile notification count is anchored on the avatar instead of floating after it",
+    pass:
+      mobileTabs.includes('className="relative"') &&
+      mobileTabs.includes("<CommunityAvatar") &&
+      mobileTabs.includes("{notificationLabel}") &&
+      !mobileTabs.includes("absolute right-3 top-1")
+  },
+  {
+    label: "Messages button keeps unread count visible on My TYORA",
+    pass:
+      messages.includes("unreadText(unreadCount)") &&
+      messages.includes("bg-[#ff385c]") &&
+      messages.includes("{unread}")
   }
 ];
 

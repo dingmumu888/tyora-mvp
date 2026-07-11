@@ -119,20 +119,6 @@ export default function MobileBottomTabs() {
 
   const plusActive = pathname === "/ask/new";
   const notificationLabel = notificationCount > 99 ? "99+" : String(notificationCount);
-  async function markNotificationsRead() {
-    if (notificationCount <= 0) return;
-    setNotificationCount(0);
-    try {
-      await fetch("/api/community/notifications/read", { method: "POST" });
-      window.dispatchEvent(new CustomEvent("tyora:community-notifications-read"));
-    } catch {
-      void fetch("/api/community/session", { cache: "no-store" })
-        .then((response) => response.json())
-        .then((payload) => setNotificationCount(Number(payload.notificationCount || 0)))
-        .catch(() => setNotificationCount(0));
-    }
-  }
-
   return (
     <>
     {createOpen ? (
@@ -185,16 +171,25 @@ export default function MobileBottomTabs() {
             </Link>
           );
         })}
-        <Link href="/me" onClick={() => void markNotificationsRead()} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${tabs[3].match(pathname, hash) ? "bg-white/8 text-white" : "text-white/48"}`} aria-label="Profile and activity">
-          {notificationCount > 0 ? (
-            <span className="absolute right-3 top-1 min-w-5 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-center text-[9px] font-bold leading-none text-white">
-              {notificationLabel}
-            </span>
-          ) : null}
+        <Link href="/me" className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${tabs[3].match(pathname, hash) ? "bg-white/8 text-white" : "text-white/48"}`} aria-label="Profile and activity">
           {user ? (
-            <CommunityAvatar name={user.name} src={user.avatar} className="size-6 border border-white/20 text-[9px]" />
+            <span className="relative">
+              <CommunityAvatar name={user.name} src={user.avatar} className="size-6 border border-white/20 text-[9px]" />
+              {notificationCount > 0 ? (
+                <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-center text-[9px] font-bold leading-none text-white ring-2 ring-[#07080a]">
+                  {notificationLabel}
+                </span>
+              ) : null}
+            </span>
           ) : (
-            <UserRound size={20} />
+            <span className="relative">
+              <UserRound size={20} />
+              {notificationCount > 0 ? (
+                <span className="absolute -right-3 -top-2 min-w-5 rounded-full bg-[#ff385c] px-1.5 py-0.5 text-center text-[9px] font-bold leading-none text-white ring-2 ring-[#07080a]">
+                  {notificationLabel}
+                </span>
+              ) : null}
+            </span>
           )}
           <span className="max-w-12 truncate">{user ? user.name.split(" ")[0] : tabCopy.profile}</span>
         </Link>
