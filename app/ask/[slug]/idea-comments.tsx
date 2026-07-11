@@ -14,6 +14,7 @@ function timeLabel(value: string) {
 
 export default function IdeaComments({ slug, comments }: { slug: string; comments: CommunityComment[] }) {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [likingId, setLikingId] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommunityComment | null>(null);
@@ -34,7 +35,8 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
       fetch("/api/community/session")
         .then((response) => response.json())
         .then((data) => setUser(data.user || null))
-        .catch(() => setUser(null));
+        .catch(() => setUser(null))
+        .finally(() => setSessionChecked(true));
     }
 
     refreshSession();
@@ -60,6 +62,7 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
   }
 
   async function likeComment(comment: CommunityComment) {
+    if (!sessionChecked) return;
     if (!user) {
       setMessage("Email login is required to like comments.");
       return;
@@ -80,6 +83,7 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
 
   async function postReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!sessionChecked) return;
     if (!user || !replyingTo) {
       setMessage("Email login is required to reply.");
       return;
@@ -122,7 +126,11 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
         </div>
         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{comment.body}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
-          {user ? (
+          {!sessionChecked ? (
+            <button disabled className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-2.5 opacity-60">
+              <Loader2 className="animate-spin" size={13} /> Checking
+            </button>
+          ) : user ? (
             <button type="button" onClick={() => void likeComment(comment)} className={`inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition ${comment.viewerLiked ? "bg-[#fff1f2] text-[#be123c]" : "bg-white hover:bg-[#eef2f7]"}`}>
               {likingId === comment.id ? <Loader2 className="animate-spin" size={13} /> : <Heart size={13} />} {comment.likeCount} Like
             </button>
@@ -168,7 +176,11 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
           <textarea value={replyBody} onChange={(event) => setReplyBody(event.target.value)} rows={3} placeholder="Write a reply..." className="mt-3 w-full resize-none rounded-2xl border border-[#dfe3e8] bg-white p-3 text-sm outline-none focus:border-[#2563eb]" />
           <div className="mt-2 flex items-center justify-end gap-2">
             <button type="button" onClick={() => setReplyingTo(null)} className="h-9 rounded-full border border-[#dfe3e8] px-4 text-xs font-semibold text-[#59616e]">Cancel</button>
-            {user ? (
+            {!sessionChecked ? (
+              <button disabled className="inline-flex h-9 items-center gap-2 rounded-full bg-[#101216] px-4 text-xs font-semibold text-white opacity-60">
+                <Loader2 className="animate-spin" size={13} /> Checking
+              </button>
+            ) : user ? (
               <button disabled={replyBusy || !replyBody.trim()} className="inline-flex h-9 items-center gap-2 rounded-full bg-[#101216] px-4 text-xs font-semibold text-white disabled:opacity-60">
                 {replyBusy ? <Loader2 className="animate-spin" size={13} /> : <Reply size={13} />} Reply
               </button>

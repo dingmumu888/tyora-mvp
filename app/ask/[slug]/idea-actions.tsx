@@ -12,6 +12,7 @@ const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
 export default function IdeaActions({ idea, mode = "bar", compact = false }: { idea: CommunityIdea; mode?: IdeaActionMode; compact?: boolean }) {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [body, setBody] = useState("");
   const [reactionState, setReactionState] = useState({ liked: false, interested: false });
   const [editOpen, setEditOpen] = useState(false);
@@ -30,7 +31,8 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
       fetch("/api/community/session")
         .then((response) => response.json())
         .then((data) => setUser(data.user || null))
-        .catch(() => setUser(null));
+        .catch(() => setUser(null))
+        .finally(() => setSessionChecked(true));
     }
 
     refreshSession();
@@ -69,6 +71,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
 
   async function postComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!sessionChecked) return;
     if (!user) {
       setMessage("Email login is required to comment.");
       return;
@@ -90,6 +93,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
   }
 
   async function react(type: "Like" | "Interested") {
+    if (!sessionChecked) return;
     if (!user) {
       setMessage("Email login is required.");
       return;
@@ -170,7 +174,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             ))}
           </div>
         ) : null}
-        {user ? (
+        {!sessionChecked ? (
+          <button disabled className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white opacity-60">
+            <Loader2 className="animate-spin" size={15} /> Checking login
+          </button>
+        ) : user ? (
           <button className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
             {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} Comment
           </button>
@@ -189,7 +197,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
       <section id="continue" className="rounded-[24px] bg-[#101216] p-6 text-white shadow-xl shadow-[#101216]/15">
         <h2 className="text-2xl font-semibold">Ready to build?</h2>
         <p className="mt-3 text-sm leading-6 text-white/72">Continue This Project sends TYORA the Idea ID, Idea URL, Title, and Customer Name.</p>
-        {user ? (
+        {!sessionChecked ? (
+          <button disabled className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216] opacity-70">
+            <Loader2 className="animate-spin" size={15} /> Checking login
+          </button>
+        ) : user ? (
           <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
             Continue This Project →
           </a>
@@ -215,7 +227,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             </button>
           </>
         ) : null}
-        {user ? (
+        {!sessionChecked ? (
+          <button disabled className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs opacity-60">
+            <Loader2 className="animate-spin" size={14} /> Checking
+          </button>
+        ) : user ? (
           <button onClick={() => void react("Like")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.liked ? "bg-[#fff1f2] text-[#be123c]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
             {busy === "Like" ? <Loader2 className="animate-spin" size={14} /> : <Heart size={14} />} {idea.likeCount} Like
           </button>
@@ -224,7 +240,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             <Heart size={14} /> {idea.likeCount} Like
           </EmailLogin>
         )}
-        {user ? (
+        {!sessionChecked ? (
+          <button disabled className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs opacity-60">
+            <Loader2 className="animate-spin" size={14} /> Checking
+          </button>
+        ) : user ? (
           <button onClick={() => void react("Interested")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.interested ? "bg-[#eff6ff] text-[#1d4ed8]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
             {busy === "Interested" ? <Loader2 className="animate-spin" size={14} /> : <Star size={14} />} {idea.interestedCount} Interested
           </button>
@@ -298,7 +318,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
       ) : null}
 
       <div className="grid gap-2 sm:grid-cols-3">
-        {user ? (
+        {!sessionChecked ? (
+          <button disabled className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold opacity-60">
+            <Loader2 className="animate-spin" size={16} /> Checking
+          </button>
+        ) : user ? (
           <button onClick={() => void react("Like")} className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${reactionState.liked ? "border-[#fecdd3] bg-[#fff1f2] text-[#be123c]" : "border-[#dfe3e8] bg-white hover:bg-[#f7f8fa]"}`}>
             {busy === "Like" ? <Loader2 className="animate-spin" size={16} /> : <Heart size={16} />} {reactionState.liked ? "Liked" : "Like"}
           </button>
@@ -307,7 +331,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             <Heart size={16} /> Like
           </EmailLogin>
         )}
-        {user ? (
+        {!sessionChecked ? (
+          <button disabled className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold opacity-60">
+            <Loader2 className="animate-spin" size={16} /> Checking
+          </button>
+        ) : user ? (
           <button onClick={() => void react("Interested")} className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${reactionState.interested ? "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]" : "border-[#dfe3e8] bg-white hover:bg-[#f7f8fa]"}`}>
             {busy === "Interested" ? <Loader2 className="animate-spin" size={16} /> : <Star size={16} />} {reactionState.interested ? "Interested" : "Interested"}
           </button>

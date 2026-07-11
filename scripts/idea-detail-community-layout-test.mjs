@@ -20,11 +20,21 @@ const checks = [
   },
   {
     name: "comments default to five with a view-more control",
-    pass: comments.includes("visibleComments") && comments.includes("comments.slice(0, 5)") && comments.includes("View more comments")
+    pass: comments.includes("visibleComments") && comments.includes("topLevelComments.slice(0, 5)") && comments.includes("View more comments")
   },
   {
     name: "actions are split into bar, comment form, and ready CTA",
     pass: actions.includes('mode = "bar"') && page.includes('mode="bar"') && page.includes('mode="comment"') && page.includes('mode="ready"')
+  },
+  {
+    name: "idea actions wait for community session before showing email login gates",
+    pass:
+      actions.includes("sessionChecked") &&
+      actions.includes("setSessionChecked(true)") &&
+      actions.includes("!sessionChecked") &&
+      comments.includes("sessionChecked") &&
+      comments.includes("setSessionChecked(true)") &&
+      comments.includes("!sessionChecked")
   }
 ];
 
