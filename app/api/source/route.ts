@@ -1,27 +1,10 @@
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { requireAdminSession } from "@/lib/server/admin-auth";
+import { getDetectedCountry } from "@/lib/server/request-country";
 import { createSourceRequest, getSourceRequests } from "@/lib/server/source-store";
-
-const countryHeaderNames = [
-  "x-vercel-ip-country",
-  "cf-ipcountry",
-  "x-country-code",
-  "x-ip-country"
-];
 
 const emptyDestinationLabels = ["", "Not specified", "unknown", "n/a", "na"];
 const emptyDestinationValues = new Set(emptyDestinationLabels.map((label) => label.toLowerCase()));
-
-function getDetectedCountry(headers: Headers) {
-  for (const headerName of countryHeaderNames) {
-    const country = headers.get(headerName)?.trim();
-    if (country && country.toLowerCase() !== "unknown" && country.toUpperCase() !== "XX") {
-      return country.toUpperCase();
-    }
-  }
-
-  return "";
-}
 
 function hasCustomerDestination(value: unknown) {
   if (typeof value !== "string") return false;
