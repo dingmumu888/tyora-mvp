@@ -1,4 +1,5 @@
 import { normalizeSourceNeedTypes, normalizeSourceStatus, SourceRequest } from "@/lib/source";
+import { sanitizeOptionalProductLink } from "@/lib/source-contact";
 import { prisma } from "@/lib/server/db";
 
 const MAX_INLINE_SOURCE_IMAGE_LENGTH = 900000;
@@ -20,6 +21,11 @@ function iso(value: Date | string | null | undefined) {
 
 function text(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function validEmailOrEmpty(value: unknown) {
+  const email = text(value, 254);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
 }
 
 function safeImageUrl(value: unknown) {
@@ -106,17 +112,14 @@ export function validateSourceRequestInput(input: unknown) {
   const description = text(data.description, 2000);
   const quantity = text(data.quantity, 80);
   const destinationCountry = text(data.destinationCountry, 120);
-  const email = text(data.email, 254);
+  const email = validEmailOrEmpty(data.email);
   const whatsapp = text(data.whatsapp, 80);
   const needTypes = normalizeSourceNeedTypes(data.needTypes);
-  const productLink = text(data.productLink, 500);
 
   if (!productName && !description) return "Product name or description is required.";
   if (!quantity) return "Quantity needed is required.";
   if (!destinationCountry) return "Destination country is required.";
   if (!email && !whatsapp) return "Email or WhatsApp is required.";
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Please enter a valid email address.";
-  if (productLink && !/^https?:\/\//i.test(productLink)) return "Product link must start with http:// or https://.";
   if (needTypes.length === 0) return "Select at least one sourcing need.";
   if (sourceImageUrls(data).length === 0) return "Upload a valid product image.";
 
@@ -128,18 +131,19 @@ export async function createSourceRequest(input: unknown) {
   if (validationError) throw new Error(validationError);
   const data = input as Record<string, unknown>;
   const imageUrls = sourceImageUrls(data);
+  const productLink = sanitizeOptionalProductLink(data.productLink);
 
   const row = await prisma.sourceRequest.create({
     data: {
       id: sourceId(),
       productName: text(data.productName, 140) || text(data.description, 80) || "Product reference",
       description: text(data.description, 2000),
-      productLink: text(data.productLink, 500) || null,
+      productLink: productLink || null,
       material: text(data.material, 160) || null,
       quantity: text(data.quantity, 80),
       targetPrice: text(data.targetPrice, 80) || null,
       destinationCountry: text(data.destinationCountry, 120),
-      email: text(data.email, 254) || null,
+      email: validEmailOrEmpty(data.email) || null,
       whatsapp: text(data.whatsapp, 80) || null,
       needTypesJson: JSON.stringify(normalizeSourceNeedTypes(data.needTypes)),
       imageUrl: serializeSourceImages(imageUrls),
