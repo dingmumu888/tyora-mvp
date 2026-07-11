@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 
 const source = readFileSync("app/source/source-client.tsx", "utf8");
 const sourceRoute = readFileSync("app/api/source/route.ts", "utf8");
+const sourceCountryRoute = readFileSync("app/api/source/country/route.ts", "utf8");
+const requestCountry = readFileSync("lib/server/request-country.ts", "utf8");
 const sourceStore = readFileSync("lib/server/source-store.ts", "utf8");
 const sourceTypes = readFileSync("lib/source.ts", "utf8");
 const sourceAdmin = readFileSync("app/admin/source/source-admin-client.tsx", "utf8");
@@ -29,7 +31,7 @@ const checks = [
     pass:
       source.includes("category: string") &&
       source.includes("Please add a category.") &&
-      source.includes("Email or WhatsApp")
+      source.includes("Please add an email address or WhatsApp number.")
   },
   {
     name: "category is folded into existing description payload without backend changes",
@@ -67,14 +69,14 @@ const checks = [
       source.includes("<span className=\"hidden sm:inline\">{ctaText}</span>")
   },
   {
-    name: "contact friction is reduced to one Email or WhatsApp field",
+    name: "contact form offers separate Email and WhatsApp fields with one required",
     pass:
-      source.includes("contact: string") &&
-      source.includes("Email or WhatsApp") &&
-      source.includes("you@example.com or +1...") &&
-      source.includes("mapContactToPayload") &&
-      !source.includes("<Field label=\"Email\">") &&
-      !source.includes("<Field label=\"WhatsApp\">")
+      source.includes("email: string") &&
+      source.includes("whatsappLocalNumber: string") &&
+      source.includes("Please add an email address or WhatsApp number.") &&
+      source.includes("<Field label=\"Email\">") &&
+      source.includes("label=\"WhatsApp\"") &&
+      !source.includes("mapContactToPayload")
   },
   {
     name: "scary post-CTA disclaimer is moved and softened",
@@ -136,8 +138,10 @@ const checks = [
     name: "source API fills missing destination country from platform country headers",
     pass:
       sourceRoute.includes("withDetectedCountry") &&
-      sourceRoute.includes("x-vercel-ip-country") &&
-      sourceRoute.includes("cf-ipcountry") &&
+      sourceRoute.includes("getDetectedCountry") &&
+      sourceCountryRoute.includes("getDetectedCountry") &&
+      requestCountry.includes("x-vercel-ip-country") &&
+      requestCountry.includes("cf-ipcountry") &&
       sourceRoute.includes("Not specified") &&
       sourceRoute.includes("Detected country:")
   },
