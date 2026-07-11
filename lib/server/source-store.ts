@@ -170,7 +170,7 @@ export async function updateSourceRequest(id: string, input: unknown) {
     where: { id },
     data: {
       status: normalizeSourceStatus(data.status),
-      internalNotes: text(data.internalNotes, 3000) || null
+      ...(typeof data.internalNotes === "string" ? { internalNotes: text(data.internalNotes, 3000) || null } : {})
     }
   });
   return sourceToPublic(row);

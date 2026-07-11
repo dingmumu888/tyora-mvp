@@ -8,7 +8,6 @@ import {
   Check,
   ChevronLeft,
   ClipboardCheck,
-  Eye,
   Flame,
   Heart,
   MessageCircle,
@@ -55,6 +54,15 @@ type CommunityActivityItem = {
   createdAt: string;
 };
 
+type CommunityTotals = {
+  ideas: number;
+  reviews: number;
+  projects: number;
+  inProgress: number;
+  delivered: number;
+  countries: number;
+};
+
 function safeSessionGet(key: string) {
   try {
     return window.sessionStorage.getItem(key) || "";
@@ -75,34 +83,11 @@ const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
 const starterExamples = [
-  {
-    title: "Magnetic Phone Stand",
-    category: "Phone Accessories",
-    description: "A foldable desk stand with a weighted base, magnetic ring, and manufacturable hinge design."
-  },
-  {
-    title: "Portable Pet Water Bottle",
-    category: "Pet",
-    description: "A leak-resistant travel bottle with a one-hand drinking tray and easy-clean plastic parts."
-  },
-  {
-    title: "Travel Coffee Mug",
-    category: "Kitchen",
-    description: "A compact insulated mug with a secure lid, tactile grip, and low-MOQ material options."
-  }
-] as const;
-const exampleMetrics = [
-  { love: 28, comments: 14, buy: 9, views: 483, reply: "5 min ago", avatars: ["AL", "TY", "JR"] },
-  { love: 21, comments: 11, buy: 7, views: 356, reply: "9 min ago", avatars: ["SA", "TY", "MK"] },
-  { love: 34, comments: 18, buy: 12, views: 621, reply: "12 min ago", avatars: ["MI", "TY", "LE"] }
+  { title: "Magnetic Phone Stand", category: "Phone Accessories", description: "A foldable desk stand with a weighted base and manufacturable hinge." }
 ] as const;
 const featuredJourney = [
-  ["Idea", "Founder shares a spill-proof mug concept", "Done"],
-  ["Discussion", "Community compares lid, grip and MOQ", "Done"],
-  ["TYORA Review", "Material, tooling and factory path reviewed", "Done"],
-  ["Prototype", "Sample structure and finish confirmed", "Done"],
-  ["Manufacturing", "Factory route and QC plan locked", "Active"],
-  ["Delivered", "First batch ready for creator testing", "Next"]
+  ["Idea", "Product concept submitted", "Done"],
+  ["Review", "Manufacturing path reviewed", "Active"]
 ] as const;
 const earlyCommunityStats = [
   ["Early access", "Founder community"],
@@ -172,10 +157,6 @@ function activityDot(type: CommunityActivityItem["type"]) {
   return "bg-[#8b5cf6]";
 }
 
-function ideaViews(idea: CommunityIdea) {
-  return Math.max(idea.likeCount * 18 + idea.comments.length * 24 + idea.interestedCount * 30, 37);
-}
-
 function homepageIdeaScore(idea: CommunityIdea) {
   return (idea.isHot ? 500 : 0) + idea.likeCount * 3 + idea.comments.length * 5 + idea.interestedCount * 2;
 }
@@ -206,6 +187,7 @@ export default function Home() {
   const [showAllMobileCases, setShowAllMobileCases] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
+  const [communityTotals, setCommunityTotals] = useState<CommunityTotals | null>(null);
   const [communityLoading, setCommunityLoading] = useState(true);
   const [liveActivity, setLiveActivity] = useState<CommunityActivityItem[]>([]);
   const [sourceRequestCount, setSourceRequestCount] = useState(0);
@@ -234,6 +216,13 @@ export default function Home() {
       .then((payload) => setCommunityIdeas(Array.isArray(payload.data) ? payload.data : []))
       .catch(() => setCommunityIdeas([]))
       .finally(() => setCommunityLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/community/stats")
+      .then((response) => response.json())
+      .then((payload) => setCommunityTotals(payload.data || null))
+      .catch(() => setCommunityTotals(null));
   }, []);
 
   useEffect(() => {
@@ -366,14 +355,14 @@ export default function Home() {
       return new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime();
     })
     .slice(0, 3);
-  const hasCommunityStats = communityIdeas.length > 0;
-  const communityStats = [
-    ["Ideas Shared", communityIdeas.length],
-    ["TYORA Reviews", communityIdeas.filter((idea) => idea.review).length],
-    ["Projects Started", communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length],
-    ["Products Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length],
-    ["Countries", new Set(communityIdeas.map((idea) => idea.country).filter(Boolean)).size]
-  ] as const;
+  const hasCommunityStats = Boolean(communityTotals && communityTotals.ideas > 0);
+  const communityStats = communityTotals ? [
+    ["Ideas Shared", communityTotals.ideas],
+    ["TYORA Reviews", communityTotals.reviews],
+    ["Projects Started", communityTotals.projects],
+    ["Products Delivered", communityTotals.delivered],
+    ["Countries", communityTotals.countries]
+  ] as const : earlyCommunityStats;
   const moduleVisibility = displayContent.moduleVisibility;
   const sourceCopy = displayContent.sourcePage;
 
@@ -427,21 +416,21 @@ export default function Home() {
             <div className="flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={19} /></div>
             <h2 className="mt-3 text-lg font-semibold">Creator HQ</h2>
             <p className="mt-1.5 text-sm leading-6 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
-            <div className="mt-3 grid gap-2">
+            {communityTotals ? <div className="mt-3 grid gap-2">
               {[
-                ["Founders Online", Math.max(communityIdeas.length * 3, 12), "bg-[#ecfdf5] text-[#0f766e]", "bg-[#14b8a6]"],
-                ["Discussions Today", Math.max(communityIdeas.length, 8), "bg-[#f2f7ff] text-[#315fbd]", "bg-[#2563eb]"],
-                ["TYORA Replies Today", Math.max(communityIdeas.filter((item) => item.review).length, 5), "bg-[#fff7ed] text-[#c2410c]", "bg-[#f59e0b]"]
+                ["Real public discussions", communityTotals.ideas, "bg-[#ecfdf5] text-[#0f766e]", "bg-[#14b8a6]"],
+                ["TYORA reviews", communityTotals.reviews, "bg-[#f2f7ff] text-[#315fbd]", "bg-[#2563eb]"],
+                ["Projects in progress", communityTotals.inProgress, "bg-[#fff7ed] text-[#c2410c]", "bg-[#f59e0b]"]
               ].map(([label, value, tone, dot]) => (
                 <div key={label} className={`flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-semibold ${tone}`}>
                   <span className="inline-flex items-center gap-2">
-                    <span className={`size-2 rounded-full ${dot} ${label === "Founders Online" ? "animate-pulse shadow-[0_0_0_4px_rgba(20,184,166,0.13)]" : ""}`} />
+                    <span className={`size-2 rounded-full ${dot}`} />
                     {label}
                   </span>
                   <span>{value}</span>
                 </div>
               ))}
-            </div>
+            </div> : null}
             <Link href="/ask/new" className={`mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold ${primaryButton}`}>
               <Upload size={15} /> Start a Discussion
             </Link>
@@ -550,9 +539,7 @@ export default function Home() {
                     <div className="mt-2 flex items-center gap-4 text-[13px] font-medium text-[#5f6b7a] sm:mt-1.5 sm:flex-wrap sm:gap-x-2.5 sm:gap-y-0.5 sm:text-[11px] max-sm:[&>span:nth-child(3)]:hidden">
                       <span className="inline-flex items-center gap-1"><Heart size={15} className="sm:size-[13px]" /> {idea.likeCount}<span className="hidden sm:inline"> Love</span></span>
                       <span className="inline-flex items-center gap-1"><MessageCircle size={15} className="sm:size-[13px]" /> {idea.comments.length}<span className="hidden sm:inline"> Comments</span></span>
-                      <span className="inline-flex items-center gap-1 sm:hidden"><Eye size={15} /> {ideaViews(idea)}</span>
                       <span className="hidden items-center gap-1 sm:inline-flex"><ShoppingBag size={13} /> {idea.interestedCount} I'd Buy</span>
-                      <span className="hidden items-center gap-1 sm:inline-flex"><Eye size={13} /> {ideaViews(idea)} Views</span>
                       <span className="hidden text-[#315fbd] sm:inline">Last reply {timeAgo(idea.updatedAt || idea.createdAt)}</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between sm:hidden">
@@ -641,33 +628,14 @@ export default function Home() {
                 ))}
               </div>
             </section>
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-sm shadow-[#101216]/4">
-              <h2 className="text-base font-semibold">Products Built</h2>
-              <div className="mt-3 space-y-2">
-                {["Portable Coffee Mug", "Magnetic Phone Stand", "Pet Water Bottle"].map((product, index) => (
-                  <p key={product} className="flex items-center justify-between rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">
-                    <span>{product}</span>
-                    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", index === 0 ? "bg-[#ede9fe] text-[#6d28d9]" : "bg-[#e9f7f3] text-[#0f766e]")}>{index === 0 ? "Manufacturing" : "Reviewed"}</span>
-                  </p>
-                ))}
-              </div>
-            </section>
-            <section className="rounded-[16px] border border-[#e8ebef] bg-[#101216] p-3.5 text-white shadow-[0_16px_44px_rgba(15,23,42,0.18)]">
-              <h2 className="text-base font-semibold">Journey of the Week</h2>
-              <p className="mt-1 text-sm font-semibold text-white">Portable Coffee Mug</p>
-              <div className="mt-3 grid gap-1.5 text-sm text-white/72">
-                {featuredJourney.slice(0, 5).map(([step, , state]) => <span key={step} className={cn("flex items-center justify-between rounded-full px-3 py-1.5", state === "Active" ? "bg-[#2563eb] text-white" : "bg-white/8")}><span>{step}</span><span className="text-[10px] uppercase">{state}</span></span>)}
-              </div>
-              <Link href="/ask" className="mt-5 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#101216]">View Full Journey</Link>
-            </section>
             <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Community Statistics</h2>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                {(hasCommunityStats ? [
-                  ["Ideas", communityIdeas.length],
-                  ["Reviews", communityIdeas.filter((idea) => idea.review).length],
-                  ["Projects", communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length],
-                  ["Delivered", communityIdeas.filter((idea) => idea.status === "Completed").length]
+                {(hasCommunityStats && communityTotals ? [
+                  ["Ideas", communityTotals.ideas],
+                  ["Reviews", communityTotals.reviews],
+                  ["Projects", communityTotals.projects],
+                  ["Delivered", communityTotals.delivered]
                 ] : [
                   ["Access", "Open"],
                   ["Reviews", "Free"],
@@ -764,12 +732,12 @@ export default function Home() {
       </section>
       ) : null}
 
-      {moduleVisibility.journeys ? (
+      {false ? (
       <section id="journeys" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))] md:block">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-stretch">
             <div className="rounded-[18px] border border-[#dfe6ef] bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.07)]">
-              <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Featured Journey</p>
+              <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Project example</p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight">Portable Coffee Mug</h2>
               <p className="mt-3 text-sm leading-6 text-[#59616e]">
                 A founder starts with a spill-proof travel mug idea. The community tightens the lid, grip and MOQ questions, TYORA reviews the manufacturing path, and the project moves into production planning.
@@ -813,12 +781,12 @@ export default function Home() {
       </section>
       ) : null}
 
-      {moduleVisibility.successStories ? (
+      {false ? (
       <section id="success-stories" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[#f6f7fb]/80 md:block">
         <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-[#69707d]">Products Built by Community</p>
+              <p className="text-sm font-medium text-[#69707d]">Community projects</p>
               <h2 className="mt-2 text-3xl font-semibold leading-tight">Real journeys, not product catalog cards.</h2>
             </div>
             <Link href="/ask" className="text-sm font-semibold text-[#2563eb]">Browse all ideas →</Link>
@@ -864,7 +832,7 @@ export default function Home() {
       </section>
       ) : null}
 
-      {moduleVisibility.build ? (
+      {false ? (
       <>
       <section id="build" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[#f7f8fb] md:block">
         <div className="mx-auto grid max-w-7xl gap-6 px-3 py-8 sm:px-5 lg:grid-cols-[1fr_360px] lg:items-center lg:px-6 lg:py-10">
@@ -941,7 +909,7 @@ export default function Home() {
       </>
       ) : null}
 
-      {moduleVisibility.pricing ? (
+      {false ? (
       <section id="pricing" className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] md:block">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
           <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{displayContent.pricingTitle}</h2>
@@ -1035,7 +1003,7 @@ export default function Home() {
       </section>
       ) : null}
 
-      {moduleVisibility.founder ? (
+      {false ? (
       <section className="hidden border-y border-[#eef1f4] bg-white md:block">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-20">
           <div>
@@ -1069,7 +1037,7 @@ export default function Home() {
       </section>
       ) : null}
 
-      {moduleVisibility.faq ? (
+      {false ? (
       <section id="faq" className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] md:block">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <div className="mb-6 max-w-3xl">

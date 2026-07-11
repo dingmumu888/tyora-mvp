@@ -58,6 +58,8 @@ if (exists("lib", "server", "work-order-store.ts")) {
     "type: \"Source\"",
     "type: \"Project\"",
     "needsReply"
+    ,"hasReview"
+    ,"hasInternalNotes"
   ].forEach((text) => {
     if (!store.includes(text)) failures.push(`Work order store missing: ${text}`);
   });
@@ -65,7 +67,7 @@ if (exists("lib", "server", "work-order-store.ts")) {
 
 if (exists("app", "api", "admin", "work-orders", "route.ts")) {
   const route = read("app", "api", "admin", "work-orders", "route.ts");
-  ["requireAdminSession", "getWorkOrders", "ok("].forEach((text) => {
+  ["requireAdminSession", "getWorkOrders", "updateWorkOrder", "export async function PATCH", "ok("].forEach((text) => {
     if (!route.includes(text)) failures.push(`Work orders API missing: ${text}`);
   });
 }
@@ -87,6 +89,13 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
     "WhatsApp",
     "Email",
     "internalNotes",
+    "saveWorkOrder",
+    "PATCH",
+    "Status",
+    "TYORA reply",
+    "Internal notes",
+    "Save changes",
+    "useEffect(() =>",
     "slice(0, 9)",
     "grid-cols-3",
     "grid-cols-1",

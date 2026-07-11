@@ -387,6 +387,21 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
   }).slice(0, safeLimit);
 }
 
+export async function getCommunityStats() {
+  const ideas = await prisma.communityIdea.findMany({
+    where: { hidden: false, visibility: "Public" },
+    select: { status: true, country: true, review: { select: { id: true } } }
+  });
+  return {
+    ideas: ideas.length,
+    reviews: ideas.filter((idea) => Boolean(idea.review)).length,
+    projects: ideas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length,
+    inProgress: ideas.filter((idea) => ["Project Started", "Manufacturing", "Shipping"].includes(idea.status)).length,
+    delivered: ideas.filter((idea) => idea.status === "Completed").length,
+    countries: new Set(ideas.map((idea) => idea.country).filter(Boolean)).size
+  };
+}
+
 export async function getCommunityActivity(limit = 8): Promise<CommunityActivityItem[]> {
   const safeLimit = Math.min(20, Math.max(1, Number.isFinite(limit) ? Math.round(limit) : 8));
   const [ideas, comments, reviews, statusIdeas] = await Promise.all([
@@ -960,27 +975,30 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   });
 
   if (Object.keys(review).length > 0) {
+    const reviewField = (key: keyof typeof review) => Object.prototype.hasOwnProperty.call(review, key)
+      ? stringOrNull(review[key])
+      : existing.review?.[key as keyof typeof existing.review] as string | null | undefined;
     await prisma.tyoraReview.upsert({
       where: { ideaId: existing.id },
       create: {
         id: makeCommunityId("REVIEW"),
         ideaId: existing.id,
-        manufacturingFeasible: stringOrNull(review.manufacturingFeasible),
-        estimatedCostRange: stringOrNull(review.estimatedCostRange),
-        suggestedMaterial: stringOrNull(review.suggestedMaterial),
-        estimatedMoq: stringOrNull(review.estimatedMoq),
-        suggestedManufacturing: stringOrNull(review.suggestedManufacturing),
-        factoriesMatched: stringOrNull(review.factoriesMatched),
-        additionalNotes: stringOrNull(review.additionalNotes)
+        manufacturingFeasible: reviewField("manufacturingFeasible"),
+        estimatedCostRange: reviewField("estimatedCostRange"),
+        suggestedMaterial: reviewField("suggestedMaterial"),
+        estimatedMoq: reviewField("estimatedMoq"),
+        suggestedManufacturing: reviewField("suggestedManufacturing"),
+        factoriesMatched: reviewField("factoriesMatched"),
+        additionalNotes: reviewField("additionalNotes")
       },
       update: {
-        manufacturingFeasible: stringOrNull(review.manufacturingFeasible),
-        estimatedCostRange: stringOrNull(review.estimatedCostRange),
-        suggestedMaterial: stringOrNull(review.suggestedMaterial),
-        estimatedMoq: stringOrNull(review.estimatedMoq),
-        suggestedManufacturing: stringOrNull(review.suggestedManufacturing),
-        factoriesMatched: stringOrNull(review.factoriesMatched),
-        additionalNotes: stringOrNull(review.additionalNotes)
+        manufacturingFeasible: reviewField("manufacturingFeasible"),
+        estimatedCostRange: reviewField("estimatedCostRange"),
+        suggestedMaterial: reviewField("suggestedMaterial"),
+        estimatedMoq: reviewField("estimatedMoq"),
+        suggestedManufacturing: reviewField("suggestedManufacturing"),
+        factoriesMatched: reviewField("factoriesMatched"),
+        additionalNotes: reviewField("additionalNotes")
       }
     });
   }

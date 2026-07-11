@@ -1,10 +1,10 @@
 import { CommunityIdea, CommunityStatus } from "@/lib/community";
 import { Lead, LeadStatus } from "@/lib/storage";
 import { SourceRequest, SourceStatus } from "@/lib/source";
-import { WorkOrder, WorkOrderStatus } from "@/lib/work-orders";
-import { getCommunityIdeas } from "@/lib/server/community-store";
-import { getLeads } from "@/lib/server/data-store";
-import { getSourceRequests } from "@/lib/server/source-store";
+import { WorkOrder, WorkOrderStatus, workOrderStatuses } from "@/lib/work-orders";
+import { getCommunityIdeas, updateCommunityIdeaAdmin } from "@/lib/server/community-store";
+import { getLeads, updateLead } from "@/lib/server/data-store";
+import { getSourceRequests, updateSourceRequest } from "@/lib/server/source-store";
 
 function communityStatus(status: CommunityStatus, needsReply: boolean, hidden: boolean): WorkOrderStatus {
   if (hidden) return "Closed";
@@ -14,7 +14,7 @@ function communityStatus(status: CommunityStatus, needsReply: boolean, hidden: b
   if (status === "Manufacturing") return "Production";
   if (status === "Shipping") return "Shipping";
   if (status === "Completed") return "Completed";
-  return "New";
+  return "Reviewing";
 }
 
 function sourceStatus(status: SourceStatus): WorkOrderStatus {
@@ -44,6 +44,7 @@ function communityToWorkOrder(idea: CommunityIdea): WorkOrder {
   return {
     id: `${type.toLowerCase()}-${idea.id}`,
     sourceId: idea.id,
+    actionId: idea.slug,
     type,
     status: communityStatus(idea.status, needsReply, idea.hidden),
     title: idea.title,
@@ -54,6 +55,7 @@ function communityToWorkOrder(idea: CommunityIdea): WorkOrder {
     submittedAt: idea.createdAt,
     updatedAt: idea.updatedAt,
     needsReply,
+    hasReview: Boolean(idea.review),
     imageUrls: idea.imageUrls,
     tags: [
       idea.visibility,
@@ -72,6 +74,7 @@ function sourceToWorkOrder(request: SourceRequest): WorkOrder {
   return {
     id: `source-${request.id}`,
     sourceId: request.id,
+    actionId: request.id,
     type: "Source",
     status: sourceStatus(request.status),
     title: request.productName,
@@ -86,6 +89,7 @@ function sourceToWorkOrder(request: SourceRequest): WorkOrder {
     submittedAt: request.createdAt,
     updatedAt: request.updatedAt,
     needsReply: ["New", "Checking Supplier"].includes(request.status),
+    hasReview: false,
     imageUrls: request.imageUrls && request.imageUrls.length > 0 ? request.imageUrls : request.imageUrl ? [request.imageUrl] : [],
     tags: [request.status, ...request.needTypes, request.material || ""].filter(Boolean),
     internalNotes: request.internalNotes,
@@ -98,6 +102,7 @@ function projectToWorkOrder(lead: Lead): WorkOrder {
   return {
     id: `project-${lead.id}`,
     sourceId: lead.id,
+    actionId: lead.id,
     type: "Project",
     status: projectStatus(lead.status),
     title: lead.productIdea || "Project submission",
@@ -111,6 +116,7 @@ function projectToWorkOrder(lead: Lead): WorkOrder {
     submittedAt: lead.submissionDate,
     updatedAt: lead.statusHistory?.[0]?.createdAt || lead.submissionDate,
     needsReply: ["New", "Contacted", "Quoting"].includes(lead.status),
+    hasReview: false,
     imageUrls: lead.uploadedFiles && lead.uploadedFiles.length > 0 ? lead.uploadedFiles : lead.uploadedFile ? [lead.uploadedFile] : [],
     tags: [lead.status, lead.priority || "Medium", lead.designType, lead.timeline].filter(Boolean),
     internalNotes: lead.internalNotes,
@@ -130,4 +136,67 @@ export async function getWorkOrders(): Promise<WorkOrder[]> {
     ...sourceRequests.map(sourceToWorkOrder),
     ...leads.map(projectToWorkOrder)
   ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+}
+
+function communityStatusInput(status: WorkOrderStatus): CommunityStatus {
+  if (status === "Reviewing" || status === "Needs Reply" || status === "New") return "TYORA Reviewing";
+  if (status === "Managed" || status === "Quoted" || status === "Sample" || status === "Factory Introduced") return "Project Started";
+  if (status === "Production") return "Manufacturing";
+  if (status === "Shipping") return "Shipping";
+  if (status === "Completed" || status === "Closed") return "Completed";
+  return "TYORA Reviewing";
+}
+
+function sourceStatusInput(status: WorkOrderStatus): SourceStatus {
+  if (status === "Reviewing" || status === "Needs Reply") return "Checking Supplier";
+  if (status === "Quoted") return "Quoted";
+  if (status === "Sample") return "Sample Requested";
+  if (status === "Factory Introduced") return "Factory Introduced";
+  if (["Managed", "Production", "Shipping"].includes(status)) return "Managed Sourcing";
+  if (["Completed", "Closed"].includes(status)) return "Completed";
+  return "New";
+}
+
+function projectStatusInput(status: WorkOrderStatus): LeadStatus {
+  if (status === "Reviewing" || status === "Needs Reply") return "Contacted";
+  if (status === "Quoted") return "Quoting";
+  if (status === "Sample") return "Sample Stage";
+  if (status === "Production" || status === "Managed" || status === "Factory Introduced") return "Production";
+  if (status === "Shipping") return "Shipment";
+  if (status === "Completed") return "Completed";
+  if (status === "Closed") return "Lost";
+  return "New";
+}
+
+export async function updateWorkOrder(input: unknown): Promise<WorkOrder> {
+  const data = input && typeof input === "object" && !Array.isArray(input) ? input as Record<string, unknown> : {};
+  const id = typeof data.id === "string" ? data.id : "";
+  const hasInternalNotes = typeof data.internalNotes === "string";
+  const notes = hasInternalNotes ? (data.internalNotes as string).trim().slice(0, 3000) : undefined;
+  const orders = await getWorkOrders();
+  const order = orders.find((item) => item.id === id);
+  if (!order) throw new Error("Work order not found.");
+  if (typeof data.status === "string" && !workOrderStatuses.includes(data.status as WorkOrderStatus)) {
+    throw new Error("Invalid work order status.");
+  }
+  const status = typeof data.status === "string" ? data.status as WorkOrderStatus : order.status;
+
+  if (order.type === "Idea" || order.type === "Custom") {
+    const updated = await updateCommunityIdeaAdmin(order.actionId, {
+      status: communityStatusInput(status),
+      ...(hasInternalNotes ? { review: { additionalNotes: notes } } : {})
+    });
+    if (!updated) throw new Error("Idea not found.");
+    return communityToWorkOrder(updated);
+  }
+  if (order.type === "Source") {
+    return sourceToWorkOrder(await updateSourceRequest(order.actionId, {
+      status: sourceStatusInput(status),
+      ...(hasInternalNotes ? { internalNotes: notes } : {})
+    }));
+  }
+  return projectToWorkOrder(await updateLead(order.actionId, {
+    status: projectStatusInput(status),
+    ...(hasInternalNotes ? { internalNotes: notes } : {})
+  }));
 }

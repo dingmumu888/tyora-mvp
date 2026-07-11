@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Loader2, Mail, MessageCircle, RefreshCcw, Search } from "lucide-react";
+import { ArrowUpRight, Loader2, Mail, MessageCircle, RefreshCcw, Save, Search } from "lucide-react";
 import { WorkOrder, WorkOrderStatus, WorkOrderType } from "@/lib/work-orders";
 import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 
@@ -65,6 +65,71 @@ function workOrderActionLabel(type: WorkOrderType) {
   return "Follow up project";
 }
 
+function statusOptions(order: WorkOrder): WorkOrderStatus[] {
+  const options: WorkOrderStatus[] = order.type === "Idea" || order.type === "Custom"
+    ? ["Reviewing", "Managed", "Production", "Shipping", "Completed"]
+    : order.type === "Source"
+      ? ["New", "Reviewing", "Quoted", "Sample", "Factory Introduced", "Managed", "Completed"]
+      : ["New", "Reviewing", "Quoted", "Sample", "Production", "Shipping", "Completed", "Closed"];
+  return options.includes(order.status) ? options : [order.status, ...options];
+}
+
+function WorkOrderEditor({ order, onSaved }: { order: WorkOrder; onSaved: (order: WorkOrder) => void }) {
+  const [status, setStatus] = useState<WorkOrderStatus>(order.status);
+  const [internalNotes, setInternalNotes] = useState(order.internalNotes || "");
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const isCommunity = order.type === "Idea" || order.type === "Custom";
+
+  useEffect(() => {
+    setStatus(order.status);
+    setInternalNotes(order.internalNotes || "");
+    setFeedback("");
+  }, [order.status, order.internalNotes]);
+
+  async function submit() {
+    setSaving(true);
+    setFeedback("");
+    try {
+      const response = await fetch("/api/admin/work-orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: order.id, status, internalNotes })
+      });
+      const payload = await response.json() as ApiResponse<WorkOrder>;
+      if (!payload.success || !payload.data) throw new Error(payload.message || "Unable to save changes.");
+      onSaved(payload.data);
+      setStatus(payload.data.status);
+      setInternalNotes(payload.data.internalNotes || "");
+      setFeedback("Saved");
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Unable to save changes.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-2 rounded-2xl border border-[#dfe5ee] bg-[#f8fafc] p-3">
+      <label className="grid gap-1 text-xs font-semibold text-[#59616e]">
+        Status
+        <select value={status} onChange={(event) => setStatus(event.target.value as WorkOrderStatus)} className="h-10 rounded-xl border border-[#dfe5ee] bg-white px-3 text-sm text-[#101216] outline-none focus:border-[#2563eb]">
+          {statusOptions(order).map((item) => <option key={item} value={item}>{item}</option>)}
+        </select>
+      </label>
+      <label className="grid gap-1 text-xs font-semibold text-[#59616e]">
+        {isCommunity ? "TYORA reply" : "Internal notes"}
+        <textarea value={internalNotes} onChange={(event) => setInternalNotes(event.target.value)} rows={4} placeholder={isCommunity ? "Write the helpful reply shown to the customer." : "Add progress, quote, or follow-up notes."} className="resize-y rounded-xl border border-[#dfe5ee] bg-white p-3 text-sm font-normal leading-5 text-[#101216] outline-none focus:border-[#2563eb]" />
+      </label>
+      <button type="button" onClick={() => void submit()} disabled={saving || (isCommunity && !order.hasReview && !internalNotes.trim())} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#101216] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45">
+        {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Save changes
+      </button>
+      {isCommunity && !order.hasReview && !internalNotes.trim() ? <p className="text-xs text-[#687284]">Write a TYORA reply before marking this request handled.</p> : null}
+      {feedback ? <p className={`text-xs font-semibold ${feedback === "Saved" ? "text-[#047857]" : "text-[#be123c]"}`}>{feedback}</p> : null}
+    </div>
+  );
+}
+
 export default function WorkOrdersAdminClient() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [filter, setFilter] = useState<Filter>("Needs Reply");
@@ -90,6 +155,10 @@ export default function WorkOrdersAdminClient() {
   useEffect(() => {
     void loadOrders();
   }, []);
+
+  function saveWorkOrder(updated: WorkOrder) {
+    setOrders((current) => current.map((order) => order.id === updated.id ? updated : order));
+  }
 
   const counts = useMemo(() => {
     return {
@@ -250,8 +319,9 @@ export default function WorkOrdersAdminClient() {
                         Public link <ArrowUpRight size={15} />
                       </a>
                     ) : null}
-                    <Link href={order.adminHref} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-                      {workOrderActionLabel(order.type)} <ArrowUpRight size={15} />
+                    <WorkOrderEditor order={order} onSaved={saveWorkOrder} />
+                    <Link href={order.adminHref} className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#dfe5ee] bg-white px-4 text-sm font-semibold">
+                      Advanced: {workOrderActionLabel(order.type)} <ArrowUpRight size={15} />
                     </Link>
                   </div>
                 </article>

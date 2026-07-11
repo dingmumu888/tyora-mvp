@@ -20,6 +20,7 @@ export type WorkOrderStatus = (typeof workOrderStatuses)[number];
 export type WorkOrder = {
   id: string;
   sourceId: string;
+  actionId: string;
   type: WorkOrderType;
   status: WorkOrderStatus;
   title: string;
@@ -35,6 +36,7 @@ export type WorkOrder = {
   submittedAt: string;
   updatedAt: string;
   needsReply: boolean;
+  hasReview: boolean;
   imageUrls: string[];
   tags: string[];
   internalNotes?: string;

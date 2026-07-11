@@ -151,6 +151,25 @@ export async function getLeads(): Promise<Lead[]> {
   return rows.map(rowToLead);
 }
 
+export async function updateLead(id: string, input: unknown): Promise<Lead> {
+  const existing = await prisma.lead.findUnique({ where: { id } });
+  if (!existing) throw new Error("Project not found.");
+  const data = input && typeof input === "object" && !Array.isArray(input) ? input as Record<string, unknown> : {};
+  const allowedStatuses = ["New", "Contacted", "Quoting", "Sample Stage", "Production", "Shipment", "Completed", "Lost"];
+  const requestedStatus = typeof data.status === "string" ? data.status : existing.status;
+  const status = allowedStatuses.includes(requestedStatus) ? requestedStatus : existing.status;
+  const internalNotes = typeof data.internalNotes === "string" ? data.internalNotes.trim().slice(0, 3000) : existing.internalNotes;
+  const statusHistory = parseJson<Array<{ id: string; label: string; actor: string; createdAt: string }>>(existing.statusHistoryJson, []);
+  if (status !== existing.status) {
+    statusHistory.unshift({ id: `STATUS-${Date.now()}`, label: status, actor: "Admin", createdAt: new Date().toISOString() });
+  }
+  const row = await prisma.lead.update({
+    where: { id },
+    data: { status, internalNotes: internalNotes || null, statusHistoryJson: JSON.stringify(statusHistory) }
+  });
+  return rowToLead(row);
+}
+
 export async function createLead(lead: unknown): Promise<Lead> {
   const normalized = normalizeLead(lead);
   await prisma.lead.upsert({
