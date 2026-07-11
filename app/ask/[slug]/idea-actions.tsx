@@ -193,23 +193,18 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
   }
 
   if (mode === "ready") {
+    if (!sessionChecked || !isOwner) return null;
     return (
-      <section id="continue" className="rounded-[24px] bg-[#101216] p-6 text-white shadow-xl shadow-[#101216]/15">
-        <h2 className="text-2xl font-semibold">Ready to build?</h2>
-        <p className="mt-3 text-sm leading-6 text-white/72">Continue This Project sends TYORA the Idea ID, Idea URL, Title, and Customer Name.</p>
-        {!sessionChecked ? (
-          <button disabled className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216] opacity-70">
-            <Loader2 className="animate-spin" size={15} /> Checking login
-          </button>
-        ) : user ? (
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
-            Continue This Project →
+      <section id="continue" className="rounded-[18px] border border-[#dfe3e8] bg-white p-4 shadow-sm shadow-[#101216]/4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold">Continue your project</h2>
+            <p className="mt-1 text-sm leading-6 text-[#69707d]">Send this idea to TYORA to discuss the next manufacturing step.</p>
+          </div>
+          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
+            Continue with TYORA →
           </a>
-        ) : (
-          <EmailLogin className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#101216]">
-            Email Login to Continue
-          </EmailLogin>
-        )}
+        </div>
       </section>
     );
   }
