@@ -349,7 +349,7 @@ export default function SourceClient() {
           </div>
         </div>
 
-        <form id="source-form" onSubmit={submit} className="scroll-mt-24 rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-6">
+        <form id="source-form" noValidate onSubmit={submit} className="scroll-mt-24 rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-6">
           <div className="grid gap-4">
             <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-[#cfd8e6] bg-[#f8fafc] text-left transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
               {form.imageUrls.length > 0 ? (

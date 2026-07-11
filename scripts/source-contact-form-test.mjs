@@ -21,7 +21,9 @@ const checks = [
   },
   {
     name: "source form requires at least one contact method",
-    pass: source.includes("Please add an email address or WhatsApp number.")
+    pass:
+      source.includes("Please add an email address or WhatsApp number.") &&
+      source.includes('<form id="source-form" noValidate')
   },
   {
     name: "WhatsApp selector supports searchable country calling codes",
