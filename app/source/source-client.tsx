@@ -4,7 +4,10 @@ import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Factory, ImagePlus, PackageSearch, ShieldCheck } from "lucide-react";
 import CommunityUserMenu from "@/components/community-user-menu";
+import WhatsAppNumberInput from "@/components/whatsapp-number-input";
+import { callingCodeForCountry } from "@/lib/country-calling-codes";
 import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
+import { normalizeOptionalProductLink, normalizeWhatsAppNumber } from "@/lib/source-contact";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
 type FormState = {
@@ -16,7 +19,9 @@ type FormState = {
   quantity: string;
   targetPrice: string;
   destinationCountry: string;
-  contact: string;
+  email: string;
+  whatsappCountryIso: string;
+  whatsappLocalNumber: string;
   needTypes: SourceNeedType[];
   imageUrls: string[];
 };
@@ -30,7 +35,9 @@ const emptyForm: FormState = {
   quantity: "",
   targetPrice: "",
   destinationCountry: "",
-  contact: "",
+  email: "",
+  whatsappCountryIso: "US",
+  whatsappLocalNumber: "",
   needTypes: ["Find supplier"],
   imageUrls: []
 };
@@ -111,12 +118,8 @@ function fileToDataUrl(file: File) {
   });
 }
 
-function mapContactToPayload(contact: string) {
-  const trimmed = contact.trim();
-  if (trimmed.includes("@")) {
-    return { email: trimmed, whatsapp: "" };
-  }
-  return { email: "", whatsapp: trimmed };
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 export default function SourceClient() {
@@ -124,13 +127,30 @@ export default function SourceClient() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [submissionNotice, setSubmissionNotice] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const [trustToast, setTrustToast] = useState<{ title: string; subtitle: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const whatsappCountryChangedRef = useRef(false);
   const sourceCopy = content.sourcePage;
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/source/country")
+      .then((response) => response.json())
+      .then((payload) => {
+        const countryCode = payload?.success ? payload.data?.countryCode : "";
+        if (!active || whatsappCountryChangedRef.current || typeof countryCode !== "string") return;
+        update("whatsappCountryIso", callingCodeForCountry(countryCode).iso);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -193,14 +213,18 @@ export default function SourceClient() {
     update("imageUrls", form.imageUrls.filter((_, imageIndex) => imageIndex !== index));
   }
 
-  function buildSourcePayload() {
-    const contactPayload = mapContactToPayload(form.contact);
-    const { contact: _contact, ...sourceFields } = form;
+  function buildSourcePayload(email: string, whatsapp: string, productLink: string) {
+    const {
+      email: _email,
+      whatsappCountryIso: _whatsappCountryIso,
+      whatsappLocalNumber: _whatsappLocalNumber,
+      ...sourceFields
+    } = form;
     const descriptionParts = [
       `Category: ${form.category}`,
       `Description: ${form.description || "Not provided"}`,
       form.productName ? `Product name: ${form.productName}` : "",
-      form.productLink ? `Product link: ${form.productLink}` : "",
+      productLink ? `Product link: ${productLink}` : "",
       form.material ? `Material: ${form.material}` : "",
       form.targetPrice ? `Target price: ${form.targetPrice}` : "",
       form.destinationCountry ? `Destination country: ${form.destinationCountry}` : "",
@@ -209,7 +233,9 @@ export default function SourceClient() {
 
     return {
       ...sourceFields,
-      ...contactPayload,
+      email,
+      whatsapp,
+      productLink,
       imageUrl: form.imageUrls[0] || "",
       imageUrls: form.imageUrls,
       productName: form.productName || `${form.category} product reference`,
@@ -223,21 +249,40 @@ export default function SourceClient() {
     event.preventDefault();
     setSubmitting(true);
     setMessage("");
+    setSubmissionNotice("");
     setSubmittedId("");
     try {
       if (form.imageUrls.length === 0) throw new Error("Please upload a product image.");
       if (!form.category.trim()) throw new Error("Please add a category.");
       if (!form.quantity.trim()) throw new Error("Please add the quantity needed.");
-      if (!form.contact.trim()) throw new Error("Please add Email or WhatsApp.");
+      const enteredEmail = form.email.trim();
+      const selectedCountry = callingCodeForCountry(form.whatsappCountryIso);
+      const enteredWhatsapp = normalizeWhatsAppNumber(selectedCountry.dialCode, form.whatsappLocalNumber);
+      const email = enteredEmail && isValidEmail(enteredEmail) ? enteredEmail : "";
+      const whatsapp = enteredWhatsapp.replace(/\D/g, "").length >= 6 ? enteredWhatsapp : "";
+      const productLink = normalizeOptionalProductLink(form.productLink);
+      const notices: string[] = [];
+
+      if (!enteredEmail && !form.whatsappLocalNumber.trim()) {
+        throw new Error("Please add an email address or WhatsApp number.");
+      }
+      if (!email && !whatsapp) {
+        throw new Error(enteredEmail ? "Please enter a valid email address or WhatsApp number." : "Please enter a valid WhatsApp number or email address.");
+      }
+      if (enteredEmail && !email) notices.push("The email address was not saved because its format was invalid.");
+      if (form.whatsappLocalNumber.trim() && !whatsapp) notices.push("The WhatsApp number was not saved because it was incomplete.");
+      if (productLink.omittedInvalid) notices.push("The product link was not saved because its format was invalid.");
+
       const response = await fetch("/api/source", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(buildSourcePayload())
+        body: JSON.stringify(buildSourcePayload(email, whatsapp, productLink.value))
       });
       const payload = await response.json();
       if (!payload.success) throw new Error(payload.message || "Unable to submit source request.");
       setSubmittedId(payload.data.id);
-      setForm(emptyForm);
+      setSubmissionNotice(notices.length > 0 ? `Your request was submitted. ${notices.join(" ")}` : "");
+      setForm({ ...emptyForm, whatsappCountryIso: form.whatsappCountryIso });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to submit source request.");
     } finally {
@@ -351,9 +396,30 @@ export default function SourceClient() {
               </Field>
             </div>
 
-            <Field label="Email or WhatsApp">
-              <input value={form.contact} onChange={(event) => update("contact", event.target.value)} className={inputClass} placeholder="you@example.com or +1..." />
-            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Email">
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={form.email}
+                  onChange={(event) => update("email", event.target.value)}
+                  className={inputClass}
+                  placeholder="you@example.com"
+                />
+              </Field>
+              <WhatsAppNumberInput
+                label="WhatsApp"
+                countryIso={form.whatsappCountryIso}
+                localNumber={form.whatsappLocalNumber}
+                onCountryChange={(countryIso) => {
+                  whatsappCountryChangedRef.current = true;
+                  update("whatsappCountryIso", countryIso);
+                }}
+                onLocalNumberChange={(localNumber) => update("whatsappLocalNumber", localNumber)}
+              />
+            </div>
+            <p className="-mt-1 text-xs leading-5 text-[#69707d]">Add an email address or WhatsApp number. You can provide both.</p>
 
             <details className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
               <summary className="cursor-pointer text-sm font-semibold">More details (optional)</summary>
@@ -364,6 +430,7 @@ export default function SourceClient() {
                   </Field>
                   <Field label="Product link">
                     <input value={form.productLink} onChange={(event) => update("productLink", event.target.value)} className={inputClass} placeholder="https://..." />
+                    <span className="text-xs font-normal leading-5 text-[#69707d]">Optional. Paste a product page link, for example https://www.1688.com/...</span>
                   </Field>
                 </div>
                 <Field label="Product description">
@@ -394,6 +461,7 @@ export default function SourceClient() {
             </details>
 
             {message ? <p className="rounded-2xl bg-[#fff1f2] p-3 text-sm font-semibold text-[#be123c]">{message}</p> : null}
+            {submissionNotice ? <p className="rounded-2xl border border-[#fde68a] bg-[#fffbeb] p-3 text-sm font-medium leading-6 text-[#92400e]">{submissionNotice}</p> : null}
             {submittedId ? (
               <div className="rounded-2xl bg-[#ecfdf5] p-4 text-sm text-[#0f766e]">
                 <p className="flex items-center gap-2 font-semibold"><CheckCircle2 size={16} /> {sourceCopy.successTitle}</p>
