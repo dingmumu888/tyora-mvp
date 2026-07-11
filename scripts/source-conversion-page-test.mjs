@@ -67,14 +67,14 @@ const checks = [
       source.includes("<span className=\"hidden sm:inline\">{ctaText}</span>")
   },
   {
-    name: "contact friction is reduced to one Email or WhatsApp field",
+    name: "contact form offers separate Email and WhatsApp fields with one required",
     pass:
-      source.includes("contact: string") &&
-      source.includes("Email or WhatsApp") &&
-      source.includes("you@example.com or +1...") &&
-      source.includes("mapContactToPayload") &&
-      !source.includes("<Field label=\"Email\">") &&
-      !source.includes("<Field label=\"WhatsApp\">")
+      source.includes("email: string") &&
+      source.includes("whatsappLocalNumber: string") &&
+      source.includes("Please add an email address or WhatsApp number.") &&
+      source.includes("<Field label=\"Email\">") &&
+      source.includes("label=\"WhatsApp\"") &&
+      !source.includes("mapContactToPayload")
   },
   {
     name: "scary post-CTA disclaimer is moved and softened",
