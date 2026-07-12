@@ -83,10 +83,16 @@ model AnalyticsEvent {
   pageGroup              String?
   referrer               String?
   referrerSource         String?
+  utmSource              String?
+  utmMedium              String?
+  utmCampaign            String?
   countryName            String?
   countryCode            String?
+  cityName               String?
   device                 String?
   visitorId              String?
+  ipHash                 String?
+  maskedIp               String?
   sessionId              String?
   sessionDurationSeconds Int?
   createdAt              DateTime @default(now())
@@ -97,28 +103,39 @@ model AnalyticsEvent {
   @@index([sessionId])
   @@index([countryCode])
   @@index([referrerSource])
+  @@index([utmSource])
+  @@index([ipHash])
   @@index([device])
 }
 
 model CommunityUser {
-  id              String             @id
-  googleId        String?            @unique
-  email           String             @unique
-  username        String             @unique
-  name            String
-  avatar          String?
-  bio             String?
-  profileCompleted Boolean           @default(false)
-  country         String?
+  id                     String              @id
+  googleId               String?             @unique
+  email                  String              @unique
+  username               String              @unique
+  name                   String
+  avatar                 String?
+  bio                    String?
+  profileCompleted       Boolean             @default(false)
+  country                String?
   lastNotificationSeenAt DateTime?
-  joinedAt        DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  ideas           CommunityIdea[]
-  comments        CommunityComment[]
-  reactions       CommunityReaction[]
+  lastLoginAt            DateTime?
+  loginCount             Int                 @default(0)
+  firstTrafficSource     String?
+  lastCountry            String?
+  lastCity               String?
+  lastIpHash             String?
+  lastMaskedIp           String?
+  joinedAt               DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  ideas                  CommunityIdea[]
+  comments               CommunityComment[]
+  reactions              CommunityReaction[]
 
   @@index([joinedAt])
   @@index([country])
+  @@index([lastLoginAt])
+  @@index([firstTrafficSource])
 }
 
 model EmailLoginCode {
@@ -158,13 +175,13 @@ model SourceRequest {
 }
 
 model WorkOrderContactEvent {
-  id             String   @id
+  id             String    @id
   workOrderId    String
   channel        String
   note           String?
   contactedAt    DateTime
   nextFollowUpAt DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@index([workOrderId])
   @@index([contactedAt])
@@ -172,29 +189,29 @@ model WorkOrderContactEvent {
 }
 
 model CommunityIdea {
-  id             String              @id
-  slug           String              @unique
-  title          String
-  description    String
-  category       String
-  country        String
-  imageUrlsJson  String              @default("[]")
-  questionsJson  String              @default("[]")
-  otherQuestion  String?
-  visibility     String              @default("Public")
-  status         String              @default("Discussing")
-  hidden         Boolean             @default(false)
-  locked         Boolean             @default(false)
-  pinned         Boolean             @default(false)
-  homepageFeatured Boolean           @default(false)
+  id                    String              @id
+  slug                  String              @unique
+  title                 String
+  description           String
+  category              String
+  country               String
+  imageUrlsJson         String              @default("[]")
+  questionsJson         String              @default("[]")
+  otherQuestion         String?
+  visibility            String              @default("Public")
+  status                String              @default("Discussing")
+  hidden                Boolean             @default(false)
+  locked                Boolean             @default(false)
+  pinned                Boolean             @default(false)
+  homepageFeatured      Boolean             @default(false)
   homepageFeaturedOrder Int?
-  authorId       String
-  author         CommunityUser       @relation(fields: [authorId], references: [id])
-  comments       CommunityComment[]
-  review         TyoraReview?
-  reactions      CommunityReaction[]
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  authorId              String
+  author                CommunityUser       @relation(fields: [authorId], references: [id])
+  comments              CommunityComment[]
+  review                TyoraReview?
+  reactions             CommunityReaction[]
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
 
   @@index([authorId])
   @@index([status])
@@ -207,17 +224,17 @@ model CommunityIdea {
 }
 
 model CommunityComment {
-  id          String              @id
-  body        String
-  hidden      Boolean             @default(false)
-  ideaId      String
-  idea        CommunityIdea       @relation(fields: [ideaId], references: [id])
-  authorId    String
-  author      CommunityUser       @relation(fields: [authorId], references: [id])
-  parentId    String?
-  reactions   CommunityReaction[]
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id        String              @id
+  body      String
+  hidden    Boolean             @default(false)
+  ideaId    String
+  idea      CommunityIdea       @relation(fields: [ideaId], references: [id])
+  authorId  String
+  author    CommunityUser       @relation(fields: [authorId], references: [id])
+  parentId  String?
+  reactions CommunityReaction[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
 
   @@index([ideaId])
   @@index([authorId])
@@ -227,32 +244,32 @@ model CommunityComment {
 }
 
 model TyoraReview {
-  id                         String        @id
-  ideaId                     String        @unique
-  idea                       CommunityIdea @relation(fields: [ideaId], references: [id])
-  manufacturingFeasible      String?
-  estimatedCostRange         String?
-  suggestedMaterial          String?
-  estimatedMoq               String?
-  suggestedManufacturing     String?
-  factoriesMatched           String?
-  additionalNotes            String?
-  createdAt                  DateTime      @default(now())
-  updatedAt                  DateTime      @updatedAt
+  id                     String        @id
+  ideaId                 String        @unique
+  idea                   CommunityIdea @relation(fields: [ideaId], references: [id])
+  manufacturingFeasible  String?
+  estimatedCostRange     String?
+  suggestedMaterial      String?
+  estimatedMoq           String?
+  suggestedManufacturing String?
+  factoriesMatched       String?
+  additionalNotes        String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 
   @@index([createdAt])
 }
 
 model CommunityReaction {
-  id        String             @id
+  id        String            @id
   type      String
   userId    String
-  user      CommunityUser      @relation(fields: [userId], references: [id])
+  user      CommunityUser     @relation(fields: [userId], references: [id])
   ideaId    String?
-  idea      CommunityIdea?     @relation(fields: [ideaId], references: [id])
+  idea      CommunityIdea?    @relation(fields: [ideaId], references: [id])
   commentId String?
-  comment   CommunityComment?  @relation(fields: [commentId], references: [id])
-  createdAt DateTime           @default(now())
+  comment   CommunityComment? @relation(fields: [commentId], references: [id])
+  createdAt DateTime          @default(now())
 
   @@unique([userId, type, ideaId])
   @@unique([userId, type, commentId])

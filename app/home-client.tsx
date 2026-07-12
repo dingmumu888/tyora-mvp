@@ -207,10 +207,6 @@ export default function Home() {
   }, [mobileDiscussionCtaCollapsed]);
 
   useEffect(() => {
-    trackAnalyticsEvent("page_visit");
-  }, []);
-
-  useEffect(() => {
     fetch("/api/community/ideas?sort=trending&limit=12")
       .then((response) => response.json())
       .then((payload) => setCommunityIdeas(Array.isArray(payload.data) ? payload.data : []))

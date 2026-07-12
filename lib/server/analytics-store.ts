@@ -1,5 +1,8 @@
 import { analyticsEventTypes, AnalyticsDashboard, AnalyticsEventType, AnalyticsMetric } from "@/lib/analytics";
 import { prisma } from "@/lib/server/db";
+import { hashIpAddress, maskIpAddress, sourceFromTraffic, trafficContext } from "@/lib/server/traffic-context";
+
+export { hashIpAddress, maskIpAddress, sourceFromTraffic } from "@/lib/server/traffic-context";
 
 const allowedEvents = new Set<string>(analyticsEventTypes);
 const sourceLabels = ["Direct", "Google", "LinkedIn", "Reddit", "Facebook", "Other"];
@@ -9,6 +12,9 @@ type AnalyticsInput = {
   type?: unknown;
   path?: unknown;
   referrer?: unknown;
+  utmSource?: unknown;
+  utmMedium?: unknown;
+  utmCampaign?: unknown;
   visitorId?: unknown;
   sessionId?: unknown;
   sessionDurationSeconds?: unknown;
@@ -19,10 +25,13 @@ type EventRow = {
   path: string | null;
   pageGroup: string | null;
   referrerSource: string | null;
+  cityName: string | null;
   countryName: string | null;
   countryCode: string | null;
   device: string | null;
   visitorId: string | null;
+  ipHash: string | null;
+  maskedIp: string | null;
   sessionId: string | null;
   sessionDurationSeconds: number | null;
   createdAt: Date;
@@ -61,20 +70,6 @@ function pageGroup(path: string) {
   return path.split("?")[0].slice(0, 80);
 }
 
-function sourceFromReferrer(referrer: string) {
-  if (!referrer) return "Direct";
-  try {
-    const host = new URL(referrer).hostname.toLowerCase();
-    if (host.includes("google")) return "Google";
-    if (host.includes("linkedin")) return "LinkedIn";
-    if (host.includes("reddit")) return "Reddit";
-    if (host.includes("facebook") || host.includes("fb.com")) return "Facebook";
-    return "Other";
-  } catch {
-    return "Other";
-  }
-}
-
 function deviceFromUserAgent(userAgent: string) {
   const value = userAgent.toLowerCase();
   if (value.includes("ipad") || value.includes("tablet")) return "Tablet";
@@ -102,7 +97,38 @@ function percent(value: number, total: number) {
 }
 
 function uniqueVisitors(rows: EventRow[]) {
-  return new Set(rows.map((row) => row.visitorId).filter(Boolean)).size;
+  const visitorIds = new Set<string>();
+  const ipHashes = new Set<string>();
+  let count = 0;
+  rows.forEach((row) => {
+    const knownVisitor = Boolean(row.visitorId && visitorIds.has(row.visitorId));
+    const knownIp = Boolean(row.ipHash && ipHashes.has(row.ipHash));
+    if (!knownVisitor && !knownIp && (row.visitorId || row.ipHash)) count += 1;
+    if (row.visitorId) visitorIds.add(row.visitorId);
+    if (row.ipHash) ipHashes.add(row.ipHash);
+  });
+  return count;
+}
+
+function recentVisitorRows(rows: EventRow[]) {
+  const seenVisitors = new Set<string>();
+  const seenIps = new Set<string>();
+  return rows.flatMap((row) => {
+    const key = row.visitorId || row.ipHash;
+    if (!key || (row.visitorId && seenVisitors.has(row.visitorId)) || (row.ipHash && seenIps.has(row.ipHash))) return [];
+    if (row.visitorId) seenVisitors.add(row.visitorId);
+    if (row.ipHash) seenIps.add(row.ipHash);
+    return [{
+      id: key,
+      path: row.path || "/",
+      source: row.referrerSource || "Direct",
+      country: row.countryName || "Unknown",
+      city: row.cityName || "",
+      device: row.device || "Unknown",
+      maskedIp: row.maskedIp || "",
+      visitedAt: row.createdAt.toISOString()
+    }];
+  }).slice(0, 20);
 }
 
 function countType(rows: EventRow[], type: AnalyticsEventType) {
@@ -189,7 +215,11 @@ export async function recordAnalyticsEvent(input: AnalyticsInput, request: Reque
 
   const path = safeText(input.path || "/", 180) || "/";
   const referrer = safeText(input.referrer, 260);
-  const countryCode = safeText(request.headers.get("x-vercel-ip-country") || "", 8).toUpperCase();
+  const utmSource = safeText(input.utmSource, 80);
+  const utmMedium = safeText(input.utmMedium, 80);
+  const utmCampaign = safeText(input.utmCampaign, 120);
+  const context = trafficContext(request, utmSource, referrer);
+  const countryCode = context.countryCode;
   const countryName = countryCode ? countryNameFromCode(countryCode) : "Unknown";
   const userAgent = request.headers.get("user-agent") || "";
   const duration = Number(input.sessionDurationSeconds);
@@ -201,11 +231,17 @@ export async function recordAnalyticsEvent(input: AnalyticsInput, request: Reque
       path,
       pageGroup: pageGroup(path),
       referrer,
-      referrerSource: sourceFromReferrer(referrer),
+      referrerSource: context.referrerSource,
+      utmSource: utmSource || null,
+      utmMedium: utmMedium || null,
+      utmCampaign: utmCampaign || null,
       countryCode: countryCode || null,
       countryName,
+      cityName: context.cityName || null,
       device: deviceFromUserAgent(userAgent),
       visitorId: safeId(input.visitorId) || null,
+      ipHash: context.ipHash || null,
+      maskedIp: context.maskedIp || null,
       sessionId: safeId(input.sessionId) || null,
       sessionDurationSeconds: Number.isFinite(duration) ? Math.max(0, Math.min(86400, Math.round(duration))) : null
     }
@@ -217,7 +253,7 @@ export async function getAnalyticsDashboard(): Promise<AnalyticsDashboard> {
   const last7 = daysAgo(6);
   const last30 = daysAgo(29);
 
-  const [events30, recentLeads, leadsToday, quotedLeads, productionLeads, waitingFollowUp] = await Promise.all([
+  const [events30, recentLeads, leadsToday, quotedLeads, productionLeads, waitingFollowUp, newCustomersToday] = await Promise.all([
     prisma.analyticsEvent.findMany({
       where: { createdAt: { gte: last30 } },
       orderBy: { createdAt: "desc" }
@@ -240,7 +276,8 @@ export async function getAnalyticsDashboard(): Promise<AnalyticsDashboard> {
         nextFollowUpDate: { lt: formatDay(today) },
         status: { notIn: ["Completed", "Lost", "Rejected"] }
       }
-    })
+    }),
+    prisma.communityUser.count({ where: { joinedAt: { gte: today } } })
   ]);
 
   const rows = events30 as EventRow[];
@@ -305,7 +342,8 @@ export async function getAnalyticsDashboard(): Promise<AnalyticsDashboard> {
       whatsappClicksToday,
       newLeadsToday: leadsToday,
       conversionRateToday: percent(leadsToday, visitorsToday),
-      averageSessionDurationSeconds: averageSessionDuration(todayRows)
+      averageSessionDurationSeconds: averageSessionDuration(todayRows),
+      newCustomersToday
     },
     countries,
     sources,
@@ -313,6 +351,7 @@ export async function getAnalyticsDashboard(): Promise<AnalyticsDashboard> {
     topPages,
     ctaPerformance,
     recentLeads: recentLeadRows(recentLeads),
+    recentVisitors: recentVisitorRows(thirtyDayVisits),
     funnel,
     tasks,
     insights: makeInsights({

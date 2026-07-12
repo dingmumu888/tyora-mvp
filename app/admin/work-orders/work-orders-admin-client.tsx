@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Loader2, Mail, MessageCircle, RefreshCcw, Save, Search } from "lucide-react";
 import { WorkOrder, WorkOrderStatus, WorkOrderType } from "@/lib/work-orders";
 import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
+import { AnalyticsDashboard } from "@/lib/analytics";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -12,9 +13,9 @@ type ApiResponse<T> = {
   message?: string;
 };
 
-type Filter = "All" | "Needs Reply" | WorkOrderType | "In Progress";
+type Filter = "All" | "Needs Reply" | "Replied" | "Community" | "Source" | "Projects";
 
-const filters: Filter[] = ["Needs Reply", "All", "Source", "Custom", "Idea", "Project", "In Progress"];
+const filters: Filter[] = ["Needs Reply", "Replied", "All", "Community", "Source", "Projects"];
 
 const statusTone: Record<WorkOrderStatus, string> = {
   "Needs Reply": "bg-amber-50 text-amber-800 ring-amber-200",
@@ -31,9 +32,9 @@ const statusTone: Record<WorkOrderStatus, string> = {
 };
 
 const typeTone: Record<WorkOrderType, string> = {
-  Idea: "bg-[#fff7ed] text-[#c2410c]",
-  Custom: "bg-[#f4f6f8] text-[#394150]",
-  Source: "bg-[#eff6ff] text-[#1d4ed8]",
+  Idea: "bg-[#eff6ff] text-[#1d4ed8]",
+  Custom: "bg-[#eff6ff] text-[#1d4ed8]",
+  Source: "bg-[#f5f3ff] text-[#6d28d9]",
   Project: "bg-[#ecfdf5] text-[#047857]"
 };
 
@@ -204,9 +205,10 @@ function WorkOrderEditor({ order, onSaved }: { order: WorkOrder; onSaved: (order
   );
 }
 
-export default function WorkOrdersAdminClient() {
+export default function WorkOrdersAdminClient({ embedded = false }: { embedded?: boolean }) {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [filter, setFilter] = useState<Filter>("Needs Reply");
+  const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -228,6 +230,10 @@ export default function WorkOrdersAdminClient() {
 
   useEffect(() => {
     void loadOrders();
+    void fetch("/api/analytics", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => setAnalytics(payload.success ? payload.data : null))
+      .catch(() => setAnalytics(null));
   }, []);
 
   function saveWorkOrder(updated: WorkOrder) {
@@ -238,11 +244,10 @@ export default function WorkOrdersAdminClient() {
     return {
       All: orders.length,
       "Needs Reply": orders.filter((order) => order.needsReply).length,
+      Replied: orders.filter((order) => !order.needsReply).length,
+      Community: orders.filter((order) => order.type === "Idea" || order.type === "Custom").length,
       Source: orders.filter((order) => order.type === "Source").length,
-      Custom: orders.filter((order) => order.type === "Custom").length,
-      Idea: orders.filter((order) => order.type === "Idea").length,
-      Project: orders.filter((order) => order.type === "Project").length,
-      "In Progress": orders.filter((order) => !["Completed", "Closed"].includes(order.status)).length
+      Projects: orders.filter((order) => order.type === "Project").length
     };
   }, [orders]);
 
@@ -252,8 +257,10 @@ export default function WorkOrdersAdminClient() {
       const matchesFilter =
         filter === "All" ||
         (filter === "Needs Reply" && order.needsReply) ||
-        (filter === "In Progress" && !["Completed", "Closed"].includes(order.status)) ||
-        order.type === filter;
+        (filter === "Replied" && !order.needsReply) ||
+        (filter === "Community" && (order.type === "Idea" || order.type === "Custom")) ||
+        (filter === "Source" && order.type === "Source") ||
+        (filter === "Projects" && order.type === "Project");
       const searchable = [
         order.id,
         order.sourceId,
@@ -277,8 +284,8 @@ export default function WorkOrdersAdminClient() {
   }, [filter, orders, query]);
 
   return (
-    <main className="min-h-screen bg-[#f6f7fb] text-[#101216]">
-      <header className="sticky top-0 z-30 border-b border-[#e3e7ee] bg-white/90 backdrop-blur-xl">
+    <div className={`${embedded ? "" : "min-h-screen bg-[#f6f7fb]"} text-[#101216]`}>
+      {!embedded ? <header className="sticky top-0 z-30 border-b border-[#e3e7ee] bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
             <Link href="/admin" className="text-xs font-semibold uppercase tracking-[0.18em] text-[#687284]">TYORA OS</Link>
@@ -294,9 +301,44 @@ export default function WorkOrdersAdminClient() {
             </button>
           </div>
         </div>
-      </header>
+      </header> : null}
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-5 sm:px-6 lg:px-8">
+      <section className={`mx-auto grid max-w-7xl gap-4 ${embedded ? "" : "px-4 py-5 sm:px-6 lg:px-8"}`}>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {[
+            ["Unique visitors", analytics?.summary.visitorsToday || 0],
+            ["Page views", analytics?.summary.pageViewsToday || 0],
+            ["New customers", analytics?.summary.newCustomersToday || 0],
+            ["Needs reply", counts["Needs Reply"] || 0],
+            ["Replied", counts.Replied || 0]
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-2xl border border-[#e1e6ee] bg-white p-4 shadow-sm">
+              <p className="text-2xl font-semibold">{value}</p>
+              <p className="mt-1 text-xs font-semibold text-[#687284]">{label}</p>
+            </div>
+          ))}
+        </div>
+        <details className="rounded-2xl border border-[#e1e6ee] bg-white shadow-sm">
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold">Recent visitors <span className="ml-2 text-xs font-normal text-[#687284]">source, page, approximate location and masked IP</span></summary>
+          <div className="overflow-x-auto border-t border-[#eef1f4]">
+            <table className="w-full min-w-[760px] text-left text-xs">
+              <thead className="bg-[#f8fafc] text-[#687284]"><tr>{["Time", "Source", "Page", "Location", "Device", "Masked IP"].map((label) => <th key={label} className="px-3 py-2 font-semibold">{label}</th>)}</tr></thead>
+              <tbody className="divide-y divide-[#eef1f4]">
+                {(analytics?.recentVisitors || []).map((visitor) => (
+                  <tr key={`${visitor.id}-${visitor.visitedAt}`}>
+                    <td className="px-3 py-2">{formatDate(visitor.visitedAt)}</td>
+                    <td className="px-3 py-2 font-semibold">{visitor.source}</td>
+                    <td className="max-w-64 truncate px-3 py-2">{visitor.path}</td>
+                    <td className="px-3 py-2">{[visitor.city, visitor.country].filter(Boolean).join(", ")}</td>
+                    <td className="px-3 py-2">{visitor.device}</td>
+                    <td className="px-3 py-2 text-[#8791a0]">{visitor.maskedIp || "Unavailable"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!analytics?.recentVisitors.length ? <p className="p-4 text-sm text-[#687284]">No visitor data yet.</p> : null}
+          </div>
+        </details>
         <div className="grid gap-3 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {filters.map((item) => (
@@ -427,6 +469,6 @@ export default function WorkOrdersAdminClient() {
           </div>
         )}
       </section>
-    </main>
+    </div>
   );
 }

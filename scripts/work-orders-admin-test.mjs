@@ -129,8 +129,11 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
 }
 
 const admin = read("app", "admin", "page.tsx");
-if (!admin.includes("href: \"/admin/work-orders\"")) {
-  failures.push("Admin navigation does not link Work Orders.");
+if (!admin.includes('label: "Workbench"') || !admin.includes("<WorkOrdersAdminClient embedded />")) {
+  failures.push("Admin navigation does not expose the unified Workbench queue.");
+}
+if (admin.includes('label: "Work Orders"')) {
+  failures.push("Admin navigation still exposes Work Orders separately from Workbench.");
 }
 if (admin.includes("{ href: \"/admin/community\", label: \"Ideas\" }") && admin.includes("{ href: \"/admin/source\", label: \"Source Products\" }")) {
   failures.push("Admin primary navigation still exposes separate Ideas and Source Products entries.");

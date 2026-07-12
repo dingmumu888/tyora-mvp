@@ -62,10 +62,12 @@ import {
 } from "@/lib/storage";
 import { AnalyticsDashboard } from "@/lib/analytics";
 import { CommunityIdea, CommunityStatus } from "@/lib/community";
+import WorkOrdersAdminClient from "@/app/admin/work-orders/work-orders-admin-client";
 
 type TabId =
   | "today"
   | "analytics"
+  | "customers"
   | "homepage"
   | "sourceContent"
   | "mobileTabs"
@@ -80,6 +82,23 @@ type TabId =
   | "submissions";
 
 type CmsLanguage = "en" | "zh";
+
+type AdminCustomer = {
+  id: string;
+  email: string;
+  name: string;
+  username: string;
+  joinedAt: string;
+  lastLoginAt: string | null;
+  loginCount: number;
+  source: string;
+  country: string;
+  city: string;
+  maskedIp: string;
+  ideaCount: number;
+  commentCount: number;
+  reactionCount: number;
+};
 
 const zhText: Record<string, string> = {
   "TYORA Admin Login": "TYORA 后台登录",
@@ -284,11 +303,10 @@ const osSections: Array<{
   title: string;
   items: Array<{ id?: TabId; href?: string; label: string; badge?: string }>;
 }> = [
-  { title: "Today", items: [{ id: "today", label: "Today" }] },
+  { title: "Operations", items: [{ id: "today", label: "Workbench" }] },
   {
-    title: "Operations",
+    title: "Projects",
     items: [
-      { href: "/admin/work-orders", label: "Work Orders" },
       { id: "submissions", label: "Projects & Team" }
     ]
   },
@@ -318,7 +336,8 @@ const osSections: Array<{
   {
     title: "Users",
     items: [
-      { id: "analytics", label: "Users" },
+      { id: "customers", label: "Customers" },
+      { id: "analytics", label: "Traffic Analytics" },
       { id: "analytics", label: "Roles & Permissions" }
     ]
   },
@@ -538,6 +557,7 @@ export default function AdminPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(defaultTeamMembers);
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
+  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [mediaSearch, setMediaSearch] = useState("");
@@ -574,6 +594,7 @@ export default function AdminPage() {
       .catch(() => showToast("Unable to load admin data."));
     void loadAnalytics();
     void loadCommunityAdminData();
+    void loadCustomers();
   }, [authenticated]);
 
   const t = (value: string) => (cmsLanguage === "zh" ? zhText[value] || value : value);
@@ -611,6 +632,16 @@ export default function AdminPage() {
       setCommunityIdeas(payload.data || []);
     } catch {
       setCommunityIdeas([]);
+    }
+  }
+
+  async function loadCustomers() {
+    try {
+      const response = await fetch("/api/admin/customers", { cache: "no-store" });
+      const payload = await response.json();
+      setCustomers(response.ok && payload.success && Array.isArray(payload.data) ? payload.data : []);
+    } catch {
+      setCustomers([]);
     }
   }
 
@@ -864,7 +895,6 @@ export default function AdminPage() {
                   {section.items.map((item) => item.href ? (
                     <Link key={`${section.title}-${item.label}`} href={item.href} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">
                       <span>{item.label}</span>
-                      {item.label === "Work Orders" ? <span className="rounded-full bg-[#eef2ff] px-2 py-0.5 text-[11px] text-[#315fbd]">{communityIdeas.filter((idea) => !idea.review && !idea.hidden).length}</span> : null}
                     </Link>
                   ) : (
                     <button
@@ -886,13 +916,17 @@ export default function AdminPage() {
 
         <section className="min-w-0 space-y-6">
           {activeTab === "today" ? (
-            <TodaySection
-              analytics={analytics}
-              communityIdeas={communityIdeas}
-              leads={leads}
-              setActiveTab={setActiveTab}
-            />
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-[#69707d]">TYORA OS</p>
+                <h1 className="mt-1 text-3xl font-semibold">Workbench</h1>
+                <p className="mt-1 text-sm text-[#69707d]">Visitors, requests, replies and follow-up in one place.</p>
+              </div>
+              <WorkOrdersAdminClient embedded />
+            </div>
           ) : null}
+
+          {activeTab === "customers" ? <CustomersSection customers={customers} refresh={() => void loadCustomers()} /> : null}
 
           {activeTab === "analytics" ? (
             <CeoDashboardSection
@@ -1352,6 +1386,53 @@ export default function AdminPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; refresh: () => void }) {
+  const [query, setQuery] = useState("");
+  const visible = customers.filter((customer) => {
+    const haystack = [customer.email, customer.name, customer.username, customer.source, customer.country, customer.city].join(" ").toLowerCase();
+    return haystack.includes(query.trim().toLowerCase());
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[#69707d]">Customers</p>
+          <h1 className="mt-1 text-3xl font-semibold">Email customer records</h1>
+          <p className="mt-1 text-sm text-[#69707d]">People who completed Email Login, with basic activity and acquisition context.</p>
+        </div>
+        <button onClick={refresh} className="h-10 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">Refresh</button>
+      </div>
+      <label className="flex h-11 items-center gap-2 rounded-full border border-[#dfe5ee] bg-white px-4 text-sm">
+        <Search size={16} className="text-[#8791a0]" />
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search email, name, source or country" className="w-full bg-transparent outline-none" />
+      </label>
+      <div className="overflow-x-auto rounded-[22px] border border-[#e1e6ee] bg-white shadow-sm">
+        <table className="w-full min-w-[980px] text-left text-sm">
+          <thead className="border-b border-[#e8ebef] bg-[#f8fafc] text-xs text-[#687284]">
+            <tr>{["Customer", "Source", "Location / IP", "Last login", "Logins", "Ideas", "Comments", "Reactions"].map((label) => <th key={label} className="px-4 py-3 font-semibold">{label}</th>)}</tr>
+          </thead>
+          <tbody className="divide-y divide-[#eef1f4]">
+            {visible.map((customer) => (
+              <tr key={customer.id}>
+                <td className="px-4 py-3"><p className="font-semibold">{customer.name || customer.username}</p><p className="text-xs text-[#687284]">{customer.email}</p></td>
+                <td className="px-4 py-3"><span className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-xs font-semibold text-[#315fbd]">{customer.source}</span></td>
+                <td className="px-4 py-3"><p>{[customer.city, customer.country].filter(Boolean).join(", ")}</p><p className="text-xs text-[#8791a0]">{customer.maskedIp || "IP unavailable"}</p></td>
+                <td className="px-4 py-3">{customer.lastLoginAt ? new Date(customer.lastLoginAt).toLocaleString() : "-"}</td>
+                <td className="px-4 py-3">{customer.loginCount}</td>
+                <td className="px-4 py-3">{customer.ideaCount}</td>
+                <td className="px-4 py-3">{customer.commentCount}</td>
+                <td className="px-4 py-3">{customer.reactionCount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!visible.length ? <p className="p-8 text-center text-sm text-[#687284]">No customers found.</p> : null}
+      </div>
+    </div>
   );
 }
 

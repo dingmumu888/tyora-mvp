@@ -32,6 +32,17 @@ export type AnalyticsRecentLead = {
   submissionTime: string;
 };
 
+export type AnalyticsRecentVisitor = {
+  id: string;
+  path: string;
+  source: string;
+  country: string;
+  city: string;
+  device: string;
+  maskedIp: string;
+  visitedAt: string;
+};
+
 export type AnalyticsDashboard = {
   summary: {
     visitorsToday: number;
@@ -42,6 +53,7 @@ export type AnalyticsDashboard = {
     newLeadsToday: number;
     conversionRateToday: number;
     averageSessionDurationSeconds: number;
+    newCustomersToday: number;
   };
   countries: AnalyticsMetric[];
   sources: AnalyticsMetric[];
@@ -49,6 +61,7 @@ export type AnalyticsDashboard = {
   topPages: AnalyticsMetric[];
   ctaPerformance: AnalyticsMetric[];
   recentLeads: AnalyticsRecentLead[];
+  recentVisitors: AnalyticsRecentVisitor[];
   funnel: AnalyticsMetric[];
   tasks: AnalyticsMetric[];
   insights: string[];
@@ -132,7 +145,10 @@ export function trackAnalyticsEvent(type: AnalyticsEventType, path?: string) {
     referrer: document.referrer || "",
     visitorId: getVisitorId(),
     sessionId: getSessionId(),
-    sessionDurationSeconds: getSessionDurationSeconds()
+    sessionDurationSeconds: getSessionDurationSeconds(),
+    utmSource: new URLSearchParams(window.location.search).get("utm_source") || "",
+    utmMedium: new URLSearchParams(window.location.search).get("utm_medium") || "",
+    utmCampaign: new URLSearchParams(window.location.search).get("utm_campaign") || ""
   };
 
   const payload = JSON.stringify(body);

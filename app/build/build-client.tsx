@@ -50,7 +50,6 @@ export default function BuildClient() {
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
-    trackAnalyticsEvent("page_visit");
   }, []);
 
   const whatsappUrl = useMemo(() => normalizeWhatsAppUrl(content.whatsappLink), [content.whatsappLink]);
