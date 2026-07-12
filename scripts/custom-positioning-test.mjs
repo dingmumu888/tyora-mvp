@@ -10,6 +10,7 @@ const source = read("app", "source", "source-client.tsx");
 const newIdea = read("app", "ask", "new", "new-idea-client.tsx");
 const storage = read("lib", "storage.ts");
 const i18n = read("lib", "i18n.ts");
+const whatsapp = read("lib", "whatsapp.ts");
 
 const failures = [];
 
@@ -27,10 +28,17 @@ if (!fs.existsSync(customPagePath)) {
     "Repeat Order Management",
     "10% of repeat order value, minimum $399",
     "approved reference sample",
-    "does not add markup"
+    "does not add markup",
+    "Start Private Review on WhatsApp",
+    "Prefer email?",
+    "mailto:support@tyora.io"
   ].forEach((text) => {
     if (!custom.includes(text)) failures.push(`/custom page missing: ${text}`);
   });
+}
+
+if (!whatsapp.includes("PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL") || !whatsapp.includes("I will send my design and requirements here")) {
+  failures.push("Private review WhatsApp message is missing.");
 }
 
 [
@@ -50,15 +58,15 @@ if (home.includes("3 FREE Expert Reviews per day")) {
 [
   '<Link href="/custom"',
   "Need to create a new custom product instead?",
-  "Start a Private Custom Project",
+  "Start Private Review on WhatsApp",
   "Example private sourcing requests"
 ].forEach((text) => {
   if (!source.includes(text)) failures.push(`Source page missing: ${text}`);
 });
 
 [
-  "Private Custom Project",
-  "Only you and TYORA can view this custom project.",
+  "Public community discussion",
+  "Your idea will be visible to everyone",
   "Every submitted idea gets an initial TYORA manufacturing review."
 ].forEach((text) => {
   if (!newIdea.includes(text)) failures.push(`New idea page missing: ${text}`);

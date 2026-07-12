@@ -9,6 +9,7 @@ import { callingCodeForCountry } from "@/lib/country-calling-codes";
 import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
 import { normalizeOptionalProductLink, normalizeWhatsAppNumber } from "@/lib/source-contact";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
+import { PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL } from "@/lib/whatsapp";
 
 type FormState = {
   category: string;
@@ -343,11 +344,11 @@ export default function SourceClient() {
           <div className="mt-3 rounded-3xl border border-[#dbeafe] bg-[#eff6ff] p-4">
             <p className="text-sm font-semibold text-[#1d4ed8]">Need to create a new custom product instead?</p>
             <p className="mt-2 text-sm leading-6 text-[#315fbd]">
-              If you have an AI design, sketch, or product idea that needs development, use the private Custom page.
+              If you have an AI design, sketch, or product idea that needs development, contact TYORA privately on WhatsApp.
             </p>
-            <Link href="/custom" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#2563eb]">
-              Start a Private Custom Project <ArrowRight size={14} />
-            </Link>
+            <a href={PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#2563eb]">
+              Start Private Review on WhatsApp <ArrowRight size={14} />
+            </a>
           </div>
         </div>
 

@@ -91,9 +91,17 @@ const checks = [
   {
     label: "Messages button keeps unread count visible on My TYORA",
     pass:
-      messages.includes("unreadText(unreadCount)") &&
+      messages.includes("unreadText(localUnreadCount)") &&
       messages.includes("bg-[#ff385c]") &&
       messages.includes("{unread}")
+  },
+  {
+    label: "Opening Messages marks notifications read and clears every badge",
+    pass:
+      messages.includes('fetch("/api/community/notifications/read", { method: "POST" })') &&
+      messages.includes("setLocalUnreadCount(0)") &&
+      messages.includes('window.dispatchEvent(new CustomEvent("tyora:community-notifications-read"))') &&
+      messages.includes("onClick={() => void openMessages()}")
   }
 ];
 

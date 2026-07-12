@@ -61,12 +61,13 @@ function unreadText(value: number) {
 
 export default function ActivityMessages({ notifications, unreadCount }: { notifications: ActivityMessage[]; unreadCount: number }) {
   const [open, setOpen] = useState(false);
+  const [localUnreadCount, setLocalUnreadCount] = useState(unreadCount);
   const [activeFilter, setActiveFilter] = useState<ActivityFilter>("all");
   const [activeReply, setActiveReply] = useState<ReplyTarget | null>(null);
   const [replyBody, setReplyBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const unread = unreadText(unreadCount);
+  const unread = unreadText(localUnreadCount);
   const counts = useMemo(() => ({
     comment: notifications.filter((item) => item.type === "comment").length,
     like: notifications.filter((item) => item.type === "like").length,
@@ -74,6 +75,19 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
     review: notifications.filter((item) => item.type === "review").length
   }), [notifications]);
   const visibleMessages = notifications.filter((item) => activeFilter === "all" || item.type === activeFilter);
+
+  async function openMessages() {
+    setOpen(true);
+    if (localUnreadCount <= 0) return;
+    try {
+      const response = await fetch("/api/community/notifications/read", { method: "POST" });
+      if (!response.ok) return;
+      setLocalUnreadCount(0);
+      window.dispatchEvent(new CustomEvent("tyora:community-notifications-read"));
+    } catch {
+      // Keep unread indicators visible so reopening Messages can retry.
+    }
+  }
 
   function startReply(item: ActivityMessage) {
     const slug = item.ideaSlug || slugFromHref(item.href);
@@ -116,7 +130,7 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
 
   return (
     <div id="messages" className="mt-4 scroll-mt-24">
-      <button type="button" onClick={() => setOpen(true)} className={`relative inline-flex h-11 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition ${unread ? "bg-[#ff385c] text-white shadow-sm shadow-[#ff385c]/25" : "border border-[#dfe3e8] bg-white text-[#101216] hover:bg-[#f7f8fa]"}`}>
+      <button type="button" onClick={() => void openMessages()} className={`relative inline-flex h-11 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition ${unread ? "bg-[#ff385c] text-white shadow-sm shadow-[#ff385c]/25" : "border border-[#dfe3e8] bg-white text-[#101216] hover:bg-[#f7f8fa]"}`}>
         <Bell size={16} />
         Messages
         {unread ? <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold leading-none text-[#ff385c]">{unread}</span> : null}

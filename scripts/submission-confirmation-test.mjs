@@ -15,21 +15,12 @@ const failures = [];
   if (!source.includes(text)) failures.push(`Source receipt missing: ${text}`);
 });
 
-[
-  "Private custom request received",
-  "Request ID",
-  "Open My TYORA",
-  "Submit another request",
-  'form.visibility === "Private"',
-  "setPublishedIdea"
-  ,"setOneSentence(\"\")"
-  ,"setImagePreviews([])"
-].forEach((text) => {
-  if (!idea.includes(text)) failures.push(`Private Custom receipt missing: ${text}`);
-});
+if (!idea.includes('visibility: "Public"') || !idea.includes("window.location.href = `/ask/${payload.data.slug}`")) {
+  failures.push("Public idea submissions should publish and open their discussion.");
+}
 
-if (!idea.includes('if (form.visibility === "Private") return;') || !idea.includes("window.location.href = `/ask/${payload.data.slug}`")) {
-  failures.push("Private submissions should stop on confirmation while public submissions keep redirecting.");
+if (idea.includes("Private custom request received") || idea.includes('form.visibility === "Private"')) {
+  failures.push("The public idea form still contains a private custom submission path.");
 }
 
 if (failures.length) {

@@ -10,6 +10,7 @@ const search = read("components/site-search.tsx");
 const source = read("app/source/source-client.tsx");
 const custom = read("app/custom/page.tsx");
 const newIdea = read("app/ask/new/new-idea-client.tsx");
+const whatsapp = read("lib/whatsapp.ts");
 
 const checks = [
   {
@@ -40,20 +41,22 @@ const checks = [
       source.includes('<section id="service-protection"')
   },
   {
-    label: "Custom CTA opens the existing idea form preselected as private",
-    pass: custom.includes('href="/ask/new?visibility=private"')
+    label: "Private Custom CTAs open the prefilled WhatsApp review path",
+    pass:
+      whatsapp.includes("PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL") &&
+      whatsapp.includes("I'd like a private custom product review") &&
+      custom.includes("href={PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL}") &&
+      source.includes("href={PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL}") &&
+      custom.includes("Start Private Review on WhatsApp")
   },
   {
-    label: "Idea form reads the requested private visibility",
+    label: "Idea creation is public-only because private reviews use WhatsApp",
     pass:
-      newIdea.includes("useSearchParams") &&
-      newIdea.includes('searchParams.get("visibility") === "private"')
-  },
-  {
-    label: "Mobile quick post exposes an explicit public or private choice",
-    pass:
-      newIdea.includes("Mobile submission visibility") &&
-      newIdea.includes('setForm({ ...form, visibility: option.value })')
+      newIdea.includes('visibility: "Public"') &&
+      !newIdea.includes("visibilityOptions") &&
+      !newIdea.includes("Mobile submission visibility") &&
+      !newIdea.includes("Private Custom Project") &&
+      !newIdea.includes('searchParams.get("visibility")')
   },
   {
     label: "Product images resize proportionally without center square cropping",

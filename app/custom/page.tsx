@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   Sparkles
 } from "lucide-react";
-import { WHATSAPP_URL } from "@/lib/whatsapp";
+import { PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL, WHATSAPP_URL } from "@/lib/whatsapp";
 
 export const metadata = {
   title: "Custom Product Development | TYORA",
@@ -171,14 +171,14 @@ export default function CustomPage() {
             ))}
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/ask/new?visibility=private" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white">
-              Start Private Custom Review <ArrowRight size={15} />
-            </Link>
+            <a href={PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white">
+              Start Private Review on WhatsApp <MessageCircle size={15} />
+            </a>
             <Link href="/ask/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold">
               Post a public idea <ArrowRight size={15} />
             </Link>
-            <a href={WHATSAPP_URL} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-5 text-sm font-semibold">
-              Continue on WhatsApp <MessageCircle size={15} />
+            <a href="mailto:support@tyora.io?subject=Private%20Custom%20Review" className="inline-flex h-11 items-center justify-center rounded-full px-3 text-sm font-semibold text-[#59616e] underline decoration-[#c8ced8] underline-offset-4">
+              Prefer email? support@tyora.io
             </a>
           </div>
         </div>
