@@ -157,6 +157,20 @@ model SourceRequest {
   @@index([destinationCountry])
 }
 
+model WorkOrderContactEvent {
+  id             String   @id
+  workOrderId    String
+  channel        String
+  note           String?
+  contactedAt    DateTime
+  nextFollowUpAt DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([workOrderId])
+  @@index([contactedAt])
+  @@index([nextFollowUpAt])
+}
+
 model CommunityIdea {
   id             String              @id
   slug           String              @unique

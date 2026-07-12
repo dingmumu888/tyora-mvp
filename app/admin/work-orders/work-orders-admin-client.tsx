@@ -65,6 +65,11 @@ function workOrderActionLabel(type: WorkOrderType) {
   return "Follow up project";
 }
 
+function localDateTimeInput(value = new Date()) {
+  const local = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 function statusOptions(order: WorkOrder): WorkOrderStatus[] {
   const options: WorkOrderStatus[] = order.type === "Idea" || order.type === "Custom"
     ? ["Reviewing", "Managed", "Production", "Shipping", "Completed"]
@@ -79,6 +84,10 @@ function WorkOrderEditor({ order, onSaved }: { order: WorkOrder; onSaved: (order
   const [internalNotes, setInternalNotes] = useState(order.internalNotes || "");
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [contactChannel, setContactChannel] = useState("Email");
+  const [contactedAt, setContactedAt] = useState(() => localDateTimeInput());
+  const [nextFollowUpAt, setNextFollowUpAt] = useState("");
+  const [contactNote, setContactNote] = useState("");
   const isCommunity = order.type === "Idea" || order.type === "Custom";
 
   useEffect(() => {
@@ -109,8 +118,43 @@ function WorkOrderEditor({ order, onSaved }: { order: WorkOrder; onSaved: (order
     }
   }
 
+  async function recordContact() {
+    setSaving(true);
+    setFeedback("");
+    try {
+      const response = await fetch("/api/admin/work-orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: order.id,
+          contactEvent: {
+            channel: contactChannel,
+            contactedAt: new Date(contactedAt).toISOString(),
+            nextFollowUpAt: nextFollowUpAt ? new Date(nextFollowUpAt).toISOString() : "",
+            note: contactNote
+          }
+        })
+      });
+      const payload = await response.json() as ApiResponse<WorkOrder>;
+      if (!payload.success || !payload.data) throw new Error(payload.message || "Unable to record contact.");
+      onSaved(payload.data);
+      setContactedAt(localDateTimeInput());
+      setNextFollowUpAt("");
+      setContactNote("");
+      setFeedback("Contact recorded");
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Unable to record contact.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="grid gap-2 rounded-2xl border border-[#dfe5ee] bg-[#f8fafc] p-3">
+    <details className="group rounded-2xl border border-[#dfe5ee] bg-[#f8fafc]">
+      <summary className="flex h-11 cursor-pointer list-none items-center justify-between px-4 text-sm font-semibold">
+        Handle work order <span className="text-[#687284] transition group-open:rotate-45">+</span>
+      </summary>
+      <div className="grid gap-3 border-t border-[#dfe5ee] p-3">
       <label className="grid gap-1 text-xs font-semibold text-[#59616e]">
         Status
         <select value={status} onChange={(event) => setStatus(event.target.value as WorkOrderStatus)} className="h-10 rounded-xl border border-[#dfe5ee] bg-white px-3 text-sm text-[#101216] outline-none focus:border-[#2563eb]">
@@ -125,8 +169,38 @@ function WorkOrderEditor({ order, onSaved }: { order: WorkOrder; onSaved: (order
         {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />} Save changes
       </button>
       {isCommunity && !order.hasReview && !internalNotes.trim() ? <p className="text-xs text-[#687284]">Write a TYORA reply before marking this request handled.</p> : null}
-      {feedback ? <p className={`text-xs font-semibold ${feedback === "Saved" ? "text-[#047857]" : "text-[#be123c]"}`}>{feedback}</p> : null}
-    </div>
+      <div className="mt-1 border-t border-[#dfe5ee] pt-3">
+        <p className="text-sm font-semibold">Record customer contact</p>
+        <p className="mt-1 text-xs leading-5 text-[#687284]">Internal history only. This does not send a message to the customer.</p>
+      </div>
+      <label className="grid gap-1 text-xs font-semibold text-[#59616e]">Contact channel
+        <select value={contactChannel} onChange={(event) => setContactChannel(event.target.value)} className="h-10 rounded-xl border border-[#dfe5ee] bg-white px-3 text-sm text-[#101216]">
+          {["Email", "WhatsApp", "Phone", "Other"].map((channel) => <option key={channel}>{channel}</option>)}
+        </select>
+      </label>
+      <label className="grid gap-1 text-xs font-semibold text-[#59616e]">Contacted at
+        <input type="datetime-local" value={contactedAt} onChange={(event) => setContactedAt(event.target.value)} className="h-10 rounded-xl border border-[#dfe5ee] bg-white px-3 text-sm text-[#101216]" />
+      </label>
+      <label className="grid gap-1 text-xs font-semibold text-[#59616e]">Next follow-up
+        <input type="datetime-local" value={nextFollowUpAt} min={contactedAt} onChange={(event) => setNextFollowUpAt(event.target.value)} className="h-10 rounded-xl border border-[#dfe5ee] bg-white px-3 text-sm text-[#101216]" />
+      </label>
+      <label className="grid gap-1 text-xs font-semibold text-[#59616e]">Contact note
+        <textarea value={contactNote} onChange={(event) => setContactNote(event.target.value)} rows={2} maxLength={1000} placeholder="What was discussed?" className="resize-y rounded-xl border border-[#dfe5ee] bg-white p-3 text-sm font-normal text-[#101216]" />
+      </label>
+      <button type="button" onClick={() => void recordContact()} disabled={saving || !contactedAt} className="inline-flex h-10 items-center justify-center rounded-xl border border-[#101216] bg-white px-4 text-sm font-semibold disabled:opacity-45">Add contact record</button>
+      {order.contactHistory.length > 0 ? (
+        <div className="grid max-h-56 gap-2 overflow-y-auto rounded-xl bg-white p-3 text-xs text-[#59616e]">
+          {order.contactHistory.map((event) => (
+            <div key={event.id} className="border-b border-[#eef1f4] pb-2 last:border-0 last:pb-0">
+              <p><span className="font-semibold text-[#101216]">{event.channel}</span> · {formatDate(event.contactedAt)}{event.note ? ` · ${event.note}` : ""}</p>
+              {event.nextFollowUpAt ? <p className="mt-1 text-[#315fbd]">Follow-up: {formatDate(event.nextFollowUpAt)}</p> : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {feedback ? <p className={`text-xs font-semibold ${["Saved", "Contact recorded"].includes(feedback) ? "text-[#047857]" : "text-[#be123c]"}`}>{feedback}</p> : null}
+      </div>
+    </details>
   );
 }
 
@@ -257,7 +331,23 @@ export default function WorkOrdersAdminClient() {
             {visibleOrders.map((order) => {
               const whatsApp = whatsappHref(order.contactWhatsapp);
               return (
-                <article key={order.id} className="grid gap-4 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[190px_1fr_240px]">
+                <details key={order.id} className="group overflow-hidden rounded-3xl border border-[#e1e6ee] bg-white shadow-sm">
+                  <summary className="grid cursor-pointer list-none grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-3 p-3 sm:grid-cols-[72px_minmax(0,1fr)_220px_auto] sm:p-4">
+                    <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-[#f4f6f9]">
+                      {order.imageUrls[0] ? <img src={order.imageUrls[0]} alt="" className="size-full object-contain p-1" /> : <span className="font-semibold text-[#8a94a3]">{order.type.slice(0, 2).toUpperCase()}</span>}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold"><span className={`rounded-full px-2 py-1 ${typeTone[order.type]}`}>{order.type}</span><span className={`rounded-full px-2 py-1 ring-1 ${statusTone[order.status]}`}>{order.status}</span></div>
+                      <h2 className="mt-1 truncate text-base font-semibold sm:text-lg">{order.title}</h2>
+                      <p className="truncate text-xs text-[#687284]">{order.customerName} · {formatDate(order.submittedAt)}</p>
+                    </div>
+                    <div className="hidden text-xs text-[#59616e] sm:block">
+                      {order.lastContactAt ? <p><span className="font-semibold">Latest contact:</span> {order.lastContactChannel} · {formatDate(order.lastContactAt)}</p> : <p className="text-[#8a94a3]">No contact recorded</p>}
+                      {order.nextFollowUpAt ? <p className="mt-1 text-[#315fbd]"><span className="font-semibold">Next follow-up:</span> {formatDate(order.nextFollowUpAt)}</p> : null}
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#315fbd]">Expand work order <span className="text-lg transition group-open:rotate-45">+</span></span>
+                  </summary>
+                  <div className="grid gap-4 border-t border-[#e1e6ee] p-4 lg:grid-cols-[190px_1fr_240px]">
                   <div className="overflow-hidden rounded-2xl bg-[#f4f6f9]">
                     {order.imageUrls.length ? (
                       <div className={`grid aspect-square ${imageGridClass(order.imageUrls.length)} gap-1 p-1`}>
@@ -296,6 +386,12 @@ export default function WorkOrdersAdminClient() {
                     {order.internalNotes ? (
                       <p className="mt-3 rounded-2xl bg-[#f8fafc] p-3 text-sm leading-6 text-[#59616e]">internalNotes: {order.internalNotes}</p>
                     ) : null}
+                    {order.lastContactAt ? (
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 rounded-2xl bg-[#eff6ff] p-3 text-xs text-[#315fbd]">
+                        <p><span className="font-semibold">Latest contact:</span> {order.lastContactChannel} · {formatDate(order.lastContactAt)}</p>
+                        {order.nextFollowUpAt ? <p><span className="font-semibold">Next follow-up:</span> {formatDate(order.nextFollowUpAt)}</p> : null}
+                      </div>
+                    ) : null}
                     <div className="mt-3 flex flex-wrap gap-2">
                       {order.tags.slice(0, 6).map((tag) => (
                         <span key={`${order.id}-${tag}`} className="rounded-full border border-[#dfe5ee] bg-[#f8fafc] px-2.5 py-1 text-xs font-semibold text-[#59616e]">{tag}</span>
@@ -324,7 +420,8 @@ export default function WorkOrdersAdminClient() {
                       Advanced: {workOrderActionLabel(order.type)} <ArrowUpRight size={15} />
                     </Link>
                   </div>
-                </article>
+                  </div>
+                </details>
               );
             })}
           </div>

@@ -122,6 +122,7 @@ export default function NewIdeaClient() {
   const [loginPrompt, setLoginPrompt] = useState(0);
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [published, setPublished] = useState(false);
+  const [publishedIdea, setPublishedIdea] = useState<{ id: string; slug: string } | null>(null);
   const [visibilityLearnOpen, setVisibilityLearnOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -228,6 +229,25 @@ export default function NewIdeaClient() {
     setStep((current) => Math.min(current + 1, 3) as Step);
   }
 
+  function resetPrivateRequest() {
+    setPublished(false);
+    setPublishedIdea(null);
+    setStep(0);
+    setOneSentence("");
+    setImagePreviews([]);
+    setMessage("");
+    setForm({
+      title: "",
+      description: "",
+      category: "",
+      country: "",
+      imageUrls: [],
+      questions: [],
+      otherQuestion: "",
+      visibility: "Private"
+    });
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
@@ -256,7 +276,9 @@ export default function NewIdeaClient() {
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to submit idea.");
+      setPublishedIdea({ id: payload.data.id, slug: payload.data.slug });
       setPublished(true);
+      if (form.visibility === "Private") return;
       window.setTimeout(() => {
         window.location.href = `/ask/${payload.data.slug}`;
       }, 1050);
@@ -328,8 +350,17 @@ export default function NewIdeaClient() {
                 <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#e9f7f3] text-[#0f766e] shadow-sm">
                   <Sparkles size={28} />
                 </div>
-                <h2 className="mt-5 text-3xl font-semibold leading-tight">Your discussion is now live.</h2>
-                <p className="mt-3 text-sm font-medium text-[#69707d]">Redirecting to your discussion...</p>
+                <h2 className="mt-5 text-3xl font-semibold leading-tight">{form.visibility === "Private" ? "Private custom request received" : "Your discussion is now live."}</h2>
+                {form.visibility === "Private" ? (
+                  <div className="mx-auto mt-4 max-w-lg">
+                    <p className="text-sm leading-6 text-[#69707d]">TYORA will review manufacturability, MOQ, mold and budget details. The initial review normally appears within 1 business day.</p>
+                    <p className="mt-4 rounded-2xl bg-[#f7f8fa] p-3 text-sm"><span className="font-semibold">Request ID:</span> {publishedIdea?.id}</p>
+                    <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                      <Link href="/me" className={`inline-flex h-11 items-center justify-center rounded-full px-4 text-sm font-semibold ${primaryButton}`}>Open My TYORA</Link>
+                      <button type="button" onClick={resetPrivateRequest} className="h-11 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold">Submit another request</button>
+                    </div>
+                  </div>
+                ) : <p className="mt-3 text-sm font-medium text-[#69707d]">Redirecting to your discussion...</p>}
               </div>
             </div>
           ) : (

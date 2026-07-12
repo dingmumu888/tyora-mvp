@@ -17,6 +17,18 @@ export const workOrderStatuses = [
 export type WorkOrderType = (typeof workOrderTypes)[number];
 export type WorkOrderStatus = (typeof workOrderStatuses)[number];
 
+export type WorkOrderContactChannel = "Email" | "WhatsApp" | "Phone" | "Other";
+
+export type WorkOrderContactEvent = {
+  id: string;
+  workOrderId: string;
+  channel: WorkOrderContactChannel;
+  note?: string;
+  contactedAt: string;
+  nextFollowUpAt?: string;
+  createdAt: string;
+};
+
 export type WorkOrder = {
   id: string;
   sourceId: string;
@@ -40,6 +52,10 @@ export type WorkOrder = {
   imageUrls: string[];
   tags: string[];
   internalNotes?: string;
+  contactHistory: WorkOrderContactEvent[];
+  lastContactAt?: string;
+  nextFollowUpAt?: string;
+  lastContactChannel?: WorkOrderContactChannel;
   publicHref?: string;
   adminHref: string;
 };

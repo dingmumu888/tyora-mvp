@@ -129,6 +129,7 @@ export default function SourceClient() {
   const [message, setMessage] = useState("");
   const [submissionNotice, setSubmissionNotice] = useState("");
   const [submittedId, setSubmittedId] = useState("");
+  const [submittedContact, setSubmittedContact] = useState("");
   const [trustToast, setTrustToast] = useState<{ title: string; subtitle: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const whatsappCountryChangedRef = useRef(false);
@@ -281,6 +282,7 @@ export default function SourceClient() {
       const payload = await response.json();
       if (!payload.success) throw new Error(payload.message || "Unable to submit source request.");
       setSubmittedId(payload.data.id);
+      setSubmittedContact(email || whatsapp);
       setSubmissionNotice(notices.length > 0 ? `Your request was submitted. ${notices.join(" ")}` : "");
       setForm({ ...emptyForm, whatsappCountryIso: form.whatsappCountryIso });
     } catch (error) {
@@ -350,7 +352,26 @@ export default function SourceClient() {
         </div>
 
         <form id="source-form" noValidate onSubmit={submit} className="scroll-mt-24 rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-6">
-          <div className="grid gap-4">
+          {submittedId ? (
+            <div className="grid min-h-[560px] place-items-center">
+              <div className="w-full max-w-xl rounded-3xl border border-[#b7e4d5] bg-[#f2fbf7] p-5 text-center sm:p-7">
+                <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-white text-[#0f766e] shadow-sm"><CheckCircle2 size={26} /></span>
+                <p className="mt-5 text-sm font-semibold text-[#0f766e]">Request received</p>
+                <h2 className="mt-2 text-3xl font-semibold leading-tight">TYORA will review your product match.</h2>
+                <p className="mt-3 text-sm leading-6 text-[#59616e]">We normally send the initial supplier and factory-price review within 1 business day.</p>
+                <div className="mt-5 grid gap-2 rounded-2xl bg-white p-4 text-left text-sm">
+                  <p><span className="font-semibold">Request ID:</span> {submittedId}</p>
+                  <p className="break-all"><span className="font-semibold">Saved contact:</span> {submittedContact}</p>
+                  <p><span className="font-semibold">Privacy:</span> Product details and quotes stay private.</p>
+                </div>
+                {submissionNotice ? <p className="mt-3 rounded-2xl bg-[#fffbeb] p-3 text-left text-sm text-[#92400e]">{submissionNotice}</p> : null}
+                <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                  <button type="button" onClick={() => { setSubmittedId(""); setSubmittedContact(""); setSubmissionNotice(""); }} className="h-11 rounded-full border border-[#cfd8e6] bg-white px-4 text-sm font-semibold">Submit another product</button>
+                  <Link href="/" className="inline-flex h-11 items-center justify-center rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">Back to TYORA</Link>
+                </div>
+              </div>
+            </div>
+          ) : <div className="grid gap-4">
             <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-[#cfd8e6] bg-[#f8fafc] text-left transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
               {form.imageUrls.length > 0 ? (
                 <span className="grid size-full grid-cols-3 gap-1 p-2">
@@ -462,17 +483,11 @@ export default function SourceClient() {
 
             {message ? <p className="rounded-2xl bg-[#fff1f2] p-3 text-sm font-semibold text-[#be123c]">{message}</p> : null}
             {submissionNotice ? <p className="rounded-2xl border border-[#fde68a] bg-[#fffbeb] p-3 text-sm font-medium leading-6 text-[#92400e]">{submissionNotice}</p> : null}
-            {submittedId ? (
-              <div className="rounded-2xl bg-[#ecfdf5] p-4 text-sm text-[#0f766e]">
-                <p className="flex items-center gap-2 font-semibold"><CheckCircle2 size={16} /> {sourceCopy.successTitle}</p>
-                <p className="mt-1">{sourceCopy.successBody} Request ID: {submittedId}</p>
-              </div>
-            ) : null}
 
             <button disabled={submitting} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] disabled:opacity-60">
               {submitting ? "Submitting..." : ctaText} <ArrowRight size={16} />
             </button>
-          </div>
+          </div>}
         </form>
       </section>
 

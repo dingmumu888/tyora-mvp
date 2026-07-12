@@ -1,10 +1,11 @@
 import { CommunityIdea, CommunityStatus } from "@/lib/community";
 import { Lead, LeadStatus } from "@/lib/storage";
 import { SourceRequest, SourceStatus } from "@/lib/source";
-import { WorkOrder, WorkOrderStatus, workOrderStatuses } from "@/lib/work-orders";
+import { WorkOrder, WorkOrderContactEvent, WorkOrderStatus, workOrderStatuses } from "@/lib/work-orders";
 import { getCommunityIdeas, updateCommunityIdeaAdmin } from "@/lib/server/community-store";
 import { getLeads, updateLead } from "@/lib/server/data-store";
 import { getSourceRequests, updateSourceRequest } from "@/lib/server/source-store";
+import { createWorkOrderContactEvent, getWorkOrderContactEvents } from "@/lib/server/work-order-contact-store";
 
 function communityStatus(status: CommunityStatus, needsReply: boolean, hidden: boolean): WorkOrderStatus {
   if (hidden) return "Closed";
@@ -56,6 +57,7 @@ function communityToWorkOrder(idea: CommunityIdea): WorkOrder {
     updatedAt: idea.updatedAt,
     needsReply,
     hasReview: Boolean(idea.review),
+    contactHistory: [],
     imageUrls: idea.imageUrls,
     tags: [
       idea.visibility,
@@ -90,6 +92,7 @@ function sourceToWorkOrder(request: SourceRequest): WorkOrder {
     updatedAt: request.updatedAt,
     needsReply: ["New", "Checking Supplier"].includes(request.status),
     hasReview: false,
+    contactHistory: [],
     imageUrls: request.imageUrls && request.imageUrls.length > 0 ? request.imageUrls : request.imageUrl ? [request.imageUrl] : [],
     tags: [request.status, ...request.needTypes, request.material || ""].filter(Boolean),
     internalNotes: request.internalNotes,
@@ -117,6 +120,7 @@ function projectToWorkOrder(lead: Lead): WorkOrder {
     updatedAt: lead.statusHistory?.[0]?.createdAt || lead.submissionDate,
     needsReply: ["New", "Contacted", "Quoting"].includes(lead.status),
     hasReview: false,
+    contactHistory: [],
     imageUrls: lead.uploadedFiles && lead.uploadedFiles.length > 0 ? lead.uploadedFiles : lead.uploadedFile ? [lead.uploadedFile] : [],
     tags: [lead.status, lead.priority || "Medium", lead.designType, lead.timeline].filter(Boolean),
     internalNotes: lead.internalNotes,
@@ -131,11 +135,15 @@ export async function getWorkOrders(): Promise<WorkOrder[]> {
     getLeads()
   ]);
 
-  return [
+  const orders = [
     ...ideas.map(communityToWorkOrder),
     ...sourceRequests.map(sourceToWorkOrder),
     ...leads.map(projectToWorkOrder)
-  ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  ];
+  const events = await getWorkOrderContactEvents(orders.map((order) => order.id));
+  return orders
+    .map((order) => withContactHistory(order, events.filter((event) => event.workOrderId === order.id)))
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
 function communityStatusInput(status: WorkOrderStatus): CommunityStatus {
@@ -180,23 +188,47 @@ export async function updateWorkOrder(input: unknown): Promise<WorkOrder> {
     throw new Error("Invalid work order status.");
   }
   const status = typeof data.status === "string" ? data.status as WorkOrderStatus : order.status;
+  const hasCoreUpdate = typeof data.status === "string" || hasInternalNotes;
+  let updatedOrder = order;
 
-  if (order.type === "Idea" || order.type === "Custom") {
+  if (hasCoreUpdate && (order.type === "Idea" || order.type === "Custom")) {
     const updated = await updateCommunityIdeaAdmin(order.actionId, {
       status: communityStatusInput(status),
       ...(hasInternalNotes ? { review: { additionalNotes: notes } } : {})
     });
     if (!updated) throw new Error("Idea not found.");
-    return communityToWorkOrder(updated);
-  }
-  if (order.type === "Source") {
-    return sourceToWorkOrder(await updateSourceRequest(order.actionId, {
+    updatedOrder = { ...communityToWorkOrder(updated), contactHistory: order.contactHistory, lastContactAt: order.lastContactAt, lastContactChannel: order.lastContactChannel, nextFollowUpAt: order.nextFollowUpAt };
+  } else if (hasCoreUpdate && order.type === "Source") {
+    updatedOrder = { ...sourceToWorkOrder(await updateSourceRequest(order.actionId, {
       status: sourceStatusInput(status),
       ...(hasInternalNotes ? { internalNotes: notes } : {})
-    }));
+    })), contactHistory: order.contactHistory, lastContactAt: order.lastContactAt, lastContactChannel: order.lastContactChannel, nextFollowUpAt: order.nextFollowUpAt };
+  } else if (hasCoreUpdate && order.type === "Project") {
+    updatedOrder = { ...projectToWorkOrder(await updateLead(order.actionId, {
+      status: projectStatusInput(status),
+      ...(hasInternalNotes ? { internalNotes: notes } : {})
+    })), contactHistory: order.contactHistory, lastContactAt: order.lastContactAt, lastContactChannel: order.lastContactChannel, nextFollowUpAt: order.nextFollowUpAt };
   }
-  return projectToWorkOrder(await updateLead(order.actionId, {
-    status: projectStatusInput(status),
-    ...(hasInternalNotes ? { internalNotes: notes } : {})
-  }));
+
+  if (data.contactEvent && typeof data.contactEvent === "object" && !Array.isArray(data.contactEvent)) {
+    const contactEvent = await createWorkOrderContactEvent(order.id, data.contactEvent);
+    return withContactHistory({ ...updatedOrder, updatedAt: contactEvent.createdAt }, [contactEvent, ...order.contactHistory]);
+  }
+  return updatedOrder;
+}
+
+function withContactHistory(order: WorkOrder, contactHistory: WorkOrderContactEvent[]): WorkOrder {
+  const latest = contactHistory[0];
+  const nextFollowUpAt = contactHistory
+    .map((event) => event.nextFollowUpAt)
+    .filter((value): value is string => typeof value === "string" && new Date(value).getTime() >= Date.now())
+    .sort((left, right) => new Date(left).getTime() - new Date(right).getTime())[0];
+  return {
+    ...order,
+    contactHistory,
+    lastContactAt: latest?.contactedAt,
+    lastContactChannel: latest?.channel,
+    nextFollowUpAt,
+    updatedAt: latest && new Date(latest.createdAt) > new Date(order.updatedAt) ? latest.createdAt : order.updatedAt
+  };
 }
