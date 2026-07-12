@@ -36,6 +36,8 @@ const failures = [];
   "Phone",
   "Other"
   ,"P2021"
+  ,"ensureWorkOrderContactTable"
+  ,'CREATE TABLE IF NOT EXISTS "WorkOrderContactEvent"'
 ].forEach((text) => { if (!store.includes(text)) failures.push(`Contact store missing: ${text}`); });
 
 [
@@ -47,7 +49,7 @@ const failures = [];
 ].forEach((text) => { if (!workOrders.includes(text)) failures.push(`Work-order aggregation missing: ${text}`); });
 
 if (!migration.includes('CREATE TABLE IF NOT EXISTS "WorkOrderContactEvent"')) failures.push("Idempotent additive contact-event migration is missing.");
-if (!vercel.includes("prisma migrate deploy") || !vercel.includes("npm run build")) failures.push("Vercel must apply migrations before building the new application.");
+if (vercel.includes("prisma migrate deploy")) failures.push("Vercel builds must not block on a database migration connection.");
 
 if (failures.length) {
   console.error("Work-order contact log checks failed:");

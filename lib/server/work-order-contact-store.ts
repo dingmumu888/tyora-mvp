@@ -3,6 +3,31 @@ import { WorkOrderContactChannel, WorkOrderContactEvent } from "@/lib/work-order
 import { prisma } from "@/lib/server/db";
 
 const channels: WorkOrderContactChannel[] = ["Email", "WhatsApp", "Phone", "Other"];
+let contactTableReady: Promise<void> | undefined;
+
+function ensureWorkOrderContactTable() {
+  if (!contactTableReady) {
+    contactTableReady = prisma.$transaction([
+      prisma.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS "WorkOrderContactEvent" (
+        "id" TEXT NOT NULL,
+        "workOrderId" TEXT NOT NULL,
+        "channel" TEXT NOT NULL,
+        "note" TEXT,
+        "contactedAt" TIMESTAMP(3) NOT NULL,
+        "nextFollowUpAt" TIMESTAMP(3),
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "WorkOrderContactEvent_pkey" PRIMARY KEY ("id")
+      )`),
+      prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "WorkOrderContactEvent_workOrderId_idx" ON "WorkOrderContactEvent"("workOrderId")'),
+      prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "WorkOrderContactEvent_contactedAt_idx" ON "WorkOrderContactEvent"("contactedAt")'),
+      prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "WorkOrderContactEvent_nextFollowUpAt_idx" ON "WorkOrderContactEvent"("nextFollowUpAt")')
+    ]).then(() => undefined).catch((error) => {
+      contactTableReady = undefined;
+      throw error;
+    });
+  }
+  return contactTableReady;
+}
 
 function isMissingContactTable(error: unknown) {
   return Boolean(error && typeof error === "object" && "code" in error && (error as { code?: string }).code === "P2021");
@@ -23,6 +48,7 @@ function toPublic(event: { id: string; workOrderId: string; channel: string; not
 export async function getWorkOrderContactEvents(workOrderIds: string[]) {
   if (workOrderIds.length === 0) return [];
   try {
+    await ensureWorkOrderContactTable();
     const events = await prisma.workOrderContactEvent.findMany({
       where: { workOrderId: { in: workOrderIds } },
       orderBy: [{ contactedAt: "desc" }, { createdAt: "desc" }]
@@ -47,6 +73,7 @@ export async function createWorkOrderContactEvent(workOrderId: string, input: un
   if (nextFollowUpAt && nextFollowUpAt.getTime() < contactedAt.getTime()) throw new Error("Follow-up cannot be before contact time.");
   const note = typeof data.note === "string" ? data.note.trim().slice(0, 1000) : "";
   try {
+    await ensureWorkOrderContactTable();
     const event = await prisma.workOrderContactEvent.create({
       data: {
         id: randomUUID(),
