@@ -1,6 +1,7 @@
 .next
 node_modules
-.env
+.env*
+!.env.example
 prisma/dev.db
 prisma/dev.db-*
 public/uploads/*
