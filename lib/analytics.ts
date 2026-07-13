@@ -4,7 +4,8 @@ export const analyticsEventTypes = [
   "linkedin_click",
   "email_click",
   "upload_click",
-  "lead_submit_success"
+  "lead_submit_success",
+  "idea_share"
 ] as const;
 
 export type AnalyticsEventType = (typeof analyticsEventTypes)[number];

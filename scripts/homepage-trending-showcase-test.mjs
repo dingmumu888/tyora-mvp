@@ -22,6 +22,22 @@ const checks = [
   {
     name: "real top showcase cards link to all ideas",
     pass: source.includes('href="/ask"') && source.includes("topShowcaseIdeas.map")
+  },
+  {
+    name: "homepage renders real TYORA review summaries with a two-line clamp",
+    pass:
+      source.includes("function homepageReviewSummary") &&
+      source.includes("TYORA REVIEW") &&
+      source.includes("TYORA review pending") &&
+      source.includes("line-clamp-2 font-semibold text-[#101216]")
+  },
+  {
+    name: "homepage no longer renders stored manufacturing question chips",
+    pass: !source.includes('idea.questions[0] || "Manufacturing"')
+  },
+  {
+    name: "HOT badge is rendered inside the homepage image wrapper",
+    pass: /data-testid="homepage-idea-image"[\s\S]{0,500}<HotBadge idea=\{idea\}/.test(source)
   }
 ];
 

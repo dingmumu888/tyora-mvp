@@ -166,10 +166,25 @@ function homepageFeaturedRank(idea: CommunityIdea) {
   return idea.homepageFeaturedOrder ?? 99;
 }
 
+function homepageReviewSummary(idea: CommunityIdea) {
+  if (!idea.review) return "";
+  if (idea.review.additionalNotes?.trim()) return idea.review.additionalNotes.trim();
+  return [
+    idea.review.manufacturingFeasible,
+    idea.review.estimatedCostRange,
+    idea.review.estimatedMoq,
+    idea.review.suggestedMaterial,
+    idea.review.suggestedManufacturing,
+    idea.review.factoriesMatched
+  ]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(" · ");
+}
+
 function HotBadge({ idea }: { idea: CommunityIdea }) {
   if (!idea.isHot) return null;
   return (
-    <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#ff385c] px-2.5 py-1 text-[10px] font-bold uppercase tracking-normal text-white shadow-[0_8px_22px_rgba(255,56,92,0.28)]">
+    <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#ff385c] px-2.5 py-1 text-[10px] font-bold uppercase tracking-normal text-white shadow-[0_8px_22px_rgba(255,56,92,0.28)]">
       <Flame size={11} fill="currentColor" /> Hot
     </span>
   );
@@ -508,8 +523,8 @@ export default function Home() {
               ) : (
                 topShowcaseIdeas.map((idea) => (
                 <Link key={idea.id} href={`/ask/${idea.slug}`} className="group relative grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:border-[#e1e6ee] sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
-                  <HotBadge idea={idea} />
-                  <div className="flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold shadow-inner shadow-white sm:rounded-xl">
+                  <div data-testid="homepage-idea-image" className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold shadow-inner shadow-white sm:rounded-xl">
+                    <HotBadge idea={idea} />
                     <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-[20px] object-cover transition duration-500 group-hover:scale-[1.025] sm:rounded-2xl" />
                   </div>
                   <div className="min-w-0 py-0.5 sm:py-0">
@@ -530,8 +545,15 @@ export default function Home() {
                     <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#536174] sm:text-[13px] sm:text-[#59616e]">{idea.description}</p>
                     <div className="mt-2 flex gap-1.5 sm:hidden">
                       <span className="max-w-[108px] truncate rounded-full bg-[#edf4ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">{idea.category}</span>
-                      <span className="max-w-[112px] truncate rounded-full bg-[#f2f4f7] px-2.5 py-1 text-[11px] font-semibold text-[#667085]">{idea.questions[0] || "Manufacturing"}</span>
                     </div>
+                    {homepageReviewSummary(idea) ? (
+                      <div className="mt-2 rounded-xl bg-[#f0fdfa] px-2.5 py-2">
+                        <p className="text-[10px] font-bold uppercase text-[#0f766e]">TYORA REVIEW</p>
+                        <p className="mt-0.5 line-clamp-2 font-semibold text-[#101216] text-xs leading-4">{homepageReviewSummary(idea)}</p>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs font-medium text-[#8b93a1]">TYORA review pending</p>
+                    )}
                     <div className="mt-2 flex items-center gap-4 text-[13px] font-medium text-[#5f6b7a] sm:mt-1.5 sm:flex-wrap sm:gap-x-2.5 sm:gap-y-0.5 sm:text-[11px] max-sm:[&>span:nth-child(3)]:hidden">
                       <span className="inline-flex items-center gap-1"><Heart size={15} className="sm:size-[13px]" /> {idea.likeCount}<span className="hidden sm:inline"> Love</span></span>
                       <span className="inline-flex items-center gap-1"><MessageCircle size={15} className="sm:size-[13px]" /> {idea.comments.length}<span className="hidden sm:inline"> Comments</span></span>

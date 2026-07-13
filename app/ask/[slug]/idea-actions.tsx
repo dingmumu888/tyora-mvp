@@ -5,6 +5,7 @@ import { Heart, Loader2, MessageCircle, Pencil, Share2, Star, Trash2, X } from "
 import { CommunityIdea } from "@/lib/community";
 import { WHATSAPP_URL } from "@/lib/whatsapp";
 import EmailLogin from "@/components/email-login";
+import IdeaSharePanel from "./idea-share-panel";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
 type IdeaActionMode = "bar" | "comment" | "ready";
@@ -16,6 +17,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
   const [body, setBody] = useState("");
   const [reactionState, setReactionState] = useState({ liked: false, interested: false });
   const [editOpen, setEditOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     title: idea.title,
     category: idea.category,
@@ -248,7 +250,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             <Star size={14} /> {idea.interestedCount} Interested
           </EmailLogin>
         )}
-        <button onClick={() => navigator.share?.({ title: idea.title, url: window.location.href })} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
+        <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
           <Share2 size={14} /> Share
         </button>
 
@@ -292,6 +294,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             </form>
           </div>
         ) : null}
+        <IdeaSharePanel open={shareOpen} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
       </div>
     );
   }
@@ -339,7 +342,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             <Star size={16} /> Interested
           </EmailLogin>
         )}
-        <button onClick={() => navigator.share?.({ title: idea.title, url: window.location.href })} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
+        <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
           <Share2 size={16} /> Share
         </button>
       </div>
@@ -384,6 +387,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
           </form>
         </div>
       ) : null}
+      <IdeaSharePanel open={shareOpen} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
     </div>
   );
 }

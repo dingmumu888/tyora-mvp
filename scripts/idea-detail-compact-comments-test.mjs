@@ -17,14 +17,15 @@ const checks = [
     pass:
       files.page.includes("compactMeta") &&
       files.page.includes('filter((item) => item.value && item.value !== "Not specified")') &&
-      !files.page.includes("{idea.questions.slice(0, 3).map")
+      !files.page.includes("idea.questions.slice")
   },
   {
-    label: "TYORA Expert Review card uses compact accent styling",
+    label: "TYORA Expert Review card keeps the full reply prominent in bold black text",
     pass:
       files.page.includes("border-[#99f6e4]") &&
       files.page.includes("text-[#0f766e]") &&
-      files.page.includes("p-3 text-sm leading-6")
+      files.page.includes('p-3 text-sm font-semibold leading-6 text-[#101216]') &&
+      !files.page.includes('p-3 line-clamp-')
   },
   {
     label: "idea actions render as one compact stats bar with counts",

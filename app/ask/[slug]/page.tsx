@@ -57,8 +57,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
   const expertReply = expertReplyText(idea);
   const compactMeta = [
     { value: idea.category, tone: "bg-[#edf4ff] text-[#2563eb]" },
-    { value: idea.country, tone: "bg-[#f4f6f8] text-[#667085]" },
-    ...idea.questions.slice(0, 2).map((question) => ({ value: question, tone: "bg-[#f4f6f8] text-[#667085]" }))
+    { value: idea.country, tone: "bg-[#f4f6f8] text-[#667085]" }
   ].filter((item) => item.value && item.value !== "Not specified");
 
   return (
@@ -113,7 +112,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             <h2 className="text-base font-semibold text-[#0f766e]">TYORA Expert Review</h2>
           </div>
           {idea.review ? (
-            <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-[#f0fdfa] p-3 text-sm leading-6 text-[#115e59]">{expertReply || "TYORA has replied, but no public reply text is available yet."}</p>
+            <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-[#f0fdfa] p-3 text-sm font-semibold leading-6 text-[#101216]">{expertReply || "TYORA has replied, but no public reply text is available yet."}</p>
           ) : (
             <p className="mt-2 rounded-2xl bg-[#f0fdfa] p-3 text-sm leading-6 text-[#0f766e]">TYORA review will appear here after review.</p>
           )}
