@@ -10,40 +10,16 @@ const allowedMimeTypes = new Set([
   "image/webp",
   "image/svg+xml",
   "video/mp4",
-  "video/webm",
-  "application/pdf",
-  "application/octet-stream",
-  "application/acad",
-  "application/dxf",
-  "model/stl",
-  "model/step"
+  "video/webm"
 ]);
-
-const allowedExtensions = new Set([
-  ".pdf",
-  ".step",
-  ".stp",
-  ".iges",
-  ".igs",
-  ".obj",
-  ".stl",
-  ".dwg",
-  ".dxf"
-]);
-
-function extensionFromName(name: string) {
-  const match = name.toLowerCase().match(/\.[a-z0-9]+$/);
-  return match?.[0] || "";
-}
 
 function isAllowedFile(file: File) {
-  return allowedMimeTypes.has(file.type) || allowedExtensions.has(extensionFromName(file.name));
+  return allowedMimeTypes.has(file.type);
 }
 
 function mediaTypeFromFile(file: File) {
   if (file.type.startsWith("image/")) return "image";
-  if (file.type.startsWith("video/")) return "video";
-  return "pdf";
+  return "video";
 }
 
 function safeFilename(name: string) {
@@ -72,15 +48,14 @@ async function uploadToSupabaseStorage(file: File, type: string) {
     headers: {
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": file.type || "application/octet-stream",
+      "Content-Type": file.type,
       "x-upsert": "false"
     },
     body: bytes
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Supabase Storage upload failed (${response.status}).`);
+    throw new Error(`Supabase Storage upload failed (${response.status}).`);
   }
 
   return {
@@ -106,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     const type = mediaTypeFromFile(file);
-    const maxSize = type === "image" ? 10 : type === "video" ? 200 : 20;
+    const maxSize = type === "image" ? 10 : 200;
     if (file.size > maxSize * 1024 * 1024) {
       return fail(`Maximum ${maxSize}MB for ${type} files.`, 400);
     }
@@ -118,7 +93,7 @@ export async function POST(request: Request) {
       name: uploaded.filename,
       url: uploaded.publicUrl,
       type,
-      mimeType: file.type || "application/octet-stream",
+      mimeType: file.type,
       size: file.size,
       createdAt: new Date().toISOString()
     });

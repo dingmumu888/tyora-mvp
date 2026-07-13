@@ -2,12 +2,14 @@ import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { renderVerificationEmail } from "@/lib/email";
 import { makeCommunityId, usernameFromEmail } from "@/lib/community";
 import { prisma } from "@/lib/server/db";
+import {
+  EmailDeliveryPlan,
+  resolveEmailDeliveryPlan
+} from "@/lib/server/email-delivery-policy";
 
 const CODE_TTL_MINUTES = 10;
 const REQUEST_WINDOW_MINUTES = 10;
 const MAX_REQUESTS_PER_WINDOW = 3;
-const FALLBACK_FROM = "onboarding@resend.dev";
-const DEFAULT_FROM = "TYORA <login@tyora.io>";
 export type EmailLoginStage =
   | "normalize_email"
   | "validate_email"
@@ -20,19 +22,13 @@ type EmailLoginTrace = (stage: EmailLoginStage, data?: Record<string, unknown>) 
 
 export class ResendEmailError extends Error {
   status: number;
-  statusText: string;
-  responseHeaders: Record<string, string>;
-  responseBody: string;
   errorCode: string | null;
 
-  constructor(status: number, statusText: string, responseHeaders: Record<string, string>, responseBody: string) {
+  constructor(status: number, responseBody: string) {
     const errorCode = parseResendErrorCode(responseBody);
-    super(`Unable to send login code. Resend status=${status} ${statusText}; code=${errorCode || "unknown"}; response=${responseBody}`);
+    super("Unable to send login code through the email provider.");
     this.name = "ResendEmailError";
     this.status = status;
-    this.statusText = statusText;
-    this.responseHeaders = responseHeaders;
-    this.responseBody = responseBody;
     this.errorCode = errorCode;
   }
 }
@@ -57,15 +53,7 @@ function safeParseJson(value: string) {
 function parseResendErrorCode(responseBody: string) {
   const payload = safeParseJson(responseBody) as { error?: { code?: unknown }; code?: unknown } | null;
   const code = payload?.error?.code ?? payload?.code;
-  return typeof code === "string" ? code : null;
-}
-
-function responseHeaders(response: Response) {
-  const headers: Record<string, string> = {};
-  response.headers.forEach((value, key) => {
-    headers[key] = value;
-  });
-  return headers;
+  return typeof code === "string" && /^[a-z0-9_.-]{1,64}$/i.test(code) ? code : null;
 }
 
 function authSecret() {
@@ -82,42 +70,15 @@ function safeEqual(left: string, right: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-function sender() {
-  const configured = process.env.RESEND_FROM || DEFAULT_FROM;
-  const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
-  if (isProduction && configured.includes("onboarding@resend.dev")) return DEFAULT_FROM;
-  return configured;
-}
-
-function shouldUseTestSender() {
-  const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
-  return !isProduction && sender().includes("login@tyora.io") && process.env.RESEND_USE_TEST_SENDER === "true";
-}
-
-export function getEmailLoginDebugContext() {
-  return {
-    hasResendApiKey: Boolean(process.env.RESEND_API_KEY),
-    hasAuthOrigin: Boolean(process.env.AUTH_ORIGIN),
-    authOrigin: process.env.AUTH_ORIGIN || null,
-    configuredSender: sender(),
-    environment: process.env.VERCEL_ENV || process.env.NODE_ENV || null,
-    resendUseTestSender: process.env.RESEND_USE_TEST_SENDER || null,
-    shouldUseTestSender: shouldUseTestSender(),
-    actualSender: shouldUseTestSender() ? FALLBACK_FROM : sender()
-  };
-}
-
-async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTrace) {
+async function sendLoginEmail(plan: EmailDeliveryPlan, code: string, trace?: EmailLoginTrace) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("Email login is not configured.");
 
-  const from = shouldUseTestSender() ? FALLBACK_FROM : sender();
   const emailContent = renderVerificationEmail({ code });
 
   trace?.("before_resend_fetch", {
-    email,
-    from,
-    hasResendApiKey: Boolean(apiKey)
+    deployment: plan.deployment,
+    senderKind: plan.sender.includes("resend.dev") ? "test" : "verified"
   });
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -126,38 +87,38 @@ async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTra
       "content-type": "application/json"
     },
     body: JSON.stringify({
-      from,
-      to: email,
+      from: plan.sender,
+      to: plan.recipient,
       subject: emailContent.subject,
       html: emailContent.html,
       text: emailContent.text
     })
   });
-  const responseText = await response.text().catch((error) => `Unable to read Resend response body: ${error instanceof Error ? error.message : String(error)}`);
-  const headers = responseHeaders(response);
+  const responseText = await response.text().catch(() => "");
+  const errorCode = parseResendErrorCode(responseText);
   trace?.("after_resend_fetch", {
-    email,
     status: response.status,
-    ok: response.ok
+    ok: response.ok,
+    errorCode
   });
 
   if (!response.ok) {
-    throw new ResendEmailError(response.status, response.statusText, headers, responseText);
+    throw new ResendEmailError(response.status, responseText);
   }
 }
 
 export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTrace) {
   const email = normalizeEmail(input);
   trace?.("normalize_email", {
-    inputType: typeof input,
-    email
+    inputType: typeof input
   });
   const valid = isEmail(email);
   trace?.("validate_email", {
-    email,
     valid
   });
   if (!valid) return;
+
+  const deliveryPlan = resolveEmailDeliveryPlan(email, process.env);
 
   const since = new Date(Date.now() - REQUEST_WINDOW_MINUTES * 60 * 1000);
   const recent = await prisma.emailLoginCode.count({
@@ -167,7 +128,6 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
     }
   });
   trace?.("rate_limit_check", {
-    email,
     recent,
     limit: MAX_REQUESTS_PER_WINDOW,
     limited: recent >= MAX_REQUESTS_PER_WINDOW
@@ -184,9 +144,9 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
     }
   });
   trace?.("create_login_code", {
-    email
+    created: true
   });
-  await sendLoginEmail(email, code, trace);
+  await sendLoginEmail(deliveryPlan, code, trace);
 }
 
 export async function verifyEmailLoginCode(emailInput: unknown, codeInput: unknown) {
