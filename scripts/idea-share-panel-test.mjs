@@ -40,6 +40,22 @@ const checks = [
       panel.includes('aria-label="Close share options"')
   },
   {
+    name: "share panel manages initial focus, traps Tab, and restores prior focus",
+    pass:
+      panel.includes("dialogRef") &&
+      panel.includes("closeButtonRef") &&
+      panel.includes("previousFocus") &&
+      (panel.includes('event.key === "Tab"') || panel.includes('event.key !== "Tab"')) &&
+      panel.includes("focusableElements")
+  },
+  {
+    name: "legacy copy cleanup and native cancellation are defensive",
+    pass:
+      panel.includes("finally") &&
+      panel.includes("input.remove()") &&
+      panel.includes("isShareCancellation")
+  },
+  {
     name: "share attempts are tracked with the idea_share analytics event",
     pass: analytics.includes('"idea_share"') && panel.includes('trackAnalyticsEvent("idea_share"')
   }

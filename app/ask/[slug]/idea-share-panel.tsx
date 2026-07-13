@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Copy, ExternalLink, MessageCircle, Share2, Smartphone, X } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 
@@ -17,18 +17,62 @@ function sharePath(ideaSlug: string, platform: SharePlatform) {
   return `/ask/${ideaSlug}?share=${platform}`;
 }
 
+function isShareCancellation(error: unknown) {
+  return typeof error === "object" && error !== null && "name" in error && (error as { name?: unknown }).name === "AbortError";
+}
+
 export default function IdeaSharePanel({ open, ideaSlug, ideaTitle, onClose }: IdeaSharePanelProps) {
   const [message, setMessage] = useState("");
+  const dialogRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
     setMessage("");
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+
+    function manageDialogKeyboard(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusableElements = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.getAttribute("aria-hidden") !== "true");
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+      if (event.shiftKey && (activeElement === firstElement || !dialogRef.current.contains(activeElement))) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && (activeElement === lastElement || !dialogRef.current.contains(activeElement))) {
+        event.preventDefault();
+        firstElement.focus();
+      }
     }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onClose, open]);
+
+    window.addEventListener("keydown", manageDialogKeyboard);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      window.removeEventListener("keydown", manageDialogKeyboard);
+      previousFocus?.focus();
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -78,14 +122,19 @@ export default function IdeaSharePanel({ open, ideaSlug, ideaTitle, onClose }: I
       setMessage("Link copied");
     } catch {
       const input = document.createElement("textarea");
-      input.value = ideaUrl;
-      input.style.position = "fixed";
-      input.style.opacity = "0";
-      document.body.appendChild(input);
-      input.select();
-      const copied = document.execCommand("copy");
-      input.remove();
-      setMessage(copied ? "Link copied" : "Copy this link from your browser address bar.");
+      try {
+        input.value = ideaUrl;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        const copied = document.execCommand("copy");
+        setMessage(copied ? "Link copied" : "Copy this link from your browser address bar.");
+      } catch {
+        setMessage("Copy this link from your browser address bar.");
+      } finally {
+        input.remove();
+      }
     }
   }
 
@@ -99,7 +148,7 @@ export default function IdeaSharePanel({ open, ideaSlug, ideaTitle, onClose }: I
       await navigator.share({ title: ideaTitle, url: ideaUrl });
       setMessage("Shared");
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
+      if (isShareCancellation(error)) return;
       await copyIdeaLink(false);
     }
   }
@@ -112,6 +161,7 @@ export default function IdeaSharePanel({ open, ideaSlug, ideaTitle, onClose }: I
       }}
     >
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="idea-share-title"
@@ -122,7 +172,7 @@ export default function IdeaSharePanel({ open, ideaSlug, ideaTitle, onClose }: I
             <p className="text-xs font-bold uppercase text-[#2563eb]">Share this idea</p>
             <h2 id="idea-share-title" className="mt-1 line-clamp-2 text-xl font-semibold text-[#101216]">{ideaTitle}</h2>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close share options" className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#dfe3e8] text-[#59616e] transition hover:bg-[#f5f6f8]">
+          <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Close share options" className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#dfe3e8] text-[#59616e] transition hover:bg-[#f5f6f8]">
             <X size={18} />
           </button>
         </div>
