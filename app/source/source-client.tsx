@@ -48,6 +48,9 @@ const textareaClass = `${inputClass} min-h-28 resize-none py-3 leading-6`;
 
 const ctaText = "Get Free Product Match";
 const MAX_SOURCE_IMAGES = 9;
+const SOURCE_IMAGE_MAX_DIMENSION = 1200;
+const SOURCE_IMAGE_MAX_DATA_URL_LENGTH = 280000;
+const MAX_SOURCE_REQUEST_BYTES = 3600000;
 
 const trustToastSubtitles = [
   "Checking China supplier options",
@@ -117,6 +120,61 @@ function fileToDataUrl(file: File) {
     reader.onerror = () => reject(new Error("Unable to read image."));
     reader.readAsDataURL(file);
   });
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("This image format is not supported by your browser."));
+    image.src = src;
+  });
+}
+
+async function normalizeSourceImage(file: File) {
+  const source = await fileToDataUrl(file);
+  const image = await loadImage(source);
+  let maxDimension = SOURCE_IMAGE_MAX_DIMENSION;
+  let quality = 0.82;
+  let result = "";
+
+  for (let attempt = 0; attempt < 7; attempt += 1) {
+    const scale = Math.min(1, maxDimension / image.naturalWidth, maxDimension / image.naturalHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Unable to prepare this image.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    result = canvas.toDataURL("image/jpeg", quality);
+    if (result.length <= SOURCE_IMAGE_MAX_DATA_URL_LENGTH) return result;
+    maxDimension = Math.max(600, Math.round(maxDimension * 0.82));
+    quality = Math.max(0.52, quality - 0.06);
+  }
+
+  if (result.length > SOURCE_IMAGE_MAX_DATA_URL_LENGTH) {
+    throw new Error(`Image ${file.name || "file"} is too large to prepare. Please choose a smaller image.`);
+  }
+  return result;
+}
+
+type SourceApiPayload = { success?: boolean; message?: string; data?: { id?: string } };
+
+async function parseApiResponse(response: Response): Promise<SourceApiPayload> {
+  const text = await response.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text) as SourceApiPayload;
+  } catch {
+    if (response.status === 413 || /request entity too large|payload too large/i.test(text)) {
+      throw new Error("Please remove some images or choose smaller images, then try again.");
+    }
+    throw new Error(response.ok ? "The server returned an invalid response. Please try again." : `Unable to submit source request (${response.status}).`);
+  }
 }
 
 function isValidEmail(value: string) {
@@ -206,9 +264,19 @@ export default function SourceClient() {
       setMessage(`Upload up to ${MAX_SOURCE_IMAGES} product images.`);
       return;
     }
-    const dataUrls = await Promise.all(files.slice(0, remainingSlots).map(fileToDataUrl));
-    update("imageUrls", [...form.imageUrls, ...dataUrls].slice(0, MAX_SOURCE_IMAGES));
-    setMessage(files.length > remainingSlots ? `Only ${MAX_SOURCE_IMAGES} images can be uploaded.` : "");
+    try {
+      setMessage("Preparing images...");
+      const dataUrls: string[] = [];
+      for (const file of files.slice(0, remainingSlots)) {
+        dataUrls.push(await normalizeSourceImage(file));
+      }
+      update("imageUrls", [...form.imageUrls, ...dataUrls].slice(0, MAX_SOURCE_IMAGES));
+      setMessage(files.length > remainingSlots ? `Only ${MAX_SOURCE_IMAGES} images can be uploaded.` : "");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to prepare these images.");
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
   }
 
   function removeImage(index: number) {
@@ -275,13 +343,17 @@ export default function SourceClient() {
       if (form.whatsappLocalNumber.trim() && !whatsapp) notices.push("The WhatsApp number was not saved because it was incomplete.");
       if (productLink.omittedInvalid) notices.push("The product link was not saved because its format was invalid.");
 
+      const requestBody = JSON.stringify(buildSourcePayload(email, whatsapp, productLink.value));
+      if (new Blob([requestBody]).size > MAX_SOURCE_REQUEST_BYTES) {
+        throw new Error("Please remove some images or choose smaller images, then try again.");
+      }
       const response = await fetch("/api/source", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(buildSourcePayload(email, whatsapp, productLink.value))
+        body: requestBody
       });
-      const payload = await response.json();
-      if (!payload.success) throw new Error(payload.message || "Unable to submit source request.");
+      const payload = await parseApiResponse(response);
+      if (!response.ok || !payload.success || !payload.data?.id) throw new Error(payload.message || "Unable to submit source request.");
       setSubmittedId(payload.data.id);
       setSubmittedContact(email || whatsapp);
       setSubmissionNotice(notices.length > 0 ? `Your request was submitted. ${notices.join(" ")}` : "");
