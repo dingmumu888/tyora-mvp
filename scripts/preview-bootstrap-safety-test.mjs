@@ -1,17 +1,23 @@
 import assert from "node:assert/strict";
+import { X509Certificate } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import * as tls from "node:tls";
 import test from "node:test";
 
 import {
   assertExpectedBaselineFingerprint,
   assertTypedPreviewConfirmation,
   canonicalizeMigrationSqlForChecksum,
+  createPreviewBootstrapConnectionConfig,
   parsePreviewBootstrapArguments,
   validatePreviewBootstrapEnvironment
 } from "./lib/preview-bootstrap-safety.mjs";
 
 const productionRef = "prodref12345678901234";
 const previewRef = "preview1234567890123";
+const localCertificateBase64 = Buffer.from(tls.rootCertificates[0], "utf8").toString(
+  "base64"
+);
 
 function validEnvironment(overrides = {}) {
   return {
@@ -196,6 +202,37 @@ test("the Preview migration connection must explicitly require TLS", () => {
   );
 });
 
+test("the read-only connection uses the selected CA with verified TLS and SNI", () => {
+  const directUrl = `postgresql://postgres.${previewRef}:fake%20password@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=verify-full`;
+  const config = createPreviewBootstrapConnectionConfig(
+    directUrl,
+    localCertificateBase64
+  );
+  assert.equal(config.host, "aws-0-us-east-1.pooler.supabase.com");
+  assert.equal(config.port, 5432);
+  assert.equal(config.database, "postgres");
+  assert.equal(config.user, `postgres.${previewRef}`);
+  assert.equal(config.password, "fake password");
+  assert.equal(config.ssl.rejectUnauthorized, true);
+  assert.equal(config.ssl.servername, config.host);
+  assert.equal(config.ssl.checkServerIdentity, tls.checkServerIdentity);
+  assert.ok(config.ssl.ca.every((pem) => new X509Certificate(pem).ca));
+  assert.equal(config.sslnegotiation, "postgres");
+  assert.equal("connectionString" in config, false);
+});
+
+test("an invalid CA fails before a database client can be created", () => {
+  const directUrl = `postgresql://postgres.${previewRef}:fake@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=verify-full`;
+  assert.throws(
+    () =>
+      createPreviewBootstrapConnectionConfig(
+        directUrl,
+        Buffer.from("not a certificate", "utf8").toString("base64")
+      ),
+    /invalid/i
+  );
+});
+
 test("bootstrap defaults to dry-run and accepts only an explicit apply flag", () => {
   const fingerprint = "a".repeat(64);
   assert.deepEqual(parsePreviewBootstrapArguments([]), {
@@ -238,6 +275,7 @@ test("migration checksums use canonical LF line endings", () => {
 test("CLI source is fail-closed, read-only by default, and contains no unsafe fallback", async () => {
   const source = await readFile(new URL("./bootstrap-preview-db.mjs", import.meta.url), "utf8");
   assert.match(source, /PREVIEW_DIRECT_URL/);
+  assert.match(source, /PREVIEW_SSL_CA_BASE64/);
   assert.match(source, /BEGIN READ ONLY/);
   assert.match(source, /pg_catalog\.pg_proc/);
   assert.match(source, /pg_catalog\.pg_type/);
@@ -249,6 +287,8 @@ test("CLI source is fail-closed, read-only by default, and contains no unsafe fa
   assert.match(source, /assertExpectedBaselineFingerprint/);
   assert.doesNotMatch(source, /\.\.\.process\.env/);
   assert.doesNotMatch(source, /process\.env\.DATABASE_URL/);
+  assert.doesNotMatch(source, /rejectUnauthorized\s*:\s*false/);
+  assert.doesNotMatch(source, /connectionString\s*:/);
   assert.doesNotMatch(source, /(?:from|import)\s+["']dotenv/i);
   assert.doesNotMatch(source, /migrate["',\s]+deploy/i);
   assert.doesNotMatch(source, /migrate["',\s]+resolve/i);

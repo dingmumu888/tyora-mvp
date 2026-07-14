@@ -1,3 +1,7 @@
+import * as tls from "node:tls";
+
+import { parseSelectedCertificateAuthorities } from "./preview-credential-readonly-check.mjs";
+
 const requiredEnvironmentNames = [
   "TYORA_PRODUCTION_PROJECT_REF",
   "TYORA_PREVIEW_PROJECT_REF",
@@ -188,4 +192,53 @@ export function assertExpectedBaselineFingerprint(actualFingerprint, expectedFin
 
 export function canonicalizeMigrationSqlForChecksum(value) {
   return value.replace(/\r\n?/g, "\n");
+}
+
+export function createPreviewBootstrapConnectionConfig(
+  previewDirectUrl,
+  certificateBase64
+) {
+  const directUrl = parseUrl(previewDirectUrl, "PREVIEW_DIRECT_URL");
+  let user;
+  let password;
+  let database;
+  let certificateAuthorities;
+  try {
+    user = decodeURIComponent(directUrl.username);
+    password = decodeURIComponent(directUrl.password);
+    database = decodeURIComponent(directUrl.pathname.slice(1));
+    certificateAuthorities = parseSelectedCertificateAuthorities(certificateBase64);
+  } catch {
+    throw new PreviewBootstrapSafetyError(
+      "The guarded Preview connection configuration is invalid."
+    );
+  }
+
+  if (
+    !user ||
+    !password ||
+    !directUrl.hostname ||
+    directUrl.port !== "5432" ||
+    database !== "postgres" ||
+    certificateAuthorities.length === 0
+  ) {
+    throw new PreviewBootstrapSafetyError(
+      "The guarded Preview connection configuration is invalid."
+    );
+  }
+
+  return {
+    host: directUrl.hostname,
+    port: 5432,
+    database,
+    user,
+    password,
+    ssl: {
+      rejectUnauthorized: true,
+      servername: directUrl.hostname,
+      checkServerIdentity: tls.checkServerIdentity,
+      ca: certificateAuthorities
+    },
+    sslnegotiation: "postgres"
+  };
 }

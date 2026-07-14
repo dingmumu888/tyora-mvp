@@ -13,6 +13,7 @@ import {
   assertExpectedBaselineFingerprint,
   assertTypedPreviewConfirmation,
   canonicalizeMigrationSqlForChecksum,
+  createPreviewBootstrapConnectionConfig,
   parsePreviewBootstrapArguments,
   PreviewBootstrapSafetyError,
   validatePreviewBootstrapEnvironment
@@ -94,9 +95,9 @@ function runPrisma(argumentsList, previewDirectUrl, input) {
   });
 }
 
-async function assertDatabaseIsEmpty(previewDirectUrl) {
+async function assertDatabaseIsEmpty(connectionConfig) {
   const client = new Client({
-    connectionString: previewDirectUrl,
+    ...connectionConfig,
     connectionTimeoutMillis: 10_000,
     query_timeout: 10_000,
     statement_timeout: 10_000
@@ -187,9 +188,9 @@ function createBaselineFingerprint(sql, migrationHistory) {
     .digest("hex");
 }
 
-async function applyCurrentSchema(sql, previewDirectUrl, migrationHistory) {
+async function applyCurrentSchema(sql, connectionConfig, migrationHistory) {
   const client = new Client({
-    connectionString: previewDirectUrl,
+    ...connectionConfig,
     connectionTimeoutMillis: 10_000,
     query_timeout: 120_000,
     statement_timeout: 120_000
@@ -266,36 +267,64 @@ async function requestTypedConfirmation(previewRef) {
 }
 
 async function main() {
-  const options = parsePreviewBootstrapArguments(process.argv.slice(2));
-  const identity = validatePreviewBootstrapEnvironment(process.env);
-  const previewDirectUrl = process.env.PREVIEW_DIRECT_URL;
-  if (!previewDirectUrl) {
-    throw new PreviewBootstrapSafetyError("PREVIEW_DIRECT_URL is required.");
-  }
-
-  await assertDatabaseIsEmpty(previewDirectUrl);
-  const migrationHistory = await listMigrationHistory();
-  const sql = await createCurrentSchemaSql(previewDirectUrl);
-  const fingerprint = createBaselineFingerprint(sql, migrationHistory);
-  console.log(
-    `Preview safety checks passed for project ...${identity.previewRef.slice(-6)} (${identity.connectionMode}, port 5432).`
-  );
-  console.log(
-    `Schema baseline prepared in memory (${Buffer.byteLength(sql)} bytes, ${migrationHistory.length} history entries).`
-  );
-  console.log(`Reviewed baseline fingerprint: ${fingerprint}`);
-
-  if (!options.apply) {
-    console.log(
-      "Dry-run complete. No database changes were made. Apply only after approval with --apply --fingerprint followed by the fingerprint above."
+  let previewDirectUrl;
+  let certificateBase64;
+  let connectionConfig;
+  try {
+    const options = parsePreviewBootstrapArguments(process.argv.slice(2));
+    const identity = validatePreviewBootstrapEnvironment(process.env);
+    previewDirectUrl = process.env.PREVIEW_DIRECT_URL;
+    certificateBase64 = process.env.PREVIEW_SSL_CA_BASE64;
+    if (!previewDirectUrl) {
+      throw new PreviewBootstrapSafetyError("PREVIEW_DIRECT_URL is required.");
+    }
+    if (!certificateBase64) {
+      throw new PreviewBootstrapSafetyError(
+        "PREVIEW_SSL_CA_BASE64 is required for verified TLS."
+      );
+    }
+    connectionConfig = createPreviewBootstrapConnectionConfig(
+      previewDirectUrl,
+      certificateBase64
     );
-    return;
-  }
+    delete process.env.PREVIEW_DIRECT_URL;
+    delete process.env.PREVIEW_SSL_CA_BASE64;
+    certificateBase64 = null;
 
-  assertExpectedBaselineFingerprint(fingerprint, options.expectedFingerprint);
-  await requestTypedConfirmation(identity.previewRef);
-  await applyCurrentSchema(sql, previewDirectUrl, migrationHistory);
-  console.log("Preview schema initialization completed.");
+    await assertDatabaseIsEmpty(connectionConfig);
+    const migrationHistory = await listMigrationHistory();
+    const sql = await createCurrentSchemaSql(previewDirectUrl);
+    const fingerprint = createBaselineFingerprint(sql, migrationHistory);
+    console.log(
+      `Preview safety checks passed for project ...${identity.previewRef.slice(-6)} (${identity.connectionMode}, port 5432).`
+    );
+    console.log(
+      `Schema baseline prepared in memory (${Buffer.byteLength(sql)} bytes, ${migrationHistory.length} history entries).`
+    );
+    console.log(`Reviewed baseline fingerprint: ${fingerprint}`);
+
+    if (!options.apply) {
+      console.log(
+        "Dry-run complete. No database changes were made. Apply only after approval with --apply --fingerprint followed by the fingerprint above."
+      );
+      return;
+    }
+
+    assertExpectedBaselineFingerprint(fingerprint, options.expectedFingerprint);
+    await requestTypedConfirmation(identity.previewRef);
+    await applyCurrentSchema(sql, connectionConfig, migrationHistory);
+    console.log("Preview schema initialization completed.");
+  } finally {
+    delete process.env.PREVIEW_DIRECT_URL;
+    delete process.env.PREVIEW_SSL_CA_BASE64;
+    certificateBase64 = null;
+    previewDirectUrl = null;
+    if (connectionConfig) {
+      connectionConfig.password = "";
+      connectionConfig.ssl.ca = [];
+    }
+    connectionConfig = null;
+  }
 }
 
 main().catch((error) => {
