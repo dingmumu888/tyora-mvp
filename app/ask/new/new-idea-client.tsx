@@ -303,7 +303,7 @@ export default function NewIdeaClient() {
             </div>
 
             <div className="mb-5">
-              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-[11px] font-semibold text-[#315fbd]"><Sparkles size={14} /> FREE TYORA review</p>
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-[11px] font-semibold text-[#315fbd]"><Sparkles size={14} /> Initial TYORA assessment</p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight">Start a Discussion</h2>
               <p className="mt-2 text-sm leading-6 text-[#59616e]">Share the idea quickly. Put details, questions, material, quantity, or target cost in the description.</p>
             </div>
@@ -398,7 +398,7 @@ export default function NewIdeaClient() {
                 <div>
                   <h2 className="text-2xl font-semibold leading-tight sm:text-4xl">Start a Discussion</h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e] sm:mt-3 sm:text-base sm:leading-7">
-                    Share an idea. Get free manufacturing feedback.
+                    Share an idea for an initial manufacturing assessment.
                   </p>
                 </div>
                 <p className="w-fit whitespace-nowrap rounded-2xl bg-[#f7f8fa] px-3 py-2 text-xs font-semibold text-[#59616e]">
@@ -502,7 +502,7 @@ export default function NewIdeaClient() {
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Concept"}</span>
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">Public</span>
-                  <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">FREE review</span>
+                  <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">Initial assessment</span>
                 </div>
                 <h3 className="mt-3 text-2xl font-semibold">{form.title || "Product name"}</h3>
                 <p className="mt-2 text-sm leading-6 text-[#59616e]">{form.description || oneSentence || "Your idea summary will appear here."}</p>

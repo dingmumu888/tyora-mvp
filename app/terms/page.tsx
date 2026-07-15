@@ -1,93 +1,72 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import CommunityUserMenu from "@/components/community-user-menu";
+import LegalPageShell, { LegalSection } from "@/components/legal-page-shell";
 
 export const metadata: Metadata = {
-  title: "TYORA Terms of Service",
-  description: "TYORA Terms of Service for manufacturing consulting inquiries."
+  title: "Terms of Service | TYORA",
+  description: "General terms for TYORA community, sourcing, and product-development services."
 };
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_36%,#f7f5f0_100%)] text-[#101216]">
-      <header className="border-b border-[#eef1f4] bg-white/86 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="font-semibold tracking-normal">
-            TYORA
-            <span className="block text-[10px] font-medium uppercase text-[#69707d]">
-              Idea2Product
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm font-medium text-[#59616e] hover:text-[#101216]">
-              Back to Home
-            </Link>
-            <div className="hidden md:block">
-              <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
-        <p className="mb-3 text-sm font-medium uppercase tracking-normal text-[#69707d]">
-          Legal
+    <LegalPageShell
+      eyebrow="Legal"
+      title="Terms of Service"
+      description="These general terms apply when you use TYORA's website, community, sourcing, or product-development services. A written project proposal may add or replace terms for a specific paid engagement."
+      updatedAt="July 15, 2026"
+    >
+      <LegalSection title="Service relationship">
+        <p>
+          TYORA provides product assessment, supplier sourcing, factory coordination, sampling support, production follow-up, quality support, and related consulting services. TYORA is not the manufacturer, freight carrier, customs broker, marketplace, insurer, or legal adviser unless a written agreement expressly states otherwise.
         </p>
-        <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
-          TYORA Terms of Service
-        </h1>
-        <p className="mt-5 text-base leading-7 text-[#59616e]">
-          These terms apply to TYORA website inquiries and manufacturing consulting
-          services. By contacting TYORA, you agree to work with us in a clear,
-          project-based business process.
+      </LegalSection>
+
+      <LegalSection title="Initial assessments and quotations">
+        <p>
+          An initial assessment reflects the information available at the time and is not a final production quote or guarantee. Feasibility, MOQ, tooling, samples, timing, and cost may change after specifications, materials, compliance requirements, or supplier feedback are confirmed.
         </p>
+        <p>
+          A paid project begins only after scope, service fee, expected third-party costs, and payment terms are agreed in writing.
+        </p>
+      </LegalSection>
 
-        <div className="mt-8 space-y-4 text-sm leading-7 text-[#59616e]">
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Services</h2>
-            <p className="mt-2">
-              TYORA provides product development support, manufacturing consulting,
-              supplier coordination, quotation review, sampling guidance, production
-              follow-up, and related business services.
-            </p>
-          </section>
+      <LegalSection title="Factory costs and payments">
+        <p>
+          No hidden product markup. You see the factory quotation and pay a clearly agreed TYORA service fee. Customers may pay an approved factory or service provider directly when that payment path is agreed. TYORA does not advance customer funds or finance factory orders.
+        </p>
+        <p>
+          Tooling, samples, inspection, storage, shipping, taxes, duties, certification, and other third-party costs remain the customer&apos;s responsibility unless the written proposal says otherwise.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">No Manufacturing Guarantee</h2>
-            <p className="mt-2">
-              TYORA helps evaluate and coordinate manufacturing projects, but we do not
-              guarantee that every idea can be manufactured, approved, priced, sampled,
-              or produced exactly as requested.
-            </p>
-          </section>
+      <LegalSection title="Factories and other third parties">
+        <p>
+          TYORA evaluates and coordinates third-party providers but does not control every action they take. Supplier availability, raw-material pricing, lead times, test results, transport, and government requirements can change. Replacement or corrective support depends on the written scope and the circumstances of the project.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Pricing And Scope</h2>
-            <p className="mt-2">
-              Pricing, deposits, service fees, deliverables, and project scope should be
-              confirmed before work begins. Factory costs, tooling, samples, shipping,
-              taxes, and third-party fees may vary by project.
-            </p>
-          </section>
+      <LegalSection title="Customer responsibilities">
+        <p>
+          You are responsible for providing accurate specifications, lawful content, timely approvals, and sufficient funds. You are also responsible for product safety, intellectual-property clearance, labeling, certification, import compliance, taxes, duties, insurance, and market suitability unless a written agreement assigns a specific task to TYORA.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Customer Decisions</h2>
-            <p className="mt-2">
-              Customers are responsible for final approval decisions, including product
-              design, supplier selection, samples, production orders, packaging,
-              compliance, and launch timing.
-            </p>
-          </section>
+      <LegalSection title="Community and submitted content">
+        <p>
+          You retain ownership of content you submit. For public posts, you grant TYORA a non-exclusive license to host, display, format, and share that content as needed to operate and promote the community. You must have the right to submit the content and must not post confidential, unlawful, infringing, or abusive material.
+        </p>
+        <p>
+          Private submissions are handled as private business inquiries and may be shared only as reasonably needed to assess or perform the requested service.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Communication</h2>
-            <p className="mt-2">
-              Most project communication may happen through WhatsApp, email, or other
-              agreed channels. Clear and timely communication helps reduce project risk.
-            </p>
-          </section>
-        </div>
-      </section>
-    </main>
+      <LegalSection title="Cancellations, refunds, and changes">
+        <p>
+          Cancellation and refund eligibility depend on the written service scope, work already completed, supplier information already released, and non-refundable costs already paid to third parties. Any approved refund excludes costs that cannot be recovered.
+        </p>
+        <p>
+          TYORA may update these terms for future use of the service. Material changes will be reflected by the date shown on this page.
+        </p>
+      </LegalSection>
+    </LegalPageShell>
   );
 }

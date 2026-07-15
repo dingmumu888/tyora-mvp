@@ -12,18 +12,18 @@ export function Button({
 }: ButtonProps) {
   const styles = {
     primary:
-      "bg-[#101216] text-white hover:bg-[#252a31] border border-[#101216]",
+      "border border-[var(--color-primary)] bg-[var(--color-primary)] text-white hover:border-[var(--color-primary-hover)] hover:bg-[var(--color-primary-hover)]",
     secondary:
-      "bg-[#0f766e] text-white hover:bg-[#115e59] border border-[#0f766e]",
-    ghost: "bg-transparent text-[#101216] hover:bg-[#f5f6f8] border border-transparent",
+      "border border-[var(--color-navy)] bg-[var(--color-navy)] text-white hover:border-[#0b2b5d] hover:bg-[#0b2b5d]",
+    ghost: "border border-transparent bg-transparent text-[var(--color-text)] hover:bg-[var(--color-page)]",
     outline:
-      "bg-white text-[#101216] hover:bg-[#f5f6f8] border border-[#e1e5ea]"
+      "border border-[var(--color-border)] bg-white text-[var(--color-text)] hover:bg-[var(--color-page)]"
   };
 
   return (
     <button
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-sm)] px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:shadow-[var(--focus-ring)] disabled:pointer-events-none disabled:opacity-50",
         styles[variant],
         className
       )}

@@ -27,7 +27,7 @@ const reviewItems = [
 
 const pricing = [
   {
-    title: "Free Custom Review",
+    title: "Initial Custom Review",
     price: "Free",
     body: "TYORA reviews whether the idea can be made, MOQ, mold need, mold cost range, sample possibility, and estimated budget range."
   },
@@ -39,7 +39,7 @@ const pricing = [
   {
     title: "Managed Custom Production",
     price: "15% of first order value, minimum $999",
-    body: "TYORA compares factory options, follows samples and molds, manages production, quality checks, and shipping coordination."
+    body: "TYORA compares factory options, follows samples and molds, manages production, quality checks, and coordination with the customer’s nominated freight forwarder in China."
   },
   {
     title: "Repeat Order Management",
@@ -51,7 +51,7 @@ const pricing = [
 const process = [
   ["Private request", "Send AI designs, sketches, reference products, and target quantity."],
   ["Factory feedback", "TYORA checks whether factories can make it and confirms MOQ, molds, samples, and budget range."],
-  ["Choose path", "Work directly with the factory or let TYORA manage sampling, production, QC, and shipping."],
+  ["Choose path", "Work directly with the factory or let TYORA manage sampling, production, QC, and freight-forwarder coordination."],
   ["Repeat orders", "For the same product, TYORA keeps the approved reference sample and manages future batches at the reorder rate."]
 ] as const;
 
@@ -90,15 +90,15 @@ export default function CustomPage() {
             Built for small brands and first-time founders turning AI designs, sketches, or product ideas into real products without getting lost in factory communication.
           </p>
           <div className="mt-5 rounded-3xl border border-[#cfe7df] bg-[#f2fbf7] p-4">
-            <p className="text-sm font-semibold text-[#0f766e]">No hidden product markup</p>
+            <p className="text-sm font-semibold text-[#0f766e]">No hidden product markup.</p>
             <p className="mt-2 text-sm leading-6 text-[#315f56]">
-              TYORA does not add markup to product cost. You pay factory cost plus a clear service fee. When possible, TYORA can share factory chat screenshots and payment proof.
+              You see the factory quotation and pay a clearly agreed TYORA service fee. Supporting factory quotations and payment records may be provided when applicable, with sensitive information redacted where necessary.
             </p>
           </div>
         </div>
 
         <div className="rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-7">
-          <p className="text-sm font-semibold text-[#315fbd]">Free Custom Review</p>
+          <p className="text-sm font-semibold text-[#315fbd]">Initial Custom Review</p>
           <h2 className="mt-2 text-2xl font-semibold">Know what is realistic before you spend money.</h2>
           <div className="mt-4 grid gap-2">
             {reviewItems.map((item) => (
@@ -121,7 +121,7 @@ export default function CustomPage() {
               <p className="text-sm font-semibold text-[#315fbd]">Why TYORA helps</p>
               <h2 className="mt-2 text-3xl font-semibold leading-tight">The right factory choice can save more than the service fee.</h2>
               <p className="mt-3 text-sm leading-6 text-[#59616e]">
-                Custom manufacturing is not only about finding a factory. TYORA compares factory options when possible and helps choose the best value, not just the lowest price.
+                TYORA negotiates competitive factory pricing based on the confirmed product requirements, quantity, and available supplier options.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">

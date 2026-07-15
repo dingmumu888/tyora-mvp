@@ -46,23 +46,14 @@ const emptyForm: FormState = {
 const inputClass = "min-h-11 w-full rounded-2xl border border-[#dfe6ef] bg-white px-3 text-sm font-medium text-[#101216] outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10";
 const textareaClass = `${inputClass} min-h-28 resize-none py-3 leading-6`;
 
-const ctaText = "Get Free Product Match";
 const MAX_SOURCE_IMAGES = 9;
 const SOURCE_IMAGE_MAX_DIMENSION = 1200;
 const SOURCE_IMAGE_MAX_DATA_URL_LENGTH = 280000;
 const MAX_SOURCE_REQUEST_BYTES = 3600000;
 
-const trustToastSubtitles = [
-  "Checking China supplier options",
-  "Exploring factory pricing",
-  "Looking for product sourcing help",
-  "Comparing supplier options",
-  "Reviewing managed sourcing support"
-];
-
 const pricingOptions = [
   {
-    title: "Free Product Match & Quote",
+    title: "Initial Product Match & Quote",
     price: "Free",
     description: "We check product match, supplier options, and estimated China factory pricing."
   },
@@ -80,36 +71,9 @@ const pricingOptions = [
     price: "10%-15% of order value, minimum $499",
     mobilePrice: "10%-15%",
     mobileMinimum: "Minimum $499",
-    mobileDescription: "For negotiation, purchasing, inspection, and shipping coordination.",
-    description: "TYORA helps negotiate, purchase, inspect, and coordinate shipping.",
+    mobileDescription: "For negotiation, purchasing, inspection, and freight-forwarder coordination.",
+    description: "TYORA helps negotiate, purchase, inspect, and coordinate handoff to your nominated freight forwarder in China.",
     processHref: "/source/how-it-works#managed-sourcing"
-  }
-];
-
-const recentSourceActivity = [
-  {
-    buyer: "US buyer",
-    category: "Kitchen products",
-    quantity: "500+ pcs",
-    status: "Factory quote sent privately"
-  },
-  {
-    buyer: "EU buyer",
-    category: "Pet accessories",
-    quantity: "1,000+ pcs",
-    status: "Supplier options found"
-  },
-  {
-    buyer: "UK buyer",
-    category: "Phone accessories",
-    quantity: "300+ pcs",
-    status: "Reference sample checking"
-  },
-  {
-    buyer: "CA buyer",
-    category: "Home storage",
-    quantity: "800+ pcs",
-    status: "Product match in progress"
   }
 ];
 
@@ -189,7 +153,6 @@ export default function SourceClient() {
   const [submissionNotice, setSubmissionNotice] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const [submittedContact, setSubmittedContact] = useState("");
-  const [trustToast, setTrustToast] = useState<{ title: string; subtitle: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const whatsappCountryChangedRef = useRef(false);
   const sourceCopy = content.sourcePage;
@@ -212,33 +175,6 @@ export default function SourceClient() {
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!sourceCopy.trustToastEnabled || sourceCopy.trustToastMessages.length === 0) return;
-    let active = true;
-    let timer: number;
-    const min = Math.max(5, sourceCopy.trustToastMinSeconds);
-    const max = Math.max(min, sourceCopy.trustToastMaxSeconds);
-    const schedule = () => {
-      const delay = (min + Math.random() * (max - min)) * 1000;
-      timer = window.setTimeout(() => {
-        if (!active) return;
-        const messageIndex = Math.floor(Math.random() * sourceCopy.trustToastMessages.length);
-        const subtitleIndex = Math.floor(Math.random() * trustToastSubtitles.length);
-        setTrustToast({
-          title: sourceCopy.trustToastMessages[messageIndex],
-          subtitle: trustToastSubtitles[subtitleIndex]
-        });
-        window.setTimeout(() => active && setTrustToast(null), 5200);
-        schedule();
-      }, delay);
-    };
-    schedule();
-    return () => {
-      active = false;
-      window.clearTimeout(timer);
-    };
-  }, [sourceCopy.trustToastEnabled, sourceCopy.trustToastMaxSeconds, sourceCopy.trustToastMessages, sourceCopy.trustToastMinSeconds]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -381,8 +317,8 @@ export default function SourceClient() {
               <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
             </div>
             <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-3 py-2 text-sm font-semibold sm:px-4">
-              <span className="sm:hidden">Free Match</span>
-              <span className="hidden sm:inline">{ctaText}</span>
+              <span className="sm:hidden">Product Match</span>
+              <span className="hidden sm:inline">{sourceCopy.ctaText}</span>
             </Link>
           </div>
         </div>
@@ -394,23 +330,17 @@ export default function SourceClient() {
             <PackageSearch size={14} /> {sourceCopy.eyebrow}
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-normal sm:mt-4 sm:text-5xl">
-            <span className="hidden sm:inline">Found a product?<br />Let TYORA find China supplier options.</span>
-            <span className="sm:hidden">Found a product?<br />Get a free China supplier quote.</span>
+            {sourceCopy.title}
           </h1>
-          <p className="mt-4 hidden text-base leading-7 text-[#59616e] sm:block">
-            Free product match and factory-price quote first. Pay only if you want supplier contact or managed sourcing.
-          </p>
-          <p className="mt-3 text-base leading-7 text-[#59616e] sm:hidden">
-            Upload a product photo, category, and quantity. We’ll check product match and factory pricing for free.
-          </p>
+          <p className="mt-4 text-base leading-7 text-[#59616e]">{sourceCopy.subtitle}</p>
           <p className="mt-2 rounded-2xl bg-[#f2fbf7] px-4 py-2.5 text-sm font-semibold text-[#0f766e] sm:hidden">
-            Factory price. No hidden markup. Service fee only if you continue.
+            No hidden product markup. You see the factory quotation and pay a clearly agreed TYORA service fee.
           </p>
           <div className="mt-4 hidden rounded-3xl border border-[#cfe7df] bg-[#f2fbf7] p-4 sm:block">
-            <p className="text-sm font-semibold text-[#0f766e]">No hidden product markup. Service fee only.</p>
-            <h2 className="mt-1 text-xl font-semibold leading-tight">Send a product photo. Get a free factory-price quote.</h2>
+            <p className="text-sm font-semibold text-[#0f766e]">No hidden product markup.</p>
+            <h2 className="mt-1 text-xl font-semibold leading-tight">You see the factory quotation and pay a clearly agreed TYORA service fee.</h2>
             <p className="mt-2 text-sm leading-6 text-[#315f56]">
-              We check supplier options, factory pricing, samples, and sourcing support after you submit the product.
+              Supporting factory quotations and payment records may be provided when applicable, with sensitive information redacted where necessary.
             </p>
           </div>
           <div className="mt-3 rounded-3xl border border-[#dbeafe] bg-[#eff6ff] p-4">
@@ -558,7 +488,7 @@ export default function SourceClient() {
             {submissionNotice ? <p className="rounded-2xl border border-[#fde68a] bg-[#fffbeb] p-3 text-sm font-medium leading-6 text-[#92400e]">{submissionNotice}</p> : null}
 
             <button disabled={submitting} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] disabled:opacity-60">
-              {submitting ? "Submitting..." : ctaText} <ArrowRight size={16} />
+              {submitting ? "Submitting..." : sourceCopy.ctaText} <ArrowRight size={16} />
             </button>
           </div>}
         </form>
@@ -567,35 +497,10 @@ export default function SourceClient() {
       <section className="mx-auto grid max-w-7xl gap-4 px-4 pb-6 sm:px-6 lg:px-8">
         <div className="rounded-[28px] border border-[#cfe7df] bg-white p-5 shadow-sm shadow-[#101216]/5">
           <p className="text-sm font-semibold text-[#0f766e]">Factory price transparency</p>
-          <h2 className="mt-1 text-2xl font-semibold">We do not mark up product costs.</h2>
+          <h2 className="mt-1 text-2xl font-semibold">No hidden product markup.</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[#59616e]">
-            You pay the factory price plus a clear service fee only if you continue after the free quote.
+            TYORA negotiates competitive factory pricing based on the confirmed product requirements, quantity, and available supplier options.
           </p>
-        </div>
-
-        <div className="rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-[#315fbd]">Example private sourcing requests</p>
-              <h2 className="mt-1 text-2xl font-semibold">Buyers are using TYORA for private supplier checks.</h2>
-            </div>
-            <p className="max-w-xl text-sm leading-6 text-[#69707d]">
-              Buyer details, product links, supplier contacts, and quotes are never shown publicly.
-            </p>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {recentSourceActivity.map((item) => (
-              <div key={`${item.buyer}-${item.category}`} className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
-                <p className="text-sm font-semibold text-[#101216]">{item.buyer}</p>
-                <p className="mt-2 text-sm leading-6 text-[#59616e]">
-                  {item.category} · {item.quantity}
-                </p>
-                <p className="mt-3 rounded-2xl bg-[#f2f7ff] px-3 py-2 text-xs font-semibold text-[#315fbd]">
-                  Status: {item.status}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
 
         <section id="pricing" className="scroll-mt-24 rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5">
@@ -631,7 +536,7 @@ export default function SourceClient() {
             ))}
           </div>
           <p className="mt-4 rounded-2xl bg-[#f8fafc] p-3 text-sm leading-6 text-[#59616e]">
-            We can help with samples. You only pay sample cost and shipping.
+            {sourceCopy.sampleNote}
           </p>
           <p className="mt-2 text-xs leading-5 text-[#69707d]">Final price depends on supplier confirmation.</p>
         </section>
@@ -642,22 +547,13 @@ export default function SourceClient() {
             <h2 className="text-2xl font-semibold">Service protection</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-[#59616e]">
-            Supplier Introduction fees are non-refundable after supplier contact is released, but we help find one free replacement if the supplier becomes unavailable shortly after release.
+            Supplier Introduction fees are non-refundable after supplier contact is released. If the released contact is invalid or the supplier becomes unavailable shortly after release, TYORA will review eligibility for one replacement supplier.
           </p>
           <p className="mt-2 text-sm leading-6 text-[#59616e]">
             Managed Sourcing refunds depend on order status and costs already paid to suppliers or third parties.
           </p>
         </section>
       </section>
-      {trustToast ? (
-        <div className="fixed inset-x-4 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-[9985] mx-auto max-w-sm rounded-2xl border border-[#dfe6ef] bg-white/95 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl md:inset-x-auto md:bottom-5 md:right-5">
-          <p className="flex items-start gap-2 text-sm font-semibold text-[#101216]">
-            <span className="mt-1 size-2 shrink-0 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.14)]" />
-            <span>{trustToast.title}</span>
-          </p>
-          <p className="mt-1 pl-4 text-xs text-[#69707d]">{trustToast.subtitle}</p>
-        </div>
-      ) : null}
     </main>
   );
 }

@@ -218,10 +218,10 @@ export type Lead = {
   internalNotes?: string;
 };
 
-export const contentKey = "idea2product-content";
-export const leadsKey = "idea2product-leads";
-export const mediaKey = "idea2product-media";
-export const teamMembersKey = "idea2product-team-members";
+export const contentKey = "tyora-content";
+export const leadsKey = "tyora-leads";
+export const mediaKey = "tyora-media";
+export const teamMembersKey = "tyora-team-members";
 export const defaultTeamMembers: TeamMember[] = [
   { id: "adam", name: "Adam", avatar: "A", email: "adam@tyora.co", role: "Admin", active: true },
   { id: "jack", name: "Jack", avatar: "J", email: "jack@tyora.co", role: "Project Manager", active: true },
@@ -234,9 +234,9 @@ export const defaultContent: SiteContent = {
   logoImage: "",
   favicon: "",
   whatsappLink: WHATSAPP_URL,
-  callLink: "https://cal.com/idea2product/intro",
-  linkedInLink: "https://www.linkedin.com/",
-  email: "hello@idea2product.co",
+  callLink: "",
+  linkedInLink: "",
+  email: "support@tyora.io",
   heroTagline: "Factory sourcing and manufacturing support for US founders",
   heroTitle: "Find the right factory in China — before manufacturing mistakes get expensive.",
   heroSubtitle:
@@ -265,10 +265,10 @@ export const defaultContent: SiteContent = {
   founderText:
     "TYORA helps US founders turn early product ideas into production-ready plans. We review manufacturability, identify the right manufacturing path, coordinate with China-based partners, and help reduce the risk that comes with building a product overseas.",
   pricingTitle: "Choose the right Custom support path",
-  pricingSubtitle: "Start with a free custom review, then choose factory introduction, managed custom production, or repeat order management.",
+  pricingSubtitle: "Start with an initial custom review, then choose factory introduction, managed custom production, or repeat order management.",
   pricingProofA: "First we confirm feasibility, MOQ, mold needs, sample path, and budget range.",
   pricingProofB:
-    "If you continue, TYORA charges a clear service fee. Product costs stay factory priced with no hidden markup.",
+    "No hidden product markup. You see the factory quotation and pay a clearly agreed TYORA service fee.",
   trustBadges: [
     "US Founder-Focused",
     "China Manufacturing Network",
@@ -295,46 +295,42 @@ export const defaultContent: SiteContent = {
       description: "We identify the factory type, sample plan, tooling needs, MOQ realities, and next decisions."
     },
     {
-      title: "Build, check, and deliver",
-      description: "For managed projects, TYORA supports samples, factory communication, production follow-up, quality checks, and delivery."
+      title: "Build, check, and hand off",
+      description: "For managed projects, TYORA supports samples, factory communication, production follow-up, quality checks, and handoff to the customer’s nominated freight forwarder in China."
     }
   ],
   helpCards: [
     { title: "Product development review", description: "Turn a rough idea into a clearer product direction before talking to factories." },
     { title: "Manufacturing strategy", description: "Understand materials, processes, MOQ, sample needs, tooling, and avoidable risk." },
     { title: "Factory matching", description: "Find manufacturing partners in China that fit the product, category, and project stage." },
-    { title: "Managed production support", description: "Get help with samples, factory communication, production follow-up, quality checks, and shipping." }
+    { title: "Managed production support", description: "Get help with samples, factory communication, production follow-up, quality checks, and freight-forwarder coordination." }
   ],
   sourcePage: {
     eyebrow: "Source This Product",
     title: "Found a product? Let TYORA check China supplier options.",
     subtitle: "Upload a reference image or product link. TYORA will help check supplier options and estimated China factory pricing.",
-    ctaText: "Get FREE Supplier Check",
-    statLabel: "Supplier checks requested",
-    secondaryStatValue: "FREE",
-    secondaryStatLabel: "Initial supplier check",
-    sampleNote: "Sample support is free. You only pay sample cost and international shipping.",
-    disclaimer: "No exact price or supplier is guaranteed before supplier confirmation. TYORA does not add markup to product cost; any paid work is quoted as a separate service fee before you continue.",
+    ctaText: "Request Product Match",
+    statLabel: "Supplier requests reviewed",
+    secondaryStatValue: "Initial",
+    secondaryStatLabel: "Supplier assessment",
+    sampleNote: "Sample costs and shipping are charged at cost when a sample is required.",
+    disclaimer: "No exact price or supplier is confirmed before supplier verification. No hidden product markup. You see the factory quotation and pay a clearly agreed TYORA service fee.",
     successTitle: "Source request received.",
     successBody: "TYORA will review supplier options and estimated China pricing.",
     supportCards: [
       { title: "Find supplier options", description: "We look for China suppliers that match the product reference." },
-      { title: "Check factory pricing", description: "We show supplier pricing as factory price. TYORA does not add product markup." },
-      { title: "Sample support", description: "Sample support is free. You only pay sample cost and international shipping." },
-      { title: "Two service paths", description: "Factory introduction or managed sourcing with quality and shipping support." }
+      { title: "Check factory pricing", description: "TYORA negotiates competitive factory pricing based on the confirmed product requirements, quantity, and available supplier options." },
+      { title: "Sample coordination", description: "Sample and shipping costs are disclosed and charged at cost when a sample is required." },
+      { title: "Two service paths", description: "Factory introduction or managed sourcing with quality checks and freight-forwarder coordination." }
     ],
     chargeTitle: "How TYORA charges if you continue",
     chargeCards: [
-      { title: "Free supplier check", description: "We check supplier options and estimated China factory pricing for free." },
+      { title: "Initial supplier assessment", description: "We check supplier options and estimated China factory pricing before you choose a paid service." },
       { title: "Factory introduction", description: "If you want to talk directly with a matched factory, TYORA charges a one-time introduction fee. Product cost remains factory price." },
-      { title: "Managed sourcing", description: "TYORA manages supplier communication, sample follow-up, quality checks and shipping support. Product cost is not marked up; TYORA charges an agreed service fee." }
+      { title: "Managed sourcing", description: "TYORA manages supplier communication, sample follow-up, quality checks, and freight-forwarder coordination. You see the factory quotation and pay a clearly agreed TYORA service fee." }
     ],
-    trustToastEnabled: true,
-    trustToastMessages: [
-      "Common buyer region: United States",
-      "Common buyer region: Europe",
-      "Common buyer region: North America"
-    ],
+    trustToastEnabled: false,
+    trustToastMessages: [],
     trustToastMinSeconds: 60,
     trustToastMaxSeconds: 300
   },
@@ -362,13 +358,13 @@ export const defaultContent: SiteContent = {
   pricing: [
     {
       id: "free-custom-review",
-      name: "Free Custom Review",
+      name: "Initial Custom Review",
       subtitle: "Before you spend money",
       priceLabel: "Initial feasibility review",
       price: "Free",
       description:
         "TYORA confirms whether the product can be made, MOQ, mold requirement, mold cost range, sample possibility, and estimated project budget before design or material changes.",
-      ctaText: "Start Free Review",
+      ctaText: "Request Initial Review",
       visible: true,
       order: 1,
       features: [
@@ -397,16 +393,16 @@ export const defaultContent: SiteContent = {
         "Verified factory contact",
         "Factory information and communication handoff",
         "Product cost remains factory priced",
-        "One free replacement if the supplier becomes unavailable shortly after release"
+        "Replacement eligibility review if the supplier becomes unavailable shortly after release"
       ],
       exclusions: [
         "Ongoing factory communication",
         "Sample follow-up",
         "Production monitoring",
         "Quality inspection",
-        "Shipping coordination"
+        "Freight-forwarder coordination"
       ],
-      bottomNote: "TYORA does not add markup to product cost."
+      bottomNote: "No hidden product markup. You see the factory quotation and pay a clearly agreed TYORA service fee."
     },
     {
       id: "managed-custom-production",
@@ -416,23 +412,23 @@ export const defaultContent: SiteContent = {
       priceLabel: "First custom order",
       price: "15% of first order value, minimum $999",
       description:
-        "TYORA compares factory options, follows sampling and mold work, manages production, quality checks, and shipping coordination.",
+        "TYORA compares factory options, follows sampling and mold work, manages production, quality checks, and handoff to the customer’s nominated freight forwarder in China.",
       highlightBanner: "The right factory choice can save more than the service fee.",
       ctaText: "Start Managed Custom",
       visible: true,
       order: 3,
       features: [
         "Factory option comparison",
-        "Best-value factory recommendation",
+        "Competitive factory pricing based on confirmed requirements and available supplier options",
         "Factory communication",
         "Sampling and mold follow-up",
         "Price negotiation",
         "Production follow-up",
         "Quality checks",
-        "Shipping coordination",
+        "Freight-forwarder coordination",
         "Approved reference sample retained by TYORA"
       ],
-      bottomNote: "Factory cost stays transparent. TYORA does not add product markup."
+      bottomNote: "No hidden product markup. You see the factory quotation and pay a clearly agreed TYORA service fee."
     },
     {
       id: "repeat-order-management",
@@ -451,7 +447,7 @@ export const defaultContent: SiteContent = {
         "Factory reorder communication",
         "Basic production supervision",
         "Quality comparison against retained sample",
-        "Shipping coordination"
+        "Freight-forwarder coordination"
       ],
       bottomNote: "If design, material, packaging, supplier, or quality standard changes, TYORA will review pricing again."
     }
@@ -471,7 +467,7 @@ export const defaultContent: SiteContent = {
       conceptImage: "",
       prototypeImage: "",
       finalImage: "",
-      visible: true,
+      visible: false,
       order: 1
     },
     {
@@ -488,7 +484,7 @@ export const defaultContent: SiteContent = {
       conceptImage: "",
       prototypeImage: "",
       finalImage: "",
-      visible: true,
+      visible: false,
       order: 2
     },
     {
@@ -505,7 +501,7 @@ export const defaultContent: SiteContent = {
       conceptImage: "",
       prototypeImage: "",
       finalImage: "",
-      visible: true,
+      visible: false,
       order: 3
     }
   ]

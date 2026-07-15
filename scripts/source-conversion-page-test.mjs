@@ -13,11 +13,12 @@ const processPage = existsSync(processPagePath) ? readFileSync(processPagePath, 
 
 const checks = [
   {
-    name: "source page uses new conversion-focused hero and CTA",
+    name: "source page uses CMS-managed hero and CTA",
     pass:
-      source.includes("Found a product?") &&
-      source.includes("Get a free China supplier quote.") &&
-      source.includes("Get Free Product Match")
+      source.includes("{sourceCopy.title}") &&
+      source.includes("{sourceCopy.subtitle}") &&
+      source.includes("{sourceCopy.ctaText}") &&
+      storage.includes('ctaText: "Request Product Match"')
   },
   {
     name: "source page removes supplier checks requested stat",
@@ -59,14 +60,14 @@ const checks = [
   {
     name: "sample wording avoids promising free samples",
     pass:
-      source.includes("We can help with samples. You only pay sample cost and shipping.")
+      source.includes("{sourceCopy.sampleNote}") &&
+      storage.includes("Sample costs and shipping are charged at cost when a sample is required.")
   },
   {
-    name: "mobile top navigation uses shorter Free Match CTA while main CTA stays full",
+    name: "mobile top navigation uses shorter Product Match CTA while main CTA stays CMS-managed",
     pass:
-      source.includes("Free Match") &&
-      source.includes("<span className=\"sm:hidden\">Free Match</span>") &&
-      source.includes("<span className=\"hidden sm:inline\">{ctaText}</span>")
+      source.includes("<span className=\"sm:hidden\">Product Match</span>") &&
+      source.includes("<span className=\"hidden sm:inline\">{sourceCopy.ctaText}</span>")
   },
   {
     name: "contact form offers separate Email and WhatsApp fields with one required",
@@ -101,13 +102,12 @@ const checks = [
       source.includes("View full process")
   },
   {
-    name: "source page shows example private sourcing requests without public replies",
+    name: "source page does not fabricate private sourcing requests or replies",
     pass:
-      source.includes("Example private sourcing requests") &&
-      source.includes("Buyer details, product links, supplier contacts, and quotes are never shown publicly.") &&
-      source.includes("Factory quote sent privately") &&
-      source.includes("Supplier options found") &&
-      source.includes("Reference sample checking") &&
+      !source.includes("Example private sourcing requests") &&
+      !source.includes("Factory quote sent privately") &&
+      !source.includes("Supplier options found") &&
+      !source.includes("Reference sample checking") &&
       !source.includes("TYORA reply:") &&
       !source.includes("Factory: ****") &&
       !source.includes("Price: ****")
@@ -120,11 +120,13 @@ const checks = [
       processPage.includes("id=\"managed-sourcing\"")
   },
   {
-    name: "full process page explains transparent proof without hidden product markup",
+    name: "full process page uses accurate conditional evidence wording",
     pass:
-      processPage.includes("supplier quote screenshots") &&
-      processPage.includes("order payment screenshots") &&
-      processPage.includes("relevant order communication records")
+      processPage.includes("Supporting factory quotations and payment records may be provided when applicable") &&
+      processPage.includes("sensitive information redacted where necessary") &&
+      !processPage.includes("supplier quote screenshots") &&
+      !processPage.includes("order payment screenshots") &&
+      !processPage.includes("all factory chat")
   },
   {
     name: "full process page explains reference sample at actual cost and retained matching",
@@ -146,15 +148,13 @@ const checks = [
       sourceRoute.includes("Detected country:")
   },
   {
-    name: "source trust toast uses three generic regional proof messages and slow randomized timing",
+    name: "source trust toast and fabricated regional activity are disabled",
     pass:
-      source.includes("Checking China supplier options") &&
-      source.includes("Exploring factory pricing") &&
-      source.includes("Comparing supplier options") &&
-      !source.includes("Supplier check activity") &&
-      storage.includes("Common buyer region: United States") &&
-      storage.includes("Common buyer region: Europe") &&
-      storage.includes("Common buyer region: North America") &&
+      !source.includes("Checking China supplier options") &&
+      !source.includes("Exploring factory pricing") &&
+      !source.includes("Comparing supplier options") &&
+      storage.includes("trustToastEnabled: false") &&
+      storage.includes("trustToastMessages: []") &&
       storage.includes("trustToastMinSeconds: 60") &&
       storage.includes("trustToastMaxSeconds: 300") &&
       !storage.includes("buyer viewed Source") &&

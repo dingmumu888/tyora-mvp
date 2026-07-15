@@ -20,7 +20,7 @@ if (!fs.existsSync(customPagePath)) {
   const custom = fs.readFileSync(customPagePath, "utf8");
   [
     "Develop a custom product with TYORA",
-    "Free Custom Review",
+    "Initial Custom Review",
     "Factory Introduction",
     "5% of estimated first order value, minimum $499",
     "Managed Custom Production",
@@ -28,7 +28,8 @@ if (!fs.existsSync(customPagePath)) {
     "Repeat Order Management",
     "10% of repeat order value, minimum $399",
     "approved reference sample",
-    "does not add markup",
+    "No hidden product markup.",
+    "Supporting factory quotations and payment records may be provided when applicable",
     "Start Private Review on WhatsApp",
     "Prefer email?",
     "mailto:support@tyora.io"
@@ -45,7 +46,7 @@ if (!whatsapp.includes("PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL") || !whatsapp.includ
   '["Custom", "/custom"]',
   'title: "Start a private custom project"',
   'href: "/custom"',
-  "Post publicly for a free manufacturing review, or send a private custom project to TYORA.",
+  "Post publicly for an initial assessment, or send a private custom project to TYORA.",
   "Every public idea gets an initial TYORA manufacturing review."
 ].forEach((text) => {
   if (!home.includes(text)) failures.push(`Homepage missing: ${text}`);
@@ -59,10 +60,14 @@ if (home.includes("3 FREE Expert Reviews per day")) {
   '<Link href="/custom"',
   "Need to create a new custom product instead?",
   "Start Private Review on WhatsApp",
-  "Example private sourcing requests"
+  "Supporting factory quotations and payment records may be provided when applicable"
 ].forEach((text) => {
   if (!source.includes(text)) failures.push(`Source page missing: ${text}`);
 });
+
+if (source.includes("Example private sourcing requests") || source.includes("Factory quote sent privately")) {
+  failures.push("Source page still contains fabricated private sourcing activity.");
+}
 
 [
   "Public community discussion",
@@ -77,7 +82,7 @@ if (newIdea.includes("limited to 3 per account per day") || newIdea.includes("To
 }
 
 [
-  "Free Custom Review",
+  "Initial Custom Review",
   "Factory Introduction",
   "Managed Custom Production",
   "Repeat Order Management",
@@ -89,7 +94,7 @@ if (newIdea.includes("limited to 3 per account per day") || newIdea.includes("To
 });
 
 [
-  "免费定制评估",
+  "初步定制评估",
   "工厂介绍",
   "全程定制生产",
   "返单管理",

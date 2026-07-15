@@ -51,9 +51,9 @@ const staticSearchItems: SearchItem[] = [
   },
   {
     title: "Pricing",
-    description: "Free product match, supplier introduction fees, and managed sourcing fees.",
+    description: "Initial product match, supplier introduction fees, and managed sourcing fees.",
     href: "/source#pricing",
-    keywords: "pricing price fee free quote 3% 5% 10% 15% minimum supplier introduction managed sourcing",
+    keywords: "pricing price fee quote minimum supplier introduction managed sourcing",
     type: "Page"
   },
   {
@@ -67,7 +67,7 @@ const staticSearchItems: SearchItem[] = [
     title: "Start a Discussion",
     description: "Post a product idea and get feedback from TYORA and the community.",
     href: "/ask/new",
-    keywords: "post idea upload image discussion ask tyora free review",
+    keywords: "post idea upload image discussion ask tyora initial review",
     type: "Community"
   },
   {

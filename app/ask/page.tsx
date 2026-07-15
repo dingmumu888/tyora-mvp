@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ChevronRight,
-  Eye,
   Filter,
   Flame,
   Heart,
@@ -33,7 +32,6 @@ const tabs: Array<[CommunityFeedSort, string]> = [
   ["latest-uploaded", "Recently Uploaded"]
 ];
 
-const categories = ["Phone Accessories", "Pet", "Home", "Office", "Kitchen", "Outdoor", "Electronics", "Fashion"];
 const topNav = [
   ["Ideas", "/ask"],
   ["Post Idea", "/ask/new"],
@@ -43,30 +41,6 @@ const topNav = [
 ] as const;
 const statusSteps = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping"];
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const starterExamples = [
-  {
-    title: "Magnetic Phone Stand",
-    category: "Phone Accessories",
-    description: "A foldable desk stand with a weighted base, magnetic ring, and manufacturable hinge design."
-  },
-  {
-    title: "Portable Pet Water Bottle",
-    category: "Pet",
-    description: "A leak-resistant travel bottle with a one-hand drinking tray and easy-clean plastic parts."
-  },
-  {
-    title: "Travel Coffee Mug",
-    category: "Kitchen",
-    description: "A compact insulated mug with a secure lid, tactile grip, and low-MOQ material options."
-  }
-];
-const earlyCommunityStats = [
-  ["Early access", "Founder community"],
-  ["Free review", "Within 8 working hours"],
-  ["Public discussion", "Open to browse"],
-  ["No password", "Email code login"],
-  ["Custom path", "Private when needed"]
-] as const;
 
 const statusStyles: Record<CommunityStatus, string> = {
   Discussing: "bg-[#f0eaff] text-[#6d28d9] ring-[#ddd0ff]",
@@ -179,14 +153,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="-ml-1 size-6 border text-[10px]" />
-              {["TY", "CM"].map((item) => (
-                <span key={item} className="-ml-1 flex size-6 items-center justify-center rounded-full border border-white bg-[#edf2f7] text-[10px] font-semibold text-[#59616e]">
-                  {item}
-                </span>
-              ))}
-            </div>
+            <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-6 border text-[10px]" />
           </div>
 
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
@@ -194,7 +161,6 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
               <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount} Love</span>
               <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length}</span>
               <span className="inline-flex items-center gap-1 max-sm:hidden"><ShoppingBag size={14} /> {idea.interestedCount} I&apos;d Buy</span>
-              <span className="inline-flex items-center gap-1 max-sm:hidden"><Eye size={14} /> {Math.max(idea.likeCount + idea.comments.length + idea.interestedCount, 1) * 17}</span>
             </div>
             <Link href={`/ask/${idea.slug}`} className={`hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold sm:inline-flex ${primaryButton}`}>
               Join Discussion <ChevronRight size={14} />
@@ -206,35 +172,6 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
   );
 }
 
-function ExampleCommunityCard({ example, index }: { example: (typeof starterExamples)[number]; index: number }) {
-  const tone = ["from-[#e9f7f3] via-white to-[#efe9ff]", "from-[#fff4e7] via-white to-[#e9f2ff]", "from-[#edf7ff] via-white to-[#effaf3]"][index % 3];
-
-  return (
-    <Link href="/ask/new" className="group grid grid-cols-[96px_1fr] gap-0 overflow-hidden rounded-[12px] border border-dashed border-[#cdd6e2] bg-white/94 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_14px_38px_rgba(15,23,42,0.09)] sm:grid-cols-[132px_1fr]">
-      <div className={`relative flex aspect-square items-center justify-center bg-gradient-to-br ${tone}`}>
-        <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
-          {example.title.slice(0, 2).toUpperCase()}
-        </span>
-        <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#69707d] ring-1 ring-[#e8ebef]">
-          Example
-        </span>
-      </div>
-      <div className="min-w-0 p-2.5">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[#69707d]">
-          <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{example.category}</span>
-          <span className="max-sm:hidden">Demo prompt</span>
-          <span className="inline-flex items-center gap-1 text-[#0f766e] max-sm:hidden"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Ready for review</span>
-        </div>
-        <h3 className="mt-1.5 line-clamp-1 text-base font-semibold">{example.title}</h3>
-        <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{example.description}</p>
-        <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2563eb] max-sm:hidden">
-          Start from this example <ChevronRight size={13} />
-        </p>
-      </div>
-    </Link>
-  );
-}
-
 function StarterCommunityState() {
   return (
     <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
@@ -243,7 +180,7 @@ function StarterCommunityState() {
           <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Starter community</p>
           <h2 className="mt-3 text-2xl font-semibold leading-tight">Be the first founder to start a discussion.</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e]">
-            Share a product idea and get a free manufacturing review from TYORA.
+            Share a product idea for a limited initial manufacturing assessment from TYORA.
           </p>
         </div>
         <Link href="/ask/new" className={`inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
@@ -251,35 +188,6 @@ function StarterCommunityState() {
         </Link>
       </div>
 
-      <div className="mt-4 grid gap-2.5">
-        {starterExamples.map((example, index) => (
-          <Link
-            key={example.title}
-            href="/ask/new"
-            className="grid grid-cols-[92px_1fr] gap-3 rounded-[14px] border border-[#e4e8ef] bg-[#fbfbfc] p-2.5 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-lg hover:shadow-[#101216]/6 sm:grid-cols-[116px_1fr] sm:p-3"
-          >
-            <div className={`relative flex min-h-24 items-center justify-center rounded-xl bg-gradient-to-br ${["from-[#e9f7f3] via-white to-[#efe9ff]", "from-[#fff4e7] via-white to-[#e9f2ff]", "from-[#edf7ff] via-white to-[#effaf3]"][index]}`}>
-              <span className="rounded-2xl bg-white/78 px-3 py-2 text-lg font-semibold shadow-sm ring-1 ring-white">
-                {example.title.slice(0, 2).toUpperCase()}
-              </span>
-              <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase text-[#69707d] ring-1 ring-[#e8ebef]">
-                Example
-              </span>
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[#69707d]">
-                <span className="rounded-full bg-white px-2 py-1 ring-1 ring-[#e8ebef]">{example.category}</span>
-                <span>Demo prompt</span>
-              </div>
-              <h3 className="mt-2 line-clamp-1 text-lg font-semibold">{example.title}</h3>
-              <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59616e]">{example.description}</p>
-              <p className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#2563eb]">
-                Use this as inspiration <ChevronRight size={13} />
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }
@@ -288,17 +196,13 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
   const { sort = "trending" } = await searchParams;
   const ideas = await getCommunityIdeas(sort);
   const latestReviews = ideas.filter((idea) => idea.review);
-  const projectsStarted = ideas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length;
-  const delivered = ideas.filter((idea) => idea.status === "Completed");
   const countries = new Set(ideas.map((idea) => idea.country).filter(Boolean)).size;
-  const liveActivity = activity(ideas);
-  const feedExamples = ideas.length < 4 ? starterExamples.slice(0, 4 - ideas.length) : [];
+  const recentActivity = activity(ideas);
+  const categories = Array.from(new Set(ideas.map((idea) => idea.category).filter(Boolean))).slice(0, 8);
   const hasCommunityStats = ideas.length > 0;
   const communityStats = [
     ["Ideas Shared", ideas.length],
     ["TYORA Reviews", latestReviews.length],
-    ["Projects Started", projectsStarted],
-    ["Products Delivered", delivered.length],
     ["Countries", countries]
   ] as const;
 
@@ -334,10 +238,9 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               <h2 className="mt-3 text-base font-semibold">Creator HQ</h2>
               <p className="mt-1.5 text-[13px] leading-5 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
               <div className="mt-3 grid gap-2 text-sm">
-                <span className="inline-flex items-center gap-2 rounded-2xl bg-[#f6fefb] px-3 py-2 text-[#0f766e]"><span className="size-2 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.12)]" /> {Math.max(ideas.length * 3, 8)} creators online</span>
                 <Link href="/ask/new" className={`inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 font-semibold ${primaryButton}`}><Plus size={15} /> Start a Discussion</Link>
                 <a href="#feed" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] font-semibold">Browse Ideas</a>
-                <span className="rounded-2xl bg-[#eef6ff] p-3 text-sm font-semibold text-[#315fbd]">3 FREE Expert Reviews per day</span>
+                <span className="rounded-2xl bg-[#eef6ff] p-3 text-sm font-semibold text-[#315fbd]">Limited initial manufacturing assessments</span>
               </div>
             </section>
 
@@ -370,16 +273,16 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               </div>
             </section>
 
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">
+            {categories.length > 0 ? <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">
               <p className="px-3 text-xs font-semibold uppercase text-[#8b93a1]">Categories</p>
               <div className="mt-2 grid gap-1.5">
                 {categories.map((item) => <Link key={item} href="/ask" className="rounded-xl bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#59616e] transition hover:bg-[#eef6ff] hover:text-[#1d4ed8]">{item}</Link>)}
               </div>
-            </section>
+            </section> : null}
 
             <section className="rounded-[18px] border border-[#d7f1eb] bg-[#effaf6] p-3">
               <p className="text-sm font-semibold text-[#0f766e]">Early founder community</p>
-              <p className="mt-1 text-sm leading-6 text-[#3d766d]">Share an idea and get FREE manufacturing feedback.</p>
+              <p className="mt-1 text-sm leading-6 text-[#3d766d]">Share an idea for an initial manufacturing assessment.</p>
             </section>
           </div>
         </aside>
@@ -387,13 +290,13 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
         <section id="feed" className="min-w-0">
           <div className="rounded-[16px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_10px_36px_rgba(15,23,42,0.07)] sm:p-4">
             <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-              <Sparkles size={14} /> 3 FREE Expert Reviews per day
+              <Sparkles size={14} /> Limited initial manufacturing assessment
             </p>
             <div className="mt-2 grid gap-2.5 xl:grid-cols-[1fr_auto] xl:items-end">
               <div>
                 <h1 className="max-w-3xl text-[1.45rem] font-semibold leading-[1.08] tracking-normal sm:text-3xl">What are founders building next?</h1>
                 <p className="mt-1.5 max-w-[300px] text-sm leading-5 text-[#59616e] sm:mt-2 sm:max-w-2xl sm:leading-6">
-                  Discover product ideas from founders, or share your own and get a FREE manufacturing review within 8 working hours.
+                  Discover product ideas from founders, or share your own for an initial manufacturing assessment.
                 </p>
                 <p className="mt-1.5 max-w-[320px] break-words text-xs font-medium text-[#315fbd] sm:mt-2 sm:max-w-2xl sm:text-sm">Founders are discussing product ideas with TYORA manufacturing experts.</p>
               </div>
@@ -403,12 +306,12 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
               </div>
             </div>
             <div className="mt-3 hidden gap-2 sm:grid sm:grid-cols-2 xl:grid-cols-5">
-              {(hasCommunityStats ? communityStats : earlyCommunityStats).map(([label, value]) => (
+              {hasCommunityStats ? communityStats.map(([label, value]) => (
                 <div key={label} className="rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3">
                   <p className="text-lg font-semibold">{value}</p>
                   <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
                 </div>
-              ))}
+              )) : null}
             </div>
           </div>
 
@@ -427,115 +330,63 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             ) : (
               <>
                 {ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} />)}
-                {feedExamples.map((example, index) => <ExampleCommunityCard key={example.title} example={example} index={index} />)}
               </>
             )}
           </div>
 
           <div className="mt-3 hidden gap-3 sm:grid xl:hidden">
-            <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-              <h2 className="text-base font-semibold">Live Activity</h2>
+            {recentActivity.length > 0 ? <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
+              <h2 className="text-base font-semibold">Recent community activity</h2>
               <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
-                {liveActivity.length === 0 ? (
-                  <>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-3">A founder uploads a product idea.</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-3">Creators discuss feasibility, cost and materials.</p>
-                  </>
-                ) : liveActivity.slice(0, 2).map((item) => (
+                {recentActivity.slice(0, 2).map((item) => (
                   <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3">{item}</p>
                 ))}
               </div>
-            </section>
-            <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
+            </section> : null}
+            {hasCommunityStats ? <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-base font-semibold">Community Statistics</h2>
-              <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs text-[#69707d]">
-                {(hasCommunityStats ? [
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs text-[#69707d]">
+                {[
                   ["Ideas", ideas.length],
                   ["Reviews", latestReviews.length],
-                  ["Projects", projectsStarted],
-                  ["Built", delivered.length]
-                ] : [
-                  ["Access", "Open"],
-                  ["Reviews", "Free"],
-                  ["Login", "Email"],
-                  ["Stage", "Early"]
-                ]).map(([label, value]) => (
+                  ["Countries", countries]
+                ].map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
                     <p className="text-lg font-semibold text-[#101216]">{value}</p>
                     <p>{label}</p>
                   </div>
                 ))}
               </div>
-            </section>
+            </section> : null}
           </div>
         </section>
 
         <aside className="hidden xl:block">
           <div className="sticky top-20 space-y-3">
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)]">
+            {recentActivity.length > 0 ? <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)]">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold">Live Activity</h2>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6]" /> Live</span>
+                <h2 className="text-base font-semibold">Recent community activity</h2>
               </div>
               <div className="mt-3 space-y-2">
-                {liveActivity.length === 0 ? (
-                  <>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#14b8a6]" />A founder uploads a product idea.</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#f59e0b]" />Creators discuss feasibility and cost.</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className="mr-2 inline-block size-2 rounded-full bg-[#2563eb]" />TYORA experts reply with guidance.</p>
-                  </>
-                ) : null}
-                {liveActivity.map((item, index) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className={`mr-2 inline-block size-2 rounded-full ${index % 3 === 0 ? "bg-[#14b8a6]" : index % 3 === 1 ? "bg-[#f59e0b]" : "bg-[#2563eb]"}`} />{item}</p>)}
+                {recentActivity.map((item, index) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className={`mr-2 inline-block size-2 rounded-full ${index % 3 === 0 ? "bg-[#14b8a6]" : index % 3 === 1 ? "bg-[#f59e0b]" : "bg-[#2563eb]"}`} />{item}</p>)}
               </div>
-            </section>
+            </section> : null}
 
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-sm shadow-[#101216]/4">
-              <h2 className="text-base font-semibold">Products Built</h2>
-              <div className="mt-3 space-y-2">
-                {delivered.length === 0 ? (
-                  <>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">Idea → TYORA Review → Project Started</p>
-                    <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]">Manufacturing → Shipping → Delivered</p>
-                  </>
-                ) : null}
-                {delivered.slice(0, 3).map((idea) => (
-                  <Link key={idea.id} href={`/ask/${idea.slug}`} className="block rounded-2xl border border-[#eef1f4] p-3">
-                    <p className="font-semibold">{idea.title}</p>
-                    <p className="mt-1 text-xs text-[#69707d]">Delivered · {idea.country}</p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-[16px] border border-[#e8ebef] bg-[#101216] p-3.5 text-white shadow-[0_16px_44px_rgba(15,23,42,0.18)]">
-              <h2 className="text-base font-semibold">Journey of the Week</h2>
-              <div className="mt-3 grid gap-1.5 text-sm text-white/72">
-                {["Idea", "TYORA Review", "Prototype", "Manufacturing", "Delivered"].map((step) => <span key={step} className="rounded-full bg-white/8 px-3 py-1.5">{step}</span>)}
-              </div>
-              <Link href="/ask" className="mt-5 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#101216]">View Full Journey</Link>
-            </section>
-
-            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
+            {hasCommunityStats ? <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Community Statistics</h2>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                {(hasCommunityStats ? [
+                {[
                   ["Ideas", ideas.length],
                   ["Reviews", latestReviews.length],
-                  ["Projects", projectsStarted],
-                  ["Delivered", delivered.length]
-                ] : [
-                  ["Access", "Open"],
-                  ["Reviews", "Free"],
-                  ["Login", "Email"],
-                  ["Stage", "Early"]
-                ]).map(([label, value]) => (
+                  ["Countries", countries]
+                ].map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
                     <p className="text-lg font-semibold text-[#101216]">{value}</p>
                     <p className="text-xs text-[#69707d]">{label}</p>
                   </div>
                 ))}
               </div>
-            </section>
+            </section> : null}
           </div>
         </aside>
       </div>

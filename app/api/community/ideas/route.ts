@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   try {
     const used = await countReviewsUsedToday(session.userId);
     if (used >= 3) {
-      return fail("Today's FREE Expert Reviews: 3 / 3 used. Community discussion is unlimited.", 429);
+      return fail("Today's initial assessment limit has been reached. Community discussion remains available.", 429);
     }
     return refreshCommunitySessionCookieIfNeeded(ok(await createCommunityIdea(await request.json(), session.userId)), session);
   } catch (error) {

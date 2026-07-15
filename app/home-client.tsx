@@ -46,14 +46,6 @@ import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { CommunityIdea } from "@/lib/community";
 
-type CommunityActivityItem = {
-  id: string;
-  type: "idea" | "comment" | "review" | "status";
-  label: string;
-  href: string;
-  createdAt: string;
-};
-
 type CommunityTotals = {
   ideas: number;
   reviews: number;
@@ -82,19 +74,9 @@ function safeSessionSet(key: string, value: string) {
 const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
 const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const starterExamples = [
-  { title: "Magnetic Phone Stand", category: "Phone Accessories", description: "A foldable desk stand with a weighted base and manufacturable hinge." }
-] as const;
 const featuredJourney = [
   ["Idea", "Product concept submitted", "Done"],
   ["Review", "Manufacturing path reviewed", "Active"]
-] as const;
-const earlyCommunityStats = [
-  ["Early access", "Founder community"],
-  ["Free review", "Within 8 working hours"],
-  ["Public discussion", "Open to browse"],
-  ["No password", "Email code login"],
-  ["Custom path", "Private when needed"]
 ] as const;
 const buildSupportCards = [
   ["Manufacturing review", "Understand feasibility, materials, MOQ and cost before paying for samples.", ClipboardCheck],
@@ -109,7 +91,7 @@ const sourceProductSteps = [
 const founderPaths = [
   {
     title: "I have a product idea",
-    description: "Share it with the community and get free manufacturability, cost, MOQ and risk feedback.",
+    description: "Share it with the community and request an initial manufacturability, cost, MOQ, and risk assessment.",
     href: "/ask/new",
     cta: "Start a Discussion",
     icon: Users
@@ -148,13 +130,6 @@ function timeAgo(value: string) {
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.round(hours / 24)}d ago`;
-}
-
-function activityDot(type: CommunityActivityItem["type"]) {
-  if (type === "idea") return "bg-[#14b8a6]";
-  if (type === "comment") return "bg-[#f59e0b]";
-  if (type === "review") return "bg-[#2563eb]";
-  return "bg-[#8b5cf6]";
 }
 
 function homepageIdeaScore(idea: CommunityIdea) {
@@ -204,7 +179,6 @@ export default function Home() {
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
   const [communityTotals, setCommunityTotals] = useState<CommunityTotals | null>(null);
   const [communityLoading, setCommunityLoading] = useState(true);
-  const [liveActivity, setLiveActivity] = useState<CommunityActivityItem[]>([]);
   const [sourceRequestCount, setSourceRequestCount] = useState(0);
   const [mobileDiscussionCtaCollapsed, setMobileDiscussionCtaCollapsed] = useState(true);
 
@@ -234,25 +208,6 @@ export default function Home() {
       .then((response) => response.json())
       .then((payload) => setCommunityTotals(payload.data || null))
       .catch(() => setCommunityTotals(null));
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    async function loadActivity() {
-      try {
-        const response = await fetch("/api/community/activity?limit=8", { cache: "no-store" });
-        const payload = await response.json();
-        if (active) setLiveActivity(Array.isArray(payload.data) ? payload.data : []);
-      } catch {
-        if (active) setLiveActivity([]);
-      }
-    }
-    void loadActivity();
-    const timer = window.setInterval(loadActivity, 30000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
   }, []);
 
   useEffect(() => {
@@ -370,12 +325,20 @@ export default function Home() {
   const communityStats = communityTotals ? [
     ["Ideas Shared", communityTotals.ideas],
     ["TYORA Reviews", communityTotals.reviews],
-    ["Projects Started", communityTotals.projects],
-    ["Products Delivered", communityTotals.delivered],
     ["Countries", communityTotals.countries]
-  ] as const : earlyCommunityStats;
+  ] as const : [];
   const moduleVisibility = displayContent.moduleVisibility;
   const sourceCopy = displayContent.sourcePage;
+  const linkedInUrl = (() => {
+    try {
+      const url = new URL(displayContent.linkedInLink);
+      const host = url.hostname.toLowerCase().replace(/^www\./, "");
+      const path = url.pathname.replace(/\/+$/, "");
+      return host === "linkedin.com" && path && path !== "/" ? url.toString() : "";
+    } catch {
+      return "";
+    }
+  })();
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-52 text-[#101216] md:pb-0">
@@ -397,7 +360,7 @@ export default function Home() {
             <span className="leading-tight">
               {displayContent.brandName}
               <span className="block text-[10px] font-medium uppercase tracking-normal text-[#69707d]">
-                Idea2Product
+                Product development in China
               </span>
             </span>
           </a>
@@ -452,16 +415,16 @@ export default function Home() {
           <div className="min-w-0">
             <div className="hidden rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:block sm:p-4">
               <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-                <Users size={14} /> Community is the product
+                <Users size={14} /> Public product ideas
               </p>
               <div className="mt-2 grid gap-2.5 sm:gap-3">
                 <div>
                   <h1 className="max-w-4xl text-[1.55rem] font-semibold leading-[1.08] tracking-normal sm:text-4xl lg:text-[2.65rem]">What are founders building next?</h1>
                   <p className="mt-1.5 max-w-[320px] text-sm leading-5 text-[#59616e] sm:mt-2 sm:max-w-3xl sm:text-base sm:leading-6">
-                    Share your idea. Get a FREE manufacturing review within 8 working hours.
+                    Share your idea for a limited initial manufacturing assessment.
                   </p>
                   <p className="mt-1.5 max-w-[340px] text-xs font-semibold text-[#0f766e] sm:mt-2 sm:max-w-3xl sm:text-sm">
-                    Post publicly for a free manufacturing review, or send a private custom project to TYORA.
+                    Post publicly for an initial assessment, or send a private custom project to TYORA.
                   </p>
                   <p className="mt-1.5 max-w-[340px] break-words text-xs font-semibold text-[#315fbd] sm:mt-2 sm:max-w-3xl sm:text-sm">Founders are discussing product ideas with TYORA manufacturing experts.</p>
                   <p className="mt-1.5 hidden max-w-3xl text-sm font-medium leading-6 text-[#59616e] sm:block">
@@ -472,15 +435,15 @@ export default function Home() {
                   <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:h-12 sm:px-5 ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
                   <Link href="/ask" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold sm:h-12 sm:px-5"><SearchCheck size={16} /> Browse Ideas</Link>
                 </div>
-                <p className="hidden text-xs font-semibold text-[#69707d] sm:block">Share your idea. Get FREE manufacturing feedback within 8 working hours.</p>
+                <p className="hidden text-xs font-semibold text-[#69707d] sm:block">Initial assessments cover feasibility, MOQ, cost drivers, and the next practical step.</p>
               </div>
               <div className="no-scrollbar mt-2.5 hidden gap-2 overflow-x-auto pb-1 sm:flex xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
-                {(hasCommunityStats ? communityStats : earlyCommunityStats).map(([label, value]) => (
+                {hasCommunityStats ? communityStats.map(([label, value]) => (
                   <div key={label} className="min-w-[122px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3 sm:min-w-[142px] xl:min-w-0">
                     <p className="text-lg font-semibold">{value}</p>
                     <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
                   </div>
-                ))}
+                )) : null}
               </div>
             </div>
 
@@ -561,32 +524,18 @@ export default function Home() {
                       <span className="hidden text-[#315fbd] sm:inline">Last reply {timeAgo(idea.updatedAt || idea.createdAt)}</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between sm:hidden">
-                      <div className="flex -space-x-2">
+                      <div className="flex items-center gap-2">
                         <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-6 border-2 border-white text-[9px]" />
-                        {["TY", "CM"].map((avatar, avatarIndex) => (
-                          <span key={`${idea.id}-mobile-${avatar}`} className={cn(
-                            "flex size-6 items-center justify-center rounded-full border-2 border-white text-[9px] font-semibold",
-                            avatarIndex === 0 ? "bg-[#2563eb] text-white" : "bg-[#e9f7f3] text-[#0f766e]"
-                          )}>
-                            {avatar}
-                          </span>
-                        ))}
+                        <span className="max-w-28 truncate text-[11px] font-semibold text-[#69707d]">{idea.author.name}</span>
                       </div>
-                      <span className="size-3 rounded-full bg-[#14b8a6] shadow-[0_0_0_5px_rgba(20,184,166,0.12)]" />
+                      <span className="text-[11px] font-semibold text-[#8b93a1]">{idea.comments.length} replies</span>
                     </div>
                     <div className="mt-1.5 flex items-center justify-between max-sm:hidden">
-                      <div className="flex -space-x-2">
+                      <div className="flex items-center gap-2">
                         <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-6 border-2 text-[9px]" />
-                        {["TY", "CM"].map((avatar, avatarIndex) => (
-                          <span key={`${idea.id}-${avatar}`} className={cn(
-                            "flex size-6 items-center justify-center rounded-full border-2 border-white text-[9px] font-semibold",
-                            avatarIndex === 0 ? "bg-[#2563eb] text-white" : "bg-[#e9f7f3] text-[#0f766e]"
-                          )}>
-                            {avatar}
-                          </span>
-                        ))}
+                        <span className="max-w-32 truncate text-[11px] font-semibold text-[#69707d]">{idea.author.name}</span>
                       </div>
-                      <span className="text-[11px] font-semibold text-[#8b93a1]">Founder + TYORA + makers</span>
+                      <span className="text-[11px] font-semibold text-[#8b93a1]">{idea.comments.length} community replies</span>
                     </div>
                   </div>
                 </Link>
@@ -595,25 +544,6 @@ export default function Home() {
             </div>
 
             <div className="mt-3 hidden gap-3 sm:grid xl:hidden">
-              <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold">Live Activity</h2>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]">
-                    <span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse" /> LIVE
-                  </span>
-                </div>
-                <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
-                  {liveActivity.length === 0 ? (
-                    <p className="rounded-2xl bg-[#f7f8fa] p-3 text-[#8b93a1]">No live activity yet.</p>
-                  ) : null}
-                  {liveActivity.slice(0, 3).map((item) => (
-                    <Link key={item.id} href={item.href} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-3 transition hover:bg-[#eef3ff]">
-                      <span className="inline-flex min-w-0 items-center gap-2"><span className={`size-2 shrink-0 rounded-full ${activityDot(item.type)}`} /><span className="truncate">{item.label}</span></span>
-                      <span className="shrink-0 text-xs text-[#8b93a1]">{timeAgo(item.createdAt)}</span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
               <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
                 <h2 className="text-base font-semibold">Community Flow</h2>
                 <div className="mt-3 flex gap-2 overflow-x-auto pb-1 text-sm text-[#59616e]">
@@ -626,47 +556,21 @@ export default function Home() {
           </div>
 
           <aside className="hidden space-y-3 self-start xl:sticky xl:top-20 xl:block">
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)]">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold">Live Activity</h2>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2 py-1 text-[11px] font-semibold text-[#0f766e]"><span className="size-1.5 rounded-full bg-[#14b8a6] animate-pulse shadow-[0_0_0_4px_rgba(20,184,166,0.12)]" /> LIVE</span>
-              </div>
-              <div className="mt-3 space-y-2">
-                {liveActivity.length === 0 ? (
-                  <p className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#8b93a1]">No live activity yet.</p>
-                ) : null}
-                {liveActivity.slice(0, 4).map((item) => (
-                  <Link key={item.id} href={item.href} className="flex items-center justify-between gap-3 rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e] transition hover:bg-[#eef3ff]">
-                    <span className="inline-flex min-w-0 items-center gap-2">
-                      <span className={`size-2 shrink-0 rounded-full ${activityDot(item.type)}`} />
-                      <span className="truncate">{item.label}</span>
-                    </span>
-                    <span className="shrink-0 text-[11px] text-[#8b93a1]">{timeAgo(item.createdAt)}</span>
-                  </Link>
-                ))}
-              </div>
-            </section>
-            <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
+            {hasCommunityStats && communityTotals ? <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
               <h2 className="text-lg font-semibold">Community Statistics</h2>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                {(hasCommunityStats && communityTotals ? [
+                {[
                   ["Ideas", communityTotals.ideas],
                   ["Reviews", communityTotals.reviews],
-                  ["Projects", communityTotals.projects],
-                  ["Delivered", communityTotals.delivered]
-                ] : [
-                  ["Access", "Open"],
-                  ["Reviews", "Free"],
-                  ["Login", "Email"],
-                  ["Stage", "Early"]
-                ]).map(([label, value]) => (
+                  ["Countries", communityTotals.countries]
+                ].map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
                     <p className="text-lg font-semibold text-[#101216]">{value}</p>
                     <p className="text-xs text-[#69707d]">{label}</p>
                   </div>
                 ))}
               </div>
-            </section>
+            </section> : null}
           </aside>
         </div>
       </section>
@@ -727,9 +631,9 @@ export default function Home() {
                 <Link href="/source" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
                   {sourceCopy.ctaText} <ArrowRight size={16} />
                 </Link>
-                <p className="flex items-center rounded-full bg-[#ecfdf5] px-3 py-2 text-xs font-semibold text-[#0f766e]">
+                {sourceRequestCount > 0 ? <p className="flex items-center rounded-full bg-[#ecfdf5] px-3 py-2 text-xs font-semibold text-[#0f766e]">
                   {sourceRequestCount} {sourceCopy.statLabel.toLowerCase()}
-                </p>
+                </p> : null}
                 <p className="flex items-center text-xs font-semibold text-[#69707d]">{sourceCopy.sampleNote}</p>
               </div>
             </div>
@@ -817,13 +721,6 @@ export default function Home() {
                 description: idea.description,
                 meta: `${idea.country} · ${idea.author.name}`,
                 href: `/ask/${idea.slug}`
-              })),
-              ...starterExamples.map((item) => ({
-                title: item.title,
-                tag: "Example",
-                description: item.description,
-                meta: item.category,
-                href: "/ask/new"
               }))
             ].slice(0, 6).map((item, index) => (
               <Link
@@ -1043,7 +940,7 @@ export default function Home() {
               ["For early product ideas", "Bring a rough idea, reference image, or product name. TYORA helps turn it into a practical manufacturing conversation."],
               ["For US launch teams", "Get China manufacturing support without trying to manage every supplier detail alone."],
               ["For risk reduction", "Clarify feasibility, samples, quality checks, timelines, and handoff points before production."],
-              ["For practical execution", "Move from review to factory matching, sample coordination, production follow-up, and delivery support."]
+              ["For practical execution", "Move from review to factory matching, sample coordination, production follow-up, and freight-forwarder handoff."]
             ].map(([title, description]) => (
               <Card key={title} className="p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
                 <h3 className="font-semibold">{title}</h3>
@@ -1102,9 +999,12 @@ export default function Home() {
             <p>{displayContent.footerSlogan}</p>
           </div>
           <div className="flex flex-wrap gap-4">
+            <Link href="/privacy-policy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
+            <Link href="/service-scope">Service Scope</Link>
             <a href={`mailto:${displayContent.email}`} onClick={() => trackAnalyticsEvent("email_click")}>{t.email}</a>
             <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>{t.whatsApp}</a>
-            <a href={displayContent.linkedInLink} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("linkedin_click")}>{t.linkedIn}</a>
+            {linkedInUrl ? <a href={linkedInUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("linkedin_click")}>{t.linkedIn}</a> : null}
           </div>
         </div>
       </footer>

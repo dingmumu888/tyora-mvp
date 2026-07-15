@@ -15,8 +15,8 @@ const supplierSteps = [
     text: "Upload product photo, category, quantity, and contact information."
   },
   {
-    title: "Free product match & quote",
-    text: "TYORA checks matching China supplier options and estimated factory pricing for free."
+    title: "Initial product match & quote",
+    text: "TYORA checks matching China supplier options and estimated factory pricing before you choose a paid service."
   },
   {
     title: "Product confirmation",
@@ -36,7 +36,7 @@ const supplierSteps = [
   },
   {
     title: "Replacement support",
-    text: "If the supplier becomes unavailable or the contact is invalid shortly after release, TYORA will help find one replacement supplier for free."
+    text: "If the supplier becomes unavailable or the contact is invalid shortly after release, TYORA will review eligibility for one replacement supplier."
   }
 ];
 
@@ -46,16 +46,16 @@ const managedSteps = [
     text: "Upload product photo, category, quantity, and contact information."
   },
   {
-    title: "Free product match & quote",
-    text: "TYORA checks supplier options, estimated factory pricing, MOQ, and feasibility for free."
+    title: "Initial product match & quote",
+    text: "TYORA checks supplier options, estimated factory pricing, MOQ, and feasibility before you choose a paid service."
   },
   {
     title: "Transparent sourcing plan",
-    text: "Before payment, TYORA confirms product specs, supplier option, estimated factory price, MOQ, lead time, sample plan, inspection plan, shipping option, and TYORA service fee."
+    text: "Before payment, TYORA confirms product specs, supplier option, estimated factory price, MOQ, lead time, sample plan, inspection plan, freight-forwarder handoff plan, and TYORA service fee."
   },
   {
-    title: "No hidden markup commitment",
-    text: "TYORA does not mark up product costs. You pay the factory price plus a transparent service fee. Upon request, we can provide supplier quote screenshots, order payment screenshots, or relevant order communication records so you can verify factory pricing. Sensitive supplier or unrelated information may be hidden when needed."
+    title: "No hidden product markup",
+    text: "You see the factory quotation and pay a clearly agreed TYORA service fee. Supporting factory quotations and payment records may be provided when applicable, with sensitive information redacted where necessary."
   },
   {
     title: "Order starts only after your approval",
@@ -63,7 +63,7 @@ const managedSteps = [
   },
   {
     title: "Payment structure",
-    text: "Standard payment: 30% product deposit, 100% TYORA service fee, and reference sample, inspection, or shipping costs if applicable. The remaining product balance is paid before shipment or as required by the supplier."
+    text: "Standard payment: 30% product deposit, 100% TYORA service fee, and approved reference sample, inspection, or handoff costs if applicable. The remaining product balance is paid before shipment or as required by the supplier."
   },
   {
     title: "Reference sample confirmation",
@@ -82,8 +82,8 @@ const managedSteps = [
     text: "If goods clearly do not match the approved sample or specifications before shipment, TYORA coordinates correction, remake, replacement, or refund negotiation with the supplier before goods are shipped."
   },
   {
-    title: "Shipping coordination",
-    text: "After your confirmation, TYORA ships the goods to your freight forwarder or helps coordinate shipping. Customs duties, import taxes, destination fees, and carrier delays are buyer responsibility unless separately agreed."
+    title: "Freight-forwarder handoff",
+    text: "After your confirmation, TYORA coordinates handoff to your nominated freight forwarder in China. International freight, customs duties, import taxes, destination fees, insurance, and carrier delays remain the buyer's responsibility unless separately agreed in writing."
   }
 ];
 
@@ -138,8 +138,8 @@ export default function SourceHowItWorksPage() {
           id="managed-sourcing"
           icon={<ShieldCheck size={20} />}
           label="Managed Sourcing"
-          title="For buyers who want TYORA to manage negotiation, samples, inspection, and shipping coordination."
-          summary="TYORA gives you factory-price transparency, purchases a reference sample at actual cost, follows production, checks goods before shipment, and coordinates shipping after your confirmation."
+          title="For buyers who want TYORA to manage negotiation, samples, inspection, and freight-forwarder handoff."
+          summary="TYORA gives you factory-price transparency, purchases a reference sample at actual cost, follows production, checks goods before shipment, and coordinates handoff after your confirmation."
           steps={managedSteps}
           note="TYORA does not mark up product costs. Service fees and third-party costs may be non-refundable once work has started or payments have been made to suppliers, inspectors, or logistics providers."
         />
@@ -201,7 +201,7 @@ function ProcessSection({
 
       <div className="mt-5">
         <Link href="/source#source-form" className="inline-flex items-center gap-2 rounded-full bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]">
-          Start with a free product match <CheckCircle2 size={16} />
+          Request a product match <CheckCircle2 size={16} />
         </Link>
       </div>
     </section>

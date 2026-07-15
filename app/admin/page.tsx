@@ -1464,7 +1464,7 @@ function TodaySection({
   const topCards = [
     ["Ideas Waiting", waitingIdeas.length, "yellow"],
     ["TYORA Reviews", recentReviews.length, "green"],
-    ["Projects Started", projectsStarted.length, "blue"],
+    ["Active Projects", projectsStarted.length, "blue"],
     ["New Users", Math.max(communityIdeas.length, leads.length), "purple"],
     ["Total Views", analytics?.summary.pageViewsToday || 0, "gray"],
     ["Likes", likes, "orange"]
@@ -1551,7 +1551,7 @@ function TodaySection({
       <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
         <div className="mb-4 flex items-center gap-2">
           <AlertCircle size={18} className="text-[#c2410c]" />
-          <h2 className="text-xl font-semibold">Live Activity Feed</h2>
+          <h2 className="text-xl font-semibold">Recent Activity Feed</h2>
         </div>
         <div className="grid gap-2 md:grid-cols-2">
           {liveActivity.length === 0 ? <p className="text-sm text-[#69707d]">Real activity only. Uploads, comments, TYORA reviews and project changes will appear here.</p> : null}

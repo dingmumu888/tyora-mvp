@@ -2,7 +2,7 @@ import { defaultContent, LeadStatus, SiteContent } from "@/lib/storage";
 
 export type Language = "en" | "zh";
 
-export const languageKey = "idea2product-language";
+export const languageKey = "tyora-language";
 
 export const zhContent: SiteContent = {
   ...defaultContent,
@@ -18,12 +18,12 @@ export const zhContent: SiteContent = {
   pricing: [
     {
       ...defaultContent.pricing[0],
-      name: "免费定制评估",
+      name: "初步定制评估",
       subtitle: "先确认项目是否现实",
       priceLabel: "初步可行性评估",
       price: "免费",
       description: "TYORA 会确认产品能不能做、MOQ、是否需要模具、模具成本范围、是否能先做样品，以及不改设计/材质/结构前提下的预算范围。",
-      ctaText: "开始免费评估",
+      ctaText: "开始初步评估",
       features: ["产品是否能做", "基于工厂反馈确认 MOQ", "是否需要模具和模具成本范围", "是否能先做样品", "项目预算区间", "主要风险和下一步建议"],
       exclusions: [],
       bottomNote: "这是初步评估，不是最终生产报价。"
@@ -40,7 +40,7 @@ export const zhContent: SiteContent = {
       highlightBanner: undefined,
       note: undefined,
       ctaText: "申请工厂介绍",
-      features: ["工厂匹配评估", "认证工厂联系方式", "工厂信息和沟通交接", "产品成本保持出厂价", "供应商短期失效时免费协助替换一次"],
+      features: ["工厂匹配评估", "认证工厂联系方式", "工厂信息和沟通交接", "产品成本保持出厂价", "供应商短期失效时评估替代供应商支持资格"],
       exclusions: ["后续工厂沟通", "样品跟进", "生产监督", "质量检查", "发货协调"],
       bottomNote: "TYORA 不在产品成本上加价。"
     },
@@ -130,7 +130,7 @@ export const ui = {
       ["Manufacturing Planning", "Plan the right manufacturing approach before committing to production."],
       ["Project Management", "Coordinate communication, samples, timelines, and production progress."],
       ["Quality Assurance", "Reduce manufacturing risks before shipment."],
-      ["Logistics Support", "Coordinate packaging, documents, and global delivery."]
+      ["Logistics Support", "Coordinate packaging, documents, and handoff to the customer’s nominated freight forwarder in China."]
     ],
     helpTitle: "How TYORA Helps",
     heroBadge: "Product Development Partner for makers, sellers, and launch teams",
@@ -158,8 +158,8 @@ export const ui = {
     positioningHeadlineA: "How TYORA Helps",
     positioningHeadlineB: "",
     positioningText:
-      "TYORA supports product development from validation and planning to production, quality assurance, and delivery.",
-    pricingSubtitle: "Start with a free custom review, then choose factory introduction, managed custom production, or repeat order management.",
+      "TYORA supports product development from validation and planning to production, quality assurance, and freight-forwarder handoff.",
+    pricingSubtitle: "Start with an initial custom review, then choose factory introduction, managed custom production, or repeat order management.",
     pricingTitle: "Choose the right Custom support path",
     primaryGoal: "Primary goal",
     processVideoUrl: "Process video URL",
@@ -214,7 +214,7 @@ export const ui = {
       "We identify the right manufacturing solution for your product.",
       "We coordinate prototyping, testing, revisions, and production readiness.",
       "We manage production, quality inspections, and manufacturing progress.",
-      "We coordinate packaging, logistics, and worldwide delivery."
+      "We coordinate packaging, documents, and handoff to the customer’s nominated freight forwarder in China."
     ],
     footerLine: "We don't just manufacture products. We help bring ideas to life.",
     trustBadges: [
@@ -228,13 +228,13 @@ export const ui = {
     trustCards: [
       ["Founder-Friendly Review", "Start with practical feedback before committing budget to samples or production."],
       ["China Manufacturing Context", "Get guidance on factory fit, MOQ, samples, tooling, timelines, and risk points."],
-      ["Hands-On Coordination", "Use TYORA for communication, sample review, production follow-up, quality checks, and shipping support."],
+      ["Hands-On Coordination", "Use TYORA for communication, sample review, production follow-up, quality checks, and freight-forwarder coordination."],
       ["Transparent Decisions", "Stay in control while TYORA helps you understand the tradeoffs before each next step."]
     ],
     trustTitle: "Why US Product Founders Choose TYORA",
     pricingProofA: "First we confirm feasibility, MOQ, mold needs, sample path, and budget range.",
     pricingProofB:
-      "If you continue, TYORA charges a clear service fee. Product costs stay factory priced with no hidden markup.",
+      "No hidden product markup. You see the factory quotation and pay a clearly agreed TYORA service fee.",
     videoSubtitle: "Watch how TYORA helps transform ideas into manufacturable products."
   },
   zh: {
@@ -271,7 +271,7 @@ export const ui = {
       ["制造规划", "在投入生产前规划合适的制造方式。"],
       ["项目管理", "协调沟通、样品、时间计划和生产进度。"],
       ["质量保障", "在出货前降低制造风险。"],
-      ["物流支持", "协调包装、文件和全球交付。"]
+      ["物流支持", "协调包装、文件及交付至客户指定的中国境内货运代理。"]
     ],
     helpTitle: "TYORA 如何帮助你",
     heroBadge: "为创客、卖家和新品团队打造的产品开发伙伴",
@@ -299,8 +299,8 @@ export const ui = {
     positioningHeadlineA: "TYORA 如何帮助你",
     positioningHeadlineB: "",
     positioningText:
-      "TYORA 支持从产品验证、制造规划到生产、质量保障和交付的产品开发流程。",
-    pricingSubtitle: "先免费评估，再选择工厂介绍、全程定制生产或返单管理。",
+      "TYORA 支持从产品验证、制造规划到生产、质量保障及货代交接的产品开发流程。",
+    pricingSubtitle: "先进行初步评估，再选择工厂介绍、全程定制生产或返单管理。",
     pricingTitle: "选择适合你项目阶段的 Custom 支持方式",
     primaryGoal: "核心目标",
     processVideoUrl: "流程视频链接",
@@ -353,7 +353,7 @@ export const ui = {
       "我们评估可制造性、材料、生产方式、MOQ 和项目风险。",
       "为你的项目匹配中国合适的制造伙伴。",
       "协助协调打样、生产、沟通和验货。",
-      "协助包装、物流协调和全球交付。"
+      "协助包装、文件及交付至客户指定的中国境内货运代理。"
     ],
     footerLine: "我们不只是制造产品，我们帮助想法落地。",
     trustBadges: ["产品开发", "制造伙伴匹配", "样品管理", "质量检查", "生产跟进", "发货支持"],
@@ -365,7 +365,7 @@ export const ui = {
     ],
     trustTitle: "为什么创业者选择 TYORA",
     pricingProofA: "先确认能不能做、MOQ、模具需求、样品路径和预算范围。",
-    pricingProofB: "如果继续推进，TYORA 按透明服务费收费，产品成本保持出厂价，不隐藏加价。",
+    pricingProofB: "产品不隐藏加价。客户可查看工厂报价，并支付事先明确约定的 TYORA 服务费。",
     videoSubtitle: "了解 TYORA 如何帮助想法变成可制造产品。"
   }
 } as const;

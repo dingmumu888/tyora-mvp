@@ -1,5 +1,5 @@
 {
-  "name": "idea2product",
+  "name": "tyora",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "lint:safety": "eslint app/api/community/auth/email/request/route.ts app/api/leads/files/route.ts app/api/leads/route.ts app/api/leads/upload/route.ts app/api/media/upload/route.ts lib/server/email-delivery-policy.ts lib/server/email-login.ts lib/server/lead-submission-policy.ts lib/server/private-storage-bucket-policy.ts lib/server/private-storage-config.ts lib/server/private-storage-policy.ts lib/server/private-storage-signed-url-policy.ts lib/server/private-storage.ts lib/server/private-upload-request-policy.ts --max-warnings=0",
     "test:safety": "node --no-warnings --test scripts/email-preview-safety-test.mjs scripts/private-storage-safety-test.mjs scripts/preview-bootstrap-safety-test.mjs",
+    "test:phase1b": "node scripts/phase-1b-foundations-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",
     "db:init": "node scripts/init-db.mjs",
     "db:push": "prisma db push",
