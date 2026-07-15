@@ -38,9 +38,10 @@ const checks = [
   {
     name: "homepage showcase prioritizes manually featured ideas",
     pass:
-      homeClient.includes("homepageFeaturedRank") &&
+      homeClient.includes("eligibleIdeas") &&
       homeClient.includes("left.homepageFeatured") &&
-      homeClient.includes("right.homepageFeatured")
+      homeClient.includes("right.homepageFeatured") &&
+      homeClient.includes("homepageFeaturedOrder")
   }
 ];
 

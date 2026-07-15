@@ -5,6 +5,97 @@ export type EditableCard = {
   description: string;
 };
 
+export type CmsImageValue = {
+  desktopUrl: string;
+  mobileUrl: string;
+  alt: string;
+  objectPosition: string;
+  visible: boolean;
+};
+
+export type HomepageCampaign = {
+  id: string;
+  eyebrow: string;
+  badge: string;
+  title: string;
+  description: string;
+  primaryCtaText: string;
+  primaryCtaHref: string;
+  secondaryCtaText: string;
+  secondaryCtaHref: string;
+  disclosure: string;
+  image: CmsImageValue;
+  visible: boolean;
+  order: number;
+};
+
+export type HomepagePath = {
+  id: string;
+  title: string;
+  description: string;
+  ctaText: string;
+  href: string;
+  icon: "idea" | "source" | "custom";
+  visible: boolean;
+  order: number;
+};
+
+export type HomepageCategory = {
+  id: string;
+  name: string;
+  description: string;
+  href: string;
+  image: CmsImageValue;
+  visible: boolean;
+  order: number;
+};
+
+export type HomepageLink = {
+  id: string;
+  label: string;
+  href: string;
+  visible: boolean;
+  order: number;
+};
+
+export type HomepageContent = {
+  navigationLinks: HomepageLink[];
+  campaigns: HomepageCampaign[];
+  assessmentEyebrow: string;
+  assessmentTitle: string;
+  assessmentDescription: string;
+  assessmentPoints: string[];
+  communityEyebrow: string;
+  communityTitle: string;
+  communityDescription: string;
+  communityCtaText: string;
+  communityCtaHref: string;
+  communityEmptyTitle: string;
+  communityEmptyBody: string;
+  communityLimit: number;
+  communityMinimumScore: number;
+  caseLimit: number;
+  pathsTitle: string;
+  pathsDescription: string;
+  paths: HomepagePath[];
+  categoriesTitle: string;
+  categoriesNote: string;
+  categories: HomepageCategory[];
+  sourceEyebrow: string;
+  sourceTitle: string;
+  sourceDescription: string;
+  sourceCtaText: string;
+  sourceCtaHref: string;
+  sourceSteps: EditableCard[];
+  finalEyebrow: string;
+  finalTitle: string;
+  finalDescription: string;
+  finalPrimaryCtaText: string;
+  finalPrimaryCtaHref: string;
+  finalSecondaryCtaText: string;
+  finalSecondaryCtaHref: string;
+};
+
 export type SourcePageContent = {
   eyebrow: string;
   title: string;
@@ -34,6 +125,8 @@ export type MobileTabsContent = {
   profile: string;
   startDiscussion: string;
   startDiscussionSubtitle: string;
+  privateCustom: string;
+  privateCustomSubtitle: string;
   sourceProduct: string;
   sourceProductSubtitle: string;
 };
@@ -95,11 +188,24 @@ export type CaseStudy = {
   category: string;
   shortDescription: string;
   concept: string;
+  manufacturingReview: string;
+  suggestedMaterial: string;
+  suggestedProcess: string;
   prototype: string;
+  manufacturing: string;
   final: string;
   conceptImage: string;
   prototypeImage: string;
+  manufacturingImage: string;
   finalImage: string;
+  coverImage: CmsImageValue;
+  moq: string;
+  timeline: string;
+  featured: boolean;
+  projectType: "Real Project" | "Demonstration Project";
+  badgeLabel: string;
+  ctaText: string;
+  ctaHref: string;
   visible: boolean;
   order: number;
 };
@@ -137,6 +243,7 @@ export type SiteContent = {
   helpCards: EditableCard[];
   pricing: PricingPlan[];
   cases: CaseStudy[];
+  homepage: HomepageContent;
   sourcePage: SourcePageContent;
   mobileTabs: MobileTabsContent;
   moduleVisibility: ModuleVisibility;
@@ -305,6 +412,123 @@ export const defaultContent: SiteContent = {
     { title: "Factory matching", description: "Find manufacturing partners in China that fit the product, category, and project stage." },
     { title: "Managed production support", description: "Get help with samples, factory communication, production follow-up, quality checks, and freight-forwarder coordination." }
   ],
+  homepage: {
+    navigationLinks: [
+      { id: "ideas", label: "Ideas", href: "/ask", visible: true, order: 1 },
+      { id: "custom", label: "Custom Manufacturing", href: "/custom", visible: true, order: 2 },
+      { id: "source", label: "Source Products", href: "/source", visible: true, order: 3 },
+      { id: "process", label: "How It Works", href: "/service-scope", visible: true, order: 4 },
+      { id: "pricing", label: "Pricing", href: "/build#pricing", visible: true, order: 5 },
+      { id: "account", label: "My TYORA", href: "/me", visible: true, order: 6 }
+    ],
+    campaigns: [
+      {
+        id: "phone-accessory-campaign",
+        eyebrow: "Product Development & Manufacturing in China",
+        badge: "Current Product Campaign",
+        title: "Turn your product idea into a manufacturing plan.",
+        description:
+          "Upload an AI design, sketch, or reference image. TYORA will review the likely manufacturing route before you commit to samples or tooling.",
+        primaryCtaText: "Upload Your Idea",
+        primaryCtaHref: "/ask/new",
+        secondaryCtaText: "View Manufacturing Cases",
+        secondaryCtaHref: "#ideas-and-cases",
+        disclosure: "TYORA Demonstration Visual",
+        image: {
+          desktopUrl: "/images/tyora-manufacturing-campaign-v1.png",
+          mobileUrl: "",
+          alt: "Magnetic phone stand concept, prototypes, material samples, and manufacturing tools",
+          objectPosition: "center center",
+          visible: true
+        },
+        visible: true,
+        order: 1
+      }
+    ],
+    assessmentEyebrow: "Initial Manufacturing Assessment",
+    assessmentTitle: "Know what is realistic before spending on development.",
+    assessmentDescription:
+      "TYORA gives a limited early view of the manufacturing path using the product information you provide.",
+    assessmentPoints: [
+      "Manufacturing feasibility",
+      "Estimated cost range",
+      "Estimated MOQ"
+    ],
+    communityEyebrow: "Ideas & Manufacturing Evidence",
+    communityTitle: "See what people want to build and how TYORA reviews it.",
+    communityDescription:
+      "This feed combines eligible public community ideas with clearly labelled TYORA-owned case content.",
+    communityCtaText: "Browse All Ideas",
+    communityCtaHref: "/ask",
+    communityEmptyTitle: "No eligible public ideas yet.",
+    communityEmptyBody:
+      "TYORA cases and current product campaigns remain available while the community feed is empty.",
+    communityLimit: 6,
+    communityMinimumScore: 0,
+    caseLimit: 3,
+    pathsTitle: "Choose the right starting point.",
+    pathsDescription: "Start publicly with an idea, privately with custom development, or with an existing product reference.",
+    paths: [
+      {
+        id: "ideas",
+        title: "Ideas",
+        description: "Share an AI design, sketch, or reference image for an initial manufacturing assessment.",
+        ctaText: "Upload Your Idea",
+        href: "/ask/new",
+        icon: "idea",
+        visible: true,
+        order: 1
+      },
+      {
+        id: "source",
+        title: "Source",
+        description: "Upload an existing product and let TYORA check suitable China supplier options.",
+        ctaText: "Find a Supplier",
+        href: "/source",
+        icon: "source",
+        visible: true,
+        order: 2
+      },
+      {
+        id: "custom",
+        title: "Custom",
+        description: "Send a confidential product concept for private manufacturing review and development support.",
+        ctaText: "Start Custom Project",
+        href: "/custom",
+        icon: "custom",
+        visible: true,
+        order: 3
+      }
+    ],
+    categoriesTitle: "Products TYORA Reviews",
+    categoriesNote: "Small appliances and regulated electrical products are reviewed case by case.",
+    categories: [
+      { id: "phone-accessories", name: "Phone Accessories", description: "Cases, stands, mounts, and related accessories.", href: "/ask?category=Phone%20Accessories", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 1 },
+      { id: "electronics-accessories", name: "Consumer Electronics Accessories", description: "Accessory products without unsupported compliance claims.", href: "/ask?category=Consumer%20Electronics", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 2 },
+      { id: "desktop-office", name: "Desktop & Office Products", description: "Organizers, stands, tools, and workplace products.", href: "/ask?category=Office%20%26%20Desktop", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 3 },
+      { id: "custom-gifts", name: "Custom Gifts", description: "Gift products, packaging, and presentation concepts.", href: "/ask?category=Gifts", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 4 },
+      { id: "lifestyle", name: "Lifestyle Products", description: "Everyday consumer products reviewed for practical production.", href: "/ask?category=Lifestyle", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 5 },
+      { id: "fashion-accessories", name: "Fashion Accessories", description: "Bags, jewelry, and wearable accessory concepts.", href: "/ask?category=Fashion%20Accessories", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 6 }
+    ],
+    sourceEyebrow: "Source Existing Products",
+    sourceTitle: "Already found a product? Check the supplier path.",
+    sourceDescription:
+      "Upload a photo or link. TYORA checks product fit, suitable supplier options, and estimated China factory pricing.",
+    sourceCtaText: "Request Product Match",
+    sourceCtaHref: "/source",
+    sourceSteps: [
+      { title: "Upload a reference", description: "Send product photos or a link with the target quantity." },
+      { title: "Confirm the requirement", description: "TYORA reviews the product details and supplier fit." },
+      { title: "Choose the next step", description: "Continue with factory introduction or managed sourcing." }
+    ],
+    finalEyebrow: "Ready for the next manufacturing decision?",
+    finalTitle: "Start with the product information you already have.",
+    finalDescription: "A sketch, AI image, product photo, or short description is enough to begin the right TYORA path.",
+    finalPrimaryCtaText: "Upload Your Idea",
+    finalPrimaryCtaHref: "/ask/new",
+    finalSecondaryCtaText: "Start Private Custom Review",
+    finalSecondaryCtaHref: "/custom"
+  },
   sourcePage: {
     eyebrow: "Source This Product",
     title: "Found a product? Let TYORA check China supplier options.",
@@ -335,14 +559,16 @@ export const defaultContent: SiteContent = {
     trustToastMaxSeconds: 300
   },
   mobileTabs: {
-    community: "Community",
+    community: "Home",
     source: "Source",
-    create: "Post",
-    build: "Build",
-    profile: "Profile",
-    startDiscussion: "Start Discussion",
-    startDiscussionSubtitle: "Share a product idea with the community.",
-    sourceProduct: "Source Product",
+    create: "Submit",
+    build: "Ideas",
+    profile: "My TYORA",
+    startDiscussion: "Public Idea",
+    startDiscussionSubtitle: "Share a product idea for community and TYORA review.",
+    privateCustom: "Private Custom Review",
+    privateCustomSubtitle: "Send a confidential concept directly to TYORA.",
+    sourceProduct: "Source Existing Product",
     sourceProductSubtitle: "Upload a product reference for supplier check."
   },
   moduleVisibility: {
@@ -454,6 +680,43 @@ export const defaultContent: SiteContent = {
   ],
   cases: [
     {
+      id: "tyora-phone-stand-demonstration",
+      name: "Magnetic Phone Stand Development",
+      slug: "tyora-phone-stand-demonstration",
+      status: "Prototype Approved",
+      country: "",
+      category: "Phone Accessories",
+      shortDescription:
+        "A TYORA demonstration case showing how a rough accessory concept can be reviewed before factory matching.",
+      concept: "A compact magnetic stand intended to fold flat and support common phone sizes.",
+      manufacturingReview: "The hinge, magnet stack, device clearance, and surface finish need confirmation before quotation.",
+      suggestedMaterial: "CNC aluminium prototype followed by die-cast aluminium review for suitable production volume.",
+      suggestedProcess: "CAD refinement, functional prototype, hinge-cycle review, then supplier quotation against confirmed dimensions.",
+      prototype: "Functional form and hinge movement reviewed before production tooling decisions.",
+      manufacturing: "Factory matching begins only after the dimensions, finish, magnet requirement, and target quantity are confirmed.",
+      final: "Demonstration only. No customer production result is claimed.",
+      conceptImage: "/images/tyora-manufacturing-campaign-v1.png",
+      prototypeImage: "/images/tyora-manufacturing-campaign-v1.png",
+      manufacturingImage: "/images/tyora-manufacturing-campaign-v1.png",
+      finalImage: "/images/tyora-manufacturing-campaign-v1.png",
+      coverImage: {
+        desktopUrl: "/images/tyora-manufacturing-campaign-v1.png",
+        mobileUrl: "",
+        alt: "Magnetic phone stand concept and prototype on a manufacturing workbench",
+        objectPosition: "center center",
+        visible: true
+      },
+      moq: "Confirmed after material and process selection",
+      timeline: "Confirmed after prototype scope",
+      featured: true,
+      projectType: "Demonstration Project",
+        badgeLabel: "TYORA Case",
+        ctaText: "Review Custom Path",
+        ctaHref: "/custom",
+        visible: true,
+      order: 1
+    },
+    {
       id: "magnetic-phone-stand",
       name: "Magnetic Phone Stand",
       slug: "magnetic-phone-stand",
@@ -462,13 +725,26 @@ export const defaultContent: SiteContent = {
       category: "Consumer Electronics",
       shortDescription: "A foldable magnetic phone stand developed from concept to shipment.",
       concept: "Concept",
+      manufacturingReview: "",
+      suggestedMaterial: "",
+      suggestedProcess: "",
       prototype: "Prototype",
+      manufacturing: "",
       final: "Final Product",
       conceptImage: "",
       prototypeImage: "",
+      manufacturingImage: "",
       finalImage: "",
-      visible: false,
-      order: 1
+      coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
+      moq: "",
+      timeline: "",
+      featured: false,
+      projectType: "Demonstration Project",
+        badgeLabel: "TYORA Case",
+        ctaText: "View Custom Manufacturing",
+        ctaHref: "/custom",
+        visible: false,
+      order: 2
     },
     {
       id: "capybara-night-light",
@@ -479,13 +755,26 @@ export const defaultContent: SiteContent = {
       category: "Home & Lifestyle",
       shortDescription: "A playful night light prepared for small-batch production.",
       concept: "Concept",
+      manufacturingReview: "",
+      suggestedMaterial: "",
+      suggestedProcess: "",
       prototype: "Prototype",
+      manufacturing: "",
       final: "Final Product",
       conceptImage: "",
       prototypeImage: "",
+      manufacturingImage: "",
       finalImage: "",
-      visible: false,
-      order: 2
+      coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
+      moq: "",
+      timeline: "",
+      featured: false,
+      projectType: "Demonstration Project",
+        badgeLabel: "TYORA Case",
+        ctaText: "View Custom Manufacturing",
+        ctaHref: "/custom",
+        visible: false,
+      order: 3
     },
     {
       id: "pet-grooming-tool",
@@ -496,13 +785,26 @@ export const defaultContent: SiteContent = {
       category: "Pet Products",
       shortDescription: "A pet care product refined through prototype review.",
       concept: "Concept",
+      manufacturingReview: "",
+      suggestedMaterial: "",
+      suggestedProcess: "",
       prototype: "Prototype",
+      manufacturing: "",
       final: "Final Product",
       conceptImage: "",
       prototypeImage: "",
+      manufacturingImage: "",
       finalImage: "",
-      visible: false,
-      order: 3
+      coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
+      moq: "",
+      timeline: "",
+      featured: false,
+      projectType: "Demonstration Project",
+        badgeLabel: "TYORA Case",
+        ctaText: "View Custom Manufacturing",
+        ctaHref: "/custom",
+        visible: false,
+      order: 4
     }
   ]
 };
@@ -649,6 +951,154 @@ function normalizeCards(value: unknown, fallback: EditableCard[]) {
   });
 }
 
+function safeCmsImageUrl(value: unknown, fallback = "") {
+  const candidate = typeof value === "string" ? value.trim() : fallback;
+  if (!candidate || candidate.startsWith("data:") || candidate.startsWith("//")) return "";
+  if (candidate.startsWith("/")) {
+    return /\.svg(?:$|[?#])/i.test(candidate) ? "" : candidate;
+  }
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== "https:" || /\.svg$/i.test(url.pathname)) return "";
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+
+function safeCmsHref(value: unknown, fallback: string) {
+  const candidate = typeof value === "string" ? value.trim() : fallback;
+  if (candidate.startsWith("/") && !candidate.startsWith("//")) return candidate;
+  if (candidate.startsWith("#")) return candidate;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === "https:" ? url.toString() : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeCmsImage(value: unknown, fallback: CmsImageValue): CmsImageValue {
+  const item = value && typeof value === "object" ? (value as Partial<CmsImageValue>) : {};
+  const objectPosition = stringValue(item.objectPosition, fallback.objectPosition).trim();
+  return {
+    desktopUrl: safeCmsImageUrl(item.desktopUrl, fallback.desktopUrl),
+    mobileUrl: safeCmsImageUrl(item.mobileUrl, fallback.mobileUrl),
+    alt: stringValue(item.alt, fallback.alt).trim().slice(0, 240),
+    objectPosition: objectPosition && !/[;{}]/.test(objectPosition) ? objectPosition.slice(0, 40) : "center center",
+    visible: booleanValue(item.visible, fallback.visible)
+  };
+}
+
+function normalizeHomepage(value: unknown): HomepageContent {
+  const item = value && typeof value === "object" ? (value as Partial<HomepageContent>) : {};
+  const fallback = defaultContent.homepage;
+  const campaignsSource = Array.isArray(item.campaigns) ? item.campaigns : fallback.campaigns;
+  const pathsSource = Array.isArray(item.paths) ? item.paths : fallback.paths;
+  const categoriesSource = Array.isArray(item.categories) ? item.categories : fallback.categories;
+  const navigationSource = Array.isArray(item.navigationLinks) ? item.navigationLinks : fallback.navigationLinks;
+
+  const navigationLinks = navigationSource.map((entry, index) => {
+    const link = entry as Partial<HomepageLink>;
+    const fb = fallback.navigationLinks[index] || fallback.navigationLinks[0];
+    return {
+      id: stringValue(link.id, fb.id || cryptoSafeId("nav")),
+      label: stringValue(link.label, fb.label),
+      href: safeCmsHref(link.href, fb.href),
+      visible: booleanValue(link.visible, fb.visible),
+      order: numberValue(link.order, fb.order || index + 1, 1, 99)
+    };
+  }).sort((left, right) => left.order - right.order);
+
+  const campaigns = campaignsSource.map((entry, index) => {
+    const campaign = entry as Partial<HomepageCampaign>;
+    const fb = fallback.campaigns[index] || fallback.campaigns[0];
+    return {
+      id: stringValue(campaign.id, fb.id || cryptoSafeId("campaign")),
+      eyebrow: stringValue(campaign.eyebrow, fb.eyebrow),
+      badge: stringValue(campaign.badge, fb.badge),
+      title: stringValue(campaign.title, fb.title),
+      description: stringValue(campaign.description, fb.description),
+      primaryCtaText: stringValue(campaign.primaryCtaText, fb.primaryCtaText),
+      primaryCtaHref: safeCmsHref(campaign.primaryCtaHref, fb.primaryCtaHref),
+      secondaryCtaText: stringValue(campaign.secondaryCtaText, fb.secondaryCtaText),
+      secondaryCtaHref: safeCmsHref(campaign.secondaryCtaHref, fb.secondaryCtaHref),
+      disclosure: stringValue(campaign.disclosure, fb.disclosure),
+      image: normalizeCmsImage(campaign.image, fb.image),
+      visible: booleanValue(campaign.visible, fb.visible),
+      order: numberValue(campaign.order, fb.order || index + 1, 1, 99)
+    };
+  }).sort((left, right) => left.order - right.order);
+
+  const paths = pathsSource.map((entry, index) => {
+    const path = entry as Partial<HomepagePath>;
+    const fb = fallback.paths[index] || fallback.paths[0];
+    const icon = ["idea", "source", "custom"].includes(path.icon || "") ? path.icon : fb.icon;
+    return {
+      id: stringValue(path.id, fb.id || cryptoSafeId("path")),
+      title: stringValue(path.title, fb.title),
+      description: stringValue(path.description, fb.description),
+      ctaText: stringValue(path.ctaText, fb.ctaText),
+      href: safeCmsHref(path.href, fb.href),
+      icon: icon as HomepagePath["icon"],
+      visible: booleanValue(path.visible, fb.visible),
+      order: numberValue(path.order, fb.order || index + 1, 1, 99)
+    };
+  }).sort((left, right) => left.order - right.order);
+
+  const categories = categoriesSource.map((entry, index) => {
+    const category = entry as Partial<HomepageCategory>;
+    const fb = fallback.categories[index] || fallback.categories[0];
+    return {
+      id: stringValue(category.id, fb.id || cryptoSafeId("category")),
+      name: stringValue(category.name, fb.name),
+      description: stringValue(category.description, fb.description),
+      href: safeCmsHref(category.href, fb.href),
+      image: normalizeCmsImage(category.image, fb.image),
+      visible: booleanValue(category.visible, fb.visible),
+      order: numberValue(category.order, fb.order || index + 1, 1, 99)
+    };
+  }).sort((left, right) => left.order - right.order);
+
+  return {
+    navigationLinks,
+    campaigns,
+    assessmentEyebrow: stringValue(item.assessmentEyebrow, fallback.assessmentEyebrow),
+    assessmentTitle: stringValue(item.assessmentTitle, fallback.assessmentTitle),
+    assessmentDescription: stringValue(item.assessmentDescription, fallback.assessmentDescription),
+    assessmentPoints: stringListValue(item.assessmentPoints, fallback.assessmentPoints),
+    communityEyebrow: stringValue(item.communityEyebrow, fallback.communityEyebrow),
+    communityTitle: stringValue(item.communityTitle, fallback.communityTitle),
+    communityDescription: stringValue(item.communityDescription, fallback.communityDescription),
+    communityCtaText: stringValue(item.communityCtaText, fallback.communityCtaText),
+    communityCtaHref: safeCmsHref(item.communityCtaHref, fallback.communityCtaHref),
+    communityEmptyTitle: stringValue(item.communityEmptyTitle, fallback.communityEmptyTitle),
+    communityEmptyBody: stringValue(item.communityEmptyBody, fallback.communityEmptyBody),
+    communityLimit: numberValue(item.communityLimit, fallback.communityLimit, 1, 12),
+    communityMinimumScore: numberValue(item.communityMinimumScore, fallback.communityMinimumScore, 0, 10000),
+    caseLimit: numberValue(item.caseLimit, fallback.caseLimit, 1, 12),
+    pathsTitle: stringValue(item.pathsTitle, fallback.pathsTitle),
+    pathsDescription: stringValue(item.pathsDescription, fallback.pathsDescription),
+    paths,
+    categoriesTitle: stringValue(item.categoriesTitle, fallback.categoriesTitle),
+    categoriesNote: stringValue(item.categoriesNote, fallback.categoriesNote),
+    categories,
+    sourceEyebrow: stringValue(item.sourceEyebrow, fallback.sourceEyebrow),
+    sourceTitle: stringValue(item.sourceTitle, fallback.sourceTitle),
+    sourceDescription: stringValue(item.sourceDescription, fallback.sourceDescription),
+    sourceCtaText: stringValue(item.sourceCtaText, fallback.sourceCtaText),
+    sourceCtaHref: safeCmsHref(item.sourceCtaHref, fallback.sourceCtaHref),
+    sourceSteps: normalizeCards(item.sourceSteps, fallback.sourceSteps),
+    finalEyebrow: stringValue(item.finalEyebrow, fallback.finalEyebrow),
+    finalTitle: stringValue(item.finalTitle, fallback.finalTitle),
+    finalDescription: stringValue(item.finalDescription, fallback.finalDescription),
+    finalPrimaryCtaText: stringValue(item.finalPrimaryCtaText, fallback.finalPrimaryCtaText),
+    finalPrimaryCtaHref: safeCmsHref(item.finalPrimaryCtaHref, fallback.finalPrimaryCtaHref),
+    finalSecondaryCtaText: stringValue(item.finalSecondaryCtaText, fallback.finalSecondaryCtaText),
+    finalSecondaryCtaHref: safeCmsHref(item.finalSecondaryCtaHref, fallback.finalSecondaryCtaHref)
+  };
+}
+
 function normalizeSourcePage(value: unknown): SourcePageContent {
   const item = value && typeof value === "object" ? (value as Partial<SourcePageContent>) : {};
   const minSeconds = numberValue(item.trustToastMinSeconds, defaultContent.sourcePage.trustToastMinSeconds, 5, 600);
@@ -685,6 +1135,8 @@ function normalizeMobileTabs(value: unknown): MobileTabsContent {
     profile: stringValue(item.profile, defaultContent.mobileTabs.profile),
     startDiscussion: stringValue(item.startDiscussion, defaultContent.mobileTabs.startDiscussion),
     startDiscussionSubtitle: stringValue(item.startDiscussionSubtitle, defaultContent.mobileTabs.startDiscussionSubtitle),
+    privateCustom: stringValue(item.privateCustom, defaultContent.mobileTabs.privateCustom),
+    privateCustomSubtitle: stringValue(item.privateCustomSubtitle, defaultContent.mobileTabs.privateCustomSubtitle),
     sourceProduct: stringValue(item.sourceProduct, defaultContent.mobileTabs.sourceProduct),
     sourceProductSubtitle: stringValue(item.sourceProductSubtitle, defaultContent.mobileTabs.sourceProductSubtitle)
   };
@@ -759,11 +1211,16 @@ function normalizeCases(value: unknown): CaseStudy[] {
   return source
     .map((entry, index) => {
       const item = entry as Partial<CaseStudy>;
-      const fb = defaultContent.cases[index] || defaultContent.cases[0];
+      const storedId = typeof item.id === "string" ? item.id : "";
+      const fb = defaultContent.cases.find((study) => study.id === storedId) || defaultContent.cases[index] || defaultContent.cases[0];
       const name = stringValue(item.name, fb.name);
       const status = ["Concept", "Prototype Approved", "In Production", "Delivered"].includes(item.status || "")
         ? item.status
         : fb.status;
+      const projectType = ["Real Project", "Demonstration Project"].includes(item.projectType || "")
+        ? item.projectType
+        : fb.projectType;
+      const legacyCover = stringValue(item.finalImage, "") || stringValue(item.prototypeImage, "") || stringValue(item.conceptImage, "");
       return {
         id: stringValue(item.id, fb.id || cryptoSafeId("case")),
         name,
@@ -773,11 +1230,28 @@ function normalizeCases(value: unknown): CaseStudy[] {
         category: stringValue(item.category, fb.category),
         shortDescription: stringValue(item.shortDescription, fb.shortDescription),
         concept: stringValue(item.concept, fb.concept),
+        manufacturingReview: stringValue(item.manufacturingReview, fb.manufacturingReview),
+        suggestedMaterial: stringValue(item.suggestedMaterial, fb.suggestedMaterial),
+        suggestedProcess: stringValue(item.suggestedProcess, fb.suggestedProcess),
         prototype: stringValue(item.prototype, fb.prototype),
+        manufacturing: stringValue(item.manufacturing, fb.manufacturing),
         final: stringValue(item.final, fb.final),
-        conceptImage: stringValue(item.conceptImage, fb.conceptImage),
-        prototypeImage: stringValue(item.prototypeImage, fb.prototypeImage),
-        finalImage: stringValue(item.finalImage, fb.finalImage),
+        conceptImage: safeCmsImageUrl(item.conceptImage, fb.conceptImage),
+        prototypeImage: safeCmsImageUrl(item.prototypeImage, fb.prototypeImage),
+        manufacturingImage: safeCmsImageUrl(item.manufacturingImage, fb.manufacturingImage),
+        finalImage: safeCmsImageUrl(item.finalImage, fb.finalImage),
+        coverImage: normalizeCmsImage(item.coverImage, {
+          ...fb.coverImage,
+          desktopUrl: legacyCover || fb.coverImage.desktopUrl,
+          alt: fb.coverImage.alt || `${name} manufacturing case`
+        }),
+        moq: stringValue(item.moq, fb.moq),
+        timeline: stringValue(item.timeline, fb.timeline),
+        featured: booleanValue(item.featured, fb.featured),
+        projectType: projectType as CaseStudy["projectType"],
+        badgeLabel: stringValue(item.badgeLabel, fb.badgeLabel),
+        ctaText: stringValue(item.ctaText, fb.ctaText),
+        ctaHref: safeCmsHref(item.ctaHref, fb.ctaHref),
         visible: typeof item.visible === "boolean" ? item.visible : fb.visible,
         order: typeof item.order === "number" ? item.order : fb.order ?? index + 1
       };
@@ -923,7 +1397,7 @@ function cryptoSafeId(prefix: string) {
 export function normalizeContent(value: unknown): SiteContent {
   const item = value && typeof value === "object" ? (value as Partial<SiteContent>) : {};
   const normalized: SiteContent = {
-    brandName: stringValue(item.brandName, defaultContent.brandName),
+    brandName: "TYORA",
     logoImage: stringValue(item.logoImage, defaultContent.logoImage),
     favicon: stringValue(item.favicon, defaultContent.favicon),
     whatsappLink: normalizeWhatsAppUrl(stringValue(item.whatsappLink, defaultContent.whatsappLink)),
@@ -959,6 +1433,7 @@ export function normalizeContent(value: unknown): SiteContent {
     helpCards: normalizeCards(item.helpCards, defaultContent.helpCards),
     pricing: normalizePricing(item.pricing),
     cases: normalizeCases(item.cases),
+    homepage: normalizeHomepage(item.homepage),
     sourcePage: normalizeSourcePage(item.sourcePage),
     mobileTabs: normalizeMobileTabs(item.mobileTabs),
     moduleVisibility: normalizeModuleVisibility(item.moduleVisibility)

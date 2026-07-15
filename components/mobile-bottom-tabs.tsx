@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Factory, Home, PackageSearch, Plus, UserRound, type LucideIcon } from "lucide-react";
+import { Home, Lightbulb, PackageSearch, Plus, UserRound, type LucideIcon } from "lucide-react";
 import { useEffect, useState, type MouseEvent } from "react";
 import CommunityAvatar from "@/components/community-avatar";
 import { CommunitySessionUser } from "@/components/community-profile-modal";
@@ -16,9 +16,9 @@ type MobileTab = {
 };
 
 const tabs: MobileTab[] = [
-  { label: "Community", href: "/", icon: Home, match: (path) => path === "/" || path === "/ask" || (path.startsWith("/ask/") && path !== "/ask/new") },
+  { label: "Home", href: "/", icon: Home, match: (path) => path === "/" },
+  { label: "Ideas", href: "/ask", icon: Lightbulb, match: (path) => path === "/ask" || (path.startsWith("/ask/") && path !== "/ask/new") },
   { label: "Source", href: "/source", icon: PackageSearch, match: (path) => path === "/source" },
-  { label: "Custom", href: "/custom", icon: Factory, match: (path) => path === "/custom" || path === "/build" },
   { label: "Profile", href: "/me", icon: UserRound, match: (path) => path === "/me" }
 ];
 
@@ -145,32 +145,36 @@ export default function MobileBottomTabs() {
       />
     ) : null}
     {createOpen ? (
-      <div className="fixed inset-x-4 bottom-[calc(6.8rem+env(safe-area-inset-bottom))] z-[9991] grid gap-2 rounded-[24px] border border-[#e4e8ef] bg-white p-3 text-[#101216] shadow-[0_24px_70px_rgba(0,0,0,0.22)] md:hidden">
-        <Link href="/ask/new" onClick={() => setCreateOpen(false)} className="rounded-2xl bg-[#101216] px-4 py-3 text-sm font-semibold text-white">
+      <div className="fixed inset-x-4 bottom-[calc(6.8rem+env(safe-area-inset-bottom))] z-[9991] grid gap-2 rounded-lg border border-[#e4e8ef] bg-white p-3 text-[#101216] shadow-[0_24px_70px_rgba(0,0,0,0.22)] md:hidden">
+        <Link href="/ask/new" onClick={() => setCreateOpen(false)} className="rounded-md bg-[#101216] px-4 py-3 text-sm font-semibold text-white">
           {tabCopy.startDiscussion}
           <span className="mt-1 block text-xs font-medium text-white/70">{tabCopy.startDiscussionSubtitle}</span>
         </Link>
-        <Link href="/source#source-form" onClick={openSourceForm} className="rounded-2xl border border-[#dfe5ee] bg-[#f8fafc] px-4 py-3 text-sm font-semibold">
+        <Link href="/custom" onClick={() => setCreateOpen(false)} className="rounded-md border border-[#dfe5ee] bg-white px-4 py-3 text-sm font-semibold">
+          {tabCopy.privateCustom}
+          <span className="mt-1 block text-xs font-medium text-[#687284]">{tabCopy.privateCustomSubtitle}</span>
+        </Link>
+        <Link href="/source#source-form" onClick={openSourceForm} className="rounded-md border border-[#dfe5ee] bg-[#f8fafc] px-4 py-3 text-sm font-semibold">
           {tabCopy.sourceProduct}
           <span className="mt-1 block text-xs font-medium text-[#687284]">{tabCopy.sourceProductSubtitle}</span>
         </Link>
       </div>
     ) : null}
-    <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[9990] rounded-[28px] border border-white/10 bg-[#07080a]/96 px-2 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
+    <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[9990] rounded-lg border border-white/10 bg-[#07080a]/96 px-2 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
       <div className="mx-auto grid max-w-md grid-cols-5 items-center gap-1">
         {tabs.slice(0, 2).map((tab) => {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
+            <Link key={tab.label} href={tab.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
-              <span>{tab.label === "Community" ? tabCopy.community : tab.label === "Source" ? tabCopy.source : tab.label}</span>
+              <span>{tab.label === "Home" ? tabCopy.community : tabCopy.build}</span>
             </Link>
           );
         })}
 
         <button type="button" onClick={() => setCreateOpen((value) => !value)} className="mx-auto -mt-5 flex flex-col items-center gap-1 active:scale-95" aria-label="Create">
-          <span className={`flex size-14 items-center justify-center rounded-2xl shadow-2xl transition ${plusActive || createOpen ? "bg-white text-[#101216] shadow-white/20" : "bg-[#2563eb] text-white shadow-[#2563eb]/30"}`}>
+          <span className={`flex size-14 items-center justify-center rounded-md shadow-2xl transition ${plusActive || createOpen ? "bg-white text-[#101216] shadow-white/20" : "bg-[#2563eb] text-white shadow-[#2563eb]/30"}`}>
             <Plus size={30} strokeWidth={2.8} />
           </span>
           <span className={`text-[11px] font-semibold ${plusActive || createOpen ? "text-white" : "text-white/48"}`}>{tabCopy.create}</span>
@@ -180,13 +184,13 @@ export default function MobileBottomTabs() {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
+            <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
-              <span>{tab.label}</span>
+              <span>{tabCopy.source}</span>
             </Link>
           );
         })}
-        <Link href="/me" className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition active:scale-95 ${tabs[3].match(pathname, hash) ? "bg-white/8 text-white" : "text-white/48"}`} aria-label="Profile and activity">
+        <Link href="/me" className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${tabs[3].match(pathname, hash) ? "bg-white/8 text-white" : "text-white/48"}`} aria-label="Profile and activity">
           {user ? (
             <span className="relative">
               <CommunityAvatar name={user.name} src={user.avatar} className="size-6 border border-white/20 text-[9px]" />

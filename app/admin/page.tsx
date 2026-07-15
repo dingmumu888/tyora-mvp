@@ -15,7 +15,6 @@ import {
   File,
   Flag,
   Globe2,
-  ImagePlus,
   LayoutDashboard,
   Library,
   Lock,
@@ -37,6 +36,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
 import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
+import HomepageContentEditor from "@/components/admin/homepage-content-editor";
+import CmsImageField from "@/components/admin/cms-image-field";
 import {
   CaseStudy,
   CaseStudyStatus,
@@ -383,7 +384,7 @@ function mediaTypeFromMime(mimeType: string): MediaType {
 function validateFile(file: File, allowed: MediaType[]) {
   const type = mediaTypeFromMime(file.type);
   const validMime =
-    ["image/jpeg", "image/png", "image/webp", "image/svg+xml"].includes(file.type) ||
+    ["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type) ||
     ["video/mp4", "video/webm", "application/pdf"].includes(file.type);
 
   if (!validMime || !allowed.includes(type)) {
@@ -523,7 +524,7 @@ function MediaUploader({
           <input
             className="sr-only"
             type="file"
-            accept={allowed.includes("image") ? "image/jpeg,image/png,image/webp,image/svg+xml" : allowed.includes("video") ? "video/mp4,video/webm" : "application/pdf"}
+            accept={allowed.includes("image") ? "image/jpeg,image/png,image/webp,image/avif" : allowed.includes("video") ? "video/mp4,video/webm" : "application/pdf"}
             onChange={(event) => void handleFile(event.target.files?.[0])}
           />
         </label>
@@ -943,59 +944,15 @@ export default function AdminPage() {
                 <LayoutDashboard size={18} />
                 <h1 className="text-xl font-semibold">{t("Homepage Content")}</h1>
               </div>
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Field label={t("Hero tagline")}>
-                  <Input value={content.heroTagline} onChange={(event) => updateContent("heroTagline", event.target.value)} />
-                </Field>
-                <Field label={t("Hero headline")}>
-                  <Input value={content.heroTitle} onChange={(event) => updateContent("heroTitle", event.target.value)} />
-                </Field>
-                <Field label={t("Hero subheadline")}>
-                  <Textarea value={content.heroSubtitle} onChange={(event) => updateContent("heroSubtitle", event.target.value)} />
-                </Field>
-                <Field label={t("Hero input placeholder examples")}>
-                  <Textarea
-                    value={content.heroPlaceholders.join("\n")}
-                    onChange={(event) => updateContent("heroPlaceholders", event.target.value.split("\n").filter(Boolean))}
-                  />
-                </Field>
-                <Field label={t("CTA button text")}>
-                  <Input value={content.ctaText} onChange={(event) => updateContent("ctaText", event.target.value)} />
-                </Field>
-                <Field label={t("Trust badges, one per line")}>
-                  <Textarea
-                    value={content.trustBadges.join("\n")}
-                    onChange={(event) => updateContent("trustBadges", event.target.value.split("\n").filter(Boolean))}
-                  />
-                </Field>
-                <Field label={t("Positioning headline line 1")}>
-                  <Input value={content.positioningHeadlineA} onChange={(event) => updateContent("positioningHeadlineA", event.target.value)} />
-                </Field>
-                <Field label={t("Positioning headline line 2")}>
-                  <Input value={content.positioningHeadlineB} onChange={(event) => updateContent("positioningHeadlineB", event.target.value)} />
-                </Field>
-                <Field label={t("Positioning subtitle")}>
-                  <Textarea value={content.positioningText} onChange={(event) => updateContent("positioningText", event.target.value)} />
-                </Field>
-                <Field label={t("Footer text")}>
-                  <Input value={content.footerSlogan} onChange={(event) => updateContent("footerSlogan", event.target.value)} />
-                </Field>
-              </div>
-
-              <div className="mt-6 grid gap-5 lg:grid-cols-2">
-                <EditableCards
-                  title={t("Product Journey")}
-                  cards={content.journeySteps}
-                  onChange={(journeySteps) => updateContent("journeySteps", journeySteps)}
-                  t={t}
-                />
-                <EditableCards
-                  title={t("How TYORA Helps")}
-                  cards={content.helpCards}
-                  onChange={(helpCards) => updateContent("helpCards", helpCards)}
-                  t={t}
-                />
-              </div>
+              <p className="mb-6 rounded-lg bg-[#eef4ff] p-3 text-sm leading-6 text-[#344054]">
+                Homepage campaign, labels, images, case thresholds, categories, ordering, and CTA copy are managed here. Public visitors never see these edit controls.
+              </p>
+              <HomepageContentEditor
+                value={content.homepage}
+                media={media}
+                onUpload={addMedia}
+                onChange={(homepage) => updateContent("homepage", homepage)}
+              />
             </Card>
           ) : null}
 
@@ -1136,6 +1093,12 @@ export default function AdminPage() {
                 </Field>
                 <Field label="Start Discussion Subtitle">
                   <Input value={content.mobileTabs.startDiscussionSubtitle} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, startDiscussionSubtitle: event.target.value })} />
+                </Field>
+                <Field label="Private Custom Review">
+                  <Input value={content.mobileTabs.privateCustom} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, privateCustom: event.target.value })} />
+                </Field>
+                <Field label="Private Custom Review Subtitle">
+                  <Input value={content.mobileTabs.privateCustomSubtitle} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, privateCustomSubtitle: event.target.value })} />
                 </Field>
                 <Field label="Source Product">
                   <Input value={content.mobileTabs.sourceProduct} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, sourceProduct: event.target.value })} />
@@ -2417,11 +2380,24 @@ function CaseStudiesEditor({
           category: "",
           shortDescription: "",
           concept: "Concept",
+          manufacturingReview: "",
+          suggestedMaterial: "",
+          suggestedProcess: "",
           prototype: "Prototype",
+          manufacturing: "Manufacturing",
           final: "Final Product",
           conceptImage: "",
           prototypeImage: "",
+          manufacturingImage: "",
           finalImage: "",
+          coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
+          moq: "",
+          timeline: "",
+          featured: false,
+          projectType: "Real Project",
+          badgeLabel: "TYORA Case",
+          ctaText: "View Custom Manufacturing",
+          ctaHref: "/custom",
           visible: true,
           order: content.cases.length + 1
         }])}>
@@ -2460,11 +2436,34 @@ function CaseStudiesEditor({
               <Field label={t("Country")}><Input value={story.country} onChange={(event) => updateCase(index, { country: event.target.value })} /></Field>
               <Field label={t("Category")}><Input value={story.category} onChange={(event) => updateCase(index, { category: event.target.value })} /></Field>
               <Field label={t("Display Order")}><Input type="number" value={story.order} onChange={(event) => updateCase(index, { order: Number(event.target.value) })} /></Field>
+              <Field label="Case badge"><Input value={story.badgeLabel} onChange={(event) => updateCase(index, { badgeLabel: event.target.value })} /></Field>
+              <Field label="Card CTA"><Input value={story.ctaText} onChange={(event) => updateCase(index, { ctaText: event.target.value })} /></Field>
+              <Field label="Card CTA route"><Input value={story.ctaHref} onChange={(event) => updateCase(index, { ctaHref: event.target.value })} /></Field>
+              <Field label="Project type">
+                <select className="min-h-11 w-full rounded-lg border border-[#e1e5ea] bg-white px-3 text-sm" value={story.projectType} onChange={(event) => updateCase(index, { projectType: event.target.value as CaseStudy["projectType"] })}>
+                  <option value="Real Project">Real Project</option>
+                  <option value="Demonstration Project">Demonstration Project</option>
+                </select>
+              </Field>
+              <Toggle label="Featured on homepage" checked={story.featured} onChange={(featured) => updateCase(index, { featured })} />
               <Field label={t("Short Description")}><Textarea value={story.shortDescription} onChange={(event) => updateCase(index, { shortDescription: event.target.value })} /></Field>
+              <Field label="Concept summary"><Textarea value={story.concept} onChange={(event) => updateCase(index, { concept: event.target.value })} /></Field>
+              <Field label="Manufacturing Review"><Textarea value={story.manufacturingReview} onChange={(event) => updateCase(index, { manufacturingReview: event.target.value })} /></Field>
+              <Field label="Suggested Material"><Textarea value={story.suggestedMaterial} onChange={(event) => updateCase(index, { suggestedMaterial: event.target.value })} /></Field>
+              <Field label="Suggested Process"><Textarea value={story.suggestedProcess} onChange={(event) => updateCase(index, { suggestedProcess: event.target.value })} /></Field>
+              <Field label="Prototype summary"><Textarea value={story.prototype} onChange={(event) => updateCase(index, { prototype: event.target.value })} /></Field>
+              <Field label="Manufacturing summary"><Textarea value={story.manufacturing} onChange={(event) => updateCase(index, { manufacturing: event.target.value })} /></Field>
+              <Field label="Final product summary"><Textarea value={story.final} onChange={(event) => updateCase(index, { final: event.target.value })} /></Field>
+              <Field label="MOQ"><Input value={story.moq} onChange={(event) => updateCase(index, { moq: event.target.value })} /></Field>
+              <Field label="Timeline"><Input value={story.timeline} onChange={(event) => updateCase(index, { timeline: event.target.value })} /></Field>
+            </div>
+            <div className="mt-4">
+              <CmsImageField label="Homepage case cover" value={story.coverImage} defaultValue={defaultContent.cases[0].coverImage} media={media} onUpload={addMedia} onChange={(coverImage) => updateCase(index, { coverImage })} />
             </div>
             <div className="mt-4 grid gap-4 lg:grid-cols-3">
               <MediaUploader label={t("Concept Image")} value={story.conceptImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { conceptImage: url })} onDelete={() => updateCase(index, { conceptImage: "" })} t={t} />
               <MediaUploader label={t("Prototype Image")} value={story.prototypeImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { prototypeImage: url })} onDelete={() => updateCase(index, { prototypeImage: "" })} t={t} />
+              <MediaUploader label="Manufacturing Image" value={story.manufacturingImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { manufacturingImage: url })} onDelete={() => updateCase(index, { manufacturingImage: "" })} t={t} />
               <MediaUploader label={t("Final Product Image")} value={story.finalImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { finalImage: url })} onDelete={() => updateCase(index, { finalImage: "" })} t={t} />
             </div>
           </div>

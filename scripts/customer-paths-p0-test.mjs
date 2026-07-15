@@ -22,11 +22,14 @@ const checks = [
     pass: !home.includes('["Pricing", "/#pricing"]')
   },
   {
-    label: "Mobile primary navigation uses Custom and supports the Custom route",
+    label: "Mobile primary navigation uses Home, Ideas, Submit, Source, and My TYORA",
     pass:
-      mobileTabs.includes('{ label: "Custom", href: "/custom"') &&
-      mobileTabs.includes('if (pathname === "/custom") return true') &&
-      !mobileTabs.includes('{ label: "Build", href: "/build"')
+      mobileTabs.includes('{ label: "Home", href: "/"') &&
+      mobileTabs.includes('{ label: "Ideas", href: "/ask"') &&
+      mobileTabs.includes('{ label: "Source", href: "/source"') &&
+      mobileTabs.includes("tabCopy.create") &&
+      mobileTabs.includes("tabCopy.profile") &&
+      mobileTabs.includes('href="/custom"')
   },
   {
     label: "Site search includes the private Custom path",

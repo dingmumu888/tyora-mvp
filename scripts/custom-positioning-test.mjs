@@ -42,14 +42,16 @@ if (!whatsapp.includes("PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL") || !whatsapp.includ
   failures.push("Private review WhatsApp message is missing.");
 }
 
+if (!home.includes("homepage.paths") || !home.includes("path.href")) {
+  failures.push("Homepage must render the CMS-managed Ideas, Source, and Custom paths.");
+}
+
 [
-  '["Custom", "/custom"]',
-  'title: "Start a private custom project"',
+  'title: "Custom"',
   'href: "/custom"',
-  "Post publicly for an initial assessment, or send a private custom project to TYORA.",
-  "Every public idea gets an initial TYORA manufacturing review."
+  'privateCustom: "Private Custom Review"'
 ].forEach((text) => {
-  if (!home.includes(text)) failures.push(`Homepage missing: ${text}`);
+  if (!storage.includes(text)) failures.push(`CMS default content missing: ${text}`);
 });
 
 if (home.includes("3 FREE Expert Reviews per day")) {

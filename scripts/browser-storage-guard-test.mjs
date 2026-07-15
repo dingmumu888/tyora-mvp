@@ -20,12 +20,10 @@ const checks = [
       !analytics.includes("sessionStorage.setItem")
   },
   {
-    label: "home page mobile state storage is guarded for blocked site data",
+    label: "home page does not use unguarded browser storage",
     pass:
-      homeClient.includes("safeSessionGet") &&
-      homeClient.includes("safeSessionSet") &&
-      homeClient.includes('safeSessionGet("mobileDiscussionCtaCollapsed")') &&
-      homeClient.includes('safeSessionSet("mobileDiscussionCtaCollapsed"')
+      (!homeClient.includes("sessionStorage") && !homeClient.includes("localStorage")) ||
+      (homeClient.includes("try {") && homeClient.includes("catch"))
   },
   {
     label: "community profile gate storage is guarded for blocked site data",

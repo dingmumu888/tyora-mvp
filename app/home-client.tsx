@@ -1,147 +1,76 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowRight,
+  Boxes,
   Check,
-  ChevronLeft,
-  ClipboardCheck,
-  Flame,
+  Factory,
   Heart,
+  Image as ImageIcon,
+  Lightbulb,
+  Menu,
   MessageCircle,
-  MoreHorizontal,
   PackageCheck,
-  Play,
+  PackageSearch,
   SearchCheck,
-  ShoppingBag,
+  ShieldCheck,
   Sparkles,
   Upload,
-  Users,
-  X
+  X,
+  type LucideIcon
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import CmsImage from "@/components/cms-image";
 import CommunityImage from "@/components/community-image";
-import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
 import SiteSearch from "@/components/site-search";
-import {
-  defaultContent,
-  Lead,
-  loadContent,
-  saveLead,
-  SiteContent,
-  uploadProjectFile
-} from "@/lib/storage";
-import {
-  Language,
-  localizeContent,
-  ui
-} from "@/lib/i18n";
-import { cn } from "@/lib/utils";
-import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
-import { trackAnalyticsEvent } from "@/lib/analytics";
 import { CommunityIdea } from "@/lib/community";
+import { CaseStudy, defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
-type CommunityTotals = {
-  ideas: number;
-  reviews: number;
-  projects: number;
-  inProgress: number;
-  delivered: number;
-  countries: number;
+type HomepagePostCardProps = {
+  badge: string;
+  badgeTone: "blue" | "green";
+  title: string;
+  description: string;
+  review: string;
+  meta: string;
+  disclosure?: string;
+  href: string;
+  ctaText?: string;
+  media: ReactNode;
+  stats?: {
+    likes: number;
+    comments: number;
+  };
 };
 
-function safeSessionGet(key: string) {
-  try {
-    return window.sessionStorage.getItem(key) || "";
-  } catch {
-    return "";
-  }
-}
-
-function safeSessionSet(key: string, value: string) {
-  try {
-    window.sessionStorage.setItem(key, value);
-  } catch {
-    // Site data may be blocked in some browsers; this preference is optional.
-  }
-}
-
-const brandFilmUrl = "/videos/TYORA_Brand_Film_v1.1_Final_v2.mp4";
-const brandFilmPoster = "/videos/TYORA_Brand_Film_v1.1_Poster.jpg";
-const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const featuredJourney = [
-  ["Idea", "Product concept submitted", "Done"],
-  ["Review", "Manufacturing path reviewed", "Active"]
-] as const;
-const buildSupportCards = [
-  ["Manufacturing review", "Understand feasibility, materials, MOQ and cost before paying for samples.", ClipboardCheck],
-  ["Factory path", "When a discussion is ready, TYORA can help identify the right manufacturing route.", SearchCheck],
-  ["Project support", "Move from community feedback into samples, QC, production and shipping when needed.", PackageCheck]
-] as const;
-const sourceProductSteps = [
-  { step: "1", title: "Upload reference", body: "Photo, link, material and target quantity.", icon: SearchCheck },
-  { step: "2", title: "TYORA checks options", body: "Supplier fit and estimated China pricing.", icon: ClipboardCheck },
-  { step: "3", title: "Choose next step", body: "Factory introduction or managed sourcing.", icon: PackageCheck }
-] as const;
-const founderPaths = [
-  {
-    title: "I have a product idea",
-    description: "Share it with the community and request an initial manufacturability, cost, MOQ, and risk assessment.",
-    href: "/ask/new",
-    cta: "Start a Discussion",
-    icon: Users
-  },
-  {
-    title: "I found a product to source",
-    description: "Upload a reference product and TYORA will check China supplier options and estimated factory pricing.",
-    href: "/source",
-    cta: "Get Supplier Check",
-    icon: SearchCheck
-  },
-  {
-    title: "Start a private custom project",
-    description: "Send AI designs, sketches, or confidential product ideas directly to TYORA for a private custom review.",
-    href: "/custom",
-    cta: "Open Custom",
-    icon: PackageCheck
-  }
-] as const;
-const transparencyPoints = [
-  "Factory price, no product markup.",
-  "TYORA only charges agreed service fees if you continue.",
-  "You can choose public review, private custom support, or supplier sourcing."
-] as const;
-const topNavigation = [
-  ["Ideas", "/ask"],
-  ["Source", "/source"],
-  ["Custom", "/custom"],
-  ["My TYORA", "/me"]
-] as const;
+const iconMap: Record<string, LucideIcon> = {
+  idea: Lightbulb,
+  source: PackageSearch,
+  custom: Factory
+};
 
 function timeAgo(value: string) {
-  const diff = Date.now() - new Date(value).getTime();
-  const minutes = Math.max(1, Math.round(diff / 6e4));
-  if (minutes < 60) return `${minutes} min ago`;
-  const hours = Math.round(minutes / 60);
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return "Recently";
+  const minutes = Math.max(1, Math.floor((Date.now() - timestamp) / 60000));
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
-function homepageIdeaScore(idea: CommunityIdea) {
-  return (idea.isHot ? 500 : 0) + idea.likeCount * 3 + idea.comments.length * 5 + idea.interestedCount * 2;
+function ideaScore(idea: CommunityIdea) {
+  return (idea.homepageFeatured ? 1000 : 0)
+    + (idea.isHot ? 200 : 0)
+    + idea.likeCount * 3
+    + idea.comments.length * 5
+    + idea.interestedCount * 2;
 }
 
-function homepageFeaturedRank(idea: CommunityIdea) {
-  if (!idea.homepageFeatured) return 99;
-  return idea.homepageFeaturedOrder ?? 99;
-}
-
-function homepageReviewSummary(idea: CommunityIdea) {
+function reviewSummary(idea: CommunityIdea) {
   if (!idea.review) return "";
   if (idea.review.additionalNotes?.trim()) return idea.review.additionalNotes.trim();
   return [
@@ -149,1054 +78,394 @@ function homepageReviewSummary(idea: CommunityIdea) {
     idea.review.estimatedCostRange,
     idea.review.estimatedMoq,
     idea.review.suggestedMaterial,
-    idea.review.suggestedManufacturing,
-    idea.review.factoriesMatched
-  ]
-    .filter((value): value is string => Boolean(value?.trim()))
-    .join(" · ");
+    idea.review.suggestedManufacturing
+  ].filter((value): value is string => Boolean(value?.trim())).join(" | ");
 }
 
-function HotBadge({ idea }: { idea: CommunityIdea }) {
-  if (!idea.isHot) return null;
+function HomepagePostCard({
+  badge,
+  badgeTone,
+  title,
+  description,
+  review,
+  meta,
+  disclosure,
+  href,
+  ctaText,
+  media,
+  stats
+}: HomepagePostCardProps) {
   return (
-    <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#ff385c] px-2.5 py-1 text-[10px] font-bold uppercase tracking-normal text-white shadow-[0_8px_22px_rgba(255,56,92,0.28)]">
-      <Flame size={11} fill="currentColor" /> Hot
-    </span>
+    <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-[#dde3eb] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+      <Link href={href} className="relative block aspect-[4/3] overflow-hidden bg-[#eef2f6]" aria-label={`Open ${title}`}>
+        {media}
+        <span className={`absolute left-3 top-3 rounded-md px-2.5 py-1 text-xs font-semibold ${badgeTone === "green" ? "bg-[#0f766e] text-white" : "bg-[#155eef] text-white"}`}>
+          {badge}
+        </span>
+        {disclosure ? (
+          <span className="absolute bottom-3 right-3 max-w-[80%] rounded-md bg-white/92 px-2 py-1 text-[11px] font-medium text-[#344054] shadow-sm">
+            {disclosure}
+          </span>
+        ) : null}
+      </Link>
+      <div className="flex flex-1 flex-col p-4">
+        <p className="text-xs font-medium text-[#667085]">{meta}</p>
+        <Link href={href} className="mt-2 text-lg font-semibold leading-6 text-[#101828] hover:text-[#155eef]">
+          {title}
+        </Link>
+        <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#475467]">{description}</p>
+        {review ? (
+          <div className="mt-4 border-l-2 border-[#14b8a6] pl-3">
+            <p className="text-xs font-semibold uppercase text-[#0f766e]">TYORA Review</p>
+            <p className="mt-1 line-clamp-3 text-sm font-semibold leading-6 text-[#101828]">{review}</p>
+          </div>
+        ) : null}
+        <div className="mt-auto flex min-h-10 items-end justify-between gap-3 pt-4">
+          {stats ? (
+            <div className="flex items-center gap-4 text-sm text-[#667085]" aria-label="Community engagement">
+              <span className="inline-flex items-center gap-1.5"><Heart size={16} /> {stats.likes}</span>
+              <span className="inline-flex items-center gap-1.5"><MessageCircle size={16} /> {stats.comments}</span>
+            </div>
+          ) : <span />}
+          <Link href={href} className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#155eef]">
+            {ctaText || "Open Idea"} <ArrowRight size={15} />
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function CaseCard({ story }: { story: CaseStudy }) {
+  return (
+    <HomepagePostCard
+      badge={story.badgeLabel}
+      badgeTone="green"
+      title={story.name}
+      description={story.shortDescription}
+      review={story.manufacturingReview}
+      meta={`${story.category} | ${story.status}`}
+      disclosure={story.projectType}
+      href={story.ctaHref}
+      ctaText={story.ctaText}
+      media={(
+        <CmsImage
+          image={story.coverImage}
+          fallbackAlt={`${story.name} case image`}
+          sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 33vw"
+          className="absolute inset-0 size-full"
+        />
+      )}
+    />
+  );
+}
+
+function CommunityCard({ idea }: { idea: CommunityIdea }) {
+  return (
+    <HomepagePostCard
+      badge={idea.category}
+      badgeTone="blue"
+      title={idea.title}
+      description={idea.description}
+      review={reviewSummary(idea)}
+      meta={`${idea.author.name} | ${timeAgo(idea.updatedAt || idea.createdAt)}`}
+      href={`/ask/${idea.slug}`}
+      stats={{ likes: idea.likeCount, comments: idea.comments.length }}
+      media={(
+        <CommunityImage
+          src={idea.imageUrls[0]}
+          alt={idea.title}
+          className="size-full object-cover transition duration-300 hover:scale-[1.02]"
+          fallbackClassName="size-full bg-[#eef2f6]"
+        />
+      )}
+    />
   );
 }
 
 export default function Home() {
   const [content, setContent] = useState<SiteContent>(defaultContent);
-  const [language] = useState<Language>("en");
-  const [idea, setIdea] = useState("");
-  const [productName, setProductName] = useState("");
-  const [fileName, setFileName] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [showAllMobileCases, setShowAllMobileCases] = useState(false);
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
-  const [communityTotals, setCommunityTotals] = useState<CommunityTotals | null>(null);
   const [communityLoading, setCommunityLoading] = useState(true);
-  const [sourceRequestCount, setSourceRequestCount] = useState(0);
-  const [mobileDiscussionCtaCollapsed, setMobileDiscussionCtaCollapsed] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
   }, []);
 
   useEffect(() => {
-    const stored = safeSessionGet("mobileDiscussionCtaCollapsed");
-    if (stored === "false") setMobileDiscussionCtaCollapsed(false);
-  }, []);
-
-  useEffect(() => {
-    safeSessionSet("mobileDiscussionCtaCollapsed", String(mobileDiscussionCtaCollapsed));
-  }, [mobileDiscussionCtaCollapsed]);
-
-  useEffect(() => {
-    fetch("/api/community/ideas?sort=trending&limit=12")
+    fetch("/api/community/ideas?sort=trending&limit=24", { cache: "no-store" })
       .then((response) => response.json())
       .then((payload) => setCommunityIdeas(Array.isArray(payload.data) ? payload.data : []))
       .catch(() => setCommunityIdeas([]))
       .finally(() => setCommunityLoading(false));
   }, []);
 
-  useEffect(() => {
-    fetch("/api/community/stats")
-      .then((response) => response.json())
-      .then((payload) => setCommunityTotals(payload.data || null))
-      .catch(() => setCommunityTotals(null));
-  }, []);
+  const homepage = content.homepage;
+  const navigation = homepage.navigationLinks.filter((link) => link.visible).sort((left, right) => left.order - right.order);
+  const heroCampaign = homepage.campaigns
+    .filter((campaign) => campaign.visible)
+    .sort((left, right) => left.order - right.order)[0] || defaultContent.homepage.campaigns[0];
+  const paths = homepage.paths.filter((path) => path.visible).sort((left, right) => left.order - right.order);
+  const categories = homepage.categories.filter((category) => category.visible).sort((left, right) => left.order - right.order);
 
-  useEffect(() => {
-    fetch("/api/source/stats")
-      .then((response) => response.json())
-      .then((payload) => setSourceRequestCount(Number(payload.data?.total || 0)))
-      .catch(() => setSourceRequestCount(0));
-  }, []);
-
-  const t = ui[language];
-  const displayContent = useMemo(
-    () => localizeContent(content, language),
-    [content, language]
-  );
-  const whatsappUrl = useMemo(
-    () => normalizeWhatsAppUrl(displayContent.whatsappLink),
-    [displayContent.whatsappLink]
-  );
-  const visibleCases = displayContent.cases.filter((story) => story.visible);
-  const faqItems = [
-    {
-      question: "Is TYORA a factory?",
-      answer:
-        "No. TYORA is your product development and manufacturing support partner. We help review the product, plan the manufacturing path, match the right factory, and manage the process when needed."
-    },
-    {
-      question: "Do I need a finished design before contacting TYORA?",
-      answer:
-        "No. A product name, sketch, AI image, reference product, PDF, or CAD file is enough to start a review."
-    },
-    {
-      question: "Can TYORA help if I am based in the United States?",
-      answer:
-        "Yes. TYORA is positioned for US product founders who want practical support working with manufacturing partners in China."
-    },
-    {
-      question: "Can I manage the factory myself after the review?",
-      answer:
-        "Yes. You can start with factory matching and manage communication yourself, or choose full project management if you want TYORA involved through samples, production, quality, and shipping."
-    },
-    {
-      question: "Does TYORA guarantee a factory will produce my product?",
-      answer:
-        "No responsible partner can guarantee that before review. TYORA helps you understand feasibility, risks, requirements, and the most realistic manufacturing path before you commit."
-    },
-    {
-      question: "How do I start?",
-      answer:
-        "Enter your product name, upload a reference if you have one, and start the WhatsApp conversation. TYORA will review the project and guide the next step."
-    }
-  ];
-
-  function openWizard() {
-    trackAnalyticsEvent("upload_click");
-    setWizardOpen(true);
-    setProductName((current) => current || idea);
-  }
-
-  async function startWhatsAppChat() {
-    if (submitting) return;
-    setSubmitting(true);
-    trackAnalyticsEvent("whatsapp_click");
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-    let uploadedFiles: string[] = [];
-    try {
-      if (selectedFile) {
-        const asset = await uploadProjectFile(selectedFile);
-        uploadedFiles = [asset.url];
-      }
-
-      const lead: Lead = {
-        id: crypto.randomUUID(),
-        productIdea: productName || idea || "Product idea not named yet",
-        designType: selectedFile ? "Uploaded reference" : "",
-        quantity: "",
-        budget: "",
-        timeline: "",
-        sampleRequirement: t.no,
-        sampleReview: "",
-        additionalRequirements: "",
-        uploadedFile: uploadedFiles[0] || fileName,
-        uploadedFiles,
-        submissionDate: new Date().toISOString(),
-        status: "New"
-      };
-
-      await saveLead(lead);
-      trackAnalyticsEvent("lead_submit_success");
-      setWizardOpen(false);
-    } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Unable to submit project.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const canStartChat = Boolean(productName.trim());
-  const supportedUploads = [t.aiImage, t.sketch, t.referenceImage, t.pdf, t.cadSupported];
-  const topShowcaseIdeas = [...communityIdeas]
+  const eligibleIdeas = useMemo(() => communityIdeas
+    .filter((idea) => (
+      idea.visibility === "Public"
+      && !idea.hidden
+      && idea.imageUrls.length > 0
+      && Boolean(reviewSummary(idea))
+      && ideaScore(idea) >= homepage.communityMinimumScore
+    ))
     .sort((left, right) => {
-      const featuredGap = Number(right.homepageFeatured) - Number(left.homepageFeatured);
-      if (featuredGap !== 0) return featuredGap;
+      if (left.homepageFeatured !== right.homepageFeatured) return Number(right.homepageFeatured) - Number(left.homepageFeatured);
       if (left.homepageFeatured && right.homepageFeatured) {
-        const orderGap = homepageFeaturedRank(left) - homepageFeaturedRank(right);
+        const orderGap = (left.homepageFeaturedOrder || 99) - (right.homepageFeaturedOrder || 99);
         if (orderGap !== 0) return orderGap;
       }
-      const scoreGap = homepageIdeaScore(right) - homepageIdeaScore(left);
+      const scoreGap = ideaScore(right) - ideaScore(left);
       if (scoreGap !== 0) return scoreGap;
-      const commentGap = right.comments.length - left.comments.length;
-      if (commentGap !== 0) return commentGap;
-      return new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime();
+      return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
     })
-    .slice(0, 3);
-  const hasCommunityStats = Boolean(communityTotals && communityTotals.ideas > 0);
-  const communityStats = communityTotals ? [
-    ["Ideas Shared", communityTotals.ideas],
-    ["TYORA Reviews", communityTotals.reviews],
-    ["Countries", communityTotals.countries]
-  ] as const : [];
-  const moduleVisibility = displayContent.moduleVisibility;
-  const sourceCopy = displayContent.sourcePage;
-  const linkedInUrl = (() => {
-    try {
-      const url = new URL(displayContent.linkedInLink);
-      const host = url.hostname.toLowerCase().replace(/^www\./, "");
-      const path = url.pathname.replace(/\/+$/, "");
-      return host === "linkedin.com" && path && path !== "/" ? url.toString() : "";
-    } catch {
-      return "";
-    }
-  })();
+    .slice(0, homepage.communityLimit), [communityIdeas, homepage.communityLimit, homepage.communityMinimumScore]);
+
+  const featuredCases = useMemo(() => content.cases
+    .filter((story) => story.visible)
+    .sort((left, right) => {
+      if (left.featured !== right.featured) return Number(right.featured) - Number(left.featured);
+      return left.order - right.order;
+    })
+    .slice(0, homepage.caseLimit), [content.cases, homepage.caseLimit]);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-52 text-[#101216] md:pb-0">
-      <header className="hidden overflow-hidden border-b border-[#eef1f4]/80 bg-white/90 backdrop-blur md:sticky md:top-0 md:z-40 md:block">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <a href="#" className="flex items-center gap-2 font-semibold">
-            {displayContent.logoImage ? (
+    <main className="min-h-screen overflow-x-hidden bg-white pb-28 text-[#101828] md:pb-0">
+      <header className="sticky top-0 z-50 border-b border-[#e4e7ec] bg-white/96 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-2" aria-label="TYORA home">
+            {content.logoImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={displayContent.logoImage}
-                alt={displayContent.brandName}
-                className="size-8 rounded-lg object-cover"
-              />
+              <img src={content.logoImage} alt="" className="size-8 rounded-md object-cover" />
             ) : (
-              <span className="flex size-8 items-center justify-center rounded-lg bg-[#101216] text-white">
-                <Sparkles size={16} />
-              </span>
+              <span className="grid size-8 place-items-center rounded-md bg-[#101828] text-white"><Sparkles size={16} /></span>
             )}
-            <span className="leading-tight">
-              {displayContent.brandName}
-              <span className="block text-[10px] font-medium uppercase tracking-normal text-[#69707d]">
-                Product development in China
-              </span>
-            </span>
-          </a>
-          <nav className="hidden items-center gap-1 lg:flex">
-            {topNavigation.map(([label, href]) => (
-              <Link key={label} href={href} className={cn(
-                "rounded-full px-3 py-2 text-sm font-medium transition hover:bg-[#f5f6f8] hover:text-[#101216]",
-                label === "Ideas" ? "bg-[#2563eb] text-white hover:bg-[#1d4ed8] hover:text-white" : "text-[#59616e]"
-              )}>
-                {label}
+            <span className="text-lg font-bold tracking-normal text-[#101828]">TYORA</span>
+          </Link>
+
+          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary navigation">
+            {navigation.map((link) => (
+              <Link key={link.id} href={link.href} className="rounded-md px-3 py-2 text-sm font-medium text-[#475467] transition hover:bg-[#f2f4f7] hover:text-[#101828]">
+                {link.label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2">
+
+          <div className="hidden items-center gap-2 md:flex">
             <SiteSearch className="hidden w-44 xl:block" />
-            <CommunityUserMenu loginClassName="hidden rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold md:inline-flex" />
-            <Link href="/ask/new" className={`hidden h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:inline-flex ${primaryButton}`}>
-              <Upload size={15} /> <span className="hidden sm:inline">Start a Discussion</span>
+            <CommunityUserMenu loginClassName="inline-flex min-h-10 items-center rounded-md border border-[#d0d5dd] px-3 text-sm font-semibold text-[#344054]" />
+            <Link href={heroCampaign.primaryCtaHref} className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
+              {heroCampaign.primaryCtaText} <ArrowRight size={15} />
             </Link>
           </div>
+
+          <button type="button" onClick={() => setMobileMenuOpen((open) => !open)} className="grid size-11 place-items-center rounded-md border border-[#d0d5dd] text-[#101828] md:hidden" aria-expanded={mobileMenuOpen} aria-label="Toggle navigation">
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
+        {mobileMenuOpen ? (
+          <nav className="border-t border-[#e4e7ec] bg-white px-4 py-3 md:hidden" aria-label="Mobile navigation">
+            <div className="mx-auto grid max-w-lg gap-1">
+              {navigation.map((link) => (
+                <Link key={link.id} href={link.href} onClick={() => setMobileMenuOpen(false)} className="rounded-md px-3 py-3 text-sm font-semibold text-[#344054] hover:bg-[#f2f4f7]">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
+        ) : null}
       </header>
 
-      <section id="community" className="scroll-mt-20 border-b border-[#e4e8ef] bg-transparent lg:min-h-[calc(100vh-64px)]">
-        <div className="mx-auto grid max-w-[1700px] gap-3 px-2.5 py-3 sm:px-4 lg:grid-cols-[280px_minmax(0,1fr)_360px] lg:px-5">
-          <aside className="hidden self-start rounded-[18px] border border-[#d7e0ec] bg-white p-4 shadow-[0_14px_44px_rgba(15,23,42,0.1)] lg:sticky lg:top-20 lg:block">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={19} /></div>
-            <h2 className="mt-3 text-lg font-semibold">Creator HQ</h2>
-            <p className="mt-1.5 text-sm leading-6 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
-            {communityTotals ? <div className="mt-3 grid gap-2">
-              {[
-                ["Real public discussions", communityTotals.ideas, "bg-[#ecfdf5] text-[#0f766e]", "bg-[#14b8a6]"],
-                ["TYORA reviews", communityTotals.reviews, "bg-[#f2f7ff] text-[#315fbd]", "bg-[#2563eb]"],
-                ["Projects in progress", communityTotals.inProgress, "bg-[#fff7ed] text-[#c2410c]", "bg-[#f59e0b]"]
-              ].map(([label, value, tone, dot]) => (
-                <div key={label} className={`flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-semibold ${tone}`}>
-                  <span className="inline-flex items-center gap-2">
-                    <span className={`size-2 rounded-full ${dot}`} />
-                    {label}
-                  </span>
-                  <span>{value}</span>
-                </div>
-              ))}
-            </div> : null}
-            <Link href="/ask/new" className={`mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold ${primaryButton}`}>
-              <Upload size={15} /> Start a Discussion
-            </Link>
-            <Link href="/ask" className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Browse Ideas</Link>
-            <p className="mt-3 rounded-2xl bg-[#e9f7f3] p-3 text-sm font-semibold text-[#0f766e]">Every public idea gets an initial TYORA manufacturing review.</p>
-          </aside>
-
-          <div className="min-w-0">
-            <div className="hidden rounded-[18px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:block sm:p-4">
-              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-                <Users size={14} /> Public product ideas
-              </p>
-              <div className="mt-2 grid gap-2.5 sm:gap-3">
-                <div>
-                  <h1 className="max-w-4xl text-[1.55rem] font-semibold leading-[1.08] tracking-normal sm:text-4xl lg:text-[2.65rem]">What are founders building next?</h1>
-                  <p className="mt-1.5 max-w-[320px] text-sm leading-5 text-[#59616e] sm:mt-2 sm:max-w-3xl sm:text-base sm:leading-6">
-                    Share your idea for a limited initial manufacturing assessment.
-                  </p>
-                  <p className="mt-1.5 max-w-[340px] text-xs font-semibold text-[#0f766e] sm:mt-2 sm:max-w-3xl sm:text-sm">
-                    Post publicly for an initial assessment, or send a private custom project to TYORA.
-                  </p>
-                  <p className="mt-1.5 max-w-[340px] break-words text-xs font-semibold text-[#315fbd] sm:mt-2 sm:max-w-3xl sm:text-sm">Founders are discussing product ideas with TYORA manufacturing experts.</p>
-                  <p className="mt-1.5 hidden max-w-3xl text-sm font-medium leading-6 text-[#59616e] sm:block">
-                    Get manufacturability, cost, MOQ and supplier direction before you spend money on samples.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2 sm:gap-3">
-                  <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:h-12 sm:px-5 ${primaryButton}`}><Upload size={16} /> Start a Discussion</Link>
-                  <Link href="/ask" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold sm:h-12 sm:px-5"><SearchCheck size={16} /> Browse Ideas</Link>
-                </div>
-                <p className="hidden text-xs font-semibold text-[#69707d] sm:block">Initial assessments cover feasibility, MOQ, cost drivers, and the next practical step.</p>
-              </div>
-              <div className="no-scrollbar mt-2.5 hidden gap-2 overflow-x-auto pb-1 sm:flex xl:grid xl:grid-cols-5 xl:overflow-visible xl:pb-0">
-                {hasCommunityStats ? communityStats.map(([label, value]) => (
-                  <div key={label} className="min-w-[122px] rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3 sm:min-w-[142px] xl:min-w-0">
-                    <p className="text-lg font-semibold">{value}</p>
-                    <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
-                  </div>
-                )) : null}
-              </div>
+      <section className="relative h-[calc(100svh-112px)] min-h-[520px] max-h-[680px] overflow-hidden border-b border-[#dfe3e8] md:h-[calc(100vh-128px)] md:min-h-[520px] md:max-h-[640px]" aria-labelledby="homepage-campaign-title">
+        <CmsImage
+          image={heroCampaign.image}
+          fallbackAlt="TYORA manufacturing campaign"
+          sizes="100vw"
+          priority
+          className="absolute inset-0 size-full rounded-none"
+          imageClassName="object-cover"
+        />
+        <div className="absolute inset-0 bg-white/76" />
+        <div className="relative mx-auto flex h-full max-w-[1280px] items-center px-5 sm:px-6 lg:px-8">
+          <div className="max-w-2xl py-10">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-[#155eef]">
+              <span>{heroCampaign.eyebrow}</span>
+              {heroCampaign.badge ? <span className="rounded-md border border-[#b2ccff] bg-white/90 px-2 py-1 text-[#1849a9]">{heroCampaign.badge}</span> : null}
             </div>
-
-            <div className="mt-2.5 rounded-[18px] border border-[#dbeafe] bg-white/92 p-3 shadow-sm shadow-[#101216]/4 sm:hidden">
-              <p className="text-sm font-semibold leading-5 text-[#101216]">Share product ideas. TYORA reviews manufacturability, cost, MOQ and supplier path.</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Link href="/ask/new" className="inline-flex text-sm font-semibold text-[#2563eb]">Public Idea <ArrowRight size={14} className="ml-1 mt-0.5" /></Link>
-                <Link href="/custom" className="inline-flex text-sm font-semibold text-[#0f766e]">Private Custom <ArrowRight size={14} className="ml-1 mt-0.5" /></Link>
-              </div>
-            </div>
-
-            <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-1">
-              {["Trending", "Newest", "Most Discussed", "Latest TYORA Reply", "Recently Uploaded"].map((item, index) => (
-                <Link key={item} href="/ask" className={cn("whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold", index === 0 ? "bg-[#2563eb] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]")}>{item}</Link>
-              ))}
-            </div>
-
-            <div className="mt-2.5 grid gap-2">
-              {topShowcaseIdeas.length === 0 ? (
-                <div className="grid gap-2">
-                  {communityLoading ? (
-                    [0, 1, 2].map((item) => (
-                      <div key={item} className="grid animate-pulse grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:p-2">
-                        <div className="aspect-square rounded-[20px] bg-[#eef3f8] sm:rounded-xl" />
-                        <div className="min-w-0 space-y-3 py-1">
-                          <div className="h-3 w-2/3 rounded-full bg-[#eef3f8]" />
-                          <div className="h-5 w-4/5 rounded-full bg-[#e5ebf3]" />
-                          <div className="h-4 w-full rounded-full bg-[#eef3f8]" />
-                          <div className="h-4 w-3/5 rounded-full bg-[#eef3f8]" />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4">
-                      <p className="text-sm font-semibold text-[#101216]">No public discussions are available yet.</p>
-                      <p className="mt-1 text-sm text-[#59616e]">The showcase only displays real community posts.</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                topShowcaseIdeas.map((idea) => (
-                <Link key={idea.id} href={`/ask/${idea.slug}`} className="group relative grid grid-cols-[124px_minmax(0,1fr)] gap-3 rounded-[24px] border border-[#e8edf5] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_46px_rgba(37,99,235,0.14)] sm:grid-cols-[132px_1fr] sm:gap-2.5 sm:rounded-[12px] sm:border-[#e1e6ee] sm:p-2 sm:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
-                  <div data-testid="homepage-idea-image" className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff] text-lg font-semibold shadow-inner shadow-white sm:rounded-xl">
-                    <HotBadge idea={idea} />
-                    <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="size-full rounded-[20px] object-cover transition duration-500 group-hover:scale-[1.025] sm:rounded-2xl" />
-                  </div>
-                  <div className="min-w-0 py-0.5 sm:py-0">
-                    <div className="flex items-center gap-2 text-xs font-medium text-[#69707d] sm:hidden">
-                      <span className="max-w-[72px] truncate">{idea.author.name}</span>
-                      <span className="size-1.5 rounded-full bg-[#14b8a6] shadow-[0_0_0_4px_rgba(20,184,166,0.1)]" />
-                      <span className={cn(
-                        "truncate",
-                        idea.status === "TYORA Reviewing" ? "text-[#c2410c]" : idea.status === "Completed" ? "text-[#0f766e]" : "text-[#536174]"
-                      )}>{idea.status}</span>
-                      <span className="ml-auto shrink-0">{timeAgo(idea.updatedAt || idea.createdAt)}</span>
-                      <MoreHorizontal size={16} className="shrink-0 text-[#9aa4b2]" />
-                    </div>
-                    <div className="hidden flex-wrap gap-2 text-xs text-[#69707d] sm:flex">
-                      <span>{idea.country}</span><span>{idea.author.name}</span><span>{idea.status}</span>
-                    </div>
-                    <h2 className="mt-1.5 line-clamp-1 text-[17px] font-semibold leading-tight text-[#111827] sm:text-base">{idea.title}</h2>
-                    <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#536174] sm:text-[13px] sm:text-[#59616e]">{idea.description}</p>
-                    <div className="mt-2 flex gap-1.5 sm:hidden">
-                      <span className="max-w-[108px] truncate rounded-full bg-[#edf4ff] px-2.5 py-1 text-[11px] font-semibold text-[#2563eb]">{idea.category}</span>
-                    </div>
-                    {homepageReviewSummary(idea) ? (
-                      <div className="mt-2 rounded-xl bg-[#f0fdfa] px-2.5 py-2">
-                        <p className="text-[10px] font-bold uppercase text-[#0f766e]">TYORA REVIEW</p>
-                        <p className="mt-0.5 line-clamp-2 font-semibold text-[#101216] text-xs leading-4">{homepageReviewSummary(idea)}</p>
-                      </div>
-                    ) : (
-                      <p className="mt-2 text-xs font-medium text-[#8b93a1]">TYORA review pending</p>
-                    )}
-                    <div className="mt-2 flex items-center gap-4 text-[13px] font-medium text-[#5f6b7a] sm:mt-1.5 sm:flex-wrap sm:gap-x-2.5 sm:gap-y-0.5 sm:text-[11px] max-sm:[&>span:nth-child(3)]:hidden">
-                      <span className="inline-flex items-center gap-1"><Heart size={15} className="sm:size-[13px]" /> {idea.likeCount}<span className="hidden sm:inline"> Love</span></span>
-                      <span className="inline-flex items-center gap-1"><MessageCircle size={15} className="sm:size-[13px]" /> {idea.comments.length}<span className="hidden sm:inline"> Comments</span></span>
-                      <span className="hidden items-center gap-1 sm:inline-flex"><ShoppingBag size={13} /> {idea.interestedCount} I'd Buy</span>
-                      <span className="hidden text-[#315fbd] sm:inline">Last reply {timeAgo(idea.updatedAt || idea.createdAt)}</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between sm:hidden">
-                      <div className="flex items-center gap-2">
-                        <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-6 border-2 border-white text-[9px]" />
-                        <span className="max-w-28 truncate text-[11px] font-semibold text-[#69707d]">{idea.author.name}</span>
-                      </div>
-                      <span className="text-[11px] font-semibold text-[#8b93a1]">{idea.comments.length} replies</span>
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between max-sm:hidden">
-                      <div className="flex items-center gap-2">
-                        <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-6 border-2 text-[9px]" />
-                        <span className="max-w-32 truncate text-[11px] font-semibold text-[#69707d]">{idea.author.name}</span>
-                      </div>
-                      <span className="text-[11px] font-semibold text-[#8b93a1]">{idea.comments.length} community replies</span>
-                    </div>
-                  </div>
-                </Link>
-                ))
-              )}
-            </div>
-
-            <div className="mt-3 hidden gap-3 sm:grid xl:hidden">
-              <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
-                <h2 className="text-base font-semibold">Community Flow</h2>
-                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 text-sm text-[#59616e]">
-                  {["Idea", "Discussion", "TYORA Review", "Project", "Manufacturing", "Delivered"].map((step) => (
-                    <span key={step} className="whitespace-nowrap rounded-full bg-[#f7f8fa] px-3 py-2">{step}</span>
-                  ))}
-                </div>
-              </section>
-            </div>
-          </div>
-
-          <aside className="hidden space-y-3 self-start xl:sticky xl:top-20 xl:block">
-            {hasCommunityStats && communityTotals ? <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
-              <h2 className="text-lg font-semibold">Community Statistics</h2>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                {[
-                  ["Ideas", communityTotals.ideas],
-                  ["Reviews", communityTotals.reviews],
-                  ["Countries", communityTotals.countries]
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
-                    <p className="text-lg font-semibold text-[#101216]">{value}</p>
-                    <p className="text-xs text-[#69707d]">{label}</p>
-                  </div>
-                ))}
-              </div>
-            </section> : null}
-          </aside>
-        </div>
-      </section>
-
-      <section className="border-b border-[#dfe6ef] bg-white/72 md:bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(246,247,251,0.92))]">
-        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 md:py-8 lg:px-8">
-          <div className="grid gap-3 lg:grid-cols-[0.85fr_1.15fr] lg:items-stretch">
-            <div className="rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.07)] md:p-5">
-              <p className="text-xs font-semibold uppercase text-[#69707d]">Choose your path</p>
-              <h2 className="mt-2 text-2xl font-semibold leading-tight md:text-3xl">Start with the problem you already have.</h2>
-              <p className="mt-3 text-sm leading-6 text-[#59616e]">
-                TYORA helps two kinds of buyers: founders validating new product ideas, and sellers who already found a product but need better China supplier options.
-              </p>
-              <div className="mt-4 grid gap-2">
-                {transparencyPoints.map((point) => (
-                  <p key={point} className="flex items-center gap-2 rounded-2xl bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-[#101216]">
-                    <Check size={15} className="shrink-0 text-[#0f766e]" />
-                    {point}
-                  </p>
-                ))}
-              </div>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {founderPaths.map(({ title, description, href, cta, icon: Icon }) => (
-                <Link
-                  key={title}
-                  href={href}
-                  className="group rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.07)] transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_20px_50px_rgba(37,99,235,0.12)] md:p-5"
-                >
-                  <span className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white">
-                    <Icon size={18} />
-                  </span>
-                  <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#59616e]">{description}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#2563eb]">
-                    {cta} <ArrowRight size={15} className="transition group-hover:translate-x-0.5" />
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {moduleVisibility.source ? (
-      <section id="source-products" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(246,247,251,0.92),rgba(255,255,255,0.82))] md:block">
-        <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 lg:px-6 lg:py-9">
-          <div className="grid gap-4 rounded-[22px] border border-[#dfe6ef] bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.07)] lg:grid-cols-[0.95fr_1.05fr] lg:p-6">
-            <div>
-              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-                <SearchCheck size={14} /> {sourceCopy.eyebrow}
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold leading-tight">{sourceCopy.title}</h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-[#59616e]">
-                {sourceCopy.subtitle}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link href="/source" className={`inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
-                  {sourceCopy.ctaText} <ArrowRight size={16} />
-                </Link>
-                {sourceRequestCount > 0 ? <p className="flex items-center rounded-full bg-[#ecfdf5] px-3 py-2 text-xs font-semibold text-[#0f766e]">
-                  {sourceRequestCount} {sourceCopy.statLabel.toLowerCase()}
-                </p> : null}
-                <p className="flex items-center text-xs font-semibold text-[#69707d]">{sourceCopy.sampleNote}</p>
-              </div>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {sourceProductSteps.map(({ step, title, body, icon: Icon }) => (
-                <div key={title} className="rounded-[18px] border border-[#e4e8ef] bg-[#f8fafc] p-4 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:bg-white hover:shadow-[0_12px_34px_rgba(37,99,235,0.11)]">
-                  <span className="flex size-9 items-center justify-center rounded-2xl bg-[#101216] text-sm font-semibold text-white">{step}</span>
-                  <div className="mt-4 flex items-center gap-2">
-                    <Icon size={16} className="text-[#2563eb]" />
-                    <p className="text-sm font-semibold">{title}</p>
-                  </div>
-                  <p className="mt-2 text-xs leading-5 text-[#69707d]">{body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-      ) : null}
-
-      {false ? (
-      <section id="journeys" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[linear-gradient(180deg,rgba(255,255,255,0.68),rgba(246,247,251,0.88))] md:block">
-        <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
-          <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-stretch">
-            <div className="rounded-[18px] border border-[#dfe6ef] bg-white p-5 shadow-[0_12px_38px_rgba(15,23,42,0.07)]">
-              <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Project example</p>
-              <h2 className="mt-3 text-3xl font-semibold leading-tight">Portable Coffee Mug</h2>
-              <p className="mt-3 text-sm leading-6 text-[#59616e]">
-                A founder starts with a spill-proof travel mug idea. The community tightens the lid, grip and MOQ questions, TYORA reviews the manufacturing path, and the project moves into production planning.
-              </p>
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex -space-x-2">
-                  {["SA", "TY", "AL", "MI"].map((avatar, index) => (
-                    <span key={avatar} className={cn(
-                      "flex size-8 items-center justify-center rounded-full border-2 border-white text-[10px] font-semibold",
-                      index === 1 ? "bg-[#2563eb] text-white" : index === 2 ? "bg-[#e9f7f3] text-[#0f766e]" : "bg-[#101216] text-white"
-                    )}>{avatar}</span>
-                  ))}
-                </div>
-                <p className="text-xs font-semibold text-[#69707d]">Founder, TYORA reviewer and 12 makers involved</p>
-              </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#edf1f6]">
-                <div className="h-full w-[82%] rounded-full bg-gradient-to-r from-[#14b8a6] via-[#2563eb] to-[#8b5cf6]" />
-              </div>
-              <Link href="/ask/new" className={`mt-5 inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
-                Start a similar discussion <ArrowRight size={15} />
+            <h1 id="homepage-campaign-title" className="mt-5 max-w-[18ch] text-4xl font-bold leading-[1.08] text-[#101828] sm:text-5xl lg:text-6xl">
+              {heroCampaign.title}
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#344054] sm:text-lg sm:leading-8">{heroCampaign.description}</p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link href={heroCampaign.primaryCtaHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#155eef] px-5 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
+                <Upload size={17} /> {heroCampaign.primaryCtaText} <ArrowRight size={16} />
               </Link>
+              {heroCampaign.secondaryCtaText ? (
+                <Link href={heroCampaign.secondaryCtaHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#98a2b3] bg-white/88 px-5 text-sm font-semibold text-[#101828] transition hover:bg-white">
+                  {heroCampaign.secondaryCtaText} <ArrowRight size={16} />
+                </Link>
+              ) : null}
             </div>
-
-            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-              {featuredJourney.map(([step, description, state], index) => (
-                <div key={step} className={cn(
-                  "rounded-[16px] border bg-white p-3 shadow-sm shadow-[#101216]/4 transition duration-[180ms] hover:-translate-y-1 hover:border-[#93c5fd] hover:shadow-[0_14px_34px_rgba(37,99,235,0.12)]",
-                  state === "Active" ? "border-[#bfdbfe] bg-[#f5f9ff]" : "border-[#e4e8ef]"
-                )}>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] font-semibold uppercase text-[#8b93a1]">Step {index + 1}</p>
-                    <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase", state === "Active" ? "bg-[#dbeafe] text-[#1d4ed8]" : state === "Done" ? "bg-[#ecfdf5] text-[#0f766e]" : "bg-[#f4f6f8] text-[#69707d]")}>{state}</span>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold">{step}</p>
-                  <p className="mt-2 text-xs leading-5 text-[#69707d]">{description}</p>
-                </div>
-              ))}
-            </div>
+            {heroCampaign.disclosure ? <p className="mt-4 text-xs font-medium text-[#667085]">{heroCampaign.disclosure}</p> : null}
           </div>
         </div>
       </section>
-      ) : null}
 
-      {false ? (
-      <section id="success-stories" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[#f6f7fb]/80 md:block">
-        <div className="mx-auto max-w-7xl px-3 py-8 sm:px-5 lg:px-6 lg:py-10">
-          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-[#69707d]">Community projects</p>
-              <h2 className="mt-2 text-3xl font-semibold leading-tight">Real journeys, not product catalog cards.</h2>
-            </div>
-            <Link href="/ask" className="text-sm font-semibold text-[#2563eb]">Browse all ideas →</Link>
-          </div>
-          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
-            {[
-              ...communityIdeas.slice(0, 3).map((idea) => ({
-                title: idea.title,
-                tag: idea.status,
-                description: idea.description,
-                meta: `${idea.country} · ${idea.author.name}`,
-                href: `/ask/${idea.slug}`
-              }))
-            ].slice(0, 6).map((item, index) => (
-              <Link
-                key={`${item.title}-${index}`}
-                href={item.href}
-                className={cn(
-                  "mb-4 block break-inside-avoid rounded-[18px] border border-[#dfe6ef] bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_44px_rgba(15,23,42,0.1)]",
-                  index % 3 === 1 ? "lg:mt-6" : index % 3 === 2 ? "lg:mt-3" : ""
-                )}
-              >
-                <div className="flex min-h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#eff4ff] text-2xl font-semibold">
-                  {item.title.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <span className="rounded-full bg-[#f4f6f8] px-2.5 py-1 text-xs font-semibold text-[#59616e]">{item.tag}</span>
-                  <span className="text-xs text-[#8b93a1]">{item.meta}</span>
-                </div>
-                <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[#59616e]">{item.description}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-      ) : null}
-
-      {false ? (
-      <>
-      <section id="build" className="hidden scroll-mt-20 border-b border-[#dfe6ef] bg-[#f7f8fb] md:block">
-        <div className="mx-auto grid max-w-7xl gap-6 px-3 py-8 sm:px-5 lg:grid-cols-[1fr_360px] lg:items-center lg:px-6 lg:py-10">
+      <section className="border-b border-[#e4e7ec] bg-[#f8fafc]" aria-labelledby="assessment-title">
+        <div className="mx-auto grid max-w-[1280px] gap-6 px-5 py-10 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:items-center lg:px-8">
           <div>
-            <p className="w-fit rounded-full border border-[#e5e8ec] bg-white px-3 py-1 text-xs font-medium text-[#69707d]">
-              TYORA Brand Film v2.0
-            </p>
-            <h2 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight tracking-normal text-[#101216] lg:text-[2.4rem]">
-              The maker story behind the community.
-            </h2>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-[#59616e]">
-              Keep watching the product story unfold: idea, discussion, review, prototype, manufacturing and delivery.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2 text-xs text-[#69707d]">
-              {["Independent review", "Factory fit", "Production clarity"].map((item) => (
-                <span key={item} className="rounded-full border border-[#e8ebef] bg-white px-3 py-2">
-                  {item}
-                </span>
-              ))}
-            </div>
+            <p className="text-xs font-semibold uppercase text-[#155eef]">{homepage.assessmentEyebrow}</p>
+            <h2 id="assessment-title" className="mt-2 text-2xl font-bold leading-tight sm:text-3xl">{homepage.assessmentTitle}</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#475467] sm:text-base">{homepage.assessmentDescription}</p>
           </div>
-
-          <Card className="w-full overflow-hidden rounded-2xl border-[#e6e9ee] bg-white p-2 shadow-xl shadow-[#101216]/10 transition hover:-translate-y-0.5 hover:shadow-[#101216]/15">
-            <button
-              type="button"
-              onClick={() => setVideoModalOpen(true)}
-              className="group relative block w-full overflow-hidden rounded-xl bg-[#101216] text-left"
-              aria-label="Watch TYORA brand film"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={brandFilmPoster}
-                alt="TYORA brand film poster"
-                className="aspect-[9/16] w-full object-cover opacity-95 transition duration-500 group-hover:scale-[1.015] group-hover:opacity-100"
-              />
-              <span className="absolute inset-0 bg-gradient-to-t from-[#101216]/45 via-transparent to-transparent" />
-              <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-[#101216] backdrop-blur">
-                30 second story
-              </span>
-              <span className="absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#101216] shadow-xl transition group-hover:scale-105">
-                <Play size={22} fill="currentColor" />
-              </span>
-              <span className="absolute bottom-5 left-5 right-5 text-white">
-                <span className="block text-sm text-white/75">TYORA Brand Film</span>
-                <span className="mt-1 block text-lg font-semibold">A calmer path from idea to production.</span>
-              </span>
-            </button>
-          </Card>
-        </div>
-      </section>
-
-      <section className="hidden border-b border-[#dfe6ef] bg-white/88 md:block">
-        <div className="mx-auto max-w-7xl px-3 py-7 sm:px-5 lg:px-6 lg:py-9">
-          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-            <div>
-              <p className="text-sm font-medium text-[#69707d]">When you're ready to build</p>
-              <h2 className="mt-2 text-3xl font-semibold leading-tight">Turn a good discussion into a manufacturing plan.</h2>
-            </div>
-            <p className="text-sm leading-6 text-[#59616e]">
-              Community comes first. When an idea is ready, TYORA helps founders move from feedback into feasibility, factory fit, samples, quality and shipping with clearer decisions.
-            </p>
-          </div>
-          <div className="mt-5 grid gap-3 lg:grid-cols-3">
-            {buildSupportCards.map(([title, description, Icon]) => (
-              <Card key={title} className="rounded-[16px] bg-white p-4 shadow-sm shadow-[#101216]/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/6">
-                <Icon size={20} className="text-[#101216]" />
-                <h3 className="mt-4 font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[#59616e]">{description}</p>
-              </Card>
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            {homepage.assessmentPoints.map((point) => (
+              <div key={point} className="flex min-h-12 items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-semibold text-[#344054]">
+                <Check size={16} className="shrink-0 text-[#0f766e]" /> {point}
+              </div>
             ))}
           </div>
         </div>
       </section>
-      </>
-      ) : null}
 
-      {false ? (
-      <section id="pricing" className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] md:block">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
-          <h2 className="text-[2rem] font-semibold leading-tight lg:text-[2.25rem]">{displayContent.pricingTitle}</h2>
-          <p className="mt-2 text-[#59616e]">{displayContent.pricingSubtitle}</p>
-          <div className="mt-7 grid gap-4 lg:grid-cols-2">
-            {displayContent.pricing.filter((plan) => plan.visible).map((plan) => {
-              const isPopular = Boolean(plan.badge);
+      <section id="ideas-and-cases" className="scroll-mt-20 border-b border-[#e4e7ec] bg-white" aria-labelledby="ideas-cases-title">
+        <div className="mx-auto max-w-[1280px] px-5 py-14 sm:px-6 lg:px-8 lg:py-18">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase text-[#155eef]">{homepage.communityEyebrow}</p>
+              <h2 id="ideas-cases-title" className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">{homepage.communityTitle}</h2>
+              <p className="mt-3 text-sm leading-6 text-[#475467] sm:text-base">{homepage.communityDescription}</p>
+            </div>
+            <Link href={homepage.communityCtaHref} className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-md border border-[#d0d5dd] px-4 text-sm font-semibold text-[#344054] hover:bg-[#f8fafc] sm:self-auto">
+              {homepage.communityCtaText} <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {eligibleIdeas.map((idea) => <CommunityCard key={idea.id} idea={idea} />)}
+            {featuredCases.map((story) => <CaseCard key={story.id} story={story} />)}
+          </div>
+
+          {!communityLoading && eligibleIdeas.length === 0 ? (
+            <div className="mt-6 flex items-start gap-3 border-l-2 border-[#b2ccff] pl-4 text-sm text-[#475467]">
+              <ImageIcon size={18} className="mt-0.5 shrink-0 text-[#155eef]" />
+              <div><p className="font-semibold text-[#101828]">{homepage.communityEmptyTitle}</p><p className="mt-1">{homepage.communityEmptyBody}</p></div>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="border-b border-[#e4e7ec] bg-[#f8fafc]" aria-labelledby="paths-title">
+        <div className="mx-auto max-w-[1280px] px-5 py-14 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <h2 id="paths-title" className="text-3xl font-bold leading-tight sm:text-4xl">{homepage.pathsTitle}</h2>
+            <p className="mt-3 text-sm leading-6 text-[#475467] sm:text-base">{homepage.pathsDescription}</p>
+          </div>
+          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            {paths.map((path) => {
+              const Icon = iconMap[path.icon] || Boxes;
               return (
-              <Card key={plan.name} className={cn(
-                "relative flex h-full flex-col p-4 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5 lg:p-6",
-                isPopular ? "border-[#101216] shadow-lg shadow-[#101216]/5" : ""
-              )}>
-                <div className="flex min-h-7 items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-xl font-semibold lg:text-2xl">{plan.name}</h3>
-                    {plan.subtitle ? <p className="mt-1 text-sm font-medium text-[#69707d]">{plan.subtitle}</p> : null}
-                  </div>
-                  {isPopular ? (
-                    <span className="rounded-full bg-[#0f766e] px-2.5 py-1 text-xs font-medium text-white">
-                      {plan.badge}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="mt-5 border-y border-[#eef1f4] py-4">
-                  {plan.priceLabel ? <p className="text-sm font-medium text-[#69707d]">{plan.priceLabel}</p> : null}
-                  <p className="mt-1 text-2xl font-semibold">{plan.price}</p>
-                  {plan.priceSuffix ? (
-                    <div className="mt-2 space-y-1 text-sm font-semibold text-[#101216]">
-                      {plan.priceSuffix.split("\n").map((line) => (
-                        <p key={line}>{line}</p>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                {plan.description ? (
-                  <div className="mt-4 space-y-2 text-sm leading-6 text-[#59616e]">
-                    {plan.description.split("\n\n").map((line) => (
-                      <p key={line}>{line}</p>
-                    ))}
-                  </div>
-                ) : null}
-                {plan.highlightBanner ? (
-                  <p className="mt-4 rounded-md bg-[#e7f5f2] px-4 py-3 text-sm font-semibold text-[#0f766e]">
-                    {plan.highlightBanner}
-                  </p>
-                ) : null}
-                <p className="mt-5 text-sm font-semibold">Included</p>
-                <ul className="mt-3 space-y-2 text-sm text-[#59616e] lg:space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex gap-2">
-                      <Check className="mt-0.5 shrink-0 text-[#0f766e]" size={16} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                {plan.exclusions && plan.exclusions.length > 0 ? (
-                  <>
-                    <p className="mt-5 text-sm font-semibold">Not Included</p>
-                    <ul className="mt-3 space-y-2 text-sm text-[#59616e] lg:space-y-3">
-                      {plan.exclusions.map((feature) => (
-                        <li key={feature} className="flex gap-2">
-                          <X className="mt-0.5 shrink-0 text-[#b42318]" size={16} />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                ) : null}
-                {plan.note ? (
-                  <div className="mt-5 text-sm text-[#69707d]">
-                    {plan.note.split("\n").map((line, index) => (
-                      <p key={`${line}-${index}`} className={index === 0 ? "font-semibold text-[#101216]" : "mt-1"}>
-                        {line}
-                      </p>
-                    ))}
-                  </div>
-                ) : null}
-                {plan.bottomNote ? <p className="mt-auto pt-5 text-sm font-medium text-[#69707d]">{plan.bottomNote}</p> : null}
-                <Link href="/ask/new" className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[#101216] px-4 text-sm font-medium text-white transition hover:bg-[#1f2329]">
-                  {plan.ctaText} <ArrowRight size={16} />
+                <Link key={path.id} href={path.href} className="group flex min-h-56 flex-col rounded-lg border border-[#d0d5dd] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#84adff] hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)]">
+                  <span className="grid size-11 place-items-center rounded-md bg-[#eff4ff] text-[#155eef]"><Icon size={22} /></span>
+                  <h3 className="mt-5 text-xl font-semibold">{path.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#475467]">{path.description}</p>
+                  <span className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-[#155eef]">{path.ctaText} <ArrowRight size={16} className="transition group-hover:translate-x-0.5" /></span>
                 </Link>
-              </Card>
               );
             })}
           </div>
-          <div className="mt-8 rounded-lg border border-[#e8ebef] bg-white p-5 text-center">
-            <p className="font-semibold">{displayContent.pricingProofA}</p>
-            <p className="mt-2 text-sm text-[#59616e]">{displayContent.pricingProofB}</p>
-          </div>
         </div>
       </section>
+
+      {categories.length > 0 ? (
+        <section className="border-b border-[#e4e7ec] bg-white" aria-labelledby="categories-title">
+          <div className="mx-auto max-w-[1280px] px-5 py-12 sm:px-6 lg:px-8">
+            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+              <h2 id="categories-title" className="text-2xl font-bold sm:text-3xl">{homepage.categoriesTitle}</h2>
+              <p className="max-w-xl text-sm leading-6 text-[#667085]">{homepage.categoriesNote}</p>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+              {categories.map((category) => (
+                <Link key={category.id} href={category.href} className="group overflow-hidden rounded-lg border border-[#d0d5dd] bg-white">
+                  {category.image.visible && category.image.desktopUrl ? (
+                    <CmsImage image={category.image} fallbackAlt={category.name} sizes="(max-width: 767px) 50vw, 220px" className="aspect-[4/3] w-full rounded-none" />
+                  ) : (
+                    <div className="grid aspect-[4/3] place-items-center bg-[#f2f4f7] text-[#667085]"><PackageCheck size={25} /></div>
+                  )}
+                  <div className="p-3">
+                    <h3 className="text-sm font-semibold leading-5 group-hover:text-[#155eef]">{category.name}</h3>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#667085]">{category.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
       ) : null}
 
-      {false ? (
-      <section className="hidden border-y border-[#eef1f4] bg-white md:block">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8 lg:py-20">
+      <section className="border-b border-[#d0d5dd] bg-[#f8fafc]" aria-labelledby="source-process-title">
+        <div className="mx-auto grid max-w-[1280px] gap-10 px-5 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:px-8">
           <div>
-            <p className="text-sm font-medium text-[#69707d]">About TYORA</p>
-            <h2 className="mt-4 text-[2rem] font-semibold leading-tight lg:text-[2.6rem]">
-              {displayContent.founderTitle}
-            </h2>
-            <p className="mt-5 text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
-              {displayContent.founderText}
-            </p>
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>
-              <Button className="mt-6 min-h-12">
-                <MessageCircle size={16} /> Talk To TYORA On WhatsApp
-              </Button>
-            </a>
+            <p className="text-xs font-semibold uppercase text-[#155eef]">{homepage.sourceEyebrow}</p>
+            <h2 id="source-process-title" className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">{homepage.sourceTitle}</h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-[#475467] sm:text-base">{homepage.sourceDescription}</p>
+            <Link href={homepage.sourceCtaHref} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-md bg-[#101828] px-4 text-sm font-semibold text-white hover:bg-[#1d2939]">
+              {homepage.sourceCtaText} <ArrowRight size={16} />
+            </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["For early product ideas", "Bring a rough idea, reference image, or product name. TYORA helps turn it into a practical manufacturing conversation."],
-              ["For US launch teams", "Get China manufacturing support without trying to manage every supplier detail alone."],
-              ["For risk reduction", "Clarify feasibility, samples, quality checks, timelines, and handoff points before production."],
-              ["For practical execution", "Move from review to factory matching, sample coordination, production follow-up, and freight-forwarder handoff."]
-            ].map(([title, description]) => (
-              <Card key={title} className="p-5 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#101216]/5">
-                <h3 className="font-semibold">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#59616e]">{description}</p>
-              </Card>
-            ))}
+          <ol className="grid gap-3 sm:grid-cols-3">
+            {homepage.sourceSteps.map((step, index) => {
+              const icons = [Upload, SearchCheck, ShieldCheck];
+              const Icon = icons[index] || PackageCheck;
+              return (
+                <li key={`${step.title}-${index}`} className="min-h-52 rounded-lg border border-[#d0d5dd] bg-white p-4">
+                  <span className="flex items-center justify-between"><span className="text-xs font-bold text-[#155eef]">0{index + 1}</span><Icon size={20} className="text-[#344054]" /></span>
+                  <h3 className="mt-8 text-lg font-semibold">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#667085]">{step.description}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+
+      <section className="bg-[#101828] text-white" aria-labelledby="final-cta-title">
+        <div className="mx-auto flex max-w-[1280px] flex-col justify-between gap-8 px-5 py-14 sm:px-6 lg:flex-row lg:items-end lg:px-8 lg:py-18">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase text-[#84adff]">{homepage.finalEyebrow}</p>
+            <h2 id="final-cta-title" className="mt-3 text-3xl font-bold leading-tight sm:text-4xl">{homepage.finalTitle}</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-[#d0d5dd] sm:text-base">{homepage.finalDescription}</p>
+          </div>
+          <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
+            <Link href={homepage.finalPrimaryCtaHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#155eef] px-5 text-sm font-semibold text-white hover:bg-[#004eeb]">
+              {homepage.finalPrimaryCtaText} <ArrowRight size={16} />
+            </Link>
+            <Link href={homepage.finalSecondaryCtaHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#667085] px-5 text-sm font-semibold text-white hover:bg-[#1d2939]">
+              {homepage.finalSecondaryCtaText} <ArrowRight size={16} />
+            </Link>
           </div>
         </div>
       </section>
-      ) : null}
 
-      {false ? (
-      <section id="faq" className="hidden border-y border-[#eef1f4] bg-[#fbfbfc] md:block">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-          <div className="mb-6 max-w-3xl">
-            <p className="text-sm font-medium text-[#69707d]">FAQ</p>
-            <h2 className="mt-3 text-[2rem] font-semibold leading-tight lg:text-[2.35rem]">
-              Questions founders ask before building with TYORA
-            </h2>
-          </div>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {faqItems.map((item) => (
-              <details key={item.question} className="group rounded-[14px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold">
-                  {item.question}
-                  <span className="text-[#8b93a1] transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-sm leading-6 text-[#59616e]">{item.answer}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-      ) : null}
-
-      {moduleVisibility.finalCta ? (
-      <section className="hidden border-y border-[#eef1f4] bg-white px-4 py-16 sm:px-6 md:block lg:px-8 lg:py-24">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="text-[2.5rem] font-semibold leading-tight tracking-normal lg:text-[4rem]">
-            Ready to build your product?
-          </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#59616e] lg:text-lg lg:leading-8">
-            Start your manufacturing journey with confidence.
-          </p>
-          <Link href="/ask/new" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#101216] px-6 text-sm font-medium text-white transition hover:bg-[#1f2329]">
-            Start Building <ArrowRight size={16} />
-          </Link>
-        </div>
-      </section>
-      ) : null}
-
-      <footer className="hidden border-t border-[#eef1f4] px-4 py-6 sm:block sm:px-6 lg:px-8 lg:py-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-[#59616e] sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-semibold text-[#101216]">{displayContent.brandName}</p>
-            <p>{displayContent.footerSlogan}</p>
-          </div>
-          <div className="flex flex-wrap gap-4">
+      <footer className="border-t border-[#e4e7ec] bg-white">
+        <div className="mx-auto flex max-w-[1280px] flex-col gap-5 px-5 py-8 text-sm text-[#667085] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <div><p className="font-bold text-[#101828]">TYORA</p><p className="mt-1 max-w-md">{content.footerSlogan}</p></div>
+          <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Footer navigation">
             <Link href="/privacy-policy">Privacy</Link>
             <Link href="/terms">Terms</Link>
             <Link href="/service-scope">Service Scope</Link>
-            <a href={`mailto:${displayContent.email}`} onClick={() => trackAnalyticsEvent("email_click")}>{t.email}</a>
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("whatsapp_click")}>{t.whatsApp}</a>
-            {linkedInUrl ? <a href={linkedInUrl} target="_blank" rel="noreferrer" onClick={() => trackAnalyticsEvent("linkedin_click")}>{t.linkedIn}</a> : null}
-          </div>
+            <Link href="/me">My TYORA</Link>
+          </nav>
         </div>
       </footer>
-
-      <a
-        href={whatsappUrl}
-        target="_blank"
-        rel="noreferrer"
-        onClick={() => trackAnalyticsEvent("whatsapp_click")}
-        className="fixed inset-x-4 bottom-3 z-40 hidden min-h-12 items-center justify-center gap-2 rounded-full bg-[#0f766e] px-4 text-sm font-medium text-white shadow-2xl shadow-[#0f766e]/20 transition hover:scale-[1.02] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:inline-flex sm:px-5"
-      >
-        <MessageCircle size={18} />
-        {t.startWhatsAppChat}
-      </a>
-
-      {mobileDiscussionCtaCollapsed ? (
-        <button
-          type="button"
-          aria-label="Expand start discussion"
-          onClick={() => setMobileDiscussionCtaCollapsed(false)}
-          className="fixed right-0 top-[48vh] z-[9980] flex min-h-24 w-11 -translate-y-1/2 items-center justify-center rounded-l-2xl border border-r-0 border-white/80 bg-white/92 px-2 text-xs font-semibold text-[#2563eb] shadow-[0_14px_36px_rgba(15,23,42,0.18)] backdrop-blur-xl transition duration-[180ms] active:scale-95 sm:hidden"
-          style={{ writingMode: "vertical-rl" }}
-        >
-          Start
-        </button>
-      ) : (
-        <div className="fixed right-3 top-[44vh] z-[9980] w-[calc(100vw-88px)] max-w-[260px] -translate-y-1/2 overflow-hidden rounded-2xl border border-white/75 bg-white/92 p-3 text-[#101216] shadow-[0_18px_44px_rgba(15,23,42,0.18)] backdrop-blur-xl transition duration-[180ms] sm:hidden">
-          <span className="pointer-events-none absolute -right-8 -top-10 size-20 rounded-full bg-[#dbeafe] blur-2xl" />
-          <div className="relative z-10 flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eff6ff] px-2 py-0.5 text-[10px] font-semibold text-[#2563eb]">
-                <Users size={12} /> TYORA Community
-              </span>
-              <p className="mt-2 text-sm font-semibold leading-tight">Start a discussion</p>
-            </div>
-            <button
-              type="button"
-              aria-label="Collapse start discussion"
-              onClick={() => setMobileDiscussionCtaCollapsed(true)}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f3f5f8] text-[#69707d]"
-            >
-              <X size={14} />
-            </button>
-          </div>
-          <Link
-            href="/ask/new"
-            className="relative z-10 mt-3 inline-flex h-9 items-center justify-center gap-1 rounded-full bg-[#2563eb] px-3 text-xs font-semibold text-white shadow-lg shadow-[#2563eb]/22"
-            aria-label="Start a product discussion"
-          >
-            Start <ArrowRight size={13} />
-          </Link>
-        </div>
-      )}
-
-      <AnimatePresence>
-        {videoModalOpen ? (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/70 p-4 backdrop-blur-sm sm:p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 24, scale: 0.98 }}
-              className="relative w-full max-w-[420px] overflow-hidden rounded-2xl bg-white p-2 shadow-2xl shadow-black/30"
-            >
-              <button
-                type="button"
-                className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full bg-white/90 text-[#101216] shadow-lg backdrop-blur transition hover:bg-white"
-                onClick={() => setVideoModalOpen(false)}
-                aria-label="Close video"
-              >
-                <X size={18} />
-              </button>
-              <video
-                className="aspect-[9/16] w-full rounded-xl bg-[#101216] object-cover"
-                src={brandFilmUrl}
-                poster={brandFilmPoster}
-                controls
-                muted
-                playsInline
-                preload="metadata"
-              />
-            </motion.div>
-          </motion.div>
-        ) : null}
-        {wizardOpen ? (
-          <motion.div
-            className="fixed inset-0 z-50 bg-[#101216]/30 p-3 backdrop-blur-sm sm:p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 24, scale: 0.98 }}
-              className="mx-auto flex h-full max-h-[820px] max-w-3xl flex-col overflow-hidden rounded-2xl bg-white soft-shadow"
-            >
-              <div className="border-b border-[#eef1f4] p-4">
-                <div className="flex items-center justify-between">
-                  <button
-                    className="rounded-lg p-2 hover:bg-[#f5f6f8]"
-                    onClick={() => setWizardOpen(false)}
-                    aria-label={t.closeConversation}
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <p className="text-sm text-[#69707d]">{t.conversationStart}</p>
-                  <div className="w-9" />
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-medium text-[#69707d]">
-                  <span className="rounded-full bg-[#f5f6f8] px-2 py-2">{t.uploadYourIdea}</span>
-                  <span className="rounded-full bg-[#f5f6f8] px-2 py-2">{t.productName}</span>
-                  <span className="rounded-full bg-[#e6f7f4] px-2 py-2 text-[#0f766e]">{t.whatsApp}</span>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-5 sm:p-8">
-                <div className="space-y-7">
-                  <section className="space-y-4">
-                    <div className="flex gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-white">
-                        <Upload size={16} />
-                      </span>
-                      <div>
-                        <h2 className="text-2xl font-semibold">{t.uploadYourIdea}</h2>
-                        <p className="mt-2 text-sm leading-6 text-[#59616e]">{t.uploadIdeaSubtitle}</p>
-                      </div>
-                    </div>
-                    <div className="ml-0 rounded-lg border border-[#e1e5ea] bg-[#fbfbfc] p-4 sm:ml-12">
-                      <label className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-[#cfd5dd] bg-white px-4 text-sm font-medium transition hover:bg-[#f5f6f8]">
-                        <Upload size={16} />
-                        {fileName || t.uploadDesign}
-                        <input
-                          className="sr-only"
-                          type="file"
-                          accept="image/*,.pdf,.step,.stp,.iges,.igs,.obj,.stl,.dwg,.dxf"
-                          onChange={(event) => {
-                            const file = event.target.files?.[0] || null;
-                            setSelectedFile(file);
-                            setFileName(file?.name || "");
-                          }}
-                        />
-                      </label>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-[#69707d]">
-                        {supportedUploads.map((item) => (
-                          <span key={item} className="rounded-full bg-white px-3 py-1.5 ring-1 ring-[#e8ebef]">
-                            {item}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-
-                  <section className="space-y-4">
-                    <div className="flex gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#101216] text-white">
-                        <PackageCheck size={16} />
-                      </span>
-                      <div>
-                        <h2 className="text-2xl font-semibold">{t.productName}</h2>
-                        <p className="mt-2 text-sm leading-6 text-[#59616e]">{t.productNameSubtitle}</p>
-                      </div>
-                    </div>
-                    <div className="ml-0 sm:ml-12">
-                      <Input
-                        value={productName}
-                        placeholder={t.productNamePlaceholder}
-                        onChange={(event) => setProductName(event.target.value)}
-                        className="min-h-14 text-base"
-                      />
-                      {!productName.trim() ? (
-                        <p className="mt-3 text-sm text-[#8c94a1]">{t.productNameExample}</p>
-                      ) : null}
-                    </div>
-                  </section>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end border-t border-[#eef1f4] p-4">
-                <Button onClick={() => void startWhatsAppChat()} disabled={!canStartChat || submitting}>
-                  <MessageCircle size={16} />
-                  {submitting ? t.saving : t.startWhatsAppChat}
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
     </main>
   );
 }
