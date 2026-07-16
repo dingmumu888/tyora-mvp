@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import { ImageOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CmsImageValue } from "@/lib/storage";
@@ -47,32 +47,35 @@ export default function CmsImage({
     );
   }
 
+  const desktopImage = desktopSrc && !desktopFailed
+    ? getImageProps({ src: desktopSrc, alt, fill: true, sizes, priority })
+    : null;
+  const mobileImage = mobileSrc && !mobileFailed
+    ? getImageProps({ src: mobileSrc, alt, fill: true, sizes, priority })
+    : null;
+  const fallbackImage = desktopImage || mobileImage;
+
+  if (!fallbackImage) return null;
+  const { alt: resolvedAlt, ...fallbackProps } = fallbackImage.props;
+
   return (
     <div className={cn("relative overflow-hidden bg-[#eef2f7]", className)}>
-      {mobileSrc && !mobileFailed ? (
-        <Image
-          src={mobileSrc}
-          alt={alt}
-          fill
-          sizes={sizes}
-          priority={priority}
-          className={cn("object-cover sm:hidden", imageClassName)}
-          style={{ objectPosition: position }}
-          onError={() => setMobileFailed(true)}
+      <picture>
+        {mobileImage && desktopImage && mobileSrc !== desktopSrc ? (
+          <source media="(max-width: 639px)" srcSet={mobileImage.props.srcSet} sizes={mobileImage.props.sizes} />
+        ) : null}
+        {/* getImageProps keeps picture sources optimized without loading both mobile and desktop assets. */}
+        <img
+          {...fallbackProps}
+          alt={resolvedAlt}
+          className={cn("object-cover", imageClassName)}
+          style={{ ...fallbackImage.props.style, objectFit: "cover", objectPosition: position }}
+          onError={() => {
+            setDesktopFailed(true);
+            setMobileFailed(true);
+          }}
         />
-      ) : null}
-      {desktopSrc && !desktopFailed ? (
-        <Image
-          src={desktopSrc}
-          alt={alt}
-          fill
-          sizes={sizes}
-          priority={priority}
-          className={cn(mobileSrc && !mobileFailed ? "hidden object-cover sm:block" : "object-cover", imageClassName)}
-          style={{ objectPosition: position }}
-          onError={() => setDesktopFailed(true)}
-        />
-      ) : null}
+      </picture>
     </div>
   );
 }

@@ -14,6 +14,7 @@
     "test:safety": "node --no-warnings --test scripts/email-preview-safety-test.mjs scripts/private-storage-safety-test.mjs scripts/preview-bootstrap-safety-test.mjs",
     "test:phase1b": "node scripts/phase-1b-foundations-test.mjs",
     "test:phase2": "node scripts/phase-2-homepage-visual-test.mjs",
+    "test:phase2:correction": "node scripts/phase-2-homepage-correction-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",
     "db:init": "node scripts/init-db.mjs",
     "db:push": "prisma db push",

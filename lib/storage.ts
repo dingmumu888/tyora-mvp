@@ -15,6 +15,7 @@ export type CmsImageValue = {
 
 export type HomepageCampaign = {
   id: string;
+  active: boolean;
   eyebrow: string;
   badge: string;
   title: string;
@@ -423,21 +424,22 @@ export const defaultContent: SiteContent = {
     ],
     campaigns: [
       {
-        id: "phone-accessory-campaign",
-        eyebrow: "Product Development & Manufacturing in China",
-        badge: "Current Product Campaign",
-        title: "Turn your product idea into a manufacturing plan.",
+        id: "fidget-desk-toy-campaign",
+        active: true,
+        eyebrow: "Current Hot-Product Campaign",
+        badge: "Stress-relief desk toy",
+        title: "Build the next tactile desk toy.",
         description:
-          "Upload an AI design, sketch, or reference image. TYORA will review the likely manufacturing route before you commit to samples or tooling.",
+          "Upload your fidget, stress-relief, or desk-toy concept. TYORA reviews feasibility, likely cost range, and MOQ before you decide whether to develop it.",
         primaryCtaText: "Upload Your Idea",
         primaryCtaHref: "/ask/new",
         secondaryCtaText: "View Manufacturing Cases",
         secondaryCtaHref: "#ideas-and-cases",
-        disclosure: "TYORA Demonstration Visual",
+        disclosure: "TYORA campaign concept. Manufacturing review required.",
         image: {
-          desktopUrl: "/images/tyora-manufacturing-campaign-v1.png",
+          desktopUrl: "/images/tyora-fidget-campaign-v2.png",
           mobileUrl: "",
-          alt: "Magnetic phone stand concept, prototypes, material samples, and manufacturing tools",
+          alt: "Modular tactile desk-toy concepts, prototypes, material samples, and manufacturing tools",
           objectPosition: "center center",
           visible: true
         },
@@ -500,15 +502,39 @@ export const defaultContent: SiteContent = {
         order: 3
       }
     ],
-    categoriesTitle: "Products TYORA Reviews",
-    categoriesNote: "Small appliances and regulated electrical products are reviewed case by case.",
+    categoriesTitle: "Initial Product Categories",
+    categoriesNote: "TYORA initially reviews non-powered accessories, desktop products, and branded gifts. Compliance-sensitive products require separate review.",
     categories: [
-      { id: "phone-accessories", name: "Phone Accessories", description: "Cases, stands, mounts, and related accessories.", href: "/ask?category=Phone%20Accessories", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 1 },
-      { id: "electronics-accessories", name: "Consumer Electronics Accessories", description: "Accessory products without unsupported compliance claims.", href: "/ask?category=Consumer%20Electronics", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 2 },
-      { id: "desktop-office", name: "Desktop & Office Products", description: "Organizers, stands, tools, and workplace products.", href: "/ask?category=Office%20%26%20Desktop", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 3 },
-      { id: "custom-gifts", name: "Custom Gifts", description: "Gift products, packaging, and presentation concepts.", href: "/ask?category=Gifts", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 4 },
-      { id: "lifestyle", name: "Lifestyle Products", description: "Everyday consumer products reviewed for practical production.", href: "/ask?category=Lifestyle", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 5 },
-      { id: "fashion-accessories", name: "Fashion Accessories", description: "Bags, jewelry, and wearable accessory concepts.", href: "/ask?category=Fashion%20Accessories", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: true, order: 6 }
+      {
+        id: "phone-accessories",
+        name: "Phone & 3C Accessories",
+        description: "Non-powered cases, stands, mounts, cable organizers, and related accessories.",
+        href: "/ask?category=Phone%20Accessories",
+        image: { desktopUrl: "/images/category-phone-3c-accessories-v1.png", mobileUrl: "", alt: "Non-powered phone cases, stands, mounts, and cable organizers", objectPosition: "center center", visible: true },
+        visible: true,
+        order: 1
+      },
+      {
+        id: "desktop-office",
+        name: "Desktop & Office Accessories",
+        description: "Organizers, risers, stands, tactile desk products, and workplace tools.",
+        href: "/ask?category=Office%20%26%20Desktop",
+        image: { desktopUrl: "/images/category-desktop-office-v1.png", mobileUrl: "", alt: "Non-powered desktop organizers, stands, and office accessories", objectPosition: "center center", visible: true },
+        visible: true,
+        order: 2
+      },
+      {
+        id: "custom-gifts",
+        name: "Custom Gifts",
+        description: "Branded gifts, promotional products, presentation packaging, and keepsakes.",
+        href: "/ask?category=Gifts",
+        image: { desktopUrl: "/images/category-custom-gifts-v1.png", mobileUrl: "", alt: "Custom gift concepts, promotional products, and presentation packaging", objectPosition: "center center", visible: true },
+        visible: true,
+        order: 3
+      },
+      { id: "electronics-accessories", name: "Compliance-sensitive Accessories", description: "Powered, battery, charging, and regulated products require separate compliance review.", href: "/ask?category=Consumer%20Electronics", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: false, order: 4 },
+      { id: "lifestyle", name: "Lifestyle Products", description: "Additional consumer products enabled only when they match current review capacity.", href: "/ask?category=Lifestyle", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: false, order: 5 },
+      { id: "fashion-accessories", name: "Fashion Accessories", description: "Bags, jewelry, and wearable accessory concepts enabled separately by an administrator.", href: "/ask?category=Fashion%20Accessories", image: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false }, visible: false, order: 6 }
     ],
     sourceEyebrow: "Source Existing Products",
     sourceTitle: "Already found a product? Check the supplier path.",
@@ -563,7 +589,7 @@ export const defaultContent: SiteContent = {
     source: "Source",
     create: "Submit",
     build: "Ideas",
-    profile: "My TYORA",
+    profile: "Account",
     startDiscussion: "Public Idea",
     startDiscussionSubtitle: "Share a product idea for community and TYORA review.",
     privateCustom: "Private Custom Review",
@@ -1012,9 +1038,11 @@ function normalizeHomepage(value: unknown): HomepageContent {
 
   const campaigns = campaignsSource.map((entry, index) => {
     const campaign = entry as Partial<HomepageCampaign>;
-    const fb = fallback.campaigns[index] || fallback.campaigns[0];
+    const storedId = typeof campaign.id === "string" ? campaign.id : "";
+    const fb = fallback.campaigns.find((candidate) => candidate.id === storedId) || fallback.campaigns[index] || fallback.campaigns[0];
     return {
       id: stringValue(campaign.id, fb.id || cryptoSafeId("campaign")),
+      active: booleanValue(campaign.active, fb.active),
       eyebrow: stringValue(campaign.eyebrow, fb.eyebrow),
       badge: stringValue(campaign.badge, fb.badge),
       title: stringValue(campaign.title, fb.title),
@@ -1048,7 +1076,8 @@ function normalizeHomepage(value: unknown): HomepageContent {
 
   const categories = categoriesSource.map((entry, index) => {
     const category = entry as Partial<HomepageCategory>;
-    const fb = fallback.categories[index] || fallback.categories[0];
+    const storedId = typeof category.id === "string" ? category.id : "";
+    const fb = fallback.categories.find((candidate) => candidate.id === storedId) || fallback.categories[index] || fallback.categories[0];
     return {
       id: stringValue(category.id, fb.id || cryptoSafeId("category")),
       name: stringValue(category.name, fb.name),

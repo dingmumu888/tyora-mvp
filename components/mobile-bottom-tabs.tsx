@@ -160,13 +160,13 @@ export default function MobileBottomTabs() {
         </Link>
       </div>
     ) : null}
-    <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[9990] rounded-lg border border-white/10 bg-[#07080a]/96 px-2 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
-      <div className="mx-auto grid max-w-md grid-cols-5 items-center gap-1">
+    <nav className="fixed inset-x-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-[9990] rounded-lg border border-white/10 bg-[#07080a]/96 px-1 py-2 text-white shadow-[0_18px_60px_rgba(0,0,0,0.34)] backdrop-blur-xl sm:inset-x-3 sm:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-2 md:hidden" aria-label="Mobile navigation">
+      <div className="mx-auto grid max-w-md grid-cols-5 items-center gap-0.5 sm:gap-1">
         {tabs.slice(0, 2).map((tab) => {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
+            <Link key={tab.label} href={tab.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[10px] font-semibold transition active:scale-95 sm:text-[11px] ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
               <span>{tab.label === "Home" ? tabCopy.community : tabCopy.build}</span>
             </Link>
@@ -177,20 +177,20 @@ export default function MobileBottomTabs() {
           <span className={`flex size-14 items-center justify-center rounded-md shadow-2xl transition ${plusActive || createOpen ? "bg-white text-[#101216] shadow-white/20" : "bg-[#2563eb] text-white shadow-[#2563eb]/30"}`}>
             <Plus size={30} strokeWidth={2.8} />
           </span>
-          <span className={`text-[11px] font-semibold ${plusActive || createOpen ? "text-white" : "text-white/48"}`}>{tabCopy.create}</span>
+          <span className={`text-[10px] font-semibold sm:text-[11px] ${plusActive || createOpen ? "text-white" : "text-white/48"}`}>{tabCopy.create}</span>
         </button>
 
         {tabs.slice(2, 3).map((tab) => {
           const Icon = tab.icon;
           const active = tab.match(pathname, hash);
           return (
-            <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
+            <Link key={tab.label} href={tab.href} className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[10px] font-semibold transition active:scale-95 sm:text-[11px] ${active ? "bg-white/8 text-white" : "text-white/48"}`}>
               <Icon size={20} strokeWidth={active ? 2.6 : 2.1} />
               <span>{tabCopy.source}</span>
             </Link>
           );
         })}
-        <Link href="/me" className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition active:scale-95 ${tabs[3].match(pathname, hash) ? "bg-white/8 text-white" : "text-white/48"}`} aria-label="Profile and activity">
+        <Link href="/me" className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md text-[10px] font-semibold transition active:scale-95 sm:text-[11px] ${tabs[3].match(pathname, hash) ? "bg-white/8 text-white" : "text-white/48"}`} aria-label="Profile and activity">
           {user ? (
             <span className="relative">
               <CommunityAvatar name={user.name} src={user.avatar} className="size-6 border border-white/20 text-[9px]" />
@@ -210,7 +210,7 @@ export default function MobileBottomTabs() {
               ) : null}
             </span>
           )}
-          <span className="max-w-12 truncate">{user ? user.name.split(" ")[0] : tabCopy.profile}</span>
+          <span>{tabCopy.profile}</span>
         </Link>
       </div>
     </nav>

@@ -141,6 +141,7 @@ export default function HomepageContentEditor({ value, media, onUpload, onChange
                 <Field label="Secondary CTA route"><Input value={campaign.secondaryCtaHref} onChange={(event) => updateCampaign(index, { secondaryCtaHref: event.target.value })} /></Field>
                 <Field label="Visual disclosure"><Input value={campaign.disclosure} onChange={(event) => updateCampaign(index, { disclosure: event.target.value })} /></Field>
                 <Field label="Display order"><Input type="number" min={1} max={99} value={campaign.order} onChange={(event) => updateCampaign(index, { order: Number(event.target.value) })} /></Field>
+                <Toggle label="Active campaign" checked={campaign.active} onChange={(active) => updateCampaign(index, { active })} />
                 <Toggle label="Visible" checked={campaign.visible} onChange={(visible) => updateCampaign(index, { visible })} />
               </div>
               <div className="mt-4">
@@ -149,7 +150,7 @@ export default function HomepageContentEditor({ value, media, onUpload, onChange
             </ItemShell>
           ))}
         </div>
-        <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => patch({ campaigns: [...value.campaigns, { ...defaultContent.homepage.campaigns[0], id: id("campaign"), title: "New campaign", visible: false, order: value.campaigns.length + 1 }] })}>
+        <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => patch({ campaigns: [...value.campaigns, { ...defaultContent.homepage.campaigns[0], id: id("campaign"), title: "New campaign", active: false, visible: false, order: value.campaigns.length + 1 }] })}>
           <Plus size={16} /> Add Campaign
         </Button>
       </Section>
@@ -212,7 +213,7 @@ export default function HomepageContentEditor({ value, media, onUpload, onChange
                 <Toggle label="Visible" checked={category.visible} onChange={(visible) => updateCategory(index, { visible })} />
               </div>
               <div className="mt-4">
-                <CmsImageField label={`${category.name || "Category"} image`} value={category.image} defaultValue={defaultContent.homepage.categories[0].image} media={media} onUpload={onUpload} onChange={(image) => updateCategory(index, { image })} />
+                <CmsImageField label={`${category.name || "Category"} image`} value={category.image} defaultValue={defaultContent.homepage.categories.find((candidate) => candidate.id === category.id)?.image || defaultContent.homepage.categories[0].image} media={media} onUpload={onUpload} onChange={(image) => updateCategory(index, { image })} />
               </div>
             </ItemShell>
           ))}

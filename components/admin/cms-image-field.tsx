@@ -58,6 +58,7 @@ export default function CmsImageField({
         <div>
           <h3 className="text-sm font-semibold text-[#101828]">{label}</h3>
           <p className="mt-1 text-xs text-[#667085]">Desktop and mobile images come from the public CMS media library.</p>
+          {!value.desktopUrl ? <p className="mt-1 text-xs font-semibold text-[#b54708]">CMS image missing. The public page will use the branded fallback.</p> : null}
         </div>
         <label className="inline-flex min-h-11 items-center gap-2 text-sm font-medium">
           <input type="checkbox" checked={value.visible} onChange={(event) => patch({ visible: event.target.checked })} className="size-4" />
