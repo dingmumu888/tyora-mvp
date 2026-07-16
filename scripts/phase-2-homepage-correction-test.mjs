@@ -10,6 +10,8 @@ const casesAdmin = read("app/admin/page.tsx");
 const mobileTabs = read("components/mobile-bottom-tabs.tsx");
 const cmsImage = read("components/cms-image.tsx");
 const cmsImageField = read("components/admin/cms-image-field.tsx");
+const sourceForm = read("app/source/source-client.tsx");
+const ideaForm = read("app/ask/new/new-idea-client.tsx");
 const homepageDefaultsStart = storage.indexOf("  homepage: {");
 const homepageDefaultsEnd = storage.indexOf("  mobileTabs:", homepageDefaultsStart);
 const homepageDefaults = storage.slice(homepageDefaultsStart, homepageDefaultsEnd);
@@ -54,6 +56,16 @@ for (const id of hiddenCategoryIds) {
 requireCheck(
   storage.includes("Compliance-sensitive products require separate review."),
   "Homepage category scope does not include the approved compliance note."
+);
+requireCheck(
+  storage.includes('categoriesTitle: "Product Categories TYORA Reviews"')
+    && storage.includes('name: "Phone & Device Accessories"')
+    && storage.includes('category: "Phone & Device Accessories"'),
+  "The approved category terminology is not present in CMS defaults and TYORA case metadata."
+);
+requireCheck(
+  ![homepageDefaults, sourceForm, ideaForm].some((value) => /Phone & 3C Accessories|Phone Accessories|Phone accessories|Initial Product Categories/.test(value)),
+  "Legacy public-facing category terminology remains."
 );
 requireCheck(
   admin.includes("updateCategory(index")

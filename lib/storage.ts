@@ -502,14 +502,14 @@ export const defaultContent: SiteContent = {
         order: 3
       }
     ],
-    categoriesTitle: "Initial Product Categories",
+    categoriesTitle: "Product Categories TYORA Reviews",
     categoriesNote: "TYORA initially reviews non-powered accessories, desktop products, and branded gifts. Compliance-sensitive products require separate review.",
     categories: [
       {
         id: "phone-accessories",
-        name: "Phone & 3C Accessories",
+        name: "Phone & Device Accessories",
         description: "Non-powered cases, stands, mounts, cable organizers, and related accessories.",
-        href: "/ask?category=Phone%20Accessories",
+        href: "/ask?category=Phone%20%26%20Device%20Accessories",
         image: { desktopUrl: "/images/category-phone-3c-accessories-v1.png", mobileUrl: "", alt: "Non-powered phone cases, stands, mounts, and cable organizers", objectPosition: "center center", visible: true },
         visible: true,
         order: 1
@@ -711,7 +711,7 @@ export const defaultContent: SiteContent = {
       slug: "tyora-phone-stand-demonstration",
       status: "Prototype Approved",
       country: "",
-      category: "Phone Accessories",
+      category: "Phone & Device Accessories",
       shortDescription:
         "A TYORA demonstration case showing how a rough accessory concept can be reviewed before factory matching.",
       concept: "A compact magnetic stand intended to fold flat and support common phone sizes.",
@@ -943,6 +943,25 @@ function stringValue(value: unknown, fallback: string) {
   return typeof value === "string" ? value : fallback;
 }
 
+function publicCategoryLabel(value: unknown, fallback: string) {
+  const label = stringValue(value, fallback);
+  return label === "Phone & 3C Accessories" || label === "Phone Accessories"
+    ? "Phone & Device Accessories"
+    : label;
+}
+
+function publicCategoryHeading(value: unknown, fallback: string) {
+  const heading = stringValue(value, fallback);
+  return heading === "Initial Product Categories" ? "Product Categories TYORA Reviews" : heading;
+}
+
+function publicCategoryHref(value: unknown, fallback: string) {
+  const href = safeCmsHref(value, fallback);
+  return href === "/ask?category=Phone%20Accessories"
+    ? "/ask?category=Phone%20%26%20Device%20Accessories"
+    : href;
+}
+
 function booleanValue(value: unknown, fallback: boolean) {
   return typeof value === "boolean" ? value : fallback;
 }
@@ -1080,9 +1099,9 @@ function normalizeHomepage(value: unknown): HomepageContent {
     const fb = fallback.categories.find((candidate) => candidate.id === storedId) || fallback.categories[index] || fallback.categories[0];
     return {
       id: stringValue(category.id, fb.id || cryptoSafeId("category")),
-      name: stringValue(category.name, fb.name),
+      name: publicCategoryLabel(category.name, fb.name),
       description: stringValue(category.description, fb.description),
-      href: safeCmsHref(category.href, fb.href),
+      href: publicCategoryHref(category.href, fb.href),
       image: normalizeCmsImage(category.image, fb.image),
       visible: booleanValue(category.visible, fb.visible),
       order: numberValue(category.order, fb.order || index + 1, 1, 99)
@@ -1109,7 +1128,7 @@ function normalizeHomepage(value: unknown): HomepageContent {
     pathsTitle: stringValue(item.pathsTitle, fallback.pathsTitle),
     pathsDescription: stringValue(item.pathsDescription, fallback.pathsDescription),
     paths,
-    categoriesTitle: stringValue(item.categoriesTitle, fallback.categoriesTitle),
+    categoriesTitle: publicCategoryHeading(item.categoriesTitle, fallback.categoriesTitle),
     categoriesNote: stringValue(item.categoriesNote, fallback.categoriesNote),
     categories,
     sourceEyebrow: stringValue(item.sourceEyebrow, fallback.sourceEyebrow),
@@ -1256,7 +1275,7 @@ function normalizeCases(value: unknown): CaseStudy[] {
         slug: stringValue(item.slug, fb.slug || slugify(name)),
         status: status as CaseStudyStatus,
         country: stringValue(item.country, fb.country),
-        category: stringValue(item.category, fb.category),
+        category: publicCategoryLabel(item.category, fb.category),
         shortDescription: stringValue(item.shortDescription, fb.shortDescription),
         concept: stringValue(item.concept, fb.concept),
         manufacturingReview: stringValue(item.manufacturingReview, fb.manufacturingReview),

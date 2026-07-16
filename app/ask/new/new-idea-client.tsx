@@ -313,7 +313,7 @@ export default function NewIdeaClient() {
                 <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Magnetic phone stand" className={inputClass} />
               </label>
               <label className="grid gap-2 text-sm font-semibold">Category
-                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone accessories" className={inputClass} />
+                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone & Device Accessories" className={inputClass} />
               </label>
               <label className="grid gap-2 text-sm font-semibold">Description
                 <textarea
@@ -466,7 +466,7 @@ export default function NewIdeaClient() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm font-semibold">Category <span className="font-normal text-[#8b93a1]">optional</span>
-                    <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone accessories" className={inputClass} />
+                    <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone & Device Accessories" className={inputClass} />
                   </label>
                   <label className="grid gap-2 text-sm font-semibold">Country <span className="font-normal text-[#8b93a1]">optional</span>
                     <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="United States" className={inputClass} />

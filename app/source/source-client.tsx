@@ -413,7 +413,7 @@ export default function SourceClient() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Category">
-                <input value={form.category} onChange={(event) => update("category", event.target.value)} className={inputClass} placeholder="Kitchen, phone accessories, pet..." />
+                <input value={form.category} onChange={(event) => update("category", event.target.value)} className={inputClass} placeholder="Kitchen, device accessories, pet..." />
               </Field>
               <Field label="Quantity needed">
                 <input value={form.quantity} onChange={(event) => update("quantity", event.target.value)} className={inputClass} placeholder="500 pcs, 1,000 pcs..." />
