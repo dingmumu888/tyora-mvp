@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
+import { getCurrentIdeaAccessContext } from "@/lib/server/idea-access-context";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
 import IdeaActions from "./idea-actions";
@@ -43,7 +44,7 @@ function expertReplyText(idea: Awaited<ReturnType<typeof getCommunityIdeaBySlug>
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const idea = await getCommunityIdeaBySlug(slug);
+  const idea = await getCommunityIdeaBySlug(slug, await getCurrentIdeaAccessContext());
   return {
     title: idea ? `${idea.title} | Ask TYORA Community` : "Ask TYORA Idea",
     description: idea?.description || "Manufacturing discussion on Ask TYORA Community."
@@ -52,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CommunityIdeaPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const idea = await getCommunityIdeaBySlug(slug);
+  const idea = await getCommunityIdeaBySlug(slug, await getCurrentIdeaAccessContext());
   if (!idea) notFound();
   const expertReply = expertReplyText(idea);
   const compactMeta = [

@@ -5,21 +5,19 @@ import { EmailLoginStage, ResendEmailError, requestEmailLoginCode } from "@/lib/
 
 function safeError(error: unknown) {
   if (error instanceof EmailDeliveryPolicyError) {
-    return { name: error.name, code: error.code, providerStatus: null };
+    return { name: error.name, code: error.code };
   }
   if (error instanceof ResendEmailError) {
-    return { name: error.name, code: error.errorCode, providerStatus: error.status };
+    return { name: error.name };
   }
   return {
-    name: error instanceof Error ? error.name : "UnknownError",
-    code: null,
-    providerStatus: null
+    name: error instanceof Error ? error.name : "UnknownError"
   };
 }
 
 function safeTraceData(data?: Record<string, unknown>) {
   if (!data) return {};
-  const allowed = ["inputType", "valid", "recent", "limit", "limited", "created", "deployment", "senderKind", "status", "ok", "errorCode"];
+  const allowed = ["inputType", "valid", "recent", "limit", "limited", "created", "deployment", "senderKind"];
   return Object.fromEntries(allowed.filter((key) => key in data).map((key) => [key, data[key]]));
 }
 

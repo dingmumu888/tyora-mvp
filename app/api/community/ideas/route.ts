@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const sort = params.get("sort") as CommunityFeedSort | null;
   const limit = Number(params.get("limit") || 50);
-  return ok(await getCommunityIdeas(sort || "newest", false, limit), {
+  return ok(await getCommunityIdeas(sort || "newest", {}, limit), {
     headers: {
       "Cache-Control": "public, max-age=30, s-maxage=60, stale-while-revalidate=120"
     }

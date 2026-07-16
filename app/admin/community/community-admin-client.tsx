@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Loader2, MessageSquare, Save, Trash2, X } from "lucide-react";
-import { CommunityIdea } from "@/lib/community";
+import { CommunityIdea, CommunityModerationStatus } from "@/lib/community";
 import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 
-type QueueFilter = "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
+type QueueFilter = "pending" | "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
 
 const buckets: Array<[QueueFilter, string]> = [
+  ["pending", "Pending Approval"],
   ["needs-reply", "Needs Reply"],
   ["replied", "Replied"],
   ["featured", "Homepage Featured"],
@@ -39,6 +40,7 @@ function normalizeCommunityIdea(value: unknown): CommunityIdea {
     country: idea.country || "Not specified",
     imageUrls: Array.isArray(idea.imageUrls) ? idea.imageUrls : [],
     questions: Array.isArray(idea.questions) ? idea.questions : [],
+    moderationStatus: idea.moderationStatus || "Pending",
     hidden: Boolean(idea.hidden),
     locked: Boolean(idea.locked),
     pinned: Boolean(idea.pinned),
@@ -82,6 +84,7 @@ export default function CommunityAdminClient() {
 
   const counts = useMemo(() => {
     return {
+      pending: ideas.filter((idea) => idea.moderationStatus === "Pending").length,
       "needs-reply": ideas.filter((idea) => !idea.review && !idea.hidden).length,
       replied: ideas.filter((idea) => idea.review && !idea.hidden).length,
       featured: ideas.filter((idea) => idea.homepageFeatured && !idea.hidden).length,
@@ -97,6 +100,7 @@ export default function CommunityAdminClient() {
     setSaving(idea.slug);
     const body = {
       status: form.get("status"),
+      moderationStatus: form.get("moderationStatus"),
       hidden: form.get("hidden") === "on",
       locked: form.get("locked") === "on",
       pinned: form.get("pinned") === "on",
@@ -153,6 +157,7 @@ export default function CommunityAdminClient() {
   }
 
   const filtered = ideas.filter((idea) => {
+    if (active === "pending") return idea.moderationStatus === "Pending";
     if (active === "needs-reply") return !idea.review && !idea.hidden;
     if (active === "replied") return Boolean(idea.review) && !idea.hidden;
     if (active === "featured") return idea.homepageFeatured && !idea.hidden;
@@ -178,7 +183,7 @@ export default function CommunityAdminClient() {
           </div>
         </header>
 
-        <div className="mt-6 grid gap-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-6 grid gap-2 md:grid-cols-3 lg:grid-cols-7">
           {buckets.map(([status, label]) => (
             <button key={status} onClick={() => setActive(status)} className={`rounded-2xl border p-3 text-left shadow-sm shadow-[#101216]/4 ${active === status ? "border-[#101216] bg-[#101216] text-white" : "border-[#e8ebef] bg-white"}`}>
               <span className="block text-sm font-semibold">{label}</span>
@@ -196,6 +201,7 @@ export default function CommunityAdminClient() {
                   <div>
                     <p className="text-xs text-[#69707d]">{idea.id} · {idea.visibility} · {idea.author.name}</p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                      <span className="rounded-full bg-[#fff7d6] px-2.5 py-1 text-[#8a5a00]">{idea.moderationStatus}</span>
                       {idea.homepageFeatured ? (
                         <span className="rounded-full bg-[#edf4ff] px-2.5 py-1 text-[#2563eb]">Homepage #{idea.homepageFeaturedOrder || "?"}</span>
                       ) : null}
@@ -257,6 +263,18 @@ export default function CommunityAdminClient() {
             <label className="mt-5 grid gap-2 text-sm font-semibold">
               TYORA Reply
               <textarea name="reply" defaultValue={existingReply(replyingTo)} rows={12} autoFocus className="min-h-[260px] resize-y rounded-[18px] border border-[#dfe3e8] bg-white p-4 text-sm leading-6 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder="Example: Yes, this can be manufactured. I recommend starting with..." />
+            </label>
+            <label className="mt-4 grid gap-2 text-sm font-semibold">
+              Moderation status
+              <select
+                name="moderationStatus"
+                defaultValue={replyingTo.moderationStatus}
+                className="h-11 rounded-[14px] border border-[#dfe3e8] bg-white px-3 text-sm"
+              >
+                {(["Pending", "Approved", "Rejected", "Draft"] as CommunityModerationStatus[]).map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
             </label>
             <div className="mt-4 grid gap-3 rounded-[18px] bg-[#f7f8fa] p-4 text-sm sm:grid-cols-3">
               <label className="flex items-center gap-2"><input name="hidden" type="checkbox" defaultChecked={replyingTo.hidden} /> Hide Post</label>

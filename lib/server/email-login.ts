@@ -6,6 +6,15 @@ import {
   EmailDeliveryPlan,
   resolveEmailDeliveryPlan
 } from "@/lib/server/email-delivery-policy";
+import {
+  isVerificationEmail,
+  normalizeVerificationEmail
+} from "@/lib/server/email-verification-policy";
+import {
+  isVerificationAttemptAllowed,
+  recordVerificationFailure,
+  verificationThrottleKeys
+} from "@/lib/server/email-verification-throttle";
 
 const CODE_TTL_MINUTES = 10;
 const REQUEST_WINDOW_MINUTES = 10;
@@ -33,15 +42,6 @@ export class ResendEmailError extends Error {
   }
 }
 
-function normalizeEmail(value: unknown) {
-  if (typeof value !== "string") return "";
-  return value.trim().toLowerCase().slice(0, 254);
-}
-
-function isEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
 function safeParseJson(value: string) {
   try {
     return JSON.parse(value) as unknown;
@@ -57,7 +57,9 @@ function parseResendErrorCode(responseBody: string) {
 }
 
 function authSecret() {
-  return process.env.EMAIL_LOGIN_SECRET || process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || "tyora-email-login-dev";
+  const value = process.env.EMAIL_LOGIN_SECRET || process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET;
+  if (!value) throw new Error("Email login is not configured.");
+  return value;
 }
 
 function hashCode(email: string, code: string) {
@@ -108,11 +110,11 @@ async function sendLoginEmail(plan: EmailDeliveryPlan, code: string, trace?: Ema
 }
 
 export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTrace) {
-  const email = normalizeEmail(input);
+  const email = normalizeVerificationEmail(input);
   trace?.("normalize_email", {
     inputType: typeof input
   });
-  const valid = isEmail(email);
+  const valid = isVerificationEmail(email);
   trace?.("validate_email", {
     valid
   });
@@ -149,43 +151,55 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
   await sendLoginEmail(deliveryPlan, code, trace);
 }
 
-export async function verifyEmailLoginCode(emailInput: unknown, codeInput: unknown) {
-  const email = normalizeEmail(emailInput);
+export async function verifyEmailLoginCode(emailInput: unknown, codeInput: unknown, request: Request) {
+  const email = normalizeVerificationEmail(emailInput);
   const code = typeof codeInput === "string" ? codeInput.trim() : "";
-  if (!isEmail(email) || !/^\d{6}$/.test(code)) return null;
+  if (!(await isVerificationAttemptAllowed(email, request))) return null;
+  if (!isVerificationEmail(email) || !/^\d{6}$/.test(code)) {
+    await recordVerificationFailure(email, request);
+    return null;
+  }
 
-  const row = await prisma.emailLoginCode.findFirst({
-    where: {
-      email,
-      usedAt: null,
-      expiresAt: { gt: new Date() }
-    },
-    orderBy: { createdAt: "desc" }
+  const now = new Date();
+  const throttleIds = verificationThrottleKeys(email, request).map((key) => key.id);
+  const user = await prisma.$transaction(async (tx) => {
+    const row = await tx.emailLoginCode.findFirst({
+      where: {
+        email,
+        usedAt: null,
+        expiresAt: { gt: now }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    if (!row || !safeEqual(row.codeHash, hashCode(email, code))) return null;
+
+    const consumed = await tx.emailLoginCode.updateMany({
+      where: { id: row.id, usedAt: null, expiresAt: { gt: now } },
+      data: { usedAt: now }
+    });
+    if (consumed.count !== 1) return null;
+
+    const existing = await tx.communityUser.findUnique({ where: { email } });
+    const username = existing?.username || usernameFromEmail(email);
+    const collision = existing ? null : await tx.communityUser.findUnique({ where: { username } });
+    const finalUsername = collision ? `${username}-${Date.now().toString(36)}` : username;
+    const name = existing?.name || email.split("@")[0] || "TYORA Creator";
+    const verifiedUser = await tx.communityUser.upsert({
+      where: { email },
+      create: {
+        id: makeCommunityId("USER"),
+        email,
+        username: finalUsername,
+        name
+      },
+      update: { name }
+    });
+    await tx.emailVerificationThrottle.deleteMany({
+      where: { id: { in: throttleIds } }
+    });
+    return verifiedUser;
   });
-  if (!row || !safeEqual(row.codeHash, hashCode(email, code))) return null;
 
-  await prisma.emailLoginCode.update({
-    where: { id: row.id },
-    data: { usedAt: new Date() }
-  });
-
-  const existing = await prisma.communityUser.findUnique({ where: { email } });
-  const username = existing?.username || usernameFromEmail(email);
-  const collision = existing ? null : await prisma.communityUser.findUnique({ where: { username } });
-  const finalUsername = collision ? `${username}-${Date.now().toString(36)}` : username;
-  const name = existing?.name || email.split("@")[0] || "TYORA Creator";
-
-  return prisma.communityUser.upsert({
-    where: { email },
-    create: {
-      id: makeCommunityId("USER"),
-      email,
-      username: finalUsername,
-      name
-    },
-    update: {
-      email,
-      name
-    }
-  });
+  if (!user) await recordVerificationFailure(email, request);
+  return user;
 }

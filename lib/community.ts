@@ -17,6 +17,7 @@ export const communityQuestions = [
 ] as const;
 
 export type CommunityStatus = (typeof communityStatuses)[number];
+export type CommunityModerationStatus = "Pending" | "Approved" | "Rejected" | "Draft";
 export type CommunityVisibility = "Public" | "Private";
 export type CommunityQuestion = (typeof communityQuestions)[number];
 
@@ -68,6 +69,7 @@ export type CommunityIdea = {
   questions: CommunityQuestion[];
   otherQuestion?: string;
   visibility: CommunityVisibility;
+  moderationStatus: CommunityModerationStatus;
   status: CommunityStatus;
   hidden: boolean;
   locked: boolean;

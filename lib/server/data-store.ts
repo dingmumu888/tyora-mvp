@@ -11,6 +11,7 @@ import {
   TeamMember
 } from "@/lib/storage";
 import { prisma } from "@/lib/server/db";
+import type { PublicLeadSubmission } from "@/lib/server/lead-submission-policy";
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
@@ -170,17 +171,45 @@ export async function updateLead(id: string, input: unknown): Promise<Lead> {
   return rowToLead(row);
 }
 
-export async function createLead(lead: unknown): Promise<Lead> {
-  const normalized = normalizeLead(lead);
-  await prisma.lead.upsert({
-    where: { id: normalized.id },
-    create: {
-      id: normalized.id,
-      ...leadData(normalized)
-    },
-    update: leadData(normalized)
+export async function createPublicLead(input: PublicLeadSubmission): Promise<Lead> {
+  const submissionDate = new Date();
+  const row = await prisma.lead.create({
+    data: {
+      id: `lead-${crypto.randomUUID()}`,
+      customerName: input.customerName || null,
+      company: input.company || null,
+      email: input.email || null,
+      country: input.country || null,
+      category: input.category || null,
+      productIdea: input.productIdea,
+      designType: input.designType,
+      quantity: input.quantity,
+      budget: input.budget,
+      timeline: input.timeline,
+      sampleRequirement: input.sampleRequirement,
+      sampleReview: input.sampleReview || null,
+      additionalRequirements: input.additionalRequirements,
+      uploadedFile: input.uploadedFile || null,
+      uploadedFilesJson: JSON.stringify(input.uploadedFiles),
+      submissionDate,
+      status: "New",
+      ownerId: "unassigned",
+      priority: "Medium",
+      lastContactDate: null,
+      nextFollowUpDate: null,
+      internalNotes: null,
+      internalNoteEntriesJson: "[]",
+      statusHistoryJson: JSON.stringify([
+        {
+          id: `history-${crypto.randomUUID()}`,
+          label: "Project Submitted",
+          actor: "Customer",
+          createdAt: submissionDate.toISOString()
+        }
+      ])
+    }
   });
-  return normalized;
+  return rowToLead(row);
 }
 
 export async function putLeads(leads: unknown): Promise<Lead[]> {

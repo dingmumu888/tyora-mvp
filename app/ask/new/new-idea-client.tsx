@@ -22,7 +22,7 @@ type SessionUser = { id: string; name: string; email: string; username: string; 
 type Step = 0 | 1 | 2 | 3;
 type ImagePreview = { name: string; url: string };
 
-const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Go Live"] as const;
+const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Submit"] as const;
 const mobileSteps = ["Idea", "Show", "Understand", "Live"] as const;
 const defaultQuestions: CommunityQuestion[] = ["Can this be manufactured?", "Estimated Cost?", "Material Suggestion?"];
 const nextSteps = [
@@ -287,8 +287,8 @@ export default function NewIdeaClient() {
                 <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#e9f7f3] text-[#0f766e] shadow-sm">
                   <Sparkles size={28} />
                 </div>
-                <h2 className="mt-5 text-3xl font-semibold leading-tight">Your discussion is now live.</h2>
-                <p className="mt-3 text-sm font-medium text-[#69707d]">Redirecting to your discussion...</p>
+                <h2 className="mt-5 text-3xl font-semibold leading-tight">Your idea is ready for TYORA review.</h2>
+                <p className="mt-3 text-sm font-medium text-[#69707d]">Opening your private review page...</p>
               </div>
             </div>
           ) : (
@@ -488,7 +488,7 @@ export default function NewIdeaClient() {
                 ) : null}
                 <div className="rounded-[20px] border border-[#dbeafe] bg-[#eff6ff] p-4 text-sm leading-6 text-[#315fbd]">
                   <p className="font-semibold text-[#1d4ed8]">Public community discussion</p>
-                  <p className="mt-1">Your idea will be visible to everyone so founders can comment, react, and share manufacturing feedback.</p>
+                  <p className="mt-1">Your idea becomes visible to everyone only after TYORA approves it for the public community.</p>
                 </div>
               </div>
             </section>
@@ -496,8 +496,8 @@ export default function NewIdeaClient() {
 
           {step === 3 ? (
             <section className="mt-5">
-              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Ready to go live?</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">This is your first version. Publish it, let founders react, and let TYORA help clarify the manufacturing path.</p>
+              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Ready to submit?</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">TYORA will review it before it becomes visible in the public community.</p>
               <div className="mt-6 rounded-[20px] border border-[#e4e8ef] bg-[#fbfcff] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Concept"}</span>

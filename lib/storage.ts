@@ -1690,7 +1690,7 @@ export async function saveContent(content: SiteContent): Promise<SiteContent> {
 }
 
 export async function loadLeads(): Promise<Lead[]> {
-  return apiRequest<Lead[]>("/api/leads");
+  return apiRequest<Lead[]>("/api/admin/leads");
 }
 
 export async function saveLead(lead: Lead): Promise<Lead> {
@@ -1701,7 +1701,7 @@ export async function saveLead(lead: Lead): Promise<Lead> {
 }
 
 export async function saveLeads(leads: Lead[]): Promise<Lead[]> {
-  return apiRequest<Lead[]>("/api/leads", {
+  return apiRequest<Lead[]>("/api/admin/leads", {
     method: "PUT",
     body: JSON.stringify(leads.map(normalizeLead))
   });

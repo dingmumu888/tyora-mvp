@@ -151,6 +151,21 @@ model EmailLoginCode {
   @@index([createdAt])
 }
 
+model EmailVerificationThrottle {
+  id              String    @id
+  scope           String
+  failureCount    Int       @default(0)
+  windowStartedAt DateTime
+  lockedUntil     DateTime?
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([scope])
+  @@index([lockedUntil])
+  @@index([expiresAt])
+}
+
 model SourceRequest {
   id                 String   @id
   productName        String
@@ -199,6 +214,7 @@ model CommunityIdea {
   questionsJson         String              @default("[]")
   otherQuestion         String?
   visibility            String              @default("Public")
+  moderationStatus      String              @default("Pending")
   status                String              @default("Discussing")
   hidden                Boolean             @default(false)
   locked                Boolean             @default(false)
@@ -216,6 +232,7 @@ model CommunityIdea {
   @@index([authorId])
   @@index([status])
   @@index([visibility])
+  @@index([moderationStatus])
   @@index([hidden])
   @@index([pinned])
   @@index([homepageFeatured, homepageFeaturedOrder])

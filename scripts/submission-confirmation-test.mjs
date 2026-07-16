@@ -16,7 +16,11 @@ const failures = [];
 });
 
 if (!idea.includes('visibility: "Public"') || !idea.includes("window.location.href = `/ask/${payload.data.slug}`")) {
-  failures.push("Public idea submissions should publish and open their discussion.");
+  failures.push("Public idea submissions should retain the public intent and open the author's review page.");
+}
+
+if (!idea.includes("Your idea is ready for TYORA review.") || !idea.includes("only after TYORA approves it")) {
+  failures.push("Public idea submissions must explain moderation before public visibility.");
 }
 
 if (idea.includes("Private custom request received") || idea.includes('form.visibility === "Private"')) {

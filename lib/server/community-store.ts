@@ -1,8 +1,6 @@
 import {
   CommunityFeedSort,
   CommunityIdea,
-  CommunityQuestion,
-  CommunityStatus,
   CommunityUser,
   makeCommunityId,
   normalizeQuestions,
@@ -12,6 +10,20 @@ import {
   usernameFromEmail
 } from "@/lib/community";
 import { prisma } from "@/lib/server/db";
+import type { Prisma } from "@prisma/client";
+import {
+  assertCanInteractWithIdea,
+  assertCanReadIdea,
+  IdeaAccessContext,
+  IdeaNotFoundError,
+  isApprovedPublicIdea,
+  normalizeIdeaModerationStatus
+} from "@/lib/server/idea-access-policy";
+import {
+  buildPrivateIdeaObjectPath,
+  validatePrivateUploadBytes
+} from "@/lib/server/private-storage-policy";
+import { uploadPrivateObject } from "@/lib/server/private-storage";
 
 type UserRow = {
   id: string;
@@ -54,14 +66,22 @@ function safePublicImageUrl(value: unknown, maxInlineLength = MAX_INLINE_IDEA_IM
   return null;
 }
 
-function safePublicImageUrls(value: unknown) {
+function storedIdeaImageUrls(value: unknown) {
   const parsed = parseJson<unknown[]>(value, []);
   return Array.isArray(parsed)
-    ? parsed.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
+    ? parsed
+        .map((item) => {
+          if (typeof item !== "string") return null;
+          const stored = item.trim();
+          if (stored.startsWith("private:idea-submissions/")) return stored;
+          return safePublicImageUrl(stored);
+        })
+        .filter((item): item is string => Boolean(item))
+        .slice(0, 5)
     : [];
 }
 
-function publicIdeaImageUrls(value: unknown, slug: string) {
+function ideaImageUrls(value: unknown, slug: string, privateAccess: boolean) {
   const parsed = parseJson<unknown[]>(value, []);
   if (!Array.isArray(parsed)) return [];
 
@@ -70,6 +90,16 @@ function publicIdeaImageUrls(value: unknown, slug: string) {
       if (typeof item !== "string") return null;
       const url = item.trim();
       if (!url) return null;
+      if (url.startsWith("private:idea-submissions/")) {
+        const segment = privateAccess ? "private-ideas" : "ideas";
+        return `/api/community/${segment}/${encodeURIComponent(slug)}/images/${index}`;
+      }
+      if (privateAccess) {
+        if (DATA_IMAGE_PATTERN.test(url)) {
+          return `/api/community/private-ideas/${encodeURIComponent(slug)}/images/${index}`;
+        }
+        return null;
+      }
       if (DATA_IMAGE_PATTERN.test(url)) {
         return `/api/community/ideas/${encodeURIComponent(slug)}/images/${index}`;
       }
@@ -91,6 +121,93 @@ function parseStoredDataImage(value: unknown) {
   } catch {
     return null;
   }
+}
+
+function privateImageExtension(contentType: string) {
+  if (contentType === "image/jpeg") return ".jpg";
+  if (contentType === "image/png") return ".png";
+  if (contentType === "image/webp") return ".webp";
+  return "";
+}
+
+async function storePrivateIdeaImages(values: string[]) {
+  const stored: string[] = [];
+  for (const value of values) {
+    const image = parseStoredDataImage(value);
+    const extension = image ? privateImageExtension(image.contentType) : "";
+    if (!image || !extension) {
+      throw new Error("Private idea images must be JPG, PNG, or WebP files.");
+    }
+    validatePrivateUploadBytes({
+      displayName: `idea${extension}`,
+      mimeType: image.contentType,
+      size: image.body.byteLength,
+      header: new Uint8Array(
+        image.body.buffer,
+        image.body.byteOffset,
+        Math.min(16, image.body.byteLength)
+      )
+    });
+    const objectPath = buildPrivateIdeaObjectPath(extension);
+    const bytes = image.body.buffer.slice(
+      image.body.byteOffset,
+      image.body.byteOffset + image.body.byteLength
+    ) as ArrayBuffer;
+    await uploadPrivateObject(objectPath, bytes, image.contentType);
+    stored.push(`private:${objectPath}`);
+  }
+  return stored;
+}
+
+function storedImageIndexFromProxy(value: string, slug: string) {
+  if (!value.startsWith("/api/community/")) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(value, "https://private-images.tyora.invalid");
+  } catch {
+    return null;
+  }
+  if (
+    parsed.origin !== "https://private-images.tyora.invalid" ||
+    parsed.search ||
+    parsed.hash
+  ) {
+    return null;
+  }
+  const match = parsed.pathname.match(
+    /^\/api\/community\/(?:ideas|private-ideas)\/([^/]+)\/images\/([0-4])$/
+  );
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]) === slug ? Number(match[2]) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function ownerIdeaImageUrls(input: unknown[], existingValue: unknown, slug: string) {
+  const existing = storedIdeaImageUrls(existingValue);
+  const next: string[] = [];
+  for (const item of input.slice(0, 5)) {
+    if (typeof item !== "string") throw new Error("Invalid idea image.");
+    const value = item.trim();
+    const existingIndex = storedImageIndexFromProxy(value, slug);
+    if (existingIndex !== null && existing[existingIndex]) {
+      next.push(existing[existingIndex]);
+      continue;
+    }
+    if (existing.includes(value)) {
+      next.push(value);
+      continue;
+    }
+    const dataImage = safePublicImageUrl(value);
+    if (dataImage?.startsWith("data:image/")) {
+      next.push(...await storePrivateIdeaImages([dataImage]));
+      continue;
+    }
+    throw new Error("Invalid idea image.");
+  }
+  return next;
 }
 
 function publicCommunityAvatar(value: unknown, userId: string) {
@@ -165,10 +282,11 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
     description: row.description,
     category: row.category,
     country: row.country,
-    imageUrls: publicIdeaImageUrls(row.imageUrlsJson, row.slug),
+    imageUrls: ideaImageUrls(row.imageUrlsJson, row.slug, !isApprovedPublicIdea(row)),
     questions: normalizeQuestions(parseJson(row.questionsJson, [])),
     otherQuestion: row.otherQuestion || undefined,
     visibility: normalizeVisibility(row.visibility),
+    moderationStatus: normalizeIdeaModerationStatus(row.moderationStatus),
     status: normalizeStatus(row.status),
     hidden: Boolean(row.hidden),
     locked: Boolean(row.locked),
@@ -353,7 +471,18 @@ export async function updateCommunityProfile(userId: string, input: unknown) {
   };
 }
 
-export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", includeHidden = false, limit = 50) {
+const approvedPublicIdeaWhere: Prisma.CommunityIdeaWhereInput = {
+  hidden: false,
+  visibility: "Public",
+  moderationStatus: "Approved",
+  status: { notIn: ["Pending", "Rejected", "Draft"] }
+};
+
+export async function getCommunityIdeas(
+  sort: CommunityFeedSort = "newest",
+  context: IdeaAccessContext = {},
+  limit = 50
+) {
   const requestedLimit = Number.isFinite(limit) ? Math.round(limit) : 50;
   const safeLimit = Math.min(50, Math.max(1, requestedLimit));
   const orderBy =
@@ -366,7 +495,11 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
           : { createdAt: "desc" as const };
 
   const rows = await prisma.communityIdea.findMany({
-    where: includeHidden ? {} : { hidden: false, visibility: "Public" },
+    where: context.isAdmin
+      ? {}
+      : context.userId
+        ? { OR: [approvedPublicIdeaWhere, { authorId: context.userId }] }
+        : approvedPublicIdeaWhere,
     orderBy,
     take: sort === "trending" ? 50 : safeLimit,
     include: ideaInclude
@@ -389,7 +522,7 @@ export async function getCommunityIdeas(sort: CommunityFeedSort = "newest", incl
 
 export async function getCommunityStats() {
   const ideas = await prisma.communityIdea.findMany({
-    where: { hidden: false, visibility: "Public" },
+    where: approvedPublicIdeaWhere,
     select: { status: true, country: true, review: { select: { id: true } } }
   });
   return {
@@ -406,27 +539,26 @@ export async function getCommunityActivity(limit = 8): Promise<CommunityActivity
   const safeLimit = Math.min(20, Math.max(1, Number.isFinite(limit) ? Math.round(limit) : 8));
   const [ideas, comments, reviews, statusIdeas] = await Promise.all([
     prisma.communityIdea.findMany({
-      where: { hidden: false, visibility: "Public" },
+      where: approvedPublicIdeaWhere,
       orderBy: { createdAt: "desc" },
       take: safeLimit,
       include: { author: true }
     }),
     prisma.communityComment.findMany({
-      where: { hidden: false, idea: { hidden: false, visibility: "Public" } },
+      where: { hidden: false, idea: approvedPublicIdeaWhere },
       orderBy: { createdAt: "desc" },
       take: safeLimit,
       include: { author: true, idea: true }
     }),
     prisma.tyoraReview.findMany({
-      where: { idea: { hidden: false, visibility: "Public" } },
+      where: { idea: approvedPublicIdeaWhere },
       orderBy: { updatedAt: "desc" },
       take: safeLimit,
       include: { idea: true }
     }),
     prisma.communityIdea.findMany({
       where: {
-        hidden: false,
-        visibility: "Public",
+        ...approvedPublicIdeaWhere,
         status: { in: ["Project Started", "Manufacturing", "Shipping", "Completed"] }
       },
       orderBy: { updatedAt: "desc" },
@@ -468,16 +600,25 @@ export async function getCommunityActivity(limit = 8): Promise<CommunityActivity
     .slice(0, safeLimit);
 }
 
-export async function getCommunityIdeaBySlug(slug: string, includeHidden = false) {
+export async function getCommunityIdeaBySlug(slug: string, context: IdeaAccessContext = {}) {
   const row = await prisma.communityIdea.findUnique({
     where: { slug },
     include: ideaInclude
   });
-  if (!row || (!includeHidden && (row.hidden || row.visibility !== "Public"))) return null;
+  if (!row || !isApprovedPublicIdea(row) && !context.isAdmin && row.authorId !== context.userId) return null;
   return ideaToCommunityIdea(row);
 }
 
-export async function getCommunityIdeaImage(slug: string, index: number, options: { includeHidden?: boolean; viewerId?: string } = {}) {
+type CommunityIdeaImageResult =
+  | { access: "public" | "private"; contentType: string; body: Buffer }
+  | { access: "public"; redirectUrl: string }
+  | { access: "public" | "private"; objectPath: string };
+
+export async function getCommunityIdeaImage(
+  slug: string,
+  index: number,
+  context: IdeaAccessContext = {}
+): Promise<CommunityIdeaImageResult | null> {
   if (!Number.isInteger(index) || index < 0 || index > 4) return null;
   const row = await prisma.communityIdea.findUnique({
     where: { slug },
@@ -485,18 +626,24 @@ export async function getCommunityIdeaImage(slug: string, index: number, options
       imageUrlsJson: true,
       hidden: true,
       visibility: true,
+      moderationStatus: true,
+      status: true,
       authorId: true
     }
   });
-  const canViewPrivate = Boolean(options.viewerId && row?.authorId === options.viewerId);
-  if (!row || (!options.includeHidden && (row.hidden || (row.visibility !== "Public" && !canViewPrivate)))) return null;
+  if (!row || !isApprovedPublicIdea(row) && !context.isAdmin && row.authorId !== context.userId) return null;
   const imageUrls = parseJson<unknown[]>(row.imageUrlsJson, []);
   if (!Array.isArray(imageUrls)) return null;
   const image = imageUrls[index];
   const dataImage = parseStoredDataImage(image);
-  if (dataImage) return dataImage;
+  const access = isApprovedPublicIdea(row) ? "public" as const : "private" as const;
+  if (dataImage) return { ...dataImage, access };
+  if (typeof image === "string" && image.startsWith("private:idea-submissions/")) {
+    return { access, objectPath: image.slice("private:".length) };
+  }
+  if (access === "private") return null;
   const publicUrl = safePublicImageUrl(image);
-  return publicUrl ? { redirectUrl: publicUrl } : null;
+  return publicUrl ? { access, redirectUrl: publicUrl } : null;
 }
 
 export async function getCommunityUserAvatar(userId: string) {
@@ -518,12 +665,16 @@ export async function getCommunityUserActivity(userId: string) {
 
   const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas] = await Promise.all([
     prisma.communityIdea.findMany({
-      where: { authorId: userId, hidden: false },
+      where: { authorId: userId },
       orderBy: { updatedAt: "desc" },
       include: ideaInclude
     }),
     prisma.communityComment.findMany({
-      where: { authorId: userId, hidden: false, idea: { hidden: false, visibility: "Public" } },
+      where: {
+        authorId: userId,
+        hidden: false,
+        idea: { OR: [approvedPublicIdeaWhere, { authorId: userId }] }
+      },
       orderBy: { createdAt: "desc" },
       take: 50,
       include: {
@@ -533,7 +684,11 @@ export async function getCommunityUserActivity(userId: string) {
       }
     }),
     prisma.communityReaction.findMany({
-      where: { userId, ideaId: { not: null }, idea: { hidden: false, visibility: "Public" } },
+      where: {
+        userId,
+        ideaId: { not: null },
+        idea: { OR: [approvedPublicIdeaWhere, { authorId: userId }] }
+      },
       orderBy: { createdAt: "desc" },
       take: 50,
       include: {
@@ -543,7 +698,7 @@ export async function getCommunityUserActivity(userId: string) {
       }
     }),
     prisma.communityComment.findMany({
-      where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId, hidden: false } },
+      where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId } },
       orderBy: { createdAt: "desc" },
       take: 25,
       include: {
@@ -552,7 +707,7 @@ export async function getCommunityUserActivity(userId: string) {
       }
     }),
     prisma.communityReaction.findMany({
-      where: { userId: { not: userId }, ideaId: { not: null }, idea: { authorId: userId, hidden: false } },
+      where: { userId: { not: userId }, ideaId: { not: null }, idea: { authorId: userId } },
       orderBy: { createdAt: "desc" },
       take: 25,
       include: {
@@ -561,7 +716,7 @@ export async function getCommunityUserActivity(userId: string) {
       }
     }),
     prisma.communityIdea.findMany({
-      where: { authorId: userId, hidden: false, review: { isNot: null } },
+      where: { authorId: userId, review: { isNot: null } },
       orderBy: { updatedAt: "desc" },
       take: 25,
       include: {
@@ -721,10 +876,13 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
     throw new Error("Title, description, category, and country are required.");
   }
 
-  const imageUrls = Array.isArray(data.imageUrls)
+  const visibility = normalizeVisibility(data.visibility);
+  const submittedImageUrls = Array.isArray(data.imageUrls)
     ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
     : [];
-  if (imageUrls.length > 5) throw new Error("Upload a maximum of 5 images.");
+  const imageUrls = submittedImageUrls.length
+    ? await storePrivateIdeaImages(submittedImageUrls)
+    : [];
 
   const id = makeCommunityId("IDEA");
   const row = await prisma.communityIdea.create({
@@ -738,7 +896,8 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
       imageUrlsJson: JSON.stringify(imageUrls),
       questionsJson: JSON.stringify(normalizeQuestions(data.questions)),
       otherQuestion: typeof data.otherQuestion === "string" ? data.otherQuestion.trim().slice(0, 500) || null : null,
-      visibility: normalizeVisibility(data.visibility),
+      visibility,
+      moderationStatus: "Pending",
       status: "Discussing",
       authorId
     },
@@ -747,14 +906,26 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
   return ideaToCommunityIdea(row);
 }
 
-export async function addCommunityComment(slug: string, input: unknown, authorId: string) {
+export async function addCommunityComment(
+  slug: string,
+  input: unknown,
+  authorId: string,
+  context: IdeaAccessContext = { userId: authorId }
+) {
   const idea = await prisma.communityIdea.findUnique({ where: { slug } });
-  if (!idea || idea.hidden) throw new Error("Idea not found.");
+  assertCanInteractWithIdea(idea, context);
   if (idea.locked) throw new Error("Comments are locked for this idea.");
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const body = typeof data.body === "string" ? data.body.trim().slice(0, 1600) : "";
   if (!body) throw new Error("Comment is required.");
   const parentId = typeof data.parentId === "string" ? data.parentId : null;
+  if (parentId) {
+    const parent = await prisma.communityComment.findFirst({
+      where: { id: parentId, ideaId: idea.id, hidden: false },
+      select: { id: true }
+    });
+    if (!parent) throw new Error("Comment not found.");
+  }
 
   await prisma.communityComment.create({
     data: {
@@ -769,12 +940,17 @@ export async function addCommunityComment(slug: string, input: unknown, authorId
     where: { id: idea.id },
     data: { updatedAt: new Date() }
   });
-  return getCommunityIdeaBySlug(slug, true);
+  return getCommunityIdeaBySlug(slug, context);
 }
 
-export async function toggleCommunityReaction(slug: string, type: "Like" | "Interested", userId: string) {
+export async function toggleCommunityReaction(
+  slug: string,
+  type: "Like" | "Interested",
+  userId: string,
+  context: IdeaAccessContext = { userId }
+) {
   const idea = await prisma.communityIdea.findUnique({ where: { slug } });
-  if (!idea || idea.hidden) throw new Error("Idea not found.");
+  assertCanInteractWithIdea(idea, context);
   const existing = await prisma.communityReaction.findFirst({
     where: { ideaId: idea.id, userId, type }
   });
@@ -794,12 +970,17 @@ export async function toggleCommunityReaction(slug: string, type: "Like" | "Inte
     where: { id: idea.id },
     data: { updatedAt: new Date() }
   });
-  return getCommunityIdeaBySlug(slug, true);
+  return getCommunityIdeaBySlug(slug, context);
 }
 
-export async function toggleCommunityCommentReaction(slug: string, commentId: string, userId: string) {
-  const idea = await prisma.communityIdea.findUnique({ where: { slug }, select: { id: true, hidden: true } });
-  if (!idea || idea.hidden) throw new Error("Idea not found.");
+export async function toggleCommunityCommentReaction(
+  slug: string,
+  commentId: string,
+  userId: string,
+  context: IdeaAccessContext = { userId }
+) {
+  const idea = await prisma.communityIdea.findUnique({ where: { slug } });
+  assertCanInteractWithIdea(idea, context);
   const comment = await prisma.communityComment.findFirst({
     where: {
       id: commentId,
@@ -829,12 +1010,16 @@ export async function toggleCommunityCommentReaction(slug: string, commentId: st
     where: { id: idea.id },
     data: { updatedAt: new Date() }
   });
-  return getCommunityIdeaBySlug(slug, true);
+  return getCommunityIdeaBySlug(slug, context);
 }
 
-export async function getCommunityReactionState(slug: string, userId: string) {
-  const idea = await prisma.communityIdea.findUnique({ where: { slug }, select: { id: true, hidden: true } });
-  if (!idea || idea.hidden) throw new Error("Idea not found.");
+export async function getCommunityReactionState(
+  slug: string,
+  userId: string,
+  context: IdeaAccessContext = { userId }
+) {
+  const idea = await prisma.communityIdea.findUnique({ where: { slug } });
+  assertCanReadIdea(idea, context);
   const reactions = await prisma.communityReaction.findMany({
     where: { ideaId: idea.id, userId },
     select: { type: true }
@@ -847,16 +1032,16 @@ export async function getCommunityReactionState(slug: string, userId: string) {
 
 export async function updateCommunityIdeaOwner(slug: string, input: unknown, userId: string) {
   const existing = await prisma.communityIdea.findUnique({ where: { slug } });
-  if (!existing || existing.hidden) throw new Error("Idea not found.");
-  if (existing.authorId !== userId) throw new Error("You can only edit your own discussion.");
+  assertCanReadIdea(existing, { userId });
+  if (existing.authorId !== userId) throw new IdeaNotFoundError();
 
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const title = typeof data.title === "string" ? data.title.trim().slice(0, 140) : existing.title;
   const description = typeof data.description === "string" ? data.description.trim().slice(0, 5000) : existing.description;
   const category = typeof data.category === "string" ? data.category.trim().slice(0, 120) : existing.category;
   const imageUrls = Array.isArray(data.imageUrls)
-    ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
-    : safePublicImageUrls(existing.imageUrlsJson);
+    ? await ownerIdeaImageUrls(data.imageUrls, existing.imageUrlsJson, existing.slug)
+    : storedIdeaImageUrls(existing.imageUrlsJson);
 
   if (!title || !description || !category) throw new Error("Product name, category, and description are required.");
 
@@ -866,17 +1051,20 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
       title,
       description,
       category,
-      imageUrlsJson: JSON.stringify(imageUrls)
+      imageUrlsJson: JSON.stringify(imageUrls),
+      moderationStatus: "Pending",
+      homepageFeatured: false,
+      homepageFeaturedOrder: null
     }
   });
 
-  return getCommunityIdeaBySlug(slug, true);
+  return getCommunityIdeaBySlug(slug, { userId });
 }
 
 export async function withdrawCommunityIdeaOwner(slug: string, userId: string) {
-  const existing = await prisma.communityIdea.findUnique({ where: { slug }, select: { id: true, authorId: true, hidden: true } });
-  if (!existing || existing.hidden) throw new Error("Idea not found.");
-  if (existing.authorId !== userId) throw new Error("You can only withdraw your own discussion.");
+  const existing = await prisma.communityIdea.findUnique({ where: { slug } });
+  assertCanReadIdea(existing, { userId });
+  if (existing.authorId !== userId) throw new IdeaNotFoundError();
 
   await prisma.communityIdea.update({
     where: { slug },
@@ -891,8 +1079,9 @@ export async function deleteCommunityCommentOwner(slug: string, commentId: strin
     where: { id: commentId },
     include: { idea: true }
   });
-  if (!comment || comment.hidden || comment.idea.slug !== slug || comment.idea.hidden) throw new Error("Comment not found.");
-  if (comment.authorId !== userId) throw new Error("You can only delete your own comment.");
+  if (!comment || comment.hidden || comment.idea.slug !== slug) throw new IdeaNotFoundError();
+  assertCanReadIdea(comment.idea, { userId });
+  if (comment.authorId !== userId) throw new IdeaNotFoundError();
 
   await prisma.communityComment.update({
     where: { id: comment.id },
@@ -920,16 +1109,19 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
     ? (data.review as Record<string, unknown>)
     : {};
   const hidden = typeof data.hidden === "boolean" ? data.hidden : existing.hidden;
+  const moderationStatus = Object.prototype.hasOwnProperty.call(data, "moderationStatus")
+    ? normalizeIdeaModerationStatus(data.moderationStatus)
+    : normalizeIdeaModerationStatus(existing.moderationStatus);
   const homepageFeaturedRequested = typeof data.homepageFeatured === "boolean" ? data.homepageFeatured : existing.homepageFeatured;
   const rawHomepageOrder = Number(data.homepageFeaturedOrder);
   const requestedHomepageOrder = Number.isInteger(rawHomepageOrder) && rawHomepageOrder >= 1 && rawHomepageOrder <= 3
     ? rawHomepageOrder
     : existing.homepageFeaturedOrder;
-  let homepageFeatured = homepageFeaturedRequested && !hidden;
+  let homepageFeatured = homepageFeaturedRequested && !hidden && moderationStatus === "Approved";
   let homepageFeaturedOrder = homepageFeatured ? requestedHomepageOrder : null;
 
-  if (homepageFeatured && existing.visibility !== "Public") {
-    throw new Error("Only public ideas can be featured on the homepage.");
+  if (homepageFeatured && (existing.visibility !== "Public" || moderationStatus !== "Approved")) {
+    throw new Error("Only approved public ideas can be featured on the homepage.");
   }
 
   if (homepageFeatured && !homepageFeaturedOrder) {
@@ -938,7 +1130,8 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
         id: { not: existing.id },
         homepageFeatured: true,
         hidden: false,
-        visibility: "Public"
+        visibility: "Public",
+        moderationStatus: "Approved"
       },
       select: { homepageFeaturedOrder: true }
     });
@@ -965,6 +1158,7 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
       where: { slug },
       data: {
         status: normalizeStatus(data.status),
+        moderationStatus,
         hidden,
         locked: typeof data.locked === "boolean" ? data.locked : existing.locked,
         pinned: typeof data.pinned === "boolean" ? data.pinned : existing.pinned,
@@ -1003,7 +1197,7 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
     });
   }
 
-  return getCommunityIdeaBySlug(slug, true);
+  return getCommunityIdeaBySlug(slug, { isAdmin: true });
 }
 
 export async function deleteCommunityIdeaAdmin(slug: string) {

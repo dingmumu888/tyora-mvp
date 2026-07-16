@@ -4,6 +4,7 @@ import test from "node:test";
 
 import {
   buildPrivateFileAccessUrl,
+  buildPrivateIdeaObjectPath,
   buildPrivateObjectPath,
   isAllowedPrivateFileAccessUrl,
   isAllowedPrivateObjectPath,
@@ -67,6 +68,13 @@ test("generated object paths are constrained to the private submission namespace
   assert.equal(isAllowedPrivateObjectPath(objectPath), true);
   assert.equal(isAllowedPrivateObjectPath("project-submissions/../../secret.pdf"), false);
   assert.equal(isAllowedPrivateObjectPath("cms/2026/07/secret.pdf"), false);
+  assert.equal(
+    isAllowedPrivateObjectPath(buildPrivateIdeaObjectPath(".png", {
+      now: new Date("2026-07-13T12:34:56.000Z"),
+      id: "123e4567-e89b-42d3-a456-426614174000"
+    })),
+    true
+  );
 });
 
 test("private file references use an authenticated application route, not a public Storage URL", () => {
@@ -137,14 +145,15 @@ test("private Storage configuration never falls back to the public bucket", () =
   );
 });
 
-test("private access route is admin-only and signs short-lived URLs", async () => {
+test("private Custom access route is admin-only and signs short-lived URLs", async () => {
   const route = await readFile(new URL("../app/api/leads/files/route.ts", import.meta.url), "utf8");
   const storage = await readFile(new URL("../lib/server/private-storage.ts", import.meta.url), "utf8");
   const signedUrlPolicy = await readFile(
     new URL("../lib/server/private-storage-signed-url-policy.ts", import.meta.url),
     "utf8"
   );
-  assert.match(route, /requireAdminSession/);
+  assert.match(route, /hasAdminSession/);
+  assert.match(route, /status:\s*404/);
   assert.match(route, /createPrivateSignedUrl/);
   assert.match(route, /["']Cache-Control["']:\s*["']private, no-store/);
   assert.match(route, /fetch\(signedUrl/);
@@ -240,7 +249,7 @@ test("public lead creation accepts only protected private-file references", asyn
     "utf8"
   );
   assert.match(route, /isAllowedPrivateFileAccessUrl/);
-  assert.match(route, /validatePublicLeadSubmission/);
+  assert.match(route, /readPublicLeadRequest/);
   assert.match(policy, /uploadedFiles/);
 });
 

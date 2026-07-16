@@ -73,7 +73,7 @@ if (source.includes("Example private sourcing requests") || source.includes("Fac
 
 [
   "Public community discussion",
-  "Your idea will be visible to everyone",
+  "Your idea becomes visible to everyone only after TYORA approves it",
   "Every submitted idea gets an initial TYORA manufacturing review."
 ].forEach((text) => {
   if (!newIdea.includes(text)) failures.push(`New idea page missing: ${text}`);

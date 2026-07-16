@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { fail } from "@/lib/server/api-response";
-import { requireAdminSession } from "@/lib/server/admin-auth";
-import { isAllowedPrivateObjectPath } from "@/lib/server/private-storage-policy";
+import { hasAdminSession } from "@/lib/server/admin-auth";
+import { isAllowedPrivateLeadObjectPath } from "@/lib/server/private-storage-policy";
 import { createPrivateSignedUrl } from "@/lib/server/private-storage";
 
 export const runtime = "nodejs";
@@ -14,14 +14,21 @@ const allowedContentTypes = new Set([
   "application/pdf"
 ]);
 
+const privateHeaders = {
+  "Cache-Control": "private, no-store",
+  Pragma: "no-cache",
+  "X-Content-Type-Options": "nosniff"
+};
+
+function notFound() {
+  return new NextResponse("Not found.", { status: 404, headers: privateHeaders });
+}
+
 export async function GET(request: Request) {
-  const unauthorized = await requireAdminSession();
-  if (unauthorized) return unauthorized;
+  if (!(await hasAdminSession().catch(() => false))) return notFound();
 
   const objectPath = new URL(request.url).searchParams.get("path") || "";
-  if (!isAllowedPrivateObjectPath(objectPath)) {
-    return fail("Invalid private file path.", 400);
-  }
+  if (!isAllowedPrivateLeadObjectPath(objectPath)) return notFound();
 
   try {
     const signedUrl = await createPrivateSignedUrl(objectPath, 120);
@@ -48,11 +55,9 @@ export async function GET(request: Request) {
     return new NextResponse(storageResponse.body, {
       status: 200,
       headers: {
-        "Cache-Control": "private, no-store, max-age=0, must-revalidate",
+        ...privateHeaders,
         "Content-Disposition": `inline; filename="tyora-private-file${extension}"`,
-        "Content-Type": contentType,
-        Pragma: "no-cache",
-        "X-Content-Type-Options": "nosniff"
+        "Content-Type": contentType
       }
     });
   } catch {

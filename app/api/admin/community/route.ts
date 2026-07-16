@@ -5,5 +5,5 @@ import { ok } from "@/lib/server/api-response";
 export async function GET() {
   const unauthorized = await requireAdminSession();
   if (unauthorized) return unauthorized;
-  return ok(await getCommunityIdeas("recently-active", true));
+  return ok(await getCommunityIdeas("recently-active", { isAdmin: true }));
 }

@@ -1,14 +1,22 @@
 import { getCommunitySession, refreshCommunitySessionCookieIfNeeded } from "@/lib/server/community-auth";
-import { addCommunityComment } from "@/lib/server/community-store";
+import { addCommunityComment, getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
+import { getCurrentIdeaAccessContext } from "@/lib/server/idea-access-context";
+import { isIdeaNotFoundError } from "@/lib/server/idea-access-policy";
 
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const session = await getCommunitySession();
-  if (!session) return fail("Email login is required to comment.", 401);
   const { slug } = await params;
+  if (!session) {
+    return await getCommunityIdeaBySlug(slug)
+      ? fail("Email login is required to comment.", 401)
+      : fail("Not found.", 404);
+  }
   try {
-    return refreshCommunitySessionCookieIfNeeded(ok(await addCommunityComment(slug, await request.json(), session.userId)), session);
+    const context = await getCurrentIdeaAccessContext();
+    return refreshCommunitySessionCookieIfNeeded(ok(await addCommunityComment(slug, await request.json(), session.userId, context)), session);
   } catch (error) {
+    if (isIdeaNotFoundError(error)) return fail("Not found.", 404);
     return fail(messageFromError(error, "Unable to add comment."), 400);
   }
 }

@@ -26,7 +26,7 @@ const checks = [
       store.includes("homepageFeatured: Boolean(row.homepageFeatured)") &&
       store.includes("homepageFeaturedOrder: typeof row.homepageFeaturedOrder") &&
       store.includes("compareHomepageFeaturedIdeas") &&
-      store.includes("Only public ideas can be featured on the homepage.")
+      store.includes("Only approved public ideas can be featured on the homepage.")
   },
   {
     name: "admin can assign homepage feature slots",

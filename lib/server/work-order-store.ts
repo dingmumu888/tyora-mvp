@@ -130,7 +130,7 @@ function projectToWorkOrder(lead: Lead): WorkOrder {
 
 export async function getWorkOrders(): Promise<WorkOrder[]> {
   const [ideas, sourceRequests, leads] = await Promise.all([
-    getCommunityIdeas("recently-active", true, 200),
+    getCommunityIdeas("recently-active", { isAdmin: true }, 200),
     getSourceRequests(),
     getLeads()
   ]);

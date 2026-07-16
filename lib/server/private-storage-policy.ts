@@ -15,6 +15,10 @@ const allowedExtensions = new Set(
 const uuidPattern =
   "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 const privateObjectPathPattern = new RegExp(
+  `^(?:project-submissions|idea-submissions)/\\d{4}/(?:0[1-9]|1[0-2])/\\d{13}-${uuidPattern}\\.(?:jpg|jpeg|png|webp|pdf)$`,
+  "i"
+);
+const privateLeadObjectPathPattern = new RegExp(
   `^project-submissions/\\d{4}/(?:0[1-9]|1[0-2])/\\d{13}-${uuidPattern}\\.(?:jpg|jpeg|png|webp|pdf)$`,
   "i"
 );
@@ -57,8 +61,13 @@ function hasExpectedSignature(mimeType: string, bytes: Uint8Array) {
   return false;
 }
 
-export async function validatePrivateUploadFile(file: File) {
-  const displayName = file.name.trim();
+export function validatePrivateUploadBytes(input: {
+  displayName: string;
+  mimeType: string;
+  size: number;
+  header: Uint8Array;
+}) {
+  const displayName = input.displayName.trim();
   if (
     !displayName ||
     displayName.length > MAX_DISPLAY_NAME_LENGTH ||
@@ -69,27 +78,35 @@ export async function validatePrivateUploadFile(file: File) {
     throw new PrivateUploadValidationError("The filename is not allowed.");
   }
 
-  if (file.size === 0) {
+  if (input.size === 0) {
     throw new PrivateUploadValidationError("The file is empty.");
   }
-  if (file.size > MAX_PRIVATE_UPLOAD_BYTES) {
+  if (input.size > MAX_PRIVATE_UPLOAD_BYTES) {
     throw new PrivateUploadValidationError("Maximum 20MB for project files.");
   }
 
   const extension = extensionFromName(displayName);
-  const expectedExtensions = allowedFileTypes.get(file.type);
+  const expectedExtensions = allowedFileTypes.get(input.mimeType);
   if (!expectedExtensions?.has(extension)) {
     throw new PrivateUploadValidationError(
       "The file type must match a JPG, PNG, WebP, or PDF filename."
     );
   }
 
-  const header = new Uint8Array(await file.slice(0, 16).arrayBuffer());
-  if (!hasExpectedSignature(file.type, header)) {
+  if (!hasExpectedSignature(input.mimeType, input.header)) {
     throw new PrivateUploadValidationError("The file signature does not match its type.");
   }
 
   return { extension, displayName };
+}
+
+export async function validatePrivateUploadFile(file: File) {
+  return validatePrivateUploadBytes({
+    displayName: file.name,
+    mimeType: file.type,
+    size: file.size,
+    header: new Uint8Array(await file.slice(0, 16).arrayBuffer())
+  });
 }
 
 export function isAllowedPrivateObjectPath(objectPath: string) {
@@ -115,8 +132,22 @@ export function buildPrivateObjectPath(
   return `project-submissions/${now.getUTCFullYear()}/${month}/${now.getTime()}-${id}${normalizedExtension}`;
 }
 
+export function buildPrivateIdeaObjectPath(
+  extension: string,
+  options: { now?: Date; id?: string } = {}
+) {
+  return buildPrivateObjectPath(extension, options).replace(
+    /^project-submissions\//,
+    "idea-submissions/"
+  );
+}
+
+export function isAllowedPrivateLeadObjectPath(objectPath: string) {
+  return privateLeadObjectPathPattern.test(objectPath);
+}
+
 export function buildPrivateFileAccessUrl(objectPath: string) {
-  if (!isAllowedPrivateObjectPath(objectPath)) {
+  if (!isAllowedPrivateLeadObjectPath(objectPath)) {
     throw new PrivateUploadValidationError("The private file path is not allowed.");
   }
   return `/api/leads/files?path=${encodeURIComponent(objectPath)}`;
@@ -141,6 +172,6 @@ export function isAllowedPrivateFileAccessUrl(value: string) {
     keys.length === 1 &&
     keys[0] === "path" &&
     objectPaths.length === 1 &&
-    isAllowedPrivateObjectPath(objectPaths[0])
+    isAllowedPrivateLeadObjectPath(objectPaths[0])
   );
 }
