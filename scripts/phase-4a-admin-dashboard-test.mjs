@@ -115,11 +115,12 @@ test("pipeline groups existing statuses without mutating or inventing records", 
 });
 
 test("admin shell and dashboard preserve navigation, privacy, responsive behavior, and honest empty states", async () => {
-  const [shell, dashboard, page, route] = await Promise.all([
+  const [shell, dashboard, page, route, communityLink] = await Promise.all([
     file("components/admin/admin-shell.tsx"),
     file("components/admin/admin-dashboard.tsx"),
     file("app/admin/page.tsx"),
-    file("app/api/admin/work-orders/route.ts")
+    file("app/api/admin/work-orders/route.ts"),
+    file("components/admin-view-community-link.tsx")
   ]);
   for (const label of [
     "Dashboard",
@@ -140,6 +141,9 @@ test("admin shell and dashboard preserve navigation, privacy, responsive behavio
   assert.match(shell, /aria-label="Close navigation overlay"/);
   assert.match(shell, /Search admin sections and submissions/);
   assert.match(shell, /New Project/);
+  assert.match(shell, /AdminViewCommunityLink className="hidden xl:inline-flex"/);
+  assert.match(communityLink, /className = "inline-flex"/);
+  assert.doesNotMatch(communityLink, /className=\{`inline-flex h-10/);
   assert.match(dashboard, /No submissions yet/);
   assert.match(dashboard, /No fallback or sample records are shown/);
   assert.match(dashboard, /md:hidden/);
