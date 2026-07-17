@@ -4,6 +4,7 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import { getCurrentIdeaAccessContext } from "@/lib/server/idea-access-context";
+import { getContent } from "@/lib/server/data-store";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
 import IdeaActions from "./idea-actions";
@@ -28,18 +29,7 @@ function timeLabel(value: string) {
 
 function expertReplyText(idea: Awaited<ReturnType<typeof getCommunityIdeaBySlug>>) {
   if (!idea?.review) return "";
-  if (idea.review.additionalNotes) return idea.review.additionalNotes;
-  return [
-    ["Manufacturing feasible", idea.review.manufacturingFeasible],
-    ["Estimated cost range", idea.review.estimatedCostRange],
-    ["Suggested material", idea.review.suggestedMaterial],
-    ["Estimated MOQ", idea.review.estimatedMoq],
-    ["Suggested manufacturing process", idea.review.suggestedManufacturing],
-    ["Factories matched", idea.review.factoriesMatched]
-  ]
-    .map(([label, value]) => value ? `${label}: ${value}` : "")
-    .filter(Boolean)
-    .join("\n\n");
+  return idea.review.additionalNotes || "";
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -53,9 +43,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CommunityIdeaPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const idea = await getCommunityIdeaBySlug(slug, await getCurrentIdeaAccessContext());
+  const context = await getCurrentIdeaAccessContext();
+  const [idea, content] = await Promise.all([
+    getCommunityIdeaBySlug(slug, context),
+    getContent()
+  ]);
   if (!idea) notFound();
   const expertReply = expertReplyText(idea);
+  const labels = content.communityPage.assessmentLabels;
+  const isOwner = context.userId === idea.author.id;
+  const assessmentRows = idea.review ? [
+    [labels.feasibility, idea.review.manufacturingFeasible],
+    [labels.estimatedCostRange, idea.review.estimatedCostRange],
+    [labels.estimatedMoq, idea.review.estimatedMoq],
+    [labels.assumptions, idea.review.assumptions],
+    [labels.confidence, idea.review.confidence],
+    [labels.suggestedMaterial, idea.review.suggestedMaterial],
+    [labels.suggestedProcess, idea.review.suggestedManufacturing],
+    [labels.moldRequirement, idea.review.moldRequirement],
+    [labels.mainRisks, idea.review.mainRisks],
+    [labels.recommendedNextStep, idea.review.recommendedNextStep]
+  ].filter((entry): entry is [string, string] => Boolean(entry[1])) : [];
   const compactMeta = [
     { value: idea.category, tone: "bg-[#edf4ff] text-[#2563eb]" },
     { value: idea.country, tone: "bg-[#f4f6f8] text-[#667085]" }
@@ -104,7 +112,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             </div>
           ) : null}
 
-          <IdeaActions idea={idea} mode="bar" compact />
+          <IdeaActions idea={idea} mode="bar" compact labels={content.communityPage} />
         </section>
 
         <section id="tyora-expert-review" className="rounded-[18px] border border-[#99f6e4] bg-white p-3 shadow-sm shadow-[#14b8a6]/10">
@@ -113,15 +121,37 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             <h2 className="text-base font-semibold text-[#0f766e]">TYORA Expert Review</h2>
           </div>
           {idea.review ? (
-            <p className="mt-2 whitespace-pre-wrap rounded-2xl bg-[#f0fdfa] p-3 text-sm font-semibold leading-6 text-[#101216]">{expertReply || "TYORA has replied, but no public reply text is available yet."}</p>
+            <div className="mt-3 space-y-3">
+              {expertReply ? (
+                <p className="whitespace-pre-wrap rounded-2xl bg-[#f0fdfa] p-3 text-sm font-semibold leading-6 text-[#101216]">{expertReply}</p>
+              ) : null}
+              <dl className="grid gap-2 sm:grid-cols-2">
+                {assessmentRows.map(([label, value]) => (
+                  <div key={label} className="rounded-2xl border border-[#d5f5ec] bg-white p-3">
+                    <dt className="text-xs font-semibold uppercase text-[#0f766e]">{label}</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#101216]">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="rounded-2xl border border-[#fde7b1] bg-[#fffaf0] p-3 text-xs leading-5 text-[#7c5a16]">
+                {idea.review.disclaimer}
+              </p>
+              {idea.review.customEligible ? (
+                <Link
+                  href={isOwner ? `/custom?idea=${encodeURIComponent(idea.slug)}` : content.communityPage.continueWithTyoraHref}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"
+                >
+                  {isOwner ? content.communityPage.startCustomProjectText : content.communityPage.continueWithTyoraText}
+                </Link>
+              ) : null}
+            </div>
           ) : (
             <p className="mt-2 rounded-2xl bg-[#f0fdfa] p-3 text-sm leading-6 text-[#0f766e]">TYORA review will appear here after review.</p>
           )}
         </section>
 
         <IdeaComments slug={idea.slug} comments={idea.comments} />
-        <IdeaActions idea={idea} mode="comment" />
-        <IdeaActions idea={idea} mode="ready" />
+        <IdeaActions idea={idea} mode="comment" labels={content.communityPage} />
       </article>
     </main>
   );

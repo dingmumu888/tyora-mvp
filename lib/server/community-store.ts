@@ -10,6 +10,9 @@ import {
   usernameFromEmail
 } from "@/lib/community";
 import { prisma } from "@/lib/server/db";
+import { getContent } from "@/lib/server/data-store";
+import { executeGuardedCommunityAction } from "@/lib/server/community-action-guard";
+import { defaultContent } from "@/lib/storage";
 import type { Prisma } from "@prisma/client";
 import {
   assertCanInteractWithIdea,
@@ -41,10 +44,12 @@ type UserRow = {
 
 const MAX_INLINE_IDEA_IMAGE_LENGTH = 900000;
 const MAX_INLINE_AVATAR_LENGTH = 120000;
-const HOT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-const HOT_PROTECTION_MS = 48 * 60 * 60 * 1000;
-const HOT_SCORE_THRESHOLD = 10;
 const DATA_IMAGE_PATTERN = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([a-zA-Z0-9+/=\s]+)$/;
+
+type CommunityRankingConfig = Pick<
+  typeof defaultContent.communityPage,
+  "hotWindowDays" | "hotProtectionHours" | "hotScoreThreshold"
+>;
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
@@ -225,9 +230,12 @@ function iso(value: Date | string | null | undefined) {
   return value instanceof Date ? value.toISOString() : value;
 }
 
-function hotSignals(row: any) {
+function hotSignals(
+  row: any,
+  config: CommunityRankingConfig = defaultContent.communityPage
+) {
   const now = Date.now();
-  const since = now - HOT_WINDOW_MS;
+  const since = now - config.hotWindowDays * 24 * 60 * 60 * 1000;
   const reactions = Array.isArray(row.reactions) ? row.reactions : [];
   const comments = Array.isArray(row.comments) ? row.comments.filter((comment: any) => !comment.hidden) : [];
   const recentLikes = reactions.filter((reaction: any) => reaction.type === "Like" && new Date(reaction.createdAt).getTime() >= since);
@@ -238,9 +246,11 @@ function hotSignals(row: any) {
     .map((item: any) => new Date(item.createdAt).getTime())
     .filter(Number.isFinite)
     .sort((left, right) => right - left)[0];
-  const protectedUntil = latestSignalAt ? new Date(latestSignalAt + HOT_PROTECTION_MS) : null;
+  const protectedUntil = latestSignalAt
+    ? new Date(latestSignalAt + config.hotProtectionHours * 60 * 60 * 1000)
+    : null;
 
-  const isHot = score >= HOT_SCORE_THRESHOLD;
+  const isHot = score >= config.hotScoreThreshold;
   return {
     hotScore: score,
     isHot,
@@ -271,10 +281,20 @@ function userPublic(user: UserRow) {
   };
 }
 
-function ideaToCommunityIdea(row: any): CommunityIdea {
+function ideaToCommunityIdea(
+  row: any,
+  options: {
+    includeAdminFields?: boolean;
+    ranking?: CommunityRankingConfig;
+  } = {}
+): CommunityIdea {
   const reactions = Array.isArray(row.reactions) ? row.reactions : [];
   const comments = Array.isArray(row.comments) ? row.comments : [];
-  const hot = hotSignals(row);
+  const shares = Array.isArray(row.shares) ? row.shares : [];
+  const hot = hotSignals(row, options.ranking);
+  const review = row.review && (
+    options.includeAdminFields || row.review.assessmentStatus === "Published"
+  ) ? row.review : null;
   return {
     id: row.id,
     slug: row.slug,
@@ -293,6 +313,9 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
     pinned: Boolean(row.pinned),
     homepageFeatured: Boolean(row.homepageFeatured),
     homepageFeaturedOrder: typeof row.homepageFeaturedOrder === "number" ? row.homepageFeaturedOrder : undefined,
+    publicConsentAt: options.includeAdminFields && row.publicConsentAt ? iso(row.publicConsentAt) : undefined,
+    moderatedAt: options.includeAdminFields && row.moderatedAt ? iso(row.moderatedAt) : undefined,
+    moderationNote: options.includeAdminFields ? row.moderationNote || undefined : undefined,
     author: userPublic(row.author),
     comments: comments
       .filter((comment: any) => !comment.hidden)
@@ -306,22 +329,32 @@ function ideaToCommunityIdea(row: any): CommunityIdea {
         viewerLiked: false,
         createdAt: iso(comment.createdAt)
       })),
-    review: row.review
+    review: review
       ? {
-          id: row.review.id,
-          manufacturingFeasible: row.review.manufacturingFeasible || undefined,
-          estimatedCostRange: row.review.estimatedCostRange || undefined,
-          suggestedMaterial: row.review.suggestedMaterial || undefined,
-          estimatedMoq: row.review.estimatedMoq || undefined,
-          suggestedManufacturing: row.review.suggestedManufacturing || undefined,
-          factoriesMatched: row.review.factoriesMatched || undefined,
-          additionalNotes: row.review.additionalNotes || undefined,
-          createdAt: iso(row.review.createdAt),
-          updatedAt: iso(row.review.updatedAt)
+          id: review.id,
+          manufacturingFeasible: review.manufacturingFeasible || undefined,
+          estimatedCostRange: review.estimatedCostRange || undefined,
+          suggestedMaterial: review.suggestedMaterial || undefined,
+          estimatedMoq: review.estimatedMoq || undefined,
+          suggestedManufacturing: review.suggestedManufacturing || undefined,
+          factoriesMatched: review.factoriesMatched || undefined,
+          additionalNotes: review.additionalNotes || undefined,
+          moldRequirement: review.moldRequirement || undefined,
+          assumptions: review.assumptions || undefined,
+          confidence: review.confidence || undefined,
+          assessmentStatus: review.assessmentStatus === "Published" ? "Published" : "Draft",
+          disclaimer: review.disclaimer,
+          mainRisks: review.mainRisks || undefined,
+          recommendedNextStep: review.recommendedNextStep || undefined,
+          customEligible: Boolean(review.customEligible),
+          publishedAt: review.publishedAt ? iso(review.publishedAt) : undefined,
+          createdAt: iso(review.createdAt),
+          updatedAt: iso(review.updatedAt)
         }
       : undefined,
     likeCount: reactions.filter((reaction: any) => reaction.type === "Like").length,
     interestedCount: reactions.filter((reaction: any) => reaction.type === "Interested").length,
+    shareCount: shares.length,
     hotScore: hot.hotScore,
     isHot: hot.isHot,
     hotUntil: hot.hotUntil,
@@ -340,7 +373,8 @@ const ideaInclude = {
     }
   },
   review: true,
-  reactions: true
+  reactions: true,
+  shares: true
 } as const;
 
 export type CommunityActivityItem = {
@@ -483,6 +517,8 @@ export async function getCommunityIdeas(
   context: IdeaAccessContext = {},
   limit = 50
 ) {
+  const content = await getContent();
+  const ranking = content.communityPage;
   const requestedLimit = Number.isFinite(limit) ? Math.round(limit) : 50;
   const safeLimit = Math.min(50, Math.max(1, requestedLimit));
   const orderBy =
@@ -504,7 +540,10 @@ export async function getCommunityIdeas(
     take: sort === "trending" ? 50 : safeLimit,
     include: ideaInclude
   });
-  const ideas = rows.map(ideaToCommunityIdea);
+  const ideas = rows.map((row) => ideaToCommunityIdea(row, {
+    includeAdminFields: Boolean(context.isAdmin),
+    ranking
+  }));
   if (sort !== "trending") return ideas;
 
   return ideas.sort((left, right) => {
@@ -523,11 +562,15 @@ export async function getCommunityIdeas(
 export async function getCommunityStats() {
   const ideas = await prisma.communityIdea.findMany({
     where: approvedPublicIdeaWhere,
-    select: { status: true, country: true, review: { select: { id: true } } }
+    select: {
+      status: true,
+      country: true,
+      review: { select: { id: true, assessmentStatus: true } }
+    }
   });
   return {
     ideas: ideas.length,
-    reviews: ideas.filter((idea) => Boolean(idea.review)).length,
+    reviews: ideas.filter((idea) => idea.review?.assessmentStatus === "Published").length,
     projects: ideas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status)).length,
     inProgress: ideas.filter((idea) => ["Project Started", "Manufacturing", "Shipping"].includes(idea.status)).length,
     delivered: ideas.filter((idea) => idea.status === "Completed").length,
@@ -551,7 +594,7 @@ export async function getCommunityActivity(limit = 8): Promise<CommunityActivity
       include: { author: true, idea: true }
     }),
     prisma.tyoraReview.findMany({
-      where: { idea: approvedPublicIdeaWhere },
+      where: { assessmentStatus: "Published", idea: approvedPublicIdeaWhere },
       orderBy: { updatedAt: "desc" },
       take: safeLimit,
       include: { idea: true }
@@ -601,12 +644,16 @@ export async function getCommunityActivity(limit = 8): Promise<CommunityActivity
 }
 
 export async function getCommunityIdeaBySlug(slug: string, context: IdeaAccessContext = {}) {
+  const content = await getContent();
   const row = await prisma.communityIdea.findUnique({
     where: { slug },
     include: ideaInclude
   });
   if (!row || !isApprovedPublicIdea(row) && !context.isAdmin && row.authorId !== context.userId) return null;
-  return ideaToCommunityIdea(row);
+  return ideaToCommunityIdea(row, {
+    includeAdminFields: Boolean(context.isAdmin),
+    ranking: content.communityPage
+  });
 }
 
 type CommunityIdeaImageResult =
@@ -716,7 +763,7 @@ export async function getCommunityUserActivity(userId: string) {
       }
     }),
     prisma.communityIdea.findMany({
-      where: { authorId: userId, review: { isNot: null } },
+      where: { authorId: userId, review: { is: { assessmentStatus: "Published" } } },
       orderBy: { updatedAt: "desc" },
       take: 25,
       include: {
@@ -806,7 +853,7 @@ export async function getCommunityUserActivity(userId: string) {
       unreadReviewedIdeas,
       unreadStatusIdeas
     },
-    ideas: ideas.map(ideaToCommunityIdea),
+    ideas: ideas.map((idea) => ideaToCommunityIdea(idea)),
     comments: comments.map((comment) => ({
       id: comment.id,
       body: comment.body,
@@ -838,7 +885,16 @@ export async function getCommunityNotificationCount(userId: string) {
       where: { userId: { not: userId }, ideaId: { not: null }, idea: { authorId: userId, hidden: false }, ...(after ? { createdAt: after } : {}) }
     }),
     prisma.communityIdea.count({
-      where: { authorId: userId, hidden: false, review: after ? { is: { updatedAt: after } } : { isNot: null } }
+      where: {
+        authorId: userId,
+        hidden: false,
+        review: {
+          is: {
+            assessmentStatus: "Published",
+            ...(after ? { updatedAt: after } : {})
+          }
+        }
+      }
     }),
     prisma.communityIdea.count({
       where: { authorId: userId, hidden: false, status: { not: "Discussing" }, ...(after ? { updatedAt: after } : {}) }
@@ -877,6 +933,12 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
   }
 
   const visibility = normalizeVisibility(data.visibility);
+  const publicConsent = data.publicContentConsent === true &&
+    data.publicImageConsent === true &&
+    data.publicAssessmentConsent === true;
+  if (visibility === "Public" && !publicConsent) {
+    throw new Error("Public ideas require consent for the post, uploaded images, and TYORA assessment to be displayed publicly.");
+  }
   const submittedImageUrls = Array.isArray(data.imageUrls)
     ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
     : [];
@@ -899,6 +961,7 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
       visibility,
       moderationStatus: "Pending",
       status: "Discussing",
+      publicConsentAt: visibility === "Public" ? new Date() : null,
       authorId
     },
     include: ideaInclude
@@ -910,6 +973,7 @@ export async function addCommunityComment(
   slug: string,
   input: unknown,
   authorId: string,
+  request: Request,
   context: IdeaAccessContext = { userId: authorId }
 ) {
   const idea = await prisma.communityIdea.findUnique({ where: { slug } });
@@ -927,18 +991,22 @@ export async function addCommunityComment(
     if (!parent) throw new Error("Comment not found.");
   }
 
-  await prisma.communityComment.create({
-    data: {
-      id: makeCommunityId("COMMENT"),
-      body,
-      parentId,
-      ideaId: idea.id,
-      authorId
+  await executeGuardedCommunityAction({
+    request,
+    userId: authorId,
+    action: "comment",
+    resourceId: idea.id,
+    execute: async (tx) => {
+      const id = makeCommunityId("COMMENT");
+      await tx.communityComment.create({
+        data: { id, body, parentId, ideaId: idea.id, authorId }
+      });
+      await tx.communityIdea.update({
+        where: { id: idea.id },
+        data: { updatedAt: new Date() }
+      });
+      return { id };
     }
-  });
-  await prisma.communityIdea.update({
-    where: { id: idea.id },
-    data: { updatedAt: new Date() }
   });
   return getCommunityIdeaBySlug(slug, context);
 }
@@ -947,28 +1015,33 @@ export async function toggleCommunityReaction(
   slug: string,
   type: "Like" | "Interested",
   userId: string,
+  request: Request,
   context: IdeaAccessContext = { userId }
 ) {
   const idea = await prisma.communityIdea.findUnique({ where: { slug } });
   assertCanInteractWithIdea(idea, context);
-  const existing = await prisma.communityReaction.findFirst({
-    where: { ideaId: idea.id, userId, type }
-  });
-  if (existing) {
-    await prisma.communityReaction.delete({ where: { id: existing.id } });
-  } else {
-    await prisma.communityReaction.create({
-      data: {
-        id: makeCommunityId("REACTION"),
-        ideaId: idea.id,
-        userId,
-        type
+  await executeGuardedCommunityAction({
+    request,
+    userId,
+    action: "reaction",
+    resourceId: `${idea.id}:${type}`,
+    execute: async (tx) => {
+      const existing = await tx.communityReaction.findFirst({
+        where: { ideaId: idea.id, userId, type }
+      });
+      if (existing) {
+        await tx.communityReaction.delete({ where: { id: existing.id } });
+      } else {
+        await tx.communityReaction.create({
+          data: { id: makeCommunityId("REACTION"), ideaId: idea.id, userId, type }
+        });
       }
-    });
-  }
-  await prisma.communityIdea.update({
-    where: { id: idea.id },
-    data: { updatedAt: new Date() }
+      await tx.communityIdea.update({
+        where: { id: idea.id },
+        data: { updatedAt: new Date() }
+      });
+      return { active: !existing };
+    }
   });
   return getCommunityIdeaBySlug(slug, context);
 }
@@ -977,6 +1050,7 @@ export async function toggleCommunityCommentReaction(
   slug: string,
   commentId: string,
   userId: string,
+  request: Request,
   context: IdeaAccessContext = { userId }
 ) {
   const idea = await prisma.communityIdea.findUnique({ where: { slug } });
@@ -991,26 +1065,65 @@ export async function toggleCommunityCommentReaction(
   });
   if (!comment) throw new Error("Comment not found.");
 
-  const existing = await prisma.communityReaction.findFirst({
-    where: { commentId: comment.id, userId, type: "Like" }
-  });
-  if (existing) {
-    await prisma.communityReaction.delete({ where: { id: existing.id } });
-  } else {
-    await prisma.communityReaction.create({
-      data: {
-        id: makeCommunityId("REACTION"),
-        commentId: comment.id,
-        userId,
-        type: "Like"
+  await executeGuardedCommunityAction({
+    request,
+    userId,
+    action: "comment-reaction",
+    resourceId: comment.id,
+    execute: async (tx) => {
+      const existing = await tx.communityReaction.findFirst({
+        where: { commentId: comment.id, userId, type: "Like" }
+      });
+      if (existing) {
+        await tx.communityReaction.delete({ where: { id: existing.id } });
+      } else {
+        await tx.communityReaction.create({
+          data: { id: makeCommunityId("REACTION"), commentId: comment.id, userId, type: "Like" }
+        });
       }
-    });
-  }
-  await prisma.communityIdea.update({
-    where: { id: idea.id },
-    data: { updatedAt: new Date() }
+      await tx.communityIdea.update({
+        where: { id: idea.id },
+        data: { updatedAt: new Date() }
+      });
+      return { active: !existing };
+    }
   });
   return getCommunityIdeaBySlug(slug, context);
+}
+
+const shareChannels = new Set(["native", "copy", "facebook", "linkedin", "x", "whatsapp", "email"]);
+
+export async function recordCommunityShare(
+  slug: string,
+  channelInput: unknown,
+  userId: string,
+  request: Request,
+  context: IdeaAccessContext = { userId }
+) {
+  const idea = await prisma.communityIdea.findUnique({ where: { slug } });
+  assertCanInteractWithIdea(idea, context);
+  const channel = typeof channelInput === "string" ? channelInput.trim().toLowerCase() : "";
+  if (!shareChannels.has(channel)) throw new Error("Invalid share channel.");
+
+  await executeGuardedCommunityAction({
+    request,
+    userId,
+    action: "share",
+    resourceId: `${idea.id}:${channel}`,
+    execute: async (tx) => {
+      const existing = await tx.communityShare.findUnique({
+        where: { userId_ideaId_channel: { userId, ideaId: idea.id, channel } }
+      });
+      if (!existing) {
+        await tx.communityShare.create({
+          data: { id: makeCommunityId("SHARE"), channel, userId, ideaId: idea.id }
+        });
+      }
+      return { recorded: !existing };
+    }
+  });
+  const shareCount = await prisma.communityShare.count({ where: { ideaId: idea.id } });
+  return { shareCount };
 }
 
 export async function getCommunityReactionState(
@@ -1099,6 +1212,7 @@ export async function deleteCommunityCommentOwner(slug: string, commentId: strin
 }
 
 export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
+  const content = await getContent();
   const existing = await prisma.communityIdea.findUnique({
     where: { slug },
     include: { review: true }
@@ -1112,6 +1226,10 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   const moderationStatus = Object.prototype.hasOwnProperty.call(data, "moderationStatus")
     ? normalizeIdeaModerationStatus(data.moderationStatus)
     : normalizeIdeaModerationStatus(existing.moderationStatus);
+  const moderationNote = Object.prototype.hasOwnProperty.call(data, "moderationNote")
+    ? stringOrNull(data.moderationNote)
+    : existing.moderationNote;
+  const moderationChanged = moderationStatus !== existing.moderationStatus;
   const homepageFeaturedRequested = typeof data.homepageFeatured === "boolean" ? data.homepageFeatured : existing.homepageFeatured;
   const rawHomepageOrder = Number(data.homepageFeaturedOrder);
   const requestedHomepageOrder = Number.isInteger(rawHomepageOrder) && rawHomepageOrder >= 1 && rawHomepageOrder <= 3
@@ -1119,6 +1237,77 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
     : existing.homepageFeaturedOrder;
   let homepageFeatured = homepageFeaturedRequested && !hidden && moderationStatus === "Approved";
   let homepageFeaturedOrder = homepageFeatured ? requestedHomepageOrder : null;
+
+  let structuredReview: {
+    manufacturingFeasible: string | null | undefined;
+    estimatedCostRange: string | null | undefined;
+    suggestedMaterial: string | null | undefined;
+    estimatedMoq: string | null | undefined;
+    suggestedManufacturing: string | null | undefined;
+    factoriesMatched: string | null | undefined;
+    additionalNotes: string | null | undefined;
+    moldRequirement: string | null | undefined;
+    assumptions: string | null | undefined;
+    confidence: string | null | undefined;
+    assessmentStatus: "Draft" | "Published";
+    disclaimer: string;
+    mainRisks: string | null | undefined;
+    recommendedNextStep: string | null | undefined;
+    customEligible: boolean;
+    publishedAt: Date | null;
+  } | null = null;
+
+  if (Object.keys(review).length > 0) {
+    const reviewField = (key: keyof typeof review) => Object.prototype.hasOwnProperty.call(review, key)
+      ? stringOrNull(review[key])
+      : existing.review?.[key as keyof typeof existing.review] as string | null | undefined;
+    const assessmentStatus = Object.prototype.hasOwnProperty.call(review, "assessmentStatus")
+      ? review.assessmentStatus === "Published" ? "Published" : "Draft"
+      : existing.review?.assessmentStatus === "Published" ? "Published" : "Draft";
+    const disclaimer = reviewField("disclaimer") ||
+      existing.review?.disclaimer ||
+      content.communityPage.assessmentDisclaimer;
+    const customEligible = typeof review.customEligible === "boolean"
+      ? review.customEligible
+      : Boolean(existing.review?.customEligible);
+    structuredReview = {
+      manufacturingFeasible: reviewField("manufacturingFeasible"),
+      estimatedCostRange: reviewField("estimatedCostRange"),
+      suggestedMaterial: reviewField("suggestedMaterial"),
+      estimatedMoq: reviewField("estimatedMoq"),
+      suggestedManufacturing: reviewField("suggestedManufacturing"),
+      factoriesMatched: reviewField("factoriesMatched"),
+      additionalNotes: reviewField("additionalNotes"),
+      moldRequirement: reviewField("moldRequirement"),
+      assumptions: reviewField("assumptions"),
+      confidence: reviewField("confidence"),
+      assessmentStatus,
+      disclaimer,
+      mainRisks: reviewField("mainRisks"),
+      recommendedNextStep: reviewField("recommendedNextStep"),
+      customEligible,
+      publishedAt: assessmentStatus === "Published"
+        ? existing.review?.publishedAt || new Date()
+        : null
+    };
+
+    if (assessmentStatus === "Published" && moderationStatus !== "Approved") {
+      throw new Error("Only approved ideas can publish a public assessment.");
+    }
+    if (assessmentStatus === "Published") {
+      const required = [
+        structuredReview.manufacturingFeasible,
+        structuredReview.estimatedCostRange,
+        structuredReview.estimatedMoq,
+        structuredReview.assumptions,
+        structuredReview.confidence,
+        structuredReview.disclaimer
+      ];
+      if (required.some((value) => !value)) {
+        throw new Error("Published assessments require feasibility, cost range, MOQ, assumptions, confidence, and disclaimer.");
+      }
+    }
+  }
 
   if (homepageFeatured && (existing.visibility !== "Public" || moderationStatus !== "Approved")) {
     throw new Error("Only approved public ideas can be featured on the homepage.");
@@ -1159,6 +1348,8 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
       data: {
         status: normalizeStatus(data.status),
         moderationStatus,
+        moderatedAt: moderationChanged ? new Date() : existing.moderatedAt,
+        moderationNote,
         hidden,
         locked: typeof data.locked === "boolean" ? data.locked : existing.locked,
         pinned: typeof data.pinned === "boolean" ? data.pinned : existing.pinned,
@@ -1166,36 +1357,24 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
         homepageFeaturedOrder
       }
     });
-  });
 
-  if (Object.keys(review).length > 0) {
-    const reviewField = (key: keyof typeof review) => Object.prototype.hasOwnProperty.call(review, key)
-      ? stringOrNull(review[key])
-      : existing.review?.[key as keyof typeof existing.review] as string | null | undefined;
-    await prisma.tyoraReview.upsert({
-      where: { ideaId: existing.id },
-      create: {
-        id: makeCommunityId("REVIEW"),
-        ideaId: existing.id,
-        manufacturingFeasible: reviewField("manufacturingFeasible"),
-        estimatedCostRange: reviewField("estimatedCostRange"),
-        suggestedMaterial: reviewField("suggestedMaterial"),
-        estimatedMoq: reviewField("estimatedMoq"),
-        suggestedManufacturing: reviewField("suggestedManufacturing"),
-        factoriesMatched: reviewField("factoriesMatched"),
-        additionalNotes: reviewField("additionalNotes")
-      },
-      update: {
-        manufacturingFeasible: reviewField("manufacturingFeasible"),
-        estimatedCostRange: reviewField("estimatedCostRange"),
-        suggestedMaterial: reviewField("suggestedMaterial"),
-        estimatedMoq: reviewField("estimatedMoq"),
-        suggestedManufacturing: reviewField("suggestedManufacturing"),
-        factoriesMatched: reviewField("factoriesMatched"),
-        additionalNotes: reviewField("additionalNotes")
-      }
-    });
-  }
+    if (structuredReview) {
+      await tx.tyoraReview.upsert({
+        where: { ideaId: existing.id },
+        create: {
+          id: makeCommunityId("REVIEW"),
+          ideaId: existing.id,
+          ...structuredReview
+        },
+        update: structuredReview
+      });
+    } else if (moderationStatus !== "Approved" && existing.review?.assessmentStatus === "Published") {
+      await tx.tyoraReview.update({
+        where: { ideaId: existing.id },
+        data: { assessmentStatus: "Draft", publishedAt: null }
+      });
+    }
+  });
 
   return getCommunityIdeaBySlug(slug, { isAdmin: true });
 }
@@ -1222,6 +1401,7 @@ export async function deleteCommunityIdeaAdmin(slug: string) {
         ]
       }
     });
+    await tx.communityShare.deleteMany({ where: { ideaId: existing.id } });
     await tx.communityComment.deleteMany({ where: { ideaId: existing.id } });
     await tx.tyoraReview.deleteMany({ where: { ideaId: existing.id } });
     await tx.communityIdea.delete({ where: { id: existing.id } });

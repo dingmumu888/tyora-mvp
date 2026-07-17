@@ -16,10 +16,13 @@ export const communityQuestions = [
   "Other"
 ] as const;
 
+export const customInquiryStatuses = ["Submitted", "In Review", "Need Information", "Qualified", "Closed"] as const;
+
 export type CommunityStatus = (typeof communityStatuses)[number];
 export type CommunityModerationStatus = "Pending" | "Approved" | "Rejected" | "Draft";
 export type CommunityVisibility = "Public" | "Private";
 export type CommunityQuestion = (typeof communityQuestions)[number];
+export type CustomInquiryStatus = (typeof customInquiryStatuses)[number];
 
 export type CommunityUser = {
   id: string;
@@ -54,6 +57,15 @@ export type TyoraReview = {
   suggestedManufacturing?: string;
   factoriesMatched?: string;
   additionalNotes?: string;
+  moldRequirement?: string;
+  assumptions?: string;
+  confidence?: string;
+  assessmentStatus: "Draft" | "Published";
+  disclaimer: string;
+  mainRisks?: string;
+  recommendedNextStep?: string;
+  customEligible: boolean;
+  publishedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -76,14 +88,44 @@ export type CommunityIdea = {
   pinned: boolean;
   homepageFeatured: boolean;
   homepageFeaturedOrder?: number;
+  publicConsentAt?: string;
+  moderatedAt?: string;
+  moderationNote?: string;
   author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country">;
   comments: CommunityComment[];
   review?: TyoraReview;
   likeCount: number;
   interestedCount: number;
+  shareCount: number;
   hotScore: number;
   isHot: boolean;
   hotUntil?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CustomInquiry = {
+  id: string;
+  ideaId?: string;
+  productName: string;
+  productDescription: string;
+  category: string;
+  quantity: string;
+  budget: string;
+  targetMarket: string;
+  timeline: string;
+  contactEmail?: string;
+  contactWhatsapp?: string;
+  fileCount: number;
+  status: string;
+  nextStep?: string;
+  ideaSnapshot?: {
+    id: string;
+    slug?: string;
+    title?: string;
+    category?: string;
+  };
+  assessmentSnapshot?: Partial<TyoraReview>;
   createdAt: string;
   updatedAt: string;
 };

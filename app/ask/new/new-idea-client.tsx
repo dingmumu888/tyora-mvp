@@ -90,7 +90,10 @@ export default function NewIdeaClient() {
     imageUrls: [] as string[],
     questions: [] as CommunityQuestion[],
     otherQuestion: "",
-    visibility: "Public"
+    visibility: "Public" as "Public" | "Private",
+    publicContentConsent: false,
+    publicImageConsent: false,
+    publicAssessmentConsent: false
   });
 
   useEffect(() => {
@@ -193,6 +196,12 @@ export default function NewIdeaClient() {
     const ideaSummary = form.description.trim() || oneSentence.trim();
     if (!form.title.trim()) return setMessage("Please add a product name.");
     if (!ideaSummary) return setMessage("Please describe your idea.");
+    if (
+      form.visibility === "Public" &&
+      (!form.publicContentConsent || !form.publicImageConsent || !form.publicAssessmentConsent)
+    ) {
+      return setMessage("Please confirm all three public-sharing permissions, or choose Private.");
+    }
     if (!user) {
       setMessage("Log in with email to publish your discussion. Your draft will stay here.");
       setLoginPrompt((current) => current + 1);
@@ -224,6 +233,53 @@ export default function NewIdeaClient() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function submissionPrivacyControls() {
+    const isPublic = form.visibility === "Public";
+    return (
+      <section className="rounded-[20px] border border-[#dbe4f0] bg-[#f8fafc] p-4">
+        <p className="text-sm font-semibold">Who can see this submission?</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 rounded-[14px] bg-white p-1 ring-1 ring-[#e4e8ef]">
+          {(["Public", "Private"] as const).map((visibility) => (
+            <button
+              key={visibility}
+              type="button"
+              aria-pressed={form.visibility === visibility}
+              onClick={() => setForm((current) => ({ ...current, visibility }))}
+              className={cn(
+                "min-h-11 rounded-[11px] px-3 text-sm font-semibold transition",
+                form.visibility === visibility ? "bg-[#101216] text-white" : "text-[#59616e] hover:bg-[#f4f6f8]"
+              )}
+            >
+              {visibility}
+            </button>
+          ))}
+        </div>
+        {isPublic ? (
+          <div className="mt-4 grid gap-3 text-sm leading-5 text-[#59616e]">
+            <p className="text-xs leading-5 text-[#69707d]">Public submissions remain pending until TYORA approves them. Confirm each item below.</p>
+            {([
+              ["publicContentConsent", "I agree that my idea title and description may be published."],
+              ["publicImageConsent", "I agree that the uploaded reference images may be published."],
+              ["publicAssessmentConsent", "I agree that TYORA's initial assessment may be shown publicly."]
+            ] as const).map(([key, label]) => (
+              <label key={key} className="flex cursor-pointer items-start gap-3 rounded-[14px] bg-white p-3 ring-1 ring-[#e4e8ef]">
+                <input
+                  type="checkbox"
+                  checked={form[key]}
+                  onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.checked }))}
+                  className="mt-0.5 size-4 shrink-0 accent-[#2563eb]"
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-xs leading-5 text-[#59616e]">Private submissions are visible only to you and authorized TYORA staff. They never enter the public community feed.</p>
+        )}
+      </section>
+    );
   }
 
   if (checkingSession) {
@@ -287,8 +343,8 @@ export default function NewIdeaClient() {
                 <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#e9f7f3] text-[#0f766e] shadow-sm">
                   <Sparkles size={28} />
                 </div>
-                <h2 className="mt-5 text-3xl font-semibold leading-tight">Your idea is ready for TYORA review.</h2>
-                <p className="mt-3 text-sm font-medium text-[#69707d]">Opening your private review page...</p>
+                <h2 className="mt-5 text-3xl font-semibold leading-tight">Submitted for TYORA review.</h2>
+                <p className="mt-3 text-sm font-medium text-[#69707d]">Opening your submission. Public ideas stay pending until approved.</p>
               </div>
             </div>
           ) : (
@@ -358,6 +414,7 @@ export default function NewIdeaClient() {
                   ))}
                 </div>
               ) : null}
+              {submissionPrivacyControls()}
             </div>
 
             {message ? (
@@ -368,7 +425,7 @@ export default function NewIdeaClient() {
 
             <button disabled={submitting} className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
               {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-              {submitting ? "Publishing..." : "Start Discussion"}
+              {submitting ? "Submitting..." : "Submit for Review"}
             </button>
           </section>
 
@@ -501,7 +558,7 @@ export default function NewIdeaClient() {
               <div className="mt-6 rounded-[20px] border border-[#e4e8ef] bg-[#fbfcff] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Concept"}</span>
-                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">Public</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.visibility}</span>
                   <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">Initial assessment</span>
                 </div>
                 <h3 className="mt-3 text-2xl font-semibold">{form.title || "Product name"}</h3>
@@ -520,6 +577,7 @@ export default function NewIdeaClient() {
                   ))}
                 </div>
               </div>
+              <div className="mt-4">{submissionPrivacyControls()}</div>
             </section>
           ) : null}
 
@@ -542,7 +600,7 @@ export default function NewIdeaClient() {
             ) : (
               <button disabled={submitting} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
                 {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-                {submitting ? "Publishing..." : "Start Discussion"}
+                {submitting ? "Submitting..." : "Submit for Review"}
               </button>
             )}
           </div>

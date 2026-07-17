@@ -15,7 +15,7 @@ const allowedExtensions = new Set(
 const uuidPattern =
   "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 const privateObjectPathPattern = new RegExp(
-  `^(?:project-submissions|idea-submissions)/\\d{4}/(?:0[1-9]|1[0-2])/\\d{13}-${uuidPattern}\\.(?:jpg|jpeg|png|webp|pdf)$`,
+  `^(?:project-submissions|idea-submissions|custom-submissions)/\\d{4}/(?:0[1-9]|1[0-2])/\\d{13}-${uuidPattern}\\.(?:jpg|jpeg|png|webp|pdf)$`,
   "i"
 );
 const privateLeadObjectPathPattern = new RegExp(
@@ -140,6 +140,20 @@ export function buildPrivateIdeaObjectPath(
     /^project-submissions\//,
     "idea-submissions/"
   );
+}
+
+export function buildPrivateCustomObjectPath(
+  extension: string,
+  options: { now?: Date; id?: string } = {}
+) {
+  return buildPrivateObjectPath(extension, options).replace(
+    /^project-submissions\//,
+    "custom-submissions/"
+  );
+}
+
+export function isAllowedPrivateCustomObjectPath(objectPath: string) {
+  return objectPath.startsWith("custom-submissions/") && isAllowedPrivateObjectPath(objectPath);
 }
 
 export function isAllowedPrivateLeadObjectPath(objectPath: string) {

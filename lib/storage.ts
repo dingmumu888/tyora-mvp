@@ -132,6 +132,67 @@ export type MobileTabsContent = {
   sourceProductSubtitle: string;
 };
 
+export type CommunityAssessmentLabels = {
+  feasibility: string;
+  estimatedCostRange: string;
+  estimatedMoq: string;
+  assumptions: string;
+  confidence: string;
+  assessmentStatus: string;
+  disclaimer: string;
+  suggestedMaterial: string;
+  suggestedProcess: string;
+  moldRequirement: string;
+  mainRisks: string;
+  recommendedNextStep: string;
+  customEligibility: string;
+};
+
+export type CommunityPageContent = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  startIdeaCtaText: string;
+  startIdeaCtaHref: string;
+  privateCustomCtaText: string;
+  privateCustomCtaHref: string;
+  continueWithTyoraText: string;
+  continueWithTyoraHref: string;
+  startCustomProjectText: string;
+  startCustomProjectHref: string;
+  likeText: string;
+  commentText: string;
+  shareText: string;
+  interestedText: string;
+  assessmentDisclaimer: string;
+  assessmentLabels: CommunityAssessmentLabels;
+  feasibilityOptions: string[];
+  confidenceOptions: string[];
+  assessmentStatusOptions: string[];
+  hotScoreThreshold: number;
+  hotWindowDays: number;
+  hotProtectionHours: number;
+  commentRateLimit: number;
+  reactionRateLimit: number;
+  shareRateLimit: number;
+  rateWindowMinutes: number;
+  dailyAssessmentLimit: number;
+  showCasesInFeed: boolean;
+  caseLimit: number;
+};
+
+export type CustomPageContent = {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  formTitle: string;
+  formDescription: string;
+  submitCtaText: string;
+  successTitle: string;
+  successBody: string;
+  privacyNote: string;
+};
+
 export type ModuleVisibility = {
   source: boolean;
   journeys: boolean;
@@ -246,6 +307,8 @@ export type SiteContent = {
   cases: CaseStudy[];
   homepage: HomepageContent;
   sourcePage: SourcePageContent;
+  communityPage: CommunityPageContent;
+  customPage: CustomPageContent;
   mobileTabs: MobileTabsContent;
   moduleVisibility: ModuleVisibility;
 };
@@ -583,6 +646,63 @@ export const defaultContent: SiteContent = {
     trustToastMessages: [],
     trustToastMinSeconds: 60,
     trustToastMaxSeconds: 300
+  },
+  communityPage: {
+    eyebrow: "Ideas reviewed by TYORA",
+    title: "Share a product idea and understand the manufacturing path.",
+    description: "Public ideas enter moderation before publication. Approved ideas can receive a structured initial TYORA assessment.",
+    startIdeaCtaText: "Upload Your Idea",
+    startIdeaCtaHref: "/ask/new",
+    privateCustomCtaText: "Start a Private Custom Project",
+    privateCustomCtaHref: "/custom",
+    continueWithTyoraText: "Continue with TYORA",
+    continueWithTyoraHref: "/custom",
+    startCustomProjectText: "Start Custom Project",
+    startCustomProjectHref: "/custom",
+    likeText: "Like",
+    commentText: "Comment",
+    shareText: "Share",
+    interestedText: "I Want One",
+    assessmentDisclaimer: "Preliminary estimate only. Final pricing, MOQ, and production feasibility depend on confirmed specifications, samples, and factory quotations.",
+    assessmentLabels: {
+      feasibility: "Manufacturing feasibility",
+      estimatedCostRange: "Estimated cost range",
+      estimatedMoq: "Estimated MOQ",
+      assumptions: "Assumptions",
+      confidence: "Confidence",
+      assessmentStatus: "Assessment status",
+      disclaimer: "Assessment disclaimer",
+      suggestedMaterial: "Suggested material",
+      suggestedProcess: "Suggested process",
+      moldRequirement: "Mold requirement",
+      mainRisks: "Main risks",
+      recommendedNextStep: "Recommended next step",
+      customEligibility: "Custom project eligibility"
+    },
+    feasibilityOptions: ["Feasible", "Feasible with changes", "More information required", "Not currently feasible"],
+    confidenceOptions: ["Early indication", "Moderate confidence", "High confidence after factory feedback"],
+    assessmentStatusOptions: ["Draft", "Published"],
+    hotScoreThreshold: 10,
+    hotWindowDays: 7,
+    hotProtectionHours: 48,
+    commentRateLimit: 10,
+    reactionRateLimit: 30,
+    shareRateLimit: 10,
+    rateWindowMinutes: 10,
+    dailyAssessmentLimit: 3,
+    showCasesInFeed: true,
+    caseLimit: 4
+  },
+  customPage: {
+    eyebrow: "Private Custom Project",
+    title: "Develop a custom product with TYORA",
+    subtitle: "Send confidential product information for a private manufacturing review. Nothing submitted here is published to the community.",
+    formTitle: "Start your private Custom inquiry",
+    formDescription: "Share the information you already have. You can add approved public Idea context without entering it again.",
+    submitCtaText: "Submit Private Custom Inquiry",
+    successTitle: "Private Custom inquiry received",
+    successBody: "Your private request is available in My TYORA. TYORA will review the information and update the next step there.",
+    privacyNote: "Private by default. Customer designs, files, contact details, pricing discussions, and factory information are never shown on public pages."
   },
   mobileTabs: {
     community: "Home",
@@ -1173,6 +1293,76 @@ function normalizeSourcePage(value: unknown): SourcePageContent {
   };
 }
 
+function normalizeCommunityPage(value: unknown): CommunityPageContent {
+  const item = value && typeof value === "object" ? (value as Partial<CommunityPageContent>) : {};
+  const fallback = defaultContent.communityPage;
+  const labels = item.assessmentLabels && typeof item.assessmentLabels === "object"
+    ? item.assessmentLabels as Partial<CommunityAssessmentLabels>
+    : {};
+  return {
+    eyebrow: stringValue(item.eyebrow, fallback.eyebrow),
+    title: stringValue(item.title, fallback.title),
+    description: stringValue(item.description, fallback.description),
+    startIdeaCtaText: stringValue(item.startIdeaCtaText, fallback.startIdeaCtaText),
+    startIdeaCtaHref: safeCmsHref(item.startIdeaCtaHref, fallback.startIdeaCtaHref),
+    privateCustomCtaText: stringValue(item.privateCustomCtaText, fallback.privateCustomCtaText),
+    privateCustomCtaHref: safeCmsHref(item.privateCustomCtaHref, fallback.privateCustomCtaHref),
+    continueWithTyoraText: stringValue(item.continueWithTyoraText, fallback.continueWithTyoraText),
+    continueWithTyoraHref: safeCmsHref(item.continueWithTyoraHref, fallback.continueWithTyoraHref),
+    startCustomProjectText: stringValue(item.startCustomProjectText, fallback.startCustomProjectText),
+    startCustomProjectHref: safeCmsHref(item.startCustomProjectHref, fallback.startCustomProjectHref),
+    likeText: stringValue(item.likeText, fallback.likeText),
+    commentText: stringValue(item.commentText, fallback.commentText),
+    shareText: stringValue(item.shareText, fallback.shareText),
+    interestedText: stringValue(item.interestedText, fallback.interestedText),
+    assessmentDisclaimer: stringValue(item.assessmentDisclaimer, fallback.assessmentDisclaimer),
+    assessmentLabels: {
+      feasibility: stringValue(labels.feasibility, fallback.assessmentLabels.feasibility),
+      estimatedCostRange: stringValue(labels.estimatedCostRange, fallback.assessmentLabels.estimatedCostRange),
+      estimatedMoq: stringValue(labels.estimatedMoq, fallback.assessmentLabels.estimatedMoq),
+      assumptions: stringValue(labels.assumptions, fallback.assessmentLabels.assumptions),
+      confidence: stringValue(labels.confidence, fallback.assessmentLabels.confidence),
+      assessmentStatus: stringValue(labels.assessmentStatus, fallback.assessmentLabels.assessmentStatus),
+      disclaimer: stringValue(labels.disclaimer, fallback.assessmentLabels.disclaimer),
+      suggestedMaterial: stringValue(labels.suggestedMaterial, fallback.assessmentLabels.suggestedMaterial),
+      suggestedProcess: stringValue(labels.suggestedProcess, fallback.assessmentLabels.suggestedProcess),
+      moldRequirement: stringValue(labels.moldRequirement, fallback.assessmentLabels.moldRequirement),
+      mainRisks: stringValue(labels.mainRisks, fallback.assessmentLabels.mainRisks),
+      recommendedNextStep: stringValue(labels.recommendedNextStep, fallback.assessmentLabels.recommendedNextStep),
+      customEligibility: stringValue(labels.customEligibility, fallback.assessmentLabels.customEligibility)
+    },
+    feasibilityOptions: stringListValue(item.feasibilityOptions, fallback.feasibilityOptions).slice(0, 12),
+    confidenceOptions: stringListValue(item.confidenceOptions, fallback.confidenceOptions).slice(0, 12),
+    assessmentStatusOptions: stringListValue(item.assessmentStatusOptions, fallback.assessmentStatusOptions).filter((value) => ["Draft", "Published"].includes(value)),
+    hotScoreThreshold: numberValue(item.hotScoreThreshold, fallback.hotScoreThreshold, 1, 10000),
+    hotWindowDays: numberValue(item.hotWindowDays, fallback.hotWindowDays, 1, 90),
+    hotProtectionHours: numberValue(item.hotProtectionHours, fallback.hotProtectionHours, 1, 720),
+    commentRateLimit: numberValue(item.commentRateLimit, fallback.commentRateLimit, 1, 200),
+    reactionRateLimit: numberValue(item.reactionRateLimit, fallback.reactionRateLimit, 1, 500),
+    shareRateLimit: numberValue(item.shareRateLimit, fallback.shareRateLimit, 1, 200),
+    rateWindowMinutes: numberValue(item.rateWindowMinutes, fallback.rateWindowMinutes, 1, 1440),
+    dailyAssessmentLimit: numberValue(item.dailyAssessmentLimit, fallback.dailyAssessmentLimit, 1, 100),
+    showCasesInFeed: booleanValue(item.showCasesInFeed, fallback.showCasesInFeed),
+    caseLimit: numberValue(item.caseLimit, fallback.caseLimit, 0, 12)
+  };
+}
+
+function normalizeCustomPage(value: unknown): CustomPageContent {
+  const item = value && typeof value === "object" ? (value as Partial<CustomPageContent>) : {};
+  const fallback = defaultContent.customPage;
+  return {
+    eyebrow: stringValue(item.eyebrow, fallback.eyebrow),
+    title: stringValue(item.title, fallback.title),
+    subtitle: stringValue(item.subtitle, fallback.subtitle),
+    formTitle: stringValue(item.formTitle, fallback.formTitle),
+    formDescription: stringValue(item.formDescription, fallback.formDescription),
+    submitCtaText: stringValue(item.submitCtaText, fallback.submitCtaText),
+    successTitle: stringValue(item.successTitle, fallback.successTitle),
+    successBody: stringValue(item.successBody, fallback.successBody),
+    privacyNote: stringValue(item.privacyNote, fallback.privacyNote)
+  };
+}
+
 function normalizeMobileTabs(value: unknown): MobileTabsContent {
   const item = value && typeof value === "object" ? (value as Partial<MobileTabsContent>) : {};
   return {
@@ -1483,6 +1673,8 @@ export function normalizeContent(value: unknown): SiteContent {
     cases: normalizeCases(item.cases),
     homepage: normalizeHomepage(item.homepage),
     sourcePage: normalizeSourcePage(item.sourcePage),
+    communityPage: normalizeCommunityPage(item.communityPage),
+    customPage: normalizeCustomPage(item.customPage),
     mobileTabs: normalizeMobileTabs(item.mobileTabs),
     moduleVisibility: normalizeModuleVisibility(item.moduleVisibility)
   };

@@ -7,11 +7,14 @@ import {
   MessageCircle,
   Plus,
   Search,
+  Share2,
   ShoppingBag,
   Sparkles
 } from "lucide-react";
 import { CommunityFeedSort, CommunityIdea, CommunityStatus } from "@/lib/community";
 import { getCommunityIdeas } from "@/lib/server/community-store";
+import { getContent } from "@/lib/server/data-store";
+import { CaseStudy, CommunityPageContent } from "@/lib/storage";
 import CommunityImage from "@/components/community-image";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
@@ -88,8 +91,8 @@ function coverTone(idea: CommunityIdea) {
   return tones[idea.title.length % tones.length];
 }
 
-function HotBadge({ idea }: { idea: CommunityIdea }) {
-  if (!idea.isHot) return null;
+function HotBadge({ idea }: { idea?: CommunityIdea }) {
+  if (!idea?.isHot) return null;
   return (
     <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#ff385c] px-2.5 py-1 text-[10px] font-bold uppercase tracking-normal text-white shadow-[0_8px_22px_rgba(255,56,92,0.28)]">
       <Flame size={11} fill="currentColor" /> Hot
@@ -107,36 +110,56 @@ function activity(ideas: CommunityIdea[]) {
   ].slice(0, 7);
 }
 
-function CommunityCard({ idea }: { idea: CommunityIdea }) {
-  const progress = statusProgress(idea.status);
+function caseStatus(story: CaseStudy): CommunityStatus {
+  if (story.status === "Delivered") return "Completed";
+  if (story.status === "In Production") return "Manufacturing";
+  if (story.status === "Prototype Approved") return "Project Started";
+  return "Discussing";
+}
+
+type InteractionLabels = Pick<CommunityPageContent, "likeText" | "commentText" | "interestedText" | "shareText">;
+
+function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: CaseStudy; labels: InteractionLabels }) {
+  if (!idea && !story) return null;
+  const status = story ? caseStatus(story) : idea!.status;
+  const progress = statusProgress(status);
+  const title = story?.name || idea!.title;
+  const description = story?.shortDescription || idea!.description;
+  const category = story?.category || idea!.category;
+  const country = story?.country || idea!.country;
+  const imageUrl = story?.coverImage.desktopUrl || idea?.imageUrls[0];
+  const href = story ? `/ask/case/${encodeURIComponent(story.slug)}` : `/ask/${idea!.slug}`;
+  const authorName = story ? "TYORA" : idea!.author.name;
 
   return (
     <article className="group relative overflow-hidden rounded-[12px] border border-[#e1e6ee] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)]">
       <HotBadge idea={idea} />
       <div className="grid grid-cols-[96px_1fr] gap-0 sm:grid-cols-[132px_1fr]">
-        <Link href={`/ask/${idea.slug}`} className={`relative block aspect-square overflow-hidden bg-gradient-to-br ${coverTone(idea)}`}>
-          <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" fallbackClassName="absolute inset-0 p-6" initialsClassName="bg-white/74" />
-          <span className="absolute left-2 top-2 rounded-full bg-white/88 px-2 py-0.5 text-[10px] font-semibold text-[#101216] backdrop-blur">{idea.category}</span>
+        <Link href={href} className={`relative block aspect-square overflow-hidden bg-gradient-to-br ${story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}`}>
+          <CommunityImage src={imageUrl} alt={title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" fallbackClassName="absolute inset-0 p-6" initialsClassName="bg-white/74" />
+          <span className="absolute left-2 top-2 rounded-full bg-white/88 px-2 py-0.5 text-[10px] font-semibold text-[#101216] backdrop-blur">{category}</span>
         </Link>
 
         <div className="min-w-0 p-2.5">
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#69707d]">
-            <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{flagFor(idea.country)}</span>
-            <span>{idea.author.name}</span>
-            <span>{timeAgo(idea.createdAt)}</span>
-            <span className={`rounded-full px-2.5 py-1 font-semibold ring-1 max-sm:hidden ${statusStyles[idea.status]}`}>{idea.status}</span>
+            {country ? <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{flagFor(country)}</span> : null}
+            <span>{authorName}</span>
+            {idea ? <span>{timeAgo(idea.createdAt)}</span> : null}
+            {story ? <span className="rounded-full bg-[#101216] px-2 py-1 font-semibold text-white">{story.badgeLabel || "TYORA Case"}</span> : null}
+            {story?.projectType === "Demonstration Project" ? <span className="rounded-full bg-[#fff7d6] px-2 py-1 font-semibold text-[#8a5a00]">Demonstration Project</span> : null}
+            <span className={`rounded-full px-2.5 py-1 font-semibold ring-1 max-sm:hidden ${statusStyles[status]}`}>{status}</span>
           </div>
 
-          <Link href={`/ask/${idea.slug}`} className="mt-1.5 block">
-            <h2 className="line-clamp-1 text-base font-semibold leading-tight tracking-normal text-[#101216]">{idea.title}</h2>
-            <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{idea.description}</p>
+          <Link href={href} className="mt-1.5 block">
+            <h2 className="line-clamp-1 text-base font-semibold leading-tight tracking-normal text-[#101216]">{title}</h2>
+            <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{description}</p>
           </Link>
 
           <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] max-sm:hidden">
-            {idea.questions.slice(0, 2).map((question) => (
+            {(idea?.questions || []).slice(0, 2).map((question) => (
               <span key={question} className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">{question}</span>
             ))}
-            <span className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">Concept</span>
+            <span className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">{story ? story.status : "Concept"}</span>
           </div>
 
           <div className="mt-2 grid gap-2 max-sm:hidden sm:grid-cols-[1fr_auto] sm:items-center">
@@ -153,17 +176,18 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
               </div>
             </div>
 
-            <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-6 border text-[10px]" />
+            <CommunityAvatar name={authorName} src={idea?.author.avatar} className="size-6 border text-[10px]" />
           </div>
 
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-2 text-[11px] font-medium text-[#69707d] sm:gap-3 sm:text-xs">
-              <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount} Love</span>
-              <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length}</span>
-              <span className="inline-flex items-center gap-1 max-sm:hidden"><ShoppingBag size={14} /> {idea.interestedCount} I&apos;d Buy</span>
-            </div>
-            <Link href={`/ask/${idea.slug}`} className={`hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold sm:inline-flex ${primaryButton}`}>
-              Join Discussion <ChevronRight size={14} />
+            {idea ? <div className="flex flex-wrap gap-2 text-[11px] font-medium text-[#69707d] sm:gap-3 sm:text-xs">
+              <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount} {labels.likeText}</span>
+              <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length} {labels.commentText}</span>
+              <span className="inline-flex items-center gap-1 max-sm:hidden"><ShoppingBag size={14} /> {idea.interestedCount} {labels.interestedText}</span>
+              <span className="inline-flex items-center gap-1 max-sm:hidden"><Share2 size={14} /> {idea.shareCount} {labels.shareText}</span>
+            </div> : <span className="text-xs font-semibold text-[#315fbd]">Case information, process, and disclosure</span>}
+            <Link href={href} className={`hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold sm:inline-flex ${primaryButton}`}>
+              {story ? story.ctaText || "View Case" : "Join Discussion"} <ChevronRight size={14} />
             </Link>
           </div>
         </div>
@@ -194,7 +218,10 @@ function StarterCommunityState() {
 
 export default async function AskCommunityPage({ searchParams }: { searchParams: Promise<{ sort?: CommunityFeedSort }> }) {
   const { sort = "trending" } = await searchParams;
-  const ideas = await getCommunityIdeas(sort);
+  const [ideas, content] = await Promise.all([getCommunityIdeas(sort), getContent()]);
+  const tyoraCases = content.communityPage.showCasesInFeed
+    ? content.cases.filter((story) => story.visible).sort((left, right) => left.order - right.order).slice(0, content.communityPage.caseLimit)
+    : [];
   const latestReviews = ideas.filter((idea) => idea.review);
   const countries = new Set(ideas.map((idea) => idea.country).filter(Boolean)).size;
   const recentActivity = activity(ideas);
@@ -325,11 +352,12 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
           </nav>
 
           <div className="mt-2.5 grid gap-2">
-            {ideas.length === 0 ? (
+            {ideas.length === 0 && tyoraCases.length === 0 ? (
               <StarterCommunityState />
             ) : (
               <>
-                {ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} />)}
+                {ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} labels={content.communityPage} />)}
+                {tyoraCases.map((story) => <CommunityCard key={`case-${story.id}`} story={story} labels={content.communityPage} />)}
               </>
             )}
           </div>

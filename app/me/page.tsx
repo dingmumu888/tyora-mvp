@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, MapPin, Sparkles, UserRound } from "lucide-react";
+import { CalendarDays, FileLock2, MapPin, Sparkles, UserRound } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
 import EmailLogin from "@/components/email-login";
@@ -7,6 +7,7 @@ import MarkNotificationsRead from "@/components/mark-notifications-read";
 import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
 import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityUserActivity } from "@/lib/server/community-store";
+import { getCustomInquiriesForUser } from "@/lib/server/custom-inquiry-store";
 import ActivityMessages from "./activity-messages";
 import ActivitySummary from "./activity-summary";
 
@@ -28,7 +29,12 @@ const myTyoraDesktopNav = [
 
 export default async function MyTyoraPage() {
   const session = await getCommunitySession();
-  const activity = session ? await getCommunityUserActivity(session.userId) : null;
+  const [activity, customInquiries] = session
+    ? await Promise.all([
+        getCommunityUserActivity(session.userId),
+        getCustomInquiriesForUser(session.userId)
+      ])
+    : [null, []];
 
   if (!session || !activity) {
     return (
@@ -126,6 +132,31 @@ export default async function MyTyoraPage() {
           {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]">Set up your profile so founders know who they're talking to.</p>}
           <ActivitySummary items={compactStats} ideas={ideas} comments={comments} likedIdeas={likedIdeas} interestedIdeas={interestedIdeas} />
           <ActivityMessages notifications={notifications} unreadCount={totalUnread} />
+          <section id="custom-inquiries" className="mt-4 scroll-mt-24 rounded-2xl border border-[#dfe6ef] bg-[#fbfcff] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="inline-flex items-center gap-2 text-sm font-semibold"><FileLock2 size={15} /> Private Custom</p>
+                <p className="mt-1 text-xs text-[#69707d]">Visible only to you and authorized TYORA staff.</p>
+              </div>
+              <Link href="/custom" className="inline-flex min-h-10 items-center rounded-full bg-[#101216] px-3 text-xs font-semibold text-white">New inquiry</Link>
+            </div>
+            <div className="mt-3 grid gap-2">
+              {customInquiries.length ? customInquiries.map((inquiry) => (
+                <article key={inquiry.id} className="rounded-xl border border-[#e4e8ef] bg-white p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{inquiry.productName}</p>
+                      <p className="mt-1 text-xs text-[#69707d]">{inquiry.status} · {inquiry.fileCount} private file{inquiry.fileCount === 1 ? "" : "s"}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[#eef7f4] px-2.5 py-1 text-[11px] font-semibold text-[#0f766e]">Private</span>
+                  </div>
+                  {inquiry.nextStep ? <p className="mt-2 text-xs leading-5 text-[#59616e]">{inquiry.nextStep}</p> : null}
+                </article>
+              )) : (
+                <p className="rounded-xl bg-white p-3 text-xs leading-5 text-[#69707d]">No private Custom inquiries yet.</p>
+              )}
+            </div>
+          </section>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Link href="/ask" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Community</Link>
             <Link href="/ask/new" className="inline-flex h-10 items-center justify-center rounded-full bg-[#101216] px-3 text-sm font-semibold text-white">New post</Link>

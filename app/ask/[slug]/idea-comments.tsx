@@ -5,6 +5,7 @@ import { Heart, Loader2, MessageCircle, Reply, Trash2 } from "lucide-react";
 import { CommunityComment } from "@/lib/community";
 import CommunityAvatar from "@/components/community-avatar";
 import EmailLogin from "@/components/email-login";
+import { communityActionHeaders } from "@/lib/client/community-action";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
 
@@ -70,7 +71,10 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
     setLikingId(comment.id);
     setMessage("");
     try {
-      const response = await fetch(`/api/community/ideas/${slug}/comments/${comment.id}`, { method: "PATCH" });
+      const response = await fetch(`/api/community/ideas/${slug}/comments/${comment.id}`, {
+        method: "PATCH",
+        headers: communityActionHeaders(`comment-reaction:${comment.id}`)
+      });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to like comment.");
       window.location.reload();
@@ -93,7 +97,7 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
     try {
       const response = await fetch(`/api/community/ideas/${slug}/comments`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: communityActionHeaders(`reply:${replyingTo.id}`),
         body: JSON.stringify({ body: replyBody, parentId: replyingTo.parentId || replyingTo.id })
       });
       const payload = await response.json();

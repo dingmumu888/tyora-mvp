@@ -1,17 +1,18 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Heart, Loader2, MessageCircle, Pencil, Share2, Star, Trash2, X } from "lucide-react";
 import { CommunityIdea } from "@/lib/community";
-import { WHATSAPP_URL } from "@/lib/whatsapp";
 import EmailLogin from "@/components/email-login";
 import IdeaSharePanel from "./idea-share-panel";
+import { communityActionHeaders } from "@/lib/client/community-action";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
-type IdeaActionMode = "bar" | "comment" | "ready";
+type IdeaActionMode = "bar" | "comment";
+type IdeaActionLabels = { likeText: string; commentText: string; interestedText: string; shareText: string };
 const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
-export default function IdeaActions({ idea, mode = "bar", compact = false }: { idea: CommunityIdea; mode?: IdeaActionMode; compact?: boolean }) {
+export default function IdeaActions({ idea, mode = "bar", compact = false, labels }: { idea: CommunityIdea; mode?: IdeaActionMode; compact?: boolean; labels: IdeaActionLabels }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [body, setBody] = useState("");
@@ -51,17 +52,6 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
       .catch(() => setReactionState({ liked: false, interested: false }));
   }, [idea.slug, user?.id]);
 
-  const whatsappUrl = useMemo(() => {
-    const text = [
-      "Hi TYORA, I want to continue this project.",
-      `Idea ID: ${idea.id}`,
-      `Idea URL: ${typeof window === "undefined" ? `/ask/${idea.slug}` : window.location.href}`,
-      `Title: ${idea.title}`,
-      `Customer Name: ${user?.name || ""}`
-    ].join("\n");
-    return `${WHATSAPP_URL.split("?")[0]}?text=${encodeURIComponent(text)}`;
-  }, [idea.id, idea.slug, idea.title, user?.name]);
-
   function appendCommentEmoji(emoji: string) {
     setBody((current) => `${current}${current ? " " : ""}${emoji}`);
     window.setTimeout(() => commentRef.current?.focus(), 0);
@@ -82,7 +72,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
     try {
       const response = await fetch(`/api/community/ideas/${idea.slug}/comments`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: communityActionHeaders(`comment:${idea.id}`),
         body: JSON.stringify({ body })
       });
       if (!response.ok) throw new Error("Unable to comment.");
@@ -104,7 +94,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
     try {
       const response = await fetch(`/api/community/ideas/${idea.slug}/reaction`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: communityActionHeaders(`reaction:${idea.id}:${type}`),
         body: JSON.stringify({ type })
       });
       if (!response.ok) throw new Error("Unable to update.");
@@ -182,32 +172,15 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
           </button>
         ) : user ? (
           <button className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-            {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} Comment
+            {busy === "comment" ? <Loader2 className="animate-spin" size={15} /> : <MessageCircle size={15} />} {labels.commentText}
           </button>
         ) : (
           <EmailLogin className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-            <MessageCircle size={15} /> Email Login to Comment
+            <MessageCircle size={15} /> Email Login to {labels.commentText}
           </EmailLogin>
         )}
         {message ? <p className="mt-2 text-sm text-[#8a5a00]">{message}</p> : null}
       </form>
-    );
-  }
-
-  if (mode === "ready") {
-    if (!sessionChecked || !isOwner) return null;
-    return (
-      <section id="continue" className="rounded-[18px] border border-[#dfe3e8] bg-white p-4 shadow-sm shadow-[#101216]/4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold">Continue your project</h2>
-            <p className="mt-1 text-sm leading-6 text-[#69707d]">Send this idea to TYORA to discuss the next manufacturing step.</p>
-          </div>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">
-            Continue with TYORA →
-          </a>
-        </div>
-      </section>
     );
   }
 
@@ -230,11 +203,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
           </button>
         ) : user ? (
           <button onClick={() => void react("Like")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.liked ? "bg-[#fff1f2] text-[#be123c]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
-            {busy === "Like" ? <Loader2 className="animate-spin" size={14} /> : <Heart size={14} />} {idea.likeCount} Like
+            {busy === "Like" ? <Loader2 className="animate-spin" size={14} /> : <Heart size={14} />} {idea.likeCount} {labels.likeText}
           </button>
         ) : (
           <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
-            <Heart size={14} /> {idea.likeCount} Like
+            <Heart size={14} /> {idea.likeCount} {labels.likeText}
           </EmailLogin>
         )}
         {!sessionChecked ? (
@@ -243,15 +216,15 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
           </button>
         ) : user ? (
           <button onClick={() => void react("Interested")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.interested ? "bg-[#eff6ff] text-[#1d4ed8]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
-            {busy === "Interested" ? <Loader2 className="animate-spin" size={14} /> : <Star size={14} />} {idea.interestedCount} Interested
+            {busy === "Interested" ? <Loader2 className="animate-spin" size={14} /> : <Star size={14} />} {idea.interestedCount} {labels.interestedText}
           </button>
         ) : (
           <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
-            <Star size={14} /> {idea.interestedCount} Interested
+            <Star size={14} /> {idea.interestedCount} {labels.interestedText}
           </EmailLogin>
         )}
         <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
-          <Share2 size={14} /> Share
+          <Share2 size={14} /> {idea.shareCount} {labels.shareText}
         </button>
 
         {editOpen ? (
@@ -294,7 +267,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
             </form>
           </div>
         ) : null}
-        <IdeaSharePanel open={shareOpen} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
+        <IdeaSharePanel open={shareOpen} ideaId={idea.id} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
       </div>
     );
   }
@@ -322,11 +295,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
           </button>
         ) : user ? (
           <button onClick={() => void react("Like")} className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${reactionState.liked ? "border-[#fecdd3] bg-[#fff1f2] text-[#be123c]" : "border-[#dfe3e8] bg-white hover:bg-[#f7f8fa]"}`}>
-            {busy === "Like" ? <Loader2 className="animate-spin" size={16} /> : <Heart size={16} />} {reactionState.liked ? "Liked" : "Like"}
+            {busy === "Like" ? <Loader2 className="animate-spin" size={16} /> : <Heart size={16} />} {idea.likeCount} {labels.likeText}
           </button>
         ) : (
           <EmailLogin className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
-            <Heart size={16} /> Like
+            <Heart size={16} /> {idea.likeCount} {labels.likeText}
           </EmailLogin>
         )}
         {!sessionChecked ? (
@@ -335,15 +308,15 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
           </button>
         ) : user ? (
           <button onClick={() => void react("Interested")} className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${reactionState.interested ? "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]" : "border-[#dfe3e8] bg-white hover:bg-[#f7f8fa]"}`}>
-            {busy === "Interested" ? <Loader2 className="animate-spin" size={16} /> : <Star size={16} />} {reactionState.interested ? "Interested" : "Interested"}
+            {busy === "Interested" ? <Loader2 className="animate-spin" size={16} /> : <Star size={16} />} {idea.interestedCount} {labels.interestedText}
           </button>
         ) : (
           <EmailLogin className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
-            <Star size={16} /> Interested
+            <Star size={16} /> {idea.interestedCount} {labels.interestedText}
           </EmailLogin>
         )}
         <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
-          <Share2 size={16} /> Share
+          <Share2 size={16} /> {idea.shareCount} {labels.shareText}
         </button>
       </div>
 
@@ -387,7 +360,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false }: { i
           </form>
         </div>
       ) : null}
-      <IdeaSharePanel open={shareOpen} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
+      <IdeaSharePanel open={shareOpen} ideaId={idea.id} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
     </div>
   );
 }
