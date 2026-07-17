@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
-  AlertCircle,
   BarChart3,
-  ArrowLeft,
   CalendarClock,
   Check,
   Clock,
@@ -18,11 +15,9 @@ import {
   LayoutDashboard,
   Library,
   Lock,
-  LogOut,
   MessageCircle,
   MousePointerClick,
   Plus,
-  Save,
   Search,
   Smartphone,
   TrendingUp,
@@ -35,9 +30,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
-import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 import HomepageContentEditor from "@/components/admin/homepage-content-editor";
 import CmsImageField from "@/components/admin/cms-image-field";
+import AdminDashboard from "@/components/admin/admin-dashboard";
+import AdminShell, { AdminSearchItem, AdminSectionId } from "@/components/admin/admin-shell";
 import {
   CaseStudy,
   CaseStudyStatus,
@@ -62,8 +58,8 @@ import {
   uploadMedia
 } from "@/lib/storage";
 import { AnalyticsDashboard } from "@/lib/analytics";
-import { CommunityIdea, CommunityStatus } from "@/lib/community";
-import WorkOrdersAdminClient from "@/app/admin/work-orders/work-orders-admin-client";
+import { CommunityIdea } from "@/lib/community";
+import { WorkOrder } from "@/lib/work-orders";
 
 type TabId =
   | "today"
@@ -300,56 +296,24 @@ const zhText: Record<string, string> = {
   Lost: "已流失"
 };
 
-const osSections: Array<{
-  title: string;
-  items: Array<{ id?: TabId; href?: string; label: string; badge?: string }>;
-}> = [
-  { title: "Operations", items: [{ id: "today", label: "Workbench" }] },
-  {
-    title: "Projects",
-    items: [
-      { id: "submissions", label: "Projects & Team" }
-    ]
-  },
-  {
-    title: "Journeys",
-    items: [
-      { id: "cases", label: "All Journeys" },
-      { id: "cases", label: "Featured" }
-    ]
-  },
-  {
-    title: "Website",
-    items: [
-      { id: "homepage", label: "Homepage" },
-      { id: "sourceContent", label: "Source Page" },
-      { id: "mobileTabs", label: "Mobile Tabs" },
-      { id: "moduleVisibility", label: "Homepage Modules" },
-      { id: "brand", label: "Navigation" },
-      { id: "brand", label: "Footer" },
-      { id: "video", label: "Brand Film" },
-      { id: "pricing", label: "Pricing" },
-      { id: "contact", label: "Contact Settings" },
-      { id: "founder", label: "Founder Profile" }
-    ]
-  },
-  { title: "Media", items: [{ id: "media", label: "Media Library" }] },
-  {
-    title: "Users",
-    items: [
-      { id: "customers", label: "Customers" },
-      { id: "analytics", label: "Traffic Analytics" },
-      { id: "analytics", label: "Roles & Permissions" }
-    ]
-  },
-  {
-    title: "Settings",
-    items: [
-      { id: "brand", label: "General Settings" },
-      { id: "contact", label: "Integrations" }
-    ]
-  }
-];
+const adminSectionMeta: Record<AdminSectionId, { title: string; description: string }> = {
+  today: { title: "Operations Dashboard", description: "Real submissions, follow-ups, and project status at a glance." },
+  submissions: { title: "Projects", description: "Manage existing project submissions and project ownership." },
+  customers: { title: "Customers", description: "Review registered customers and their real TYORA activity." },
+  cases: { title: "Cases", description: "Manage TYORA cases and demonstration-project disclosure." },
+  pricing: { title: "Pricing", description: "Maintain the existing central service pricing content." },
+  homepage: { title: "Website Content", description: "Edit homepage campaigns, categories, cases, media, and calls to action." },
+  media: { title: "Media", description: "Manage the existing CMS media library." },
+  team: { title: "Team & Settings", description: "Manage existing team members and roles." },
+  sourceContent: { title: "Source Page", description: "Edit the existing public Source page content." },
+  analytics: { title: "Traffic Analytics", description: "Real Preview traffic and conversion activity." },
+  mobileTabs: { title: "Mobile Navigation", description: "Edit existing mobile-tab labels and destinations." },
+  moduleVisibility: { title: "Homepage Modules", description: "Control existing homepage module visibility." },
+  brand: { title: "Brand & Navigation", description: "Edit navigation, footer, brand assets, and general site settings." },
+  video: { title: "Brand Film", description: "Manage the existing video and cover media." },
+  contact: { title: "Contact Settings", description: "Edit existing public contact destinations." },
+  founder: { title: "Founder Profile", description: "Edit the existing founder profile content." }
+};
 
 const leadStatuses: LeadStatus[] = [
   "New",
@@ -559,6 +523,9 @@ export default function AdminPage() {
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [workOrdersLoading, setWorkOrdersLoading] = useState(false);
+  const [workOrdersError, setWorkOrdersError] = useState("");
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [mediaSearch, setMediaSearch] = useState("");
@@ -596,6 +563,7 @@ export default function AdminPage() {
     void loadAnalytics();
     void loadCommunityAdminData();
     void loadCustomers();
+    void loadWorkOrders();
   }, [authenticated]);
 
   const t = (value: string) => (cmsLanguage === "zh" ? zhText[value] || value : value);
@@ -643,6 +611,24 @@ export default function AdminPage() {
       setCustomers(response.ok && payload.success && Array.isArray(payload.data) ? payload.data : []);
     } catch {
       setCustomers([]);
+    }
+  }
+
+  async function loadWorkOrders() {
+    setWorkOrdersLoading(true);
+    setWorkOrdersError("");
+    try {
+      const response = await fetch("/api/admin/work-orders", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok || !payload.success || !Array.isArray(payload.data)) {
+        throw new Error("Unable to load operations data.");
+      }
+      setWorkOrders(payload.data);
+    } catch {
+      setWorkOrders([]);
+      setWorkOrdersError("Unable to load operations data.");
+    } finally {
+      setWorkOrdersLoading(false);
     }
   }
 
@@ -804,6 +790,46 @@ export default function AdminPage() {
 
   const leadCountries = useMemo(() => uniqueValues(leads.map((lead) => lead.country || "Unspecified")), [leads]);
   const leadCategories = useMemo(() => uniqueValues(leads.map((lead) => lead.category || "Unspecified")), [leads]);
+  const activeSection: AdminSectionId = activeTab === "submissions" && submissionView === "team"
+    ? "team"
+    : activeTab;
+  const sectionMeta = adminSectionMeta[activeSection];
+  const needsReplyCount = workOrders.filter((order) => order.needsReply).length;
+  const canSaveContent = !["today", "analytics", "customers", "submissions", "media"].includes(activeTab);
+  const adminSearchItems = useMemo<AdminSearchItem[]>(() => [
+    ...workOrders.slice(0, 60).map((order) => ({
+      id: `work-order-${order.id}`,
+      label: order.title,
+      description: `${order.type} · ${order.customerName} · ${order.sourceId}`,
+      href: order.type === "Project" ? undefined : order.adminHref,
+      sectionId: order.type === "Project" ? "submissions" as const : undefined,
+      keywords: [order.status, order.country, order.category, ...order.tags].join(" ")
+    })),
+    ...customers.slice(0, 40).map((customer) => ({
+      id: `customer-${customer.id}`,
+      label: customer.name || customer.username || "Customer",
+      description: `Customer · ${customer.email}`,
+      sectionId: "customers" as const,
+      keywords: [customer.country, customer.city, customer.source].join(" ")
+    })),
+    ...communityIdeas.slice(0, 40).map((idea) => ({
+      id: `idea-${idea.id}`,
+      label: idea.title,
+      description: `Idea · ${idea.author.name} · ${idea.status}`,
+      href: "/admin/community",
+      keywords: [idea.category, idea.visibility, idea.pinned ? "pinned" : ""].join(" ")
+    }))
+  ], [communityIdeas, customers, workOrders]);
+
+  function navigateAdmin(section: AdminSectionId) {
+    if (section === "team") {
+      setActiveTab("submissions");
+      setSubmissionView("team");
+      return;
+    }
+    setActiveTab(section);
+    if (section === "submissions") setSubmissionView("projects");
+  }
 
   if (checkingSession) {
     return (
@@ -846,85 +872,34 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f7f9] text-[#101216]">
-      <header className="sticky top-0 z-30 border-b border-[#e8ebef] bg-white/92 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="rounded-lg p-2 hover:bg-[#f5f6f8]" aria-label="Back to site">
-              <ArrowLeft size={20} />
-            </Link>
-            <div>
-              <p className="font-semibold">TYORA OS</p>
-              <p className="text-xs text-[#69707d]">Product Creator Operating System</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <AdminViewCommunityLink className="hidden sm:inline-flex" />
-            <Button variant="outline" className="hidden min-h-10 px-3 sm:inline-flex">
-              <Plus size={15} /> Quick Action
-            </Button>
-            <Button variant="outline" onClick={toggleCmsLanguage}>
-              {cmsLanguage === "en" ? "中文" : "EN"}
-            </Button>
-            <Button onClick={() => persistContent()}>
-              <Save size={16} /> {t("Save Changes")}
-            </Button>
-            <Button variant="outline" onClick={() => void logout()}>
-              <LogOut size={16} /> {t("Logout")}
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       {toast ? (
-        <div className="fixed right-5 top-20 z-50 rounded-lg bg-[#101216] px-4 py-3 text-sm text-white shadow-xl">
+        <div className="fixed right-4 top-20 z-[70] rounded-md bg-[#101828] px-4 py-3 text-sm text-white shadow-xl" role="status">
           {toast}
         </div>
       ) : null}
-
-      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8">
-        <aside className="rounded-[22px] border border-[#e8ebef] bg-white p-4 shadow-sm shadow-[#101216]/4 lg:sticky lg:top-22 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-auto">
-          <div className="mb-4 rounded-2xl bg-[#101216] p-4 text-white">
-            <p className="text-sm font-semibold">Admin workspace</p>
-            <p className="mt-1 text-xs leading-5 text-white/68">Workflow-first control for community, projects, journeys, website and media.</p>
-          </div>
-          <div className="space-y-4">
-            {osSections.map((section) => (
-              <div key={section.title}>
-                <p className="px-3 text-[11px] font-semibold uppercase tracking-normal text-[#8b93a1]">{section.title}</p>
-                <div className="mt-1 space-y-1">
-                  {section.items.map((item) => item.href ? (
-                    <Link key={`${section.title}-${item.label}`} href={item.href} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">
-                      <span>{item.label}</span>
-                    </Link>
-                  ) : (
-                    <button
-                      key={`${section.title}-${item.label}`}
-                      onClick={() => item.id && setActiveTab(item.id)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition ${
-                        activeTab === item.id ? "bg-[#101216] text-white shadow-sm shadow-[#101216]/10" : "text-[#59616e] hover:bg-[#f5f6f8]"
-                      }`}
-                    >
-                      <span>{item.label}</span>
-                      {item.badge ? <span className="text-xs opacity-70">{item.badge}</span> : null}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        <section className="min-w-0 space-y-6">
+      <AdminShell
+        activeSection={activeSection}
+        pageTitle={sectionMeta.title}
+        pageDescription={sectionMeta.description}
+        notificationCount={needsReplyCount}
+        searchItems={adminSearchItems}
+        canSave={canSaveContent}
+        languageLabel={cmsLanguage === "en" ? "中文" : "EN"}
+        onNavigate={navigateAdmin}
+        onNewProject={() => navigateAdmin("submissions")}
+        onSave={() => void persistContent()}
+        onToggleLanguage={toggleCmsLanguage}
+        onLogout={() => void logout()}
+      >
+        <section className="min-w-0 space-y-5">
           {activeTab === "today" ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-semibold text-[#69707d]">TYORA OS</p>
-                <h1 className="mt-1 text-3xl font-semibold">Workbench</h1>
-                <p className="mt-1 text-sm text-[#69707d]">Visitors, requests, replies and follow-up in one place.</p>
-              </div>
-              <WorkOrdersAdminClient embedded />
-            </div>
+            <AdminDashboard
+              orders={workOrders}
+              loading={workOrdersLoading}
+              error={workOrdersError}
+              onRefresh={() => void loadWorkOrders()}
+            />
           ) : null}
 
           {activeTab === "customers" ? <CustomersSection customers={customers} refresh={() => void loadCustomers()} /> : null}
@@ -1347,8 +1322,8 @@ export default function AdminPage() {
             />
           ) : null}
         </section>
-      </div>
-    </main>
+      </AdminShell>
+    </>
   );
 }
 
@@ -1397,174 +1372,6 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
       </div>
     </div>
   );
-}
-
-function TodaySection({
-  analytics,
-  communityIdeas,
-  leads,
-  setActiveTab
-}: {
-  analytics: AnalyticsDashboard | null;
-  communityIdeas: CommunityIdea[];
-  leads: Lead[];
-  setActiveTab: (tab: TabId) => void;
-}) {
-  const waitingIdeas = communityIdeas.filter((idea) => !idea.review && !idea.hidden).slice(0, 8);
-  const recentReviews = communityIdeas.filter((idea) => idea.review).slice(0, 5);
-  const pinnedIdeas = communityIdeas.filter((idea) => idea.pinned).slice(0, 5);
-  const projectsStarted = communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status));
-  const manufacturing = communityIdeas.filter((idea) => idea.status === "Manufacturing").length;
-  const shipping = communityIdeas.filter((idea) => idea.status === "Shipping").length;
-  const completed = communityIdeas.filter((idea) => idea.status === "Completed").length;
-  const likes = communityIdeas.reduce((sum, idea) => sum + idea.likeCount, 0);
-  const liveActivity = [
-    ...communityIdeas.slice(0, 4).map((idea) => `${idea.author.name} uploaded ${idea.title}`),
-    ...recentReviews.map((idea) => `TYORA reviewed ${idea.title}`),
-    ...communityIdeas.flatMap((idea) => idea.comments.slice(-1).map((comment) => `${comment.author.name} commented on ${idea.title}`))
-  ].slice(0, 8);
-
-  const topCards = [
-    ["Ideas Waiting", waitingIdeas.length, "yellow"],
-    ["TYORA Reviews", recentReviews.length, "green"],
-    ["Active Projects", projectsStarted.length, "blue"],
-    ["New Users", Math.max(communityIdeas.length, leads.length), "purple"],
-    ["Total Views", analytics?.summary.pageViewsToday || 0, "gray"],
-    ["Likes", likes, "orange"]
-  ] as const;
-
-  return (
-    <div className="space-y-6">
-      <section className="rounded-[24px] border border-[#e8ebef] bg-white p-6 shadow-sm shadow-[#101216]/4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-sm font-medium text-[#69707d]">Today</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal">Good morning, Adam 👋</h1>
-            <p className="mt-2 text-[#69707d]">Here&apos;s what needs your attention today.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <a href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white"><Plus size={15} /> New Idea</a>
-            <button onClick={() => setActiveTab("submissions")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold"><Plus size={15} /> New Project</button>
-            <button onClick={() => setActiveTab("cases")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold"><Plus size={15} /> Publish Journey</button>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-          {topCards.map(([label, value, tone]) => (
-            <div key={label} className={`rounded-2xl border p-4 ${toneClass(tone)}`}>
-              <p className="text-2xl font-semibold">{value}</p>
-              <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Needs Your Reply</h2>
-              <p className="mt-1 text-sm text-[#69707d]">Ideas waiting for TYORA Expert Review.</p>
-            </div>
-            <a href="/admin/community" className="text-sm font-semibold text-[#315fbd]">Open queue</a>
-          </div>
-          <div className="divide-y divide-[#eef1f4]">
-            {waitingIdeas.length === 0 ? <p className="rounded-2xl bg-[#f7f8fa] p-4 text-sm text-[#69707d]">No ideas waiting for review.</p> : null}
-            {waitingIdeas.map((idea) => (
-              <div key={idea.id} className="grid gap-3 py-4 sm:grid-cols-[52px_1fr_auto] sm:items-center">
-                <div className="flex size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e9f7f3] to-[#efe9ff] text-sm font-semibold">
-                  {idea.title.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{idea.title}</p>
-                  <p className="mt-1 text-sm text-[#69707d]">{idea.author.name} · {relativeTime(idea.createdAt)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <OsStatusBadge status={idea.status} waiting={!idea.review} />
-                  <a href="/admin/community" className="rounded-full bg-[#101216] px-3 py-2 text-xs font-semibold text-white">Reply</a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-          <h2 className="text-xl font-semibold">Product Journeys Overview</h2>
-          <div className="mt-5 grid gap-3">
-            {[
-              ["Active Projects", projectsStarted.length, "bg-[#e9f2ff] text-[#1d4ed8]"],
-              ["Manufacturing", manufacturing, "bg-[#f0eaff] text-[#6d28d9]"],
-              ["Shipping", shipping, "bg-[#fff0df] text-[#c2410c]"],
-              ["Completed", completed, "bg-[#e8f8ef] text-[#15803d]"]
-            ].map(([label, value, cls]) => (
-              <div key={label} className="flex items-center justify-between rounded-2xl border border-[#eef1f4] p-4">
-                <span className="font-medium">{label}</span>
-                <span className={`rounded-full px-3 py-1 text-sm font-semibold ${cls}`}>{value}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-3">
-        <OsListCard title="Recent Community Activity" empty="No community activity yet." items={liveActivity} />
-        <OsListCard title="Pinned Ideas" empty="No pinned ideas." items={pinnedIdeas.map((idea) => idea.title)} />
-        <OsListCard title="Recent TYORA Reviews" empty="No TYORA reviews yet." items={recentReviews.map((idea) => idea.title)} />
-      </section>
-
-      <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-        <div className="mb-4 flex items-center gap-2">
-          <AlertCircle size={18} className="text-[#c2410c]" />
-          <h2 className="text-xl font-semibold">Recent Activity Feed</h2>
-        </div>
-        <div className="grid gap-2 md:grid-cols-2">
-          {liveActivity.length === 0 ? <p className="text-sm text-[#69707d]">Real activity only. Uploads, comments, TYORA reviews and project changes will appear here.</p> : null}
-          {liveActivity.map((item) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{item}</p>)}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function OsListCard({ title, empty, items }: { title: string; empty: string; items: string[] }) {
-  return (
-    <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="mt-4 space-y-2">
-        {items.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">{empty}</p> : null}
-        {items.slice(0, 6).map((item) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{item}</p>)}
-      </div>
-    </Card>
-  );
-}
-
-function OsStatusBadge({ status, waiting }: { status: CommunityStatus; waiting?: boolean }) {
-  const label = waiting ? "Waiting TYORA Review" : status === "TYORA Reviewing" ? "TYORA Replied" : status;
-  const cls = waiting
-    ? "bg-[#fff7d6] text-[#8a5a00]"
-    : status === "Completed"
-      ? "bg-[#e8f8ef] text-[#15803d]"
-      : status === "Project Started"
-        ? "bg-[#e9f2ff] text-[#1d4ed8]"
-        : status === "Manufacturing"
-          ? "bg-[#f0eaff] text-[#6d28d9]"
-          : status === "Shipping"
-            ? "bg-[#fff0df] text-[#c2410c]"
-            : "bg-[#f0eaff] text-[#6d28d9]";
-  return <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${cls}`}>{label}</span>;
-}
-
-function toneClass(tone: string) {
-  if (tone === "green") return "border-[#c9efd8] bg-[#f3fbf6]";
-  if (tone === "yellow") return "border-[#ffe89a] bg-[#fffbea]";
-  if (tone === "blue") return "border-[#c9ddff] bg-[#f4f8ff]";
-  if (tone === "purple") return "border-[#ddd0ff] bg-[#f7f3ff]";
-  if (tone === "orange") return "border-[#ffd8ad] bg-[#fff7ed]";
-  return "border-[#eef1f4] bg-[#fbfbfc]";
-}
-
-function relativeTime(value: string) {
-  const hours = Math.max(1, Math.round((Date.now() - new Date(value).getTime()) / 36e5));
-  return hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
 }
 
 function CeoDashboardSection({
