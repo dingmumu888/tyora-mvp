@@ -135,6 +135,7 @@ test("Admin CMS surfaces expose honest empty states and responsive, accessible c
   assert.match(combined, /min-h-11/);
   assert.match(combined, /focus-visible|focus-within/);
   assert.match(combined, /overflow-x-auto/);
+  assert.match(ui, /cn\("min-w-0", title \|\| description \|\| actions/);
   assert.match(admin, /No team members/);
   assert.match(admin, /No case studies/);
   assert.match(admin, /No pricing plans/);

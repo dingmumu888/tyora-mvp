@@ -28,7 +28,7 @@ export function AdminActionBar({
           {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
         </div>
       ) : null}
-      {children ? <div className={title || description || actions ? "mt-4" : ""}>{children}</div> : null}
+      {children ? <div className={cn("min-w-0", title || description || actions ? "mt-4" : "")}>{children}</div> : null}
     </section>
   );
 }
