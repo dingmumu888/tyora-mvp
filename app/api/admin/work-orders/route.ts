@@ -5,14 +5,18 @@ import { getWorkOrders, updateWorkOrder } from "@/lib/server/work-order-store";
 export async function GET() {
   const unauthorized = await requireAdminSession();
   if (unauthorized) return unauthorized;
-  return ok(await getWorkOrders());
+  return ok(await getWorkOrders(), {
+    headers: { "Cache-Control": "private, no-store" }
+  });
 }
 
 export async function PATCH(request: Request) {
   const unauthorized = await requireAdminSession();
   if (unauthorized) return unauthorized;
   try {
-    return ok(await updateWorkOrder(await request.json()));
+    return ok(await updateWorkOrder(await request.json()), {
+      headers: { "Cache-Control": "private, no-store" }
+    });
   } catch (error) {
     return fail(messageFromError(error, "Unable to update work order."));
   }

@@ -3,7 +3,7 @@ import { hasAdminSession } from "@/lib/server/admin-auth";
 import WorkOrdersAdminClient from "./work-orders-admin-client";
 
 export const metadata = {
-  title: "Work Orders | TYORA Admin",
+  title: "Unified Inbox | TYORA Admin",
   robots: { index: false, follow: false }
 };
 

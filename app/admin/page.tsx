@@ -298,6 +298,7 @@ const zhText: Record<string, string> = {
 
 const adminSectionMeta: Record<AdminSectionId, { title: string; description: string }> = {
   today: { title: "Operations Dashboard", description: "Real submissions, follow-ups, and project status at a glance." },
+  inbox: { title: "Unified Inbox", description: "Review submissions, private context, customer updates, and follow-ups." },
   submissions: { title: "Projects", description: "Manage existing project submissions and project ownership." },
   customers: { title: "Customers", description: "Review registered customers and their real TYORA activity." },
   cases: { title: "Cases", description: "Manage TYORA cases and demonstration-project disclosure." },
@@ -541,6 +542,21 @@ export default function AdminPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [noteAuthor, setNoteAuthor] = useState("Adam");
   const [noteBody, setNoteBody] = useState("");
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("section");
+    if (requested === "team") {
+      setActiveTab("submissions");
+      setSubmissionView("team");
+      return;
+    }
+    const available: TabId[] = [
+      "today", "analytics", "customers", "homepage", "sourceContent", "mobileTabs",
+      "moduleVisibility", "media", "cases", "video", "brand", "founder", "pricing",
+      "contact", "submissions"
+    ];
+    if (available.includes(requested as TabId)) setActiveTab(requested as TabId);
+  }, []);
 
   useEffect(() => {
     void fetch("/api/admin/session")
@@ -822,6 +838,10 @@ export default function AdminPage() {
   ], [communityIdeas, customers, workOrders]);
 
   function navigateAdmin(section: AdminSectionId) {
+    if (section === "inbox") {
+      window.location.assign("/admin/work-orders");
+      return;
+    }
     if (section === "team") {
       setActiveTab("submissions");
       setSubmissionView("team");

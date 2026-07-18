@@ -29,6 +29,7 @@ import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
 
 export type AdminSectionId =
   | "today"
+  | "inbox"
   | "submissions"
   | "customers"
   | "cases"
@@ -72,7 +73,7 @@ const navGroups: NavGroup[] = [
     label: "Workspace",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, sectionId: "today", keywords: "overview kpi" },
-      { label: "Inbox", icon: MessageSquareText, href: "/admin/work-orders", keywords: "requests follow up" },
+      { label: "Inbox", icon: MessageSquareText, href: "/admin/work-orders", sectionId: "inbox", keywords: "requests follow up" },
       { label: "Ideas Moderation", icon: FileSearch, href: "/admin/community", keywords: "community assessment" },
       { label: "Projects", icon: FolderKanban, sectionId: "submissions", keywords: "submissions pipeline" },
       { label: "Customers", icon: Users, sectionId: "customers", keywords: "accounts contacts" }

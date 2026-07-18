@@ -29,11 +29,50 @@ export type WorkOrderContactEvent = {
   createdAt: string;
 };
 
+export type WorkOrderRecordKind = "CommunityIdea" | "CustomInquiry" | "SourceRequest" | "Lead";
+
+export type WorkOrderDetailItem = {
+  label: string;
+  value: string;
+};
+
+export type WorkOrderDocument = {
+  name: string;
+  href: string;
+  access: "Admin only" | "Owner or Admin";
+};
+
+export type WorkOrderAssessment = {
+  manufacturingFeasible?: string;
+  estimatedCostRange?: string;
+  estimatedMoq?: string;
+  assumptions?: string;
+  confidence?: string;
+  assessmentStatus?: string;
+  disclaimer?: string;
+  suggestedMaterial?: string;
+  suggestedManufacturing?: string;
+  moldRequirement?: string;
+  mainRisks?: string;
+  recommendedNextStep?: string;
+  customEligible?: boolean;
+};
+
+export type WorkOrderTimelineItem = {
+  id: string;
+  label: string;
+  detail?: string;
+  actor?: string;
+  createdAt: string;
+  visibility: "Internal" | "Customer visible";
+};
+
 export type WorkOrder = {
   id: string;
   sourceId: string;
   actionId: string;
   type: WorkOrderType;
+  recordKind?: WorkOrderRecordKind;
   status: WorkOrderStatus;
   title: string;
   description: string;
@@ -52,6 +91,15 @@ export type WorkOrder = {
   imageUrls: string[];
   tags: string[];
   internalNotes?: string;
+  internalContext?: string;
+  customerVisibleUpdate?: string;
+  detailItems?: WorkOrderDetailItem[];
+  documents?: WorkOrderDocument[];
+  assessment?: WorkOrderAssessment;
+  serviceMode?: string;
+  feeStatus?: string;
+  owner?: string;
+  timeline?: WorkOrderTimelineItem[];
   contactHistory: WorkOrderContactEvent[];
   lastContactAt?: string;
   nextFollowUpAt?: string;

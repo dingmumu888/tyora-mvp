@@ -51,6 +51,7 @@ if (exists("lib", "server", "work-order-store.ts")) {
   const store = read("lib", "server", "work-order-store.ts");
   [
     "getCommunityIdeas",
+    "getAllCustomInquiriesAdmin",
     "getSourceRequests",
     "getLeads",
     "visibility === \"Private\"",
@@ -80,40 +81,28 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
     "Source",
     "Custom",
     "Project",
-    "Search product, customer, country, ID",
-    "workOrderActionLabel",
-    "Reply / Quote",
-    "Reply to idea",
-    "Review custom request",
-    "Follow up project",
+    "Search product, customer, country, or ID",
     "WhatsApp",
     "Email",
     "internalNotes",
-    "saveWorkOrder",
+    "customerVisibleUpdate",
     "PATCH",
     "Status",
-    "TYORA reply",
     "Internal notes",
+    "Customer-visible update",
     "Save changes",
-    "Handle work order",
     "Record customer contact",
-    "Contact channel",
+    "Channel",
     "Contacted at",
     "Next follow-up",
     "Add contact record",
-    "Latest contact",
-    "event.nextFollowUpAt",
-    "order.contactHistory.map",
-    "Expand work order",
-    "<details",
-    "<summary",
-    "useEffect(() =>",
-    "slice(0, 9)",
-    "grid-cols-3",
-    "grid-cols-1",
-    "grid-cols-2",
-    "imageGridClass",
-    "more images",
+    "Activity timeline",
+    "Structured TYORA assessment",
+    "Documents and private files",
+    "role=\"dialog\"",
+    "xl:grid-cols-[minmax(0,1fr)_420px]",
+    "fixed inset-0 z-50 xl:hidden",
+    "activeSection=\"inbox\"",
     "object-contain"
   ].forEach((text) => {
     if (!client.includes(text)) failures.push(`Work orders client missing: ${text}`);
@@ -128,15 +117,9 @@ if (exists("app", "admin", "work-orders", "work-orders-admin-client.tsx")) {
   }
 }
 
-const admin = read("app", "admin", "page.tsx");
-if (!admin.includes('label: "Workbench"') || !admin.includes("<WorkOrdersAdminClient embedded />")) {
-  failures.push("Admin navigation does not expose the unified Workbench queue.");
-}
-if (admin.includes('label: "Work Orders"')) {
-  failures.push("Admin navigation still exposes Work Orders separately from Workbench.");
-}
-if (admin.includes("{ href: \"/admin/community\", label: \"Ideas\" }") && admin.includes("{ href: \"/admin/source\", label: \"Source Products\" }")) {
-  failures.push("Admin primary navigation still exposes separate Ideas and Source Products entries.");
+const shell = read("components", "admin", "admin-shell.tsx");
+if (!shell.includes('label: "Inbox"') || !shell.includes('href: "/admin/work-orders"') || !shell.includes('sectionId: "inbox"')) {
+  failures.push("Admin shell does not expose the unified Inbox route.");
 }
 
 if (failures.length) {
