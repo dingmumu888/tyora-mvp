@@ -4,7 +4,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Loader2, MessageSquare, Save, Settings2, Trash2, X } from "lucide-react";
 import { CommunityIdea, CommunityModerationStatus } from "@/lib/community";
-import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
+import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
+import { AdminActionBar, AdminEmptyState, AdminMetricCard } from "@/components/admin/admin-ui";
 import { CommunityPageContent, CustomPageContent, defaultContent, SiteContent } from "@/lib/storage";
 
 type QueueFilter = "pending" | "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
@@ -270,41 +271,66 @@ export default function CommunityAdminClient() {
   const communitySettings = siteContent?.communityPage || defaultContent.communityPage;
   const labels = communitySettings.assessmentLabels;
 
-  return (
-    <main className="min-h-screen bg-[#f6f7f9] px-4 py-6 text-[#101216] sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <header className="rounded-[24px] border border-[#e8ebef] bg-white p-6 shadow-sm shadow-[#101216]/4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-[#69707d]">TYORA OS · Community</p>
-            <h1 className="mt-2 text-3xl font-semibold">Ideas Work Queue</h1>
-            <p className="mt-2 text-sm text-[#69707d]">Read founder ideas and publish natural TYORA replies. Keep community management simple and conversational.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/admin" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">Back to Today</Link>
-            <Link href="/admin/custom-inquiries" className="rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">Private Custom Queue</Link>
-            <button type="button" onClick={() => setSettingsOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-[#dfe3e8] px-4 py-2 text-sm font-semibold">
-              <Settings2 size={15} /> Community Settings
-            </button>
-            <AdminViewCommunityLink />
-          </div>
-          </div>
-        </header>
+  function navigateAdmin(section: AdminSectionId) {
+    if (section === "community") return;
+    if (section === "inbox") {
+      window.location.assign("/admin/work-orders");
+      return;
+    }
+    window.location.assign(`/admin?section=${encodeURIComponent(section)}`);
+  }
 
-        <div className="mt-6 grid gap-2 md:grid-cols-3 lg:grid-cols-7">
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => undefined);
+    window.location.assign("/admin");
+  }
+
+  return (
+    <AdminShell
+      activeSection="community"
+      pageTitle="Ideas Moderation"
+      pageDescription="Moderate public Ideas and publish structured TYORA assessments."
+      notificationCount={counts["needs-reply"]}
+      searchItems={ideas.slice(0, 60).map((idea) => ({
+        id: `idea-${idea.id}`,
+        label: idea.title,
+        description: `${idea.moderationStatus} · ${idea.author.name}`,
+        href: "/admin/community",
+        keywords: [idea.category, idea.visibility, idea.hidden ? "hidden" : ""].join(" ")
+      }))}
+      canSave={false}
+      languageLabel="EN"
+      onNavigate={navigateAdmin}
+      onNewProject={() => window.location.assign("/admin?section=submissions")}
+      onSave={() => undefined}
+      onToggleLanguage={() => undefined}
+      onLogout={() => void logout()}
+    >
+      <div className="space-y-4">
+        <AdminActionBar
+          title="Moderation controls"
+          description="Review founder submissions, manage publication status, and keep public assessments clear and consistent."
+          actions={(
+            <>
+              <Link href="/admin/custom-inquiries" className="inline-flex min-h-11 items-center rounded-md border border-[#d0d5dd] bg-white px-4 text-sm font-semibold text-[#344054] hover:bg-[#f9fafb]">Private Custom Queue</Link>
+              <button type="button" onClick={() => setSettingsOpen(true)} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white hover:bg-[#004eeb]">
+              <Settings2 size={15} /> Community Settings
+              </button>
+            </>
+          )}
+        />
+
+        <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
           {buckets.map(([status, label]) => (
-            <button key={status} onClick={() => setActive(status)} className={`rounded-2xl border p-3 text-left shadow-sm shadow-[#101216]/4 ${active === status ? "border-[#101216] bg-[#101216] text-white" : "border-[#e8ebef] bg-white"}`}>
-              <span className="block text-sm font-semibold">{label}</span>
-              <span className="text-xs opacity-70">{counts[status] || 0} posts</span>
-            </button>
+            <AdminMetricCard key={status} label={label} value={counts[status] || 0} detail="posts" active={active === status} onClick={() => setActive(status)} />
           ))}
         </div>
 
         {loading ? <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin" /></div> : (
-          <div className="mt-6 space-y-5">
-            {filtered.length === 0 ? <p className="rounded-[22px] border border-[#e8ebef] bg-white p-6 text-sm text-[#69707d]">No posts in this section.</p> : null}
+          <div className="space-y-4">
+            {filtered.length === 0 ? <AdminEmptyState title="No posts in this section" description="Posts will appear here when they match the selected moderation state." /> : null}
             {filtered.map((idea) => (
-              <article key={idea.id} className="rounded-[22px] border border-[#e8ebef] bg-white p-5 shadow-sm shadow-[#101216]/4">
+              <article key={idea.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm sm:p-5">
                 <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
                   <div>
                     <p className="text-xs text-[#69707d]">{idea.id} · {idea.visibility} · {idea.author.name}</p>
@@ -324,7 +350,7 @@ export default function CommunityAdminClient() {
                       <span>{idea.interestedCount} interested</span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-start justify-between rounded-[20px] border border-[#eef1f4] bg-[#fbfbfc] p-4">
+                  <div className="flex flex-col items-start justify-between rounded-md border border-[#eef1f4] bg-[#f9fafb] p-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b93a1]">TYORA Reply</p>
                       {idea.review ? (
@@ -334,14 +360,14 @@ export default function CommunityAdminClient() {
                       )}
                     </div>
                     <div className="mt-5 flex flex-wrap gap-2">
-                      <button type="button" onClick={() => setReplyingTo(idea)} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white transition hover:bg-[#24272d]">
+                      <button type="button" onClick={() => setReplyingTo(idea)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
                         <MessageSquare size={15} /> Reply
                       </button>
                       <button
                         type="button"
                         onClick={() => void deleteIdea(idea)}
                         disabled={deleting === idea.slug}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#fecdd3] bg-[#fff1f2] px-4 text-sm font-semibold text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60"
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#fecdca] bg-[#fffafa] px-4 text-sm font-semibold text-[#b42318] transition hover:bg-[#fef3f2] disabled:opacity-60"
                       >
                         {deleting === idea.slug ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />}
                         Delete spam / violation
@@ -356,7 +382,7 @@ export default function CommunityAdminClient() {
       </div>
       {replyingTo ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/35 px-3 py-3 backdrop-blur-sm sm:px-4" role="dialog" aria-modal="true">
-          <form onSubmit={(event) => void save(event, replyingTo)} className="max-h-[calc(100vh-24px)] w-full max-w-5xl overflow-y-auto rounded-[24px] border border-[#e8ebef] bg-white p-4 shadow-2xl shadow-[#101216]/20 sm:p-6">
+          <form onSubmit={(event) => void save(event, replyingTo)} className="max-h-[calc(100vh-24px)] w-full max-w-5xl overflow-y-auto rounded-md border border-[#e8ebef] bg-white p-4 shadow-2xl shadow-[#101216]/20 sm:p-6">
             <input type="hidden" name="status" value={replyingTo.status} />
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -431,14 +457,14 @@ export default function CommunityAdminClient() {
               <label className="flex items-center gap-2"><input name="locked" type="checkbox" defaultChecked={replyingTo.locked} /> Lock Comments</label>
               <label className="flex items-center gap-2"><input name="pinned" type="checkbox" defaultChecked={replyingTo.pinned} /> Pin Post</label>
             </div>
-            <div className="mt-3 grid gap-3 rounded-[18px] border border-[#dbeafe] bg-[#f2f7ff] p-4 text-sm sm:grid-cols-[1fr_180px] sm:items-center">
+            <div className="mt-3 grid gap-3 rounded-md border border-[#dbeafe] bg-[#f2f7ff] p-4 text-sm sm:grid-cols-[1fr_180px] sm:items-center">
               <label className="flex items-center gap-2 font-semibold text-[#315fbd]">
                 <input name="homepageFeatured" type="checkbox" defaultChecked={replyingTo.homepageFeatured} />
                 Feature on homepage
               </label>
               <label className="grid gap-1 text-xs font-semibold uppercase tracking-normal text-[#536174]">
                 Showcase slot
-                <select name="homepageFeaturedOrder" defaultValue={replyingTo.homepageFeaturedOrder || 1} className="h-10 rounded-full border border-[#bfdbfe] bg-white px-3 text-sm font-semibold normal-case text-[#101216]">
+                <select name="homepageFeaturedOrder" defaultValue={replyingTo.homepageFeaturedOrder || 1} className="h-11 rounded-md border border-[#bfdbfe] bg-white px-3 text-sm font-semibold normal-case text-[#101216] focus:border-[#155eef] focus:outline-none focus:ring-4 focus:ring-[#155eef]/10">
                   <option value="1">Homepage #1</option>
                   <option value="2">Homepage #2</option>
                   <option value="3">Homepage #3</option>
@@ -446,8 +472,8 @@ export default function CommunityAdminClient() {
               </label>
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" onClick={() => setReplyingTo(null)} className="inline-flex h-11 items-center justify-center rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold">Cancel</button>
-              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white">
+              <button type="button" onClick={() => setReplyingTo(null)} className="inline-flex h-11 items-center justify-center rounded-md border border-[#d0d5dd] px-5 text-sm font-semibold">Cancel</button>
+              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-5 text-sm font-semibold text-white hover:bg-[#004eeb]">
                 {saving === replyingTo.slug ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} Save Review
               </button>
             </div>
@@ -456,7 +482,7 @@ export default function CommunityAdminClient() {
       ) : null}
       {settingsOpen && siteContent ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/35 px-3 py-3 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <form onSubmit={(event) => void saveCommunitySettings(event)} className="max-h-[calc(100vh-24px)] w-full max-w-5xl overflow-y-auto rounded-[24px] bg-white p-4 shadow-2xl sm:p-6">
+          <form onSubmit={(event) => void saveCommunitySettings(event)} className="max-h-[calc(100vh-24px)] w-full max-w-5xl overflow-y-auto rounded-md bg-white p-4 shadow-2xl sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div><p className="text-sm text-[#69707d]">Admin / CMS</p><h2 className="mt-1 text-2xl font-semibold">Community Settings</h2></div>
               <button type="button" onClick={() => setSettingsOpen(false)} className="flex size-10 items-center justify-center rounded-full border border-[#e8ebef]" aria-label="Close settings"><X size={18} /></button>
@@ -497,10 +523,10 @@ export default function CommunityAdminClient() {
               ))}
             </div>
             <p className="mt-4 text-xs leading-5 text-[#69707d]">Categories, campaign content, case images/content, ordering, and homepage visibility remain managed in the main Content and Homepage editors.</p>
-            <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setSettingsOpen(false)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold">Cancel</button><button className="inline-flex h-11 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white">{settingsSaving ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} Save Settings</button></div>
+            <div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" onClick={() => setSettingsOpen(false)} className="h-11 rounded-md border border-[#d0d5dd] px-5 text-sm font-semibold">Cancel</button><button className="inline-flex h-11 items-center gap-2 rounded-md bg-[#155eef] px-5 text-sm font-semibold text-white hover:bg-[#004eeb]">{settingsSaving ? <Loader2 className="animate-spin" size={15} /> : <Save size={15} />} Save Settings</button></div>
           </form>
         </div>
       ) : null}
-    </main>
+    </AdminShell>
   );
 }

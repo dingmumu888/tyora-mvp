@@ -34,6 +34,7 @@ import HomepageContentEditor from "@/components/admin/homepage-content-editor";
 import CmsImageField from "@/components/admin/cms-image-field";
 import AdminDashboard from "@/components/admin/admin-dashboard";
 import AdminShell, { AdminSearchItem, AdminSectionId } from "@/components/admin/admin-shell";
+import { AdminActionBar, AdminEmptyState, AdminMetricCard } from "@/components/admin/admin-ui";
 import {
   CaseStudy,
   CaseStudyStatus,
@@ -299,6 +300,8 @@ const zhText: Record<string, string> = {
 const adminSectionMeta: Record<AdminSectionId, { title: string; description: string }> = {
   today: { title: "Operations Dashboard", description: "Real submissions, follow-ups, and project status at a glance." },
   inbox: { title: "Unified Inbox", description: "Review submissions, private context, customer updates, and follow-ups." },
+  community: { title: "Ideas Moderation", description: "Moderate public Ideas and publish structured TYORA assessments." },
+  sourceQueue: { title: "Source Products Queue", description: "Review supplier-check requests and sourcing progress." },
   submissions: { title: "Projects", description: "Manage existing project submissions and project ownership." },
   customers: { title: "Customers", description: "Review registered customers and their real TYORA activity." },
   cases: { title: "Cases", description: "Manage TYORA cases and demonstration-project disclosure." },
@@ -372,7 +375,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block text-sm font-medium">
+    <label className="block text-sm font-medium text-[#344054]">
       {label}
       <div className="mt-2">{children}</div>
     </label>
@@ -389,7 +392,7 @@ function Toggle({
   label: string;
 }) {
   return (
-    <label className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-[#e8ebef] bg-white px-3 text-sm font-medium">
+    <label className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-medium text-[#344054]">
       {label}
       <input
         type="checkbox"
@@ -840,6 +843,14 @@ export default function AdminPage() {
   function navigateAdmin(section: AdminSectionId) {
     if (section === "inbox") {
       window.location.assign("/admin/work-orders");
+      return;
+    }
+    if (section === "community") {
+      window.location.assign("/admin/community");
+      return;
+    }
+    if (section === "sourceQueue") {
+      window.location.assign("/admin/source");
       return;
     }
     if (section === "team") {
@@ -1356,19 +1367,17 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-[#69707d]">Customers</p>
-          <h1 className="mt-1 text-3xl font-semibold">Email customer records</h1>
-          <p className="mt-1 text-sm text-[#69707d]">People who completed Email Login, with basic activity and acquisition context.</p>
-        </div>
-        <button onClick={refresh} className="h-10 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">Refresh</button>
-      </div>
-      <label className="flex h-11 items-center gap-2 rounded-full border border-[#dfe5ee] bg-white px-4 text-sm">
-        <Search size={16} className="text-[#8791a0]" />
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search email, name, source or country" className="w-full bg-transparent outline-none" />
-      </label>
-      <div className="overflow-x-auto rounded-[22px] border border-[#e1e6ee] bg-white shadow-sm">
+      <AdminActionBar
+        title="Customer directory"
+        description="Email Login accounts with basic activity and acquisition context from the existing customer records."
+        actions={<button onClick={refresh} className="min-h-11 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white hover:bg-[#004eeb]">Refresh</button>}
+      >
+        <label className="flex h-11 max-w-2xl items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm focus-within:border-[#155eef] focus-within:ring-4 focus-within:ring-[#155eef]/10">
+          <Search size={16} className="text-[#667085]" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search email, name, source or country" className="w-full bg-transparent outline-none" />
+        </label>
+      </AdminActionBar>
+      <div className="overflow-x-auto rounded-md border border-[#e4e7ec] bg-white shadow-sm">
         <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="border-b border-[#e8ebef] bg-[#f8fafc] text-xs text-[#687284]">
             <tr>{["Customer", "Source", "Location / IP", "Last login", "Logins", "Ideas", "Comments", "Reactions"].map((label) => <th key={label} className="px-4 py-3 font-semibold">{label}</th>)}</tr>
@@ -1388,7 +1397,7 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
             ))}
           </tbody>
         </table>
-        {!visible.length ? <p className="p-8 text-center text-sm text-[#687284]">No customers found.</p> : null}
+        {!visible.length ? <div className="p-4"><AdminEmptyState title="No customers found" description="Customer records will appear here after a matching Email Login account exists." /></div> : null}
       </div>
     </div>
   );
@@ -1447,33 +1456,21 @@ function CeoDashboardSection({
 
   return (
     <div className="space-y-6">
-      <Card className="p-5">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <BarChart3 size={18} />
-            <div>
-              <h1 className="text-xl font-semibold">{t("CEO Dashboard")}</h1>
-              <p className="text-sm text-[#69707d]">{t("Today Overview")}</p>
-            </div>
-          </div>
-          <Button variant="outline" className="min-h-9 px-3" onClick={refresh} disabled={loading}>
+      <AdminActionBar
+        title={t("Traffic and conversion overview")}
+        description={t("Today Overview")}
+        actions={(
+          <Button variant="outline" onClick={refresh} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </Button>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        )}
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           {summaryCards.map((card) => (
-            <div key={card.label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
-              <div className="mb-3 flex items-center justify-between text-[#69707d]">
-                {card.icon}
-                <span className="text-xs">{card.detail}</span>
-              </div>
-              <p className="text-2xl font-semibold">{card.value}</p>
-              <p className="mt-1 text-sm text-[#69707d]">{card.label}</p>
-            </div>
+            <AdminMetricCard key={card.label} label={card.label} value={card.value} detail={card.detail} />
           ))}
         </div>
-      </Card>
+      </AdminActionBar>
 
       {!analytics ? (
         <Card className="p-8 text-center text-sm text-[#69707d]">
@@ -1980,7 +1977,7 @@ function TeamSettings({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-semibold">{t("Team Settings")}</h2>
         <Button variant="outline" className="min-h-9 px-3" onClick={() => persistTeamMembers([...teamMembers, {
           id: id("member"),
@@ -1994,8 +1991,9 @@ function TeamSettings({
         </Button>
       </div>
       <div className="grid gap-4">
+        {teamMembers.length === 0 ? <AdminEmptyState title="No team members" description="Add a team member to assign existing projects and operational ownership." /> : null}
         {teamMembers.map((member) => (
-          <div key={member.id} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+          <div key={member.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center gap-3">
               <Avatar member={member} />
               <div>
@@ -2149,8 +2147,8 @@ function EditableCards({
   t?: (value: string) => string;
 }) {
   return (
-    <div className="rounded-lg border border-[#e8ebef] p-4">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="rounded-md border border-[#e4e7ec] p-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-semibold">{title}</h2>
         <Button variant="outline" className="min-h-9 px-3" onClick={() => onChange([...cards, { title: t("New Item"), description: "" }])}>
           <Plus size={15} /> {t("Add")}
@@ -2158,11 +2156,11 @@ function EditableCards({
       </div>
       <div className="space-y-4">
         {cards.map((card, index) => (
-          <div key={`${card.title}-${index}`} className="rounded-lg bg-[#fbfbfc] p-3">
+          <div key={`${card.title}-${index}`} className="rounded-md bg-[#f9fafb] p-3">
             <div className="grid gap-3">
               <Input value={card.title} onChange={(event) => onChange(cards.map((item, i) => i === index ? { ...item, title: event.target.value } : item))} />
               <Textarea value={card.description} onChange={(event) => onChange(cards.map((item, i) => i === index ? { ...item, description: event.target.value } : item))} />
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => index > 0 && onChange(cards.map((item, i) => i === index - 1 ? cards[index] : i === index ? cards[index - 1] : item))}>{t("Up")}</Button>
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => index < cards.length - 1 && onChange(cards.map((item, i) => i === index + 1 ? cards[index] : i === index ? cards[index + 1] : item))}>{t("Down")}</Button>
                 <Button variant="ghost" className="min-h-9 px-3" onClick={() => window.confirm(t("Delete this item?")) && onChange(cards.filter((_, i) => i !== index))}>
@@ -2196,7 +2194,7 @@ function CaseStudiesEditor({
 
   return (
     <Card className="p-5">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">{t("Case Studies")}</h1>
         <Button onClick={() => updateContent("cases", [...content.cases, {
           id: id("case"),
@@ -2232,11 +2230,12 @@ function CaseStudiesEditor({
         </Button>
       </div>
       <div className="space-y-5">
+        {content.cases.length === 0 ? <AdminEmptyState title="No case studies" description="Add a case study when a real or clearly disclosed demonstration project is ready for CMS publishing." /> : null}
         {content.cases.map((story, index) => (
-          <div key={story.id} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+          <div key={story.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold">{story.name}</h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => updateCase(index, { visible: !story.visible })}>
                   {story.visible ? <Eye size={15} /> : <EyeOff size={15} />}
                   {story.visible ? t("Visible") : t("Hidden")}
@@ -2315,7 +2314,7 @@ function PricingEditor({
 
   return (
     <Card className="p-5">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">{t("Pricing")}</h1>
         <Button onClick={() => updateContent("pricing", [...content.pricing, {
           id: id("plan"),
@@ -2337,11 +2336,12 @@ function PricingEditor({
         <Field label={t("Proof Line 2")}><Input value={content.pricingProofB} onChange={(event) => updateContent("pricingProofB", event.target.value)} /></Field>
       </div>
       <div className="mt-5 space-y-5">
+        {content.pricing.length === 0 ? <AdminEmptyState title="No pricing plans" description="Add a plan to publish editable service pricing through the existing CMS." /> : null}
         {content.pricing.map((plan, index) => (
-          <div key={plan.id} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+          <div key={plan.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold">{plan.name}</h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => updatePlan(index, { visible: !plan.visible })}>
                   {plan.visible ? t("Visible") : t("Hidden")}
                 </Button>
