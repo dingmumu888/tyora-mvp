@@ -159,3 +159,24 @@ test("Phase 4C UI does not introduce schema, migration, auth bypass, or Producti
   assert.doesNotMatch(combined, /auth.?bypass|development.?login|client.?controlled.?role/i);
   assert.doesNotMatch(combined, /vercel.*prod|--prod|production deployment/i);
 });
+
+test("Ideas feed keeps TYORA Case fields isolated from Community Idea fields", async () => {
+  const [page, storage] = await Promise.all([
+    file("app/ask/page.tsx"),
+    file("lib/storage.ts")
+  ]);
+
+  for (const field of ["name", "shortDescription", "category", "country"]) {
+    const ideaField = field === "name" ? "title" : field === "shortDescription" ? "description" : field;
+    assert.match(page, new RegExp(`story \\? story\\.${field} : idea!\\.${ideaField}`));
+  }
+  assert.match(page, /story \? story\.coverImage\.desktopUrl : idea!\.imageUrls\[0\]/);
+  assert.doesNotMatch(page, /story\?\.(?:name|shortDescription|category|country)\s*\|\|\s*idea!/);
+  assert.match(storage, /id: "tyora-phone-stand-demonstration"[\s\S]*?country: ""/);
+});
+
+test("Ideas compatibility route resolves to the community feed", async () => {
+  const ideasRoute = await file("app/ideas/page.tsx");
+
+  assert.match(ideasRoute, /redirect\("\/ask"\)/);
+});

@@ -123,11 +123,11 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
   if (!idea && !story) return null;
   const status = story ? caseStatus(story) : idea!.status;
   const progress = statusProgress(status);
-  const title = story?.name || idea!.title;
-  const description = story?.shortDescription || idea!.description;
-  const category = story?.category || idea!.category;
-  const country = story?.country || idea!.country;
-  const imageUrl = story?.coverImage.desktopUrl || idea?.imageUrls[0];
+  const title = story ? story.name : idea!.title;
+  const description = story ? story.shortDescription : idea!.description;
+  const category = story ? story.category : idea!.category;
+  const country = story ? story.country : idea!.country;
+  const imageUrl = story ? story.coverImage.desktopUrl : idea!.imageUrls[0];
   const href = story ? `/ask/case/${encodeURIComponent(story.slug)}` : `/ask/${idea!.slug}`;
   const authorName = story ? "TYORA" : idea!.author.name;
 
