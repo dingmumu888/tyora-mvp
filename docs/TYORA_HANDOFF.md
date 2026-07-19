@@ -1,5 +1,35 @@
 # TYORA Handoff
 
+## Phase 5A Checkpoint
+
+- Branch: `phase-5a/workflow-schema`
+- Base commit: `5b377dfb21b92ab6d37439923050328d29654022`
+- Scope: additive workflow schema and migration preparation only
+- Migration prepared: `20260720010000_phase_5a_submission_workflow`
+- Migration applied: **No**
+- Database connections or writes: **None**
+- Deployment: **None**
+
+Phase 5A adds a shared `SubmissionWorkflow` extension over the existing Idea, Custom inquiry, Source request, and Lead records. It also prepares immutable workflow-status and moderation/visibility audit events, nullable `TeamMember` ownership, integer minor-unit commercial fields, and explicit privacy state. Existing source models and `WorkOrderContactEvent` remain unchanged.
+
+The reviewed legacy mapping and guarded backfill proposal are documented in `docs/phase-5a-workflow-migration.md`. Ambiguous legacy statuses are not inferred and must be marked for manual review during a separately approved Preview-only Phase 5B backfill.
+
+Phase 5A verification:
+
+| Check | Result |
+| --- | --- |
+| Prisma format and schema validation | Passed using a non-routable local placeholder URL; no database connection |
+| Phase 5A schema/migration tests | Passed, 7/7 |
+| Relevant regression and safety tests | Passed, 93/93 |
+| TypeScript | Passed |
+| ESLint | Passed with 0 errors and 9 pre-existing warnings in untouched files |
+| Safety lint | Passed with 0 errors and 0 warnings |
+| Local production build | Passed with non-routable database and disabled external-service placeholders |
+| Security scan | Passed |
+| Credential scan | Passed; no credentials or tracked real environment files detected |
+
+Remaining Phase 5 work requires separate approval: apply the migration to Preview, run a guarded backfill, connect the existing server/Admin workflow to persisted data, and complete authorization/privacy acceptance. Do not apply this migration to any database from this checkpoint.
+
 ## Repository
 
 - Repository: `tyora-mvp`

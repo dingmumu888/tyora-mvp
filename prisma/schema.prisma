@@ -7,6 +7,85 @@ datasource db {
   provider = "postgresql"
 }
 
+enum SubmissionRecordKind {
+  COMMUNITY_IDEA
+  CUSTOM_INQUIRY
+  SOURCE_REQUEST
+  LEAD
+}
+
+enum SubmissionType {
+  IDEA
+  CUSTOM
+  SOURCE
+  PROJECT
+}
+
+enum WorkflowQualification {
+  UNREVIEWED
+  QUALIFIED
+  NEED_MORE_INFORMATION
+  OUT_OF_SCOPE
+  LOW_BUDGET
+  HIGH_RISK
+  SPAM
+}
+
+enum SubmissionWorkflowStatus {
+  NEW
+  UNDER_REVIEW
+  REVIEW_SENT
+  QUALIFIED
+  KICKOFF_PENDING
+  FACTORY_SOURCING
+  QUOTING
+  SAMPLING
+  PRODUCTION
+  QUALITY_INSPECTION
+  DELIVERED
+  REORDER
+  CLOSED
+  LOST
+}
+
+enum WorkflowServiceModel {
+  FREE_ASSESSMENT
+  SOURCE_INTRODUCTION
+  SOURCE_MANAGED
+  CUSTOM_INTRODUCTION
+  CUSTOM_MANAGED
+  REORDER_MANAGED
+  INSPECTION_ONLY
+}
+
+enum WorkflowPaymentStatus {
+  NOT_REQUIRED
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  REFUNDED
+  CANCELLED
+}
+
+enum WorkflowPrivacyState {
+  PUBLIC
+  PRIVATE
+}
+
+enum ModerationVisibilityAction {
+  APPROVE
+  HIDE
+  UNHIDE
+  ARCHIVE
+  RESTORE
+  MARK_SPAM
+  FEATURE
+  UNFEATURE
+  SET_PUBLIC
+  SET_PRIVATE
+  CONFIRM_PRIVATE_TO_PUBLIC
+}
+
 model SiteContent {
   id        String   @id @default("default")
   data      String
@@ -63,14 +142,17 @@ model MediaAsset {
 }
 
 model TeamMember {
-  id        String   @id
-  name      String
-  avatar    String
-  email     String
-  role      String
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                              String                           @id
+  name                            String
+  avatar                          String
+  email                           String
+  role                            String
+  active                          Boolean                          @default(true)
+  assignedSubmissionWorkflows     SubmissionWorkflow[]             @relation("WorkflowAssignedOwner")
+  workflowStatusEvents            WorkflowStatusEvent[]            @relation("WorkflowStatusActor")
+  moderationVisibilityAuditEvents ModerationVisibilityAuditEvent[] @relation("ModerationVisibilityActor")
+  createdAt                       DateTime                         @default(now())
+  updatedAt                       DateTime                         @updatedAt
 
   @@index([active])
   @@index([role])
@@ -203,6 +285,96 @@ model WorkOrderContactEvent {
   @@index([workOrderId])
   @@index([contactedAt])
   @@index([nextFollowUpAt])
+}
+
+model SubmissionWorkflow {
+  id                         String                           @id
+  recordKind                 SubmissionRecordKind
+  sourceId                   String
+  submissionType             SubmissionType
+  qualification              WorkflowQualification            @default(UNREVIEWED)
+  workflowStatus             SubmissionWorkflowStatus         @default(NEW)
+  assignedOwnerId            String?
+  assignedOwner              TeamMember?                      @relation("WorkflowAssignedOwner", fields: [assignedOwnerId], references: [id], onDelete: SetNull)
+  nextFollowUpAt             DateTime?
+  lastContactAt              DateTime?
+  productCategoryFit         String?
+  budgetFit                  String?
+  designReadiness            String?
+  targetQuantity             String?
+  targetMarket               String?
+  salesChannel               String?
+  complianceRisk             String?
+  manufacturingComplexity    String?
+  internalSummary            String?
+  recommendedNextStep        String?
+  serviceModel               WorkflowServiceModel?
+  paymentStatus              WorkflowPaymentStatus            @default(NOT_REQUIRED)
+  estimatedOrderValueMinor   BigInt?
+  feePercentageBasisPoints   Int?
+  minimumFeeMinor            BigInt?
+  finalAgreedServiceFeeMinor BigInt?
+  kickoffFeeMinor            BigInt?
+  currencyCode               String?                          @db.VarChar(3)
+  customerSnapshotJson       String                           @default("{}")
+  privacyState               WorkflowPrivacyState
+  legacyStatus               String?
+  manualReviewRequired       Boolean                          @default(false)
+  manualReviewReason         String?
+  submittedAt                DateTime
+  statusEvents               WorkflowStatusEvent[]
+  moderationVisibilityEvents ModerationVisibilityAuditEvent[]
+  createdAt                  DateTime                         @default(now())
+  updatedAt                  DateTime                         @updatedAt
+
+  @@unique([recordKind, sourceId])
+  @@index([submissionType])
+  @@index([qualification])
+  @@index([workflowStatus])
+  @@index([assignedOwnerId])
+  @@index([nextFollowUpAt])
+  @@index([privacyState])
+  @@index([submittedAt])
+}
+
+model WorkflowStatusEvent {
+  id                      String                    @id
+  workflowId              String
+  workflow                SubmissionWorkflow        @relation(fields: [workflowId], references: [id], onDelete: Restrict)
+  previousStatus          SubmissionWorkflowStatus?
+  newStatus               SubmissionWorkflowStatus
+  actorId                 String?
+  actor                   TeamMember?               @relation("WorkflowStatusActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorIdentifierSnapshot String
+  actorLabelSnapshot      String
+  note                    String?
+  createdAt               DateTime                  @default(now())
+
+  @@index([workflowId, createdAt])
+  @@index([actorId])
+  @@index([newStatus])
+}
+
+model ModerationVisibilityAuditEvent {
+  id                       String                     @id
+  workflowId               String
+  workflow                 SubmissionWorkflow         @relation(fields: [workflowId], references: [id], onDelete: Restrict)
+  action                   ModerationVisibilityAction
+  previousModerationStatus String?
+  newModerationStatus      String?
+  previousPrivacyState     WorkflowPrivacyState?
+  newPrivacyState          WorkflowPrivacyState?
+  privateToPublicConfirmed Boolean                    @default(false)
+  actorId                  String?
+  actor                    TeamMember?                @relation("ModerationVisibilityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorIdentifierSnapshot  String
+  actorLabelSnapshot       String
+  note                     String?
+  createdAt                DateTime                   @default(now())
+
+  @@index([workflowId, createdAt])
+  @@index([actorId])
+  @@index([action])
 }
 
 model CommunityIdea {
