@@ -51,19 +51,27 @@ This handoff document is the only file added after the implementation commit.
 | Credential scan | Passed; no credentials detected in the change |
 | Vercel Preview deployment | Ready on the implementation commit |
 
-## Known Issue
+## Manual Acceptance
 
-The reported issue is: **the “Preview Test Product” row in Admin Unified Inbox is not clickable**.
+**Passed.** The previously reported issue, **the “Preview Test Product” row in Admin Unified Inbox is not clickable**, is resolved on the branch-specific Preview deployment.
 
-The current hotfix implements whole-row and title-link navigation to the existing private Admin Custom inquiry workspace. Authenticated manual acceptance on the new branch-specific Preview domain is still pending, so the issue should remain open until a reviewer logs in and confirms the real `Preview Test Product` row opens the matching inquiry detail.
+Manual authenticated verification confirmed that the latest Preview Admin Unified Inbox row opens the correct private Custom inquiry detail with these values:
+
+- Product: `Preview Test Product`
+- Customer: `7630330@qq.com`
+- Category: `Phone & Device Accessories`
+- Quantity: `500 units`
+- Market: `United States`
+- Status: `Needs Reply`
+- Privacy: `Private and confidential`
+- Files: `0`
+- The Preview-only test description is correct.
+
+The row-navigation hotfix is therefore accepted for this Preview branch.
 
 ## Recommended Next Step
 
-1. Sign in at the Preview Admin URL above.
-2. Open Unified Inbox and activate `Preview Test Product` once by clicking the title and once by keyboard from the row.
-3. Confirm the detail view opens the matching real submission ID and shows `Needs Reply`, the confidentiality indicator, submitted fields, and file count.
-4. Confirm an invalid submission URL produces the safe not-found state.
-5. Accept or revise this hotfix based on that Preview-only manual check. Do not merge to `main` or deploy Production without separate approval.
+Keep this accepted hotfix on its non-production branch until a separate instruction explicitly approves the next phase or a merge. Do not merge to `main` or deploy Production without separate approval.
 
 ## Isolation Statement
 
