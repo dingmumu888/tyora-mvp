@@ -20,6 +20,7 @@
     "test:phase4a": "node --no-warnings --test scripts/phase-4a-admin-dashboard-test.mjs",
     "test:phase4b": "node --no-warnings --test scripts/phase-4b-unified-inbox-test.mjs",
     "test:phase4c": "node --no-warnings --test scripts/phase-4c-admin-cms-unification-test.mjs",
+    "test:hotfix:admin-inquiry-link": "node --no-warnings --test scripts/admin-custom-inquiry-row-link-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",
     "db:init": "node scripts/init-db.mjs",
     "db:push": "prisma db push",

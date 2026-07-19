@@ -107,3 +107,23 @@ export type WorkOrder = {
   publicHref?: string;
   adminHref: string;
 };
+
+export type WorkOrderDetailTarget = {
+  submissionId?: string;
+  recordKind?: string;
+};
+
+export function workOrderDetailHref(order: Pick<WorkOrder, "sourceId" | "recordKind">) {
+  const params = new URLSearchParams({ submission: order.sourceId });
+  if (order.recordKind) params.set("kind", order.recordKind);
+  return `/admin/work-orders?${params.toString()}`;
+}
+
+export function findWorkOrderByDetailTarget(orders: WorkOrder[], target: WorkOrderDetailTarget) {
+  const submissionId = target.submissionId?.trim();
+  if (!submissionId) return undefined;
+  return orders.find((order) => (
+    order.sourceId === submissionId &&
+    (!target.recordKind || order.recordKind === target.recordKind)
+  ));
+}

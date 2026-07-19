@@ -2,7 +2,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   CalendarClock,
@@ -22,7 +23,13 @@ import {
   X
 } from "lucide-react";
 import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
-import { WorkOrder, WorkOrderStatus, WorkOrderType } from "@/lib/work-orders";
+import {
+  findWorkOrderByDetailTarget,
+  workOrderDetailHref,
+  WorkOrder,
+  WorkOrderStatus,
+  WorkOrderType
+} from "@/lib/work-orders";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -242,6 +249,9 @@ function WorkOrderWorkspace({
           </div>
           <h2 className="mt-2 break-words text-lg font-bold">{order.title}</h2>
           <p className="mt-1 break-all text-xs text-[#667085]">{order.sourceId}</p>
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded bg-amber-50 px-2 py-1 text-xs font-bold text-amber-900 ring-1 ring-amber-200">
+            <LockKeyhole size={13} aria-hidden="true" /> Private and confidential · {order.documents?.length || 0} file{order.documents?.length === 1 ? "" : "s"}
+          </p>
         </div>
         <button ref={closeRef} type="button" onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-md border border-[#d0d5dd] bg-white hover:bg-[#f2f4f7]" aria-label="Close detail workspace">
           <X size={19} />
@@ -379,9 +389,17 @@ function WorkOrderWorkspace({
   );
 }
 
-function InboxContent() {
+function InboxContent({
+  initialSubmissionId,
+  initialRecordKind
+}: {
+  initialSubmissionId?: string;
+  initialRecordKind?: string;
+}) {
+  const router = useRouter();
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
+  const [selectionMissing, setSelectionMissing] = useState(false);
   const [filter, setFilter] = useState<QueueFilter>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | WorkOrderStatus>("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -407,12 +425,31 @@ function InboxContent() {
 
   useEffect(() => { void loadOrders(); }, []);
   useEffect(() => {
+    if (loading || !initialSubmissionId) {
+      if (!initialSubmissionId) setSelectionMissing(false);
+      return;
+    }
+    const target = findWorkOrderByDetailTarget(orders, {
+      submissionId: initialSubmissionId,
+      recordKind: initialRecordKind
+    });
+    setSelectedId(target?.id);
+    setSelectionMissing(!target);
+  }, [initialRecordKind, initialSubmissionId, loading, orders]);
+
+  const closeWorkspace = useCallback(() => {
+    setSelectedId(undefined);
+    setSelectionMissing(false);
+    router.replace("/admin/work-orders", { scroll: false });
+  }, [router]);
+
+  useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setSelectedId(undefined);
+      if (event.key === "Escape") closeWorkspace();
     }
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, []);
+  }, [closeWorkspace]);
 
   const categories = useMemo(() => ["All", ...Array.from(new Set(orders.map((order) => order.category).filter((value): value is string => Boolean(value)))).sort()], [orders]);
   const selected = orders.find((order) => order.id === selectedId);
@@ -437,6 +474,12 @@ function InboxContent() {
 
   function saveWorkOrder(updated: WorkOrder) {
     setOrders((current) => current.map((order) => order.id === updated.id ? updated : order));
+  }
+
+  function openOrder(order: WorkOrder) {
+    setSelectionMissing(false);
+    setSelectedId(order.id);
+    router.push(workOrderDetailHref(order), { scroll: false });
   }
 
   return (
@@ -470,6 +513,12 @@ function InboxContent() {
       </div>
 
       {message ? <p className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">{message}</p> : null}
+      {selectionMissing && !loading ? (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+          <div><strong>Submission not found.</strong> It may have been removed or is no longer accessible to this Admin session.</div>
+          <Link href="/admin/work-orders" onClick={() => setSelectionMissing(false)} className="rounded-md bg-white px-3 py-2 font-bold ring-1 ring-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155eef]">Return to Inbox</Link>
+        </div>
+      ) : null}
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
         <section className="min-w-0 overflow-hidden rounded-md border border-[#e4e7ec] bg-white shadow-sm" aria-label="Unified Inbox">
           <div className="flex min-h-12 items-center justify-between border-b border-[#e4e7ec] px-4">
@@ -488,7 +537,22 @@ function InboxContent() {
           ) : (
             <div className="divide-y divide-[#eaecf0]">
               {visibleOrders.map((order) => (
-                <button key={order.id} type="button" onClick={() => setSelectedId(order.id)} className={`grid min-h-[112px] w-full grid-cols-[52px_minmax(0,1fr)] gap-3 p-3 text-left hover:bg-[#f9fafb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#155eef] sm:grid-cols-[60px_minmax(0,1fr)_150px] sm:p-4 ${selectedId === order.id ? "bg-[#eef4ff]" : ""}`} aria-pressed={selectedId === order.id}>
+                <div
+                  key={order.id}
+                  role="link"
+                  tabIndex={0}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("a,button,input,select,textarea")) return;
+                    openOrder(order);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+                    event.preventDefault();
+                    openOrder(order);
+                  }}
+                  className={`grid min-h-[112px] w-full cursor-pointer grid-cols-[52px_minmax(0,1fr)] gap-3 p-3 text-left hover:bg-[#f9fafb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#155eef] sm:grid-cols-[60px_minmax(0,1fr)_150px] sm:p-4 ${selectedId === order.id ? "bg-[#eef4ff]" : ""}`}
+                  aria-label={`Open ${order.title} submission`}
+                >
                   <span className="grid size-[52px] place-items-center overflow-hidden rounded-md bg-[#f2f4f7] sm:size-[60px]">
                     {order.imageUrls[0] ? <img src={order.imageUrls[0]} alt="" className="size-full object-contain p-1" /> : <span className="text-xs font-bold text-[#667085]">{order.type.slice(0, 2).toUpperCase()}</span>}
                   </span>
@@ -497,14 +561,24 @@ function InboxContent() {
                       <span className={`rounded px-2 py-1 text-[10px] font-bold ${typeTone[order.type]}`}>{order.type}</span>
                       <span className={`rounded px-2 py-1 text-[10px] font-bold ring-1 ${statusTone[order.status]}`}>{order.status}</span>
                     </span>
-                    <span className="mt-1.5 block truncate text-sm font-bold sm:text-base">{order.title}</span>
+                    <Link
+                      href={workOrderDetailHref(order)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectionMissing(false);
+                        setSelectedId(order.id);
+                      }}
+                      className="mt-1.5 block truncate text-sm font-bold text-[#101828] underline-offset-2 hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155eef] sm:text-base"
+                    >
+                      {order.title}
+                    </Link>
                     <span className="mt-1 block truncate text-xs text-[#667085]">{order.customerName} · {order.country}</span>
                     <span className="mt-1 block truncate text-xs text-[#98a2b3]">{order.category || "Uncategorized"} · {formatDate(order.submittedAt)}</span>
                   </span>
                   <span className="hidden min-w-0 self-center text-xs text-[#667085] sm:block">
                     {order.nextFollowUpAt ? <><span className="block font-bold text-[#155eef]">Follow-up</span><span className="mt-1 block">{formatDate(order.nextFollowUpAt)}</span></> : <><span className="block font-bold text-[#475467]">Updated</span><span className="mt-1 block">{formatDate(order.updatedAt)}</span></>}
                   </span>
-                </button>
+                </div>
               ))}
             </div>
           )}
@@ -513,7 +587,7 @@ function InboxContent() {
         <aside className="hidden min-h-0 xl:block">
           {selected ? (
             <div className="sticky top-[92px] h-[calc(100vh-116px)] min-h-[620px]">
-              <WorkOrderWorkspace order={selected} onClose={() => setSelectedId(undefined)} onSaved={saveWorkOrder} />
+              <WorkOrderWorkspace order={selected} onClose={closeWorkspace} onSaved={saveWorkOrder} />
             </div>
           ) : (
             <div className="sticky top-[92px] grid min-h-[420px] place-items-center rounded-md border border-dashed border-[#d0d5dd] bg-white p-8 text-center">
@@ -525,9 +599,9 @@ function InboxContent() {
 
       {selected ? (
         <div className="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal="true" aria-label={`${selected.title} detail workspace`}>
-          <button type="button" className="absolute inset-0 bg-[#101828]/55" onClick={() => setSelectedId(undefined)} aria-label="Close detail overlay" />
+          <button type="button" className="absolute inset-0 bg-[#101828]/55" onClick={closeWorkspace} aria-label="Close detail overlay" />
           <aside className="absolute inset-y-0 right-0 w-[min(620px,100vw)] overflow-hidden shadow-2xl">
-            <WorkOrderWorkspace order={selected} onClose={() => setSelectedId(undefined)} onSaved={saveWorkOrder} />
+            <WorkOrderWorkspace order={selected} onClose={closeWorkspace} onSaved={saveWorkOrder} />
           </aside>
         </div>
       ) : null}
@@ -535,7 +609,15 @@ function InboxContent() {
   );
 }
 
-export default function WorkOrdersAdminClient({ embedded = false }: { embedded?: boolean }) {
+export default function WorkOrdersAdminClient({
+  embedded = false,
+  initialSubmissionId,
+  initialRecordKind
+}: {
+  embedded?: boolean;
+  initialSubmissionId?: string;
+  initialRecordKind?: string;
+}) {
   const [needsReplyCount, setNeedsReplyCount] = useState(0);
 
   useEffect(() => {
@@ -545,7 +627,7 @@ export default function WorkOrdersAdminClient({ embedded = false }: { embedded?:
       .catch(() => setNeedsReplyCount(0));
   }, []);
 
-  if (embedded) return <InboxContent />;
+  if (embedded) return <InboxContent initialSubmissionId={initialSubmissionId} initialRecordKind={initialRecordKind} />;
 
   function navigateAdmin(section: AdminSectionId) {
     if (section === "inbox") return;
@@ -572,7 +654,7 @@ export default function WorkOrdersAdminClient({ embedded = false }: { embedded?:
       onToggleLanguage={() => undefined}
       onLogout={() => void logout()}
     >
-      <InboxContent />
+      <InboxContent initialSubmissionId={initialSubmissionId} initialRecordKind={initialRecordKind} />
     </AdminShell>
   );
 }

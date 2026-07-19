@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ArrowRight,
@@ -14,7 +15,7 @@ import {
   UsersRound
 } from "lucide-react";
 import { createAdminDashboardSnapshot } from "@/lib/admin-dashboard";
-import { WorkOrder, WorkOrderStatus, WorkOrderType } from "@/lib/work-orders";
+import { workOrderDetailHref, WorkOrder, WorkOrderStatus, WorkOrderType } from "@/lib/work-orders";
 
 const metricIcons = {
   "new-submissions": FileInput,
@@ -71,7 +72,7 @@ function OrderIdentity({ order }: { order: WorkOrder }) {
         ) : order.type.slice(0, 2).toUpperCase()}
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-bold text-[#101828]">{order.title}</p>
+        <Link href={workOrderDetailHref(order)} onClick={(event) => event.stopPropagation()} className="block truncate rounded-sm text-sm font-bold text-[#101828] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155eef]">{order.title}</Link>
         <p className="truncate text-xs text-[#667085]">{order.sourceId}</p>
       </div>
     </div>
@@ -101,7 +102,18 @@ export default function AdminDashboard({
   error: string;
   onRefresh: () => void;
 }) {
+  const router = useRouter();
   const snapshot = createAdminDashboardSnapshot(orders);
+
+  function openOrder(order: WorkOrder) {
+    router.push(workOrderDetailHref(order));
+  }
+
+  function handleRowKeyDown(event: React.KeyboardEvent<HTMLElement>, order: WorkOrder) {
+    if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    openOrder(order);
+  }
 
   if (loading) {
     return (
@@ -172,7 +184,18 @@ export default function AdminDashboard({
                 </thead>
                 <tbody className="divide-y divide-[#eaecf0]">
                   {snapshot.inbox.map((order) => (
-                    <tr key={order.id} className="hover:bg-[#fcfcfd]">
+                    <tr
+                      key={order.id}
+                      role="link"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        if ((event.target as HTMLElement).closest("a,button,input,select,textarea")) return;
+                        openOrder(order);
+                      }}
+                      onKeyDown={(event) => handleRowKeyDown(event, order)}
+                      className="cursor-pointer hover:bg-[#fcfcfd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#155eef]"
+                      aria-label={`Open ${order.title} submission`}
+                    >
                       <td className="max-w-72 px-4 py-3"><OrderIdentity order={order} /></td>
                       <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-xs font-bold ${typeTone[order.type]}`}>{order.type}</span></td>
                       <td className="max-w-48 truncate px-4 py-3 text-[#475467]">{order.customerName}</td>
@@ -186,7 +209,18 @@ export default function AdminDashboard({
             </div>
             <div className="divide-y divide-[#eaecf0] md:hidden">
               {snapshot.inbox.map((order) => (
-                <article key={order.id} className="p-4">
+                <article
+                  key={order.id}
+                  role="link"
+                  tabIndex={0}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("a,button,input,select,textarea")) return;
+                    openOrder(order);
+                  }}
+                  onKeyDown={(event) => handleRowKeyDown(event, order)}
+                  className="cursor-pointer p-4 hover:bg-[#fcfcfd] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#155eef]"
+                  aria-label={`Open ${order.title} submission`}
+                >
                   <OrderIdentity order={order} />
                   <div className="mt-3 flex flex-wrap gap-2">
                     <span className={`rounded-full px-2 py-1 text-xs font-bold ${typeTone[order.type]}`}>{order.type}</span>
