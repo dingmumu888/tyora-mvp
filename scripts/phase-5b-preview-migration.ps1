@@ -205,19 +205,16 @@ $browseButton.Add_Click({
         $dialog.DereferenceLinks = $true
         if ($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
             $candidatePath = [System.IO.Path]::GetFullPath($dialog.FileName)
-            if (-not (Test-Phase5bCertificateSelection -CertificatePath $candidatePath)) {
-                throw [System.InvalidOperationException]::new('certificate_invalid')
-            }
             $script:selectedCertificatePath = $candidatePath
             $certificateBox.Text = 'certificate selected'
-            $statusLabel.Text = 'certificate_selected'
+            $statusLabel.Text = 'certificate_selected_pending_validation'
             $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(5, 150, 105)
         }
     }
     catch {
         $script:selectedCertificatePath = $null
         $certificateBox.Clear()
-        $statusLabel.Text = 'certificate_invalid'
+        $statusLabel.Text = 'certificate_selection_failed'
         $statusLabel.ForeColor = [System.Drawing.Color]::FromArgb(220, 38, 38)
     }
     finally {

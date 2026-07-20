@@ -83,8 +83,18 @@ try {
     $migrationGuiSource = [System.IO.File]::ReadAllText(
         (Join-Path $PSScriptRoot 'phase-5b-preview-migration.ps1')
     )
-    if ($migrationGuiSource -notmatch 'Test-Phase5bCertificateSelection\s+-CertificatePath\s+\$candidatePath') {
-        throw [System.InvalidOperationException]::new('Browse handler does not use path-only certificate selection validation')
+    $browseHandler = [regex]::Match(
+        $migrationGuiSource,
+        '(?s)\$browseButton\.Add_Click\(\{(?<body>.*?)\n\}\)\s*\r?\n\s*\r?\n\$note'
+    )
+    if (-not $browseHandler.Success) {
+        throw [System.InvalidOperationException]::new('Browse handler was not found')
+    }
+    if ($browseHandler.Groups['body'].Value -match 'Test-Phase5bCertificate(File|Selection)') {
+        throw [System.InvalidOperationException]::new('Browse handler must defer certificate parsing until Continue')
+    }
+    if ($browseHandler.Groups['body'].Value -notmatch 'certificate_selected_pending_validation') {
+        throw [System.InvalidOperationException]::new('Browse handler does not report deferred validation')
     }
     if ($migrationGuiSource -notmatch 'Test-Phase5bCertificateFile\s+-CertificatePath\s+\$script:selectedCertificatePath') {
         throw [System.InvalidOperationException]::new('Continue handler does not perform shared certificate content validation')
