@@ -90,6 +90,14 @@ test("homepage remains honest, image-led, and useful with an empty Preview commu
   assert.doesNotMatch(combined, /Idea2Product|idea2product\.co|提奥拉|提拉/);
 });
 
+test("Ideas feed keeps TYORA case fallbacks separate from community Idea records", async () => {
+  const ideas = await file("app/ask/page.tsx");
+
+  assert.match(ideas, /const country = story \? story\.country : idea\?\.country/);
+  assert.match(ideas, /const imageUrl = story \? story\.coverImage\.desktopUrl : idea\?\.imageUrls\[0\]/);
+  assert.doesNotMatch(ideas, /story\?\.country \|\| idea!\.country/);
+});
+
 test("public contact paths and core accessibility contracts remain present", async () => {
   const [home, custom, source, legal, sharePanel, globalCss] = await Promise.all([
     file("app/home-client.tsx"),
@@ -101,6 +109,7 @@ test("public contact paths and core accessibility contracts remain present", asy
   ]);
 
   assert.match(home, /<h1/);
+  assert.match(home, /inline-flex min-h-11 items-center gap-1\.5 text-sm font-semibold/);
   assert.match(custom, /<label/);
   assert.match(source, /<label|WhatsAppNumberInput/);
   assert.match(legal, /mailto:support@tyora\.io/);

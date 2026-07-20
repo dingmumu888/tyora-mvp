@@ -139,7 +139,7 @@ function HomepagePostCard({
               <span className="inline-flex items-center gap-1.5"><MessageCircle size={16} /> {stats.comments}</span>
             </div>
           ) : <span />}
-          <Link href={href} className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#155eef]">
+          <Link href={href} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#155eef]">
             {ctaText || "Open Idea"} <ArrowRight size={15} />
           </Link>
         </div>
