@@ -96,6 +96,21 @@ try {
     if ($browseHandler.Groups['body'].Value -notmatch 'certificate_selected_pending_validation') {
         throw [System.InvalidOperationException]::new('Browse handler does not report deferred validation')
     }
+    if ($browseHandler.Groups['body'].Value -notmatch "PSObject\.Properties\['AddToRecent'\]") {
+        throw [System.InvalidOperationException]::new('Browse handler does not guard the PowerShell 7-only AddToRecent property')
+    }
+
+    Add-Type -AssemblyName System.Windows.Forms
+    $compatibilityDialog = New-Object System.Windows.Forms.OpenFileDialog
+    try {
+        if ($compatibilityDialog.PSObject.Properties['AddToRecent']) {
+            $compatibilityDialog.AddToRecent = $false
+        }
+    }
+    finally {
+        $compatibilityDialog.Dispose()
+        $compatibilityDialog = $null
+    }
     if ($migrationGuiSource -notmatch 'Test-Phase5bCertificateFile\s+-CertificatePath\s+\$script:selectedCertificatePath') {
         throw [System.InvalidOperationException]::new('Continue handler does not perform shared certificate content validation')
     }

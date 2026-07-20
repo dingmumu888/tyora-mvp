@@ -200,7 +200,9 @@ $browseButton.Add_Click({
         $dialog.CheckPathExists = $true
         $dialog.Multiselect = $false
         $dialog.RestoreDirectory = $true
-        $dialog.AddToRecent = $false
+        if ($dialog.PSObject.Properties['AddToRecent']) {
+            $dialog.AddToRecent = $false
+        }
         $dialog.ValidateNames = $true
         $dialog.DereferenceLinks = $true
         if ($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
