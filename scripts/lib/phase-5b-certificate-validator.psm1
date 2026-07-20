@@ -5,12 +5,11 @@ function Test-Phase5bCertificateFile {
     param([Parameter(Mandatory = $true)][string]$CertificatePath)
 
     $certificateBytes = $null
-    $certificateText = $null
-    $normalizedText = $null
-    $decodedByteArrays = @()
-    $certificates = @()
-    $strictUtf8 = $null
+    $certificateBase64 = $null
     $certificateInfo = $null
+    $process = $null
+    $safeOutput = $null
+    $discardedError = $null
     try {
         $extension = [System.IO.Path]::GetExtension($CertificatePath).ToLowerInvariant()
         $certificateInfo = [System.IO.FileInfo]::new($CertificatePath)
@@ -19,100 +18,62 @@ function Test-Phase5bCertificateFile {
             $extension -notin @('.crt', '.cer', '.pem') -or
             -not $certificateInfo.Exists -or
             $certificateInfo.Length -le 0 -or
-            $certificateInfo.Length -gt 16384 -or
+            $certificateInfo.Length -gt 262144 -or
             (($certificateInfo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)
         ) {
             return $false
         }
 
         $certificateBytes = [System.IO.File]::ReadAllBytes($CertificatePath)
-        $strictUtf8 = [System.Text.UTF8Encoding]::new($false, $true)
-        try {
-            $certificateText = $strictUtf8.GetString($certificateBytes)
+        if ($certificateBytes.Length -le 0 -or $certificateBytes.Length -gt 262144) {
+            return $false
         }
-        catch {
-            $certificateText = $null
+        $certificateBase64 = [Convert]::ToBase64String($certificateBytes)
+
+        $nodeCommand = Get-Command node -ErrorAction Stop
+        $validatorPath = [System.IO.Path]::GetFullPath(
+            (Join-Path $PSScriptRoot '..\phase-5b-certificate-validator.mjs')
+        )
+        if (-not [System.IO.File]::Exists($validatorPath) -or $validatorPath.Contains('"')) {
+            return $false
         }
 
-        $beginMarker = '-----BEGIN CERTIFICATE-----'
-        $endMarker = '-----END CERTIFICATE-----'
-        if ($null -ne $certificateText -and $certificateText.Contains($beginMarker)) {
-            if ($certificateText.Length -gt 0 -and $certificateText[0] -eq [char]0xFEFF) {
-                $certificateText = $certificateText.Substring(1)
-            }
-            $normalizedText = $certificateText.Replace("`r`n", "`n").Replace("`r", "`n")
-            $pemPattern = '-----BEGIN CERTIFICATE-----\s*(?<body>[A-Za-z0-9+/=\s]+?)\s*-----END CERTIFICATE-----'
-            $pemMatches = [regex]::Matches(
-                $normalizedText,
-                $pemPattern,
-                [System.Text.RegularExpressions.RegexOptions]::CultureInvariant
-            )
-            $beginCount = [regex]::Matches($normalizedText, [regex]::Escape($beginMarker)).Count
-            $endCount = [regex]::Matches($normalizedText, [regex]::Escape($endMarker)).Count
-            if ($pemMatches.Count -eq 0 -or $beginCount -ne $endCount -or $pemMatches.Count -ne $beginCount) {
-                return $false
-            }
+        $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+        $startInfo.FileName = $nodeCommand.Source
+        $startInfo.Arguments = '"' + $validatorPath + '"'
+        $startInfo.UseShellExecute = $false
+        $startInfo.CreateNoWindow = $true
+        $startInfo.RedirectStandardInput = $true
+        $startInfo.RedirectStandardOutput = $true
+        $startInfo.RedirectStandardError = $true
 
-            foreach ($pemMatch in $pemMatches) {
-                $base64Body = [regex]::Replace($pemMatch.Groups['body'].Value, '\s', '')
-                if (-not $base64Body) { return $false }
-                $decodedBytes = [Convert]::FromBase64String($base64Body)
-                $decodedByteArrays += ,$decodedBytes
-                $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
-                    $decodedBytes
-                )
-                $certificates += $certificate
-            }
-        }
-        else {
-            $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
-                $certificateBytes
-            )
-            $certificates += $certificate
-        }
+        $process = [System.Diagnostics.Process]::new()
+        $process.StartInfo = $startInfo
+        if (-not $process.Start()) { return $false }
+        $process.StandardInput.Write($certificateBase64)
+        $process.StandardInput.Close()
+        $safeOutput = $process.StandardOutput.ReadToEnd()
+        $discardedError = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
 
-        foreach ($certificate in $certificates) {
-            foreach ($certificateExtension in $certificate.Extensions) {
-                if ($certificateExtension.Oid.Value -ne '2.5.29.19') { continue }
-
-                if ($certificateExtension -is [System.Security.Cryptography.X509Certificates.X509BasicConstraintsExtension]) {
-                    $basicConstraints = $certificateExtension
-                }
-                else {
-                    $basicConstraints = [System.Security.Cryptography.X509Certificates.X509BasicConstraintsExtension]::new()
-                    $basicConstraints.CopyFrom($certificateExtension)
-                }
-                if ($basicConstraints.CertificateAuthority) { return $true }
-            }
-        }
-        $false
+        $process.ExitCode -eq 0 -and $safeOutput.Trim() -eq 'certificate_valid'
     }
     catch {
         $false
     }
     finally {
         if ($certificateBytes) { [Array]::Clear($certificateBytes, 0, $certificateBytes.Length) }
-        foreach ($decodedBytes in $decodedByteArrays) {
-            if ($decodedBytes) { [Array]::Clear($decodedBytes, 0, $decodedBytes.Length) }
-        }
-        foreach ($certificate in $certificates) {
-            if ($certificate) { $certificate.Dispose() }
-        }
+        if ($process) { $process.Dispose() }
         $certificateBytes = $null
-        $certificateText = $null
-        $normalizedText = $null
-        $decodedByteArrays = @()
-        $certificates = @()
-        $strictUtf8 = $null
+        $certificateBase64 = $null
         $certificateInfo = $null
+        $process = $null
+        $safeOutput = $null
+        $discardedError = $null
         $extension = $null
-        $pemMatches = $null
-        $pemMatch = $null
-        $base64Body = $null
-        $decodedBytes = $null
-        $certificate = $null
-        $certificateExtension = $null
-        $basicConstraints = $null
+        $nodeCommand = $null
+        $validatorPath = $null
+        $startInfo = $null
     }
 }
 

@@ -1,5 +1,7 @@
-import { createHash, X509Certificate } from "node:crypto";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+
+import { parseSelectedCertificateAuthorities } from "./preview-credential-readonly-check.mjs";
 
 import {
   canonicalizeMigrationSqlForChecksum,
@@ -81,13 +83,9 @@ export async function readAndValidatePhase5bCertificate(certificatePath) {
     throw new Phase5bPreviewMigrationError("The selected Preview TLS certificate is invalid.");
   }
   try {
-    const text = bytes.toString("ascii");
-    const match = text.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/);
-    const certificate = new X509Certificate(match?.[0] || bytes);
-    if (!certificate.ca) {
-      throw new Phase5bPreviewMigrationError("The selected Preview TLS certificate is not a CA certificate.");
-    }
-    return { bytes, certificateBase64: bytes.toString("base64") };
+    const certificateBase64 = bytes.toString("base64");
+    parseSelectedCertificateAuthorities(certificateBase64);
+    return { bytes, certificateBase64 };
   } catch (error) {
     bytes.fill(0);
     if (error instanceof Phase5bPreviewMigrationError) throw error;

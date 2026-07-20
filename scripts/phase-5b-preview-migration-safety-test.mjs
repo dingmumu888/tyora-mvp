@@ -90,8 +90,12 @@ test("history guard accepts only exact prerequisites and the pinned migration", 
 
 test("selected CA is parsed locally and used with verified TLS/SNI", async () => {
   const directory = await mkdtemp(join(tmpdir(), "tyora-phase5b-test-"));
-  const certificatePath = join(directory, "preview-ca.pem");
-  await writeFile(certificatePath, tls.rootCertificates[0], "utf8");
+  const certificatePath = join(directory, "prod-ca-2021 (1).crt");
+  const crlfPem = tls.rootCertificates[0].replace(/\r?\n/g, "\r\n");
+  await writeFile(
+    certificatePath,
+    Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(crlfPem, "utf8")])
+  );
   let data;
   try {
     data = await readAndValidatePhase5bCertificate(certificatePath);
@@ -148,12 +152,14 @@ test("runner uses migrate deploy only and keeps output redacted", async () => {
   assert.doesNotMatch(backfill, /UPDATE\s+"(CommunityIdea|CustomInquiry|SourceRequest|Lead)"/i);
 });
 
-test("GUI keeps secrets masked and out of command-line arguments", async () => {
-  const [gui, consoleWrapper, certificateParser, certificateParserTest] = await Promise.all([
+test("GUI keeps secrets masked and reuses the read-only certificate loader", async () => {
+  const [gui, consoleWrapper, certificateLoader, certificateValidator, certificateParserTest, safety] = await Promise.all([
     file("scripts/phase-5b-preview-migration.ps1"),
     file("scripts/phase-5b-preview-migration-console.ps1"),
     file("scripts/lib/phase-5b-certificate-validator.psm1"),
-    file("scripts/phase-5b-certificate-parser-test.ps1")
+    file("scripts/phase-5b-certificate-validator.mjs"),
+    file("scripts/phase-5b-certificate-parser-test.ps1"),
+    file("scripts/lib/phase-5b-preview-migration-safety.mjs")
   ]);
   assert.match(gui, /UseSystemPasswordChar = \$true/g);
   assert.match(gui, /Test-TyoraPreviewTarget/);
@@ -163,14 +169,15 @@ test("GUI keeps secrets masked and out of command-line arguments", async () => {
   assert.doesNotMatch(gui, /-ArgumentList[^\n]*(Password|DirectUrl|CertificatePath)/i);
   assert.match(consoleWrapper, /phase-5b-preview-migration\.mjs/);
   assert.doesNotMatch(consoleWrapper, /Write-(Host|Output)[^\n]*\$env:/i);
-  assert.match(certificateParser, /@\('\.crt', '\.cer', '\.pem'\)/);
-  assert.match(certificateParser, /UTF8Encoding/);
-  assert.match(certificateParser, /\[char\]0xFEFF/);
-  assert.match(certificateParser, /Replace\("`r`n", "`n"\)\.Replace\("`r", "`n"\)/);
-  assert.match(certificateParser, /FromBase64String/);
-  assert.match(certificateParser, /X509BasicConstraintsExtension/);
-  assert.doesNotMatch(certificateParser, /CreateFromPem/);
-  assert.match(certificateParserTest, /utf8-bom-crlf\.crt/);
+  assert.match(certificateLoader, /@\('\.crt', '\.cer', '\.pem'\)/);
+  assert.match(certificateLoader, /ReadAllBytes/);
+  assert.match(certificateLoader, /RedirectStandardInput = \$true/);
+  assert.match(certificateLoader, /phase-5b-certificate-validator\.mjs/);
+  assert.doesNotMatch(certificateLoader, /X509Certificate2|CreateFromPem/);
+  assert.match(certificateValidator, /parseSelectedCertificateAuthorities/);
+  assert.doesNotMatch(certificateValidator, /fetch\(|https?:\/\//);
+  assert.match(safety, /parseSelectedCertificateAuthorities\(certificateBase64\)/);
+  assert.match(certificateParserTest, /prod-ca-2021 \(1\)\.crt/);
   assert.match(certificateParserTest, /utf8-lf\.pem/);
   assert.match(certificateParserTest, /binary\.cer/);
 });

@@ -45,7 +45,7 @@ try {
     $derBytes = [Convert]::FromBase64String([regex]::Replace($match.Groups['body'].Value, '\s', ''))
 
     $lfPemPath = Join-Path $testDirectory 'utf8-lf.pem'
-    $crlfBomCrtPath = Join-Path $testDirectory 'utf8-bom-crlf.crt'
+    $crlfBomCrtPath = Join-Path $testDirectory 'prod-ca-2021 (1).crt'
     $derCerPath = Join-Path $testDirectory 'binary.cer'
     $invalidPemPath = Join-Path $testDirectory 'invalid.pem'
     $unsupportedPath = Join-Path $testDirectory 'unsupported.txt'
