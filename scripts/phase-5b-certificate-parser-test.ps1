@@ -68,11 +68,27 @@ try {
     )
     [System.IO.File]::WriteAllText($unsupportedPath, $pem, [System.Text.UTF8Encoding]::new($false))
 
+    Assert-Phase5bCertificateResult (Test-Phase5bCertificateSelection $lfPemPath) $true 'Browse accepts UTF-8 LF PEM path'
+    Assert-Phase5bCertificateResult (Test-Phase5bCertificateSelection $crlfBomCrtPath) $true 'Browse accepts Windows UTF-8 BOM CRLF CRT path'
+    Assert-Phase5bCertificateResult (Test-Phase5bCertificateSelection $derCerPath) $true 'Browse accepts DER CER path'
+    Assert-Phase5bCertificateResult (Test-Phase5bCertificateSelection $invalidPemPath) $true 'Browse defers certificate content validation'
+    Assert-Phase5bCertificateResult (Test-Phase5bCertificateSelection $unsupportedPath) $false 'Browse rejects unsupported extension'
+
     Assert-Phase5bCertificateResult (Test-Phase5bCertificateFile $lfPemPath) $true 'UTF-8 LF PEM'
     Assert-Phase5bCertificateResult (Test-Phase5bCertificateFile $crlfBomCrtPath) $true 'UTF-8 BOM CRLF CRT'
     Assert-Phase5bCertificateResult (Test-Phase5bCertificateFile $derCerPath) $true 'DER CER'
     Assert-Phase5bCertificateResult (Test-Phase5bCertificateFile $invalidPemPath) $false 'invalid PEM'
     Assert-Phase5bCertificateResult (Test-Phase5bCertificateFile $unsupportedPath) $false 'unsupported extension'
+
+    $migrationGuiSource = [System.IO.File]::ReadAllText(
+        (Join-Path $PSScriptRoot 'phase-5b-preview-migration.ps1')
+    )
+    if ($migrationGuiSource -notmatch 'Test-Phase5bCertificateSelection\s+-CertificatePath\s+\$candidatePath') {
+        throw [System.InvalidOperationException]::new('Browse handler does not use path-only certificate selection validation')
+    }
+    if ($migrationGuiSource -notmatch 'Test-Phase5bCertificateFile\s+-CertificatePath\s+\$script:selectedCertificatePath') {
+        throw [System.InvalidOperationException]::new('Continue handler does not perform shared certificate content validation')
+    }
 
     'phase5b_certificate_parser_tests_pass'
 }

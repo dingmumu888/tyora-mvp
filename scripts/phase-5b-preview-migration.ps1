@@ -205,7 +205,7 @@ $browseButton.Add_Click({
         $dialog.DereferenceLinks = $true
         if ($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
             $candidatePath = [System.IO.Path]::GetFullPath($dialog.FileName)
-            if (-not (Test-Phase5bCertificateFile -CertificatePath $candidatePath)) {
+            if (-not (Test-Phase5bCertificateSelection -CertificatePath $candidatePath)) {
                 throw [System.InvalidOperationException]::new('certificate_invalid')
             }
             $script:selectedCertificatePath = $candidatePath

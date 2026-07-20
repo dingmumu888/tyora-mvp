@@ -1,5 +1,29 @@
 Set-StrictMode -Version Latest
 
+function Test-Phase5bCertificateSelection {
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)][string]$CertificatePath)
+
+    $certificateInfo = $null
+    try {
+        $extension = [System.IO.Path]::GetExtension($CertificatePath).ToLowerInvariant()
+        $certificateInfo = [System.IO.FileInfo]::new($CertificatePath)
+        -not $CertificatePath.StartsWith('\\') -and
+            $extension -in @('.crt', '.cer', '.pem') -and
+            $certificateInfo.Exists -and
+            $certificateInfo.Length -gt 0 -and
+            $certificateInfo.Length -le 262144 -and
+            (($certificateInfo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -eq 0)
+    }
+    catch {
+        $false
+    }
+    finally {
+        $certificateInfo = $null
+        $extension = $null
+    }
+}
+
 function Test-Phase5bCertificateFile {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$CertificatePath)
@@ -11,19 +35,11 @@ function Test-Phase5bCertificateFile {
     $safeOutput = $null
     $discardedError = $null
     try {
-        $extension = [System.IO.Path]::GetExtension($CertificatePath).ToLowerInvariant()
-        $certificateInfo = [System.IO.FileInfo]::new($CertificatePath)
-        if (
-            $CertificatePath.StartsWith('\\') -or
-            $extension -notin @('.crt', '.cer', '.pem') -or
-            -not $certificateInfo.Exists -or
-            $certificateInfo.Length -le 0 -or
-            $certificateInfo.Length -gt 262144 -or
-            (($certificateInfo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)
-        ) {
+        if (-not (Test-Phase5bCertificateSelection -CertificatePath $CertificatePath)) {
             return $false
         }
 
+        $certificateInfo = [System.IO.FileInfo]::new($CertificatePath)
         $certificateBytes = [System.IO.File]::ReadAllBytes($CertificatePath)
         if ($certificateBytes.Length -le 0 -or $certificateBytes.Length -gt 262144) {
             return $false
@@ -77,4 +93,4 @@ function Test-Phase5bCertificateFile {
     }
 }
 
-Export-ModuleMember -Function Test-Phase5bCertificateFile
+Export-ModuleMember -Function Test-Phase5bCertificateSelection, Test-Phase5bCertificateFile
