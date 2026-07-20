@@ -149,15 +149,28 @@ test("runner uses migrate deploy only and keeps output redacted", async () => {
 });
 
 test("GUI keeps secrets masked and out of command-line arguments", async () => {
-  const [gui, consoleWrapper] = await Promise.all([
+  const [gui, consoleWrapper, certificateParser, certificateParserTest] = await Promise.all([
     file("scripts/phase-5b-preview-migration.ps1"),
-    file("scripts/phase-5b-preview-migration-console.ps1")
+    file("scripts/phase-5b-preview-migration-console.ps1"),
+    file("scripts/lib/phase-5b-certificate-validator.psm1"),
+    file("scripts/phase-5b-certificate-parser-test.ps1")
   ]);
   assert.match(gui, /UseSystemPasswordChar = \$true/g);
   assert.match(gui, /Test-TyoraPreviewTarget/);
   assert.match(gui, /EscapeDataString\(\$passwordValue\)/);
   assert.match(gui, /PREVIEW_SSL_CA_PATH/);
+  assert.match(gui, /phase-5b-certificate-validator\.psm1/);
   assert.doesNotMatch(gui, /-ArgumentList[^\n]*(Password|DirectUrl|CertificatePath)/i);
   assert.match(consoleWrapper, /phase-5b-preview-migration\.mjs/);
   assert.doesNotMatch(consoleWrapper, /Write-(Host|Output)[^\n]*\$env:/i);
+  assert.match(certificateParser, /@\('\.crt', '\.cer', '\.pem'\)/);
+  assert.match(certificateParser, /UTF8Encoding/);
+  assert.match(certificateParser, /\[char\]0xFEFF/);
+  assert.match(certificateParser, /Replace\("`r`n", "`n"\)\.Replace\("`r", "`n"\)/);
+  assert.match(certificateParser, /FromBase64String/);
+  assert.match(certificateParser, /X509BasicConstraintsExtension/);
+  assert.doesNotMatch(certificateParser, /CreateFromPem/);
+  assert.match(certificateParserTest, /utf8-bom-crlf\.crt/);
+  assert.match(certificateParserTest, /utf8-lf\.pem/);
+  assert.match(certificateParserTest, /binary\.cer/);
 });

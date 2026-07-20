@@ -5,6 +5,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 Import-Module (Join-Path $PSScriptRoot 'lib\preview-target-validator.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'lib\preview-bootstrap-gui-result.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'lib\phase-5b-certificate-validator.psm1') -Force
 
 $script:finalStatus = $null
 $script:selectedCertificatePath = $null
@@ -52,65 +53,6 @@ function Normalize-Phase5bDirectUrlTemplate {
 
     if (-not $value) { throw [System.InvalidOperationException]::new('direct_url_empty') }
     $value
-}
-
-function Test-Phase5bCertificateFile {
-    param([Parameter(Mandatory = $true)][string]$CertificatePath)
-
-    $certificateBytes = $null
-    $certificate = $null
-    try {
-        $extension = [System.IO.Path]::GetExtension($CertificatePath).ToLowerInvariant()
-        $certificateInfo = [System.IO.FileInfo]::new($CertificatePath)
-        if (
-            $CertificatePath.StartsWith('\\') -or
-            $extension -notin @('.crt', '.cer', '.pem') -or
-            -not $certificateInfo.Exists -or
-            $certificateInfo.Length -le 0 -or
-            $certificateInfo.Length -gt 16384 -or
-            (($certificateInfo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)
-        ) {
-            return $false
-        }
-
-        $certificateBytes = [System.IO.File]::ReadAllBytes($CertificatePath)
-        $certificateText = [System.Text.Encoding]::ASCII.GetString($certificateBytes)
-        if ($certificateText.Contains('-----BEGIN CERTIFICATE-----')) {
-            $pemMatch = [regex]::Match(
-                $certificateText,
-                '-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----'
-            )
-            if (-not $pemMatch.Success) { return $false }
-            $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::CreateFromPem(
-                $pemMatch.Value
-            )
-        }
-        else {
-            $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
-                $certificateBytes
-            )
-        }
-
-        $basicConstraints = @(
-            $certificate.Extensions | Where-Object {
-                $_ -is [System.Security.Cryptography.X509Certificates.X509BasicConstraintsExtension]
-            }
-        ) | Select-Object -First 1
-        $null -ne $basicConstraints -and $basicConstraints.CertificateAuthority
-    }
-    catch {
-        $false
-    }
-    finally {
-        if ($certificateBytes) { [Array]::Clear($certificateBytes, 0, $certificateBytes.Length) }
-        if ($certificate) { $certificate.Dispose() }
-        $certificateBytes = $null
-        $certificateText = $null
-        $pemMatch = $null
-        $basicConstraints = $null
-        $certificateInfo = $null
-        $extension = $null
-    }
 }
 
 function Invoke-Phase5bMigrationConsole {
