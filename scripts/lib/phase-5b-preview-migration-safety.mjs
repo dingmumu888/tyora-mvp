@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import * as tls from "node:tls";
 
 import { parseSelectedCertificateAuthorities } from "./preview-credential-readonly-check.mjs";
 
@@ -95,6 +96,29 @@ export async function readAndValidatePhase5bCertificate(certificatePath) {
 
 export function createPhase5bConnectionConfig(previewDirectUrl, certificateBase64) {
   return createPreviewBootstrapConnectionConfig(previewDirectUrl, certificateBase64);
+}
+
+export function assertPhase5bConnectedPreviewIdentity({ connectionConfig, stream, identityRow }) {
+  const ssl = connectionConfig?.ssl;
+  if (identityRow?.databaseName !== "postgres") {
+    throw new Phase5bPreviewMigrationError("Preview database identity verification failed.");
+  }
+  if (
+    connectionConfig?.database !== "postgres" ||
+    connectionConfig?.port !== 5432 ||
+    !connectionConfig?.host ||
+    !ssl ||
+    ssl.rejectUnauthorized !== true ||
+    ssl.servername !== connectionConfig.host ||
+    ssl.checkServerIdentity !== tls.checkServerIdentity ||
+    !Array.isArray(ssl.ca) ||
+    ssl.ca.length === 0 ||
+    stream?.encrypted !== true ||
+    stream?.authorized !== true
+  ) {
+    throw new Phase5bPreviewMigrationError("Preview database client TLS verification failed.");
+  }
+  return { databaseName: "postgres", tlsVerified: true };
 }
 
 export function createPhase5bPrismaUrl(previewDirectUrl, certificatePath) {

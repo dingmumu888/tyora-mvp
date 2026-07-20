@@ -12,6 +12,7 @@ import { backfillSubmissionWorkflows } from "./lib/phase-5b-backfill.mjs";
 import {
   assertPhase5bMigrationChecksum,
   assertPhase5bTypedConfirmation,
+  assertPhase5bConnectedPreviewIdentity,
   createPhase5bConnectionConfig,
   createPhase5bPrismaUrl,
   inspectPhase5bMigrationHistory,
@@ -113,14 +114,13 @@ async function readOnlyPreviewEvidence(connectionConfig) {
     await client.query("BEGIN READ ONLY");
     transactionOpen = true;
     const identity = await client.query(`
-      SELECT current_database() AS "databaseName",
-             EXISTS (
-               SELECT 1 FROM pg_stat_ssl WHERE pid = pg_backend_pid() AND ssl = true
-             ) AS "tlsEnabled"
+      SELECT current_database() AS "databaseName"
     `);
-    if (identity.rows[0]?.databaseName !== "postgres" || identity.rows[0]?.tlsEnabled !== true) {
-      throw new Phase5bPreviewMigrationError("Preview database identity or TLS verification failed.");
-    }
+    assertPhase5bConnectedPreviewIdentity({
+      connectionConfig,
+      stream: client.connection?.stream,
+      identityRow: identity.rows[0]
+    });
     const history = await client.query(`
       SELECT "migration_name", "checksum", "finished_at", "rolled_back_at", "logs"
       FROM "_prisma_migrations"

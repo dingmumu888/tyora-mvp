@@ -8,6 +8,7 @@ import test from "node:test";
 import {
   assertPhase5bMigrationChecksum,
   assertPhase5bTypedConfirmation,
+  assertPhase5bConnectedPreviewIdentity,
   createPhase5bConnectionConfig,
   createPhase5bPrismaUrl,
   inspectPhase5bMigrationHistory,
@@ -112,6 +113,35 @@ test("selected CA is parsed locally and used with verified TLS/SNI", async () =>
   }
 });
 
+test("connected Preview identity uses verified client TLS rather than pooler backend pg_stat_ssl", () => {
+  const certificateBase64 = Buffer.from(tls.rootCertificates[0], "utf8").toString("base64");
+  const connectionConfig = createPhase5bConnectionConfig(fakeDirectUrl, certificateBase64);
+  assert.deepEqual(
+    assertPhase5bConnectedPreviewIdentity({
+      connectionConfig,
+      stream: { encrypted: true, authorized: true },
+      identityRow: { databaseName: "postgres" }
+    }),
+    { databaseName: "postgres", tlsVerified: true }
+  );
+  assert.throws(
+    () => assertPhase5bConnectedPreviewIdentity({
+      connectionConfig,
+      stream: { encrypted: true, authorized: false },
+      identityRow: { databaseName: "postgres" }
+    }),
+    /client TLS verification failed/
+  );
+  assert.throws(
+    () => assertPhase5bConnectedPreviewIdentity({
+      connectionConfig,
+      stream: { encrypted: true, authorized: true },
+      identityRow: { databaseName: "production" }
+    }),
+    /identity verification failed/
+  );
+});
+
 test("Prisma migrate URL retains Preview target and forces CA verification", () => {
   const url = new URL(createPhase5bPrismaUrl(fakeDirectUrl, "C:\\safe-fake\\preview-ca.pem"));
   assert.equal(url.hostname, "ap-northeast-1.pooler.supabase.com");
@@ -138,6 +168,8 @@ test("runner uses migrate deploy only and keeps output redacted", async () => {
   assert.match(runner, /chunk\.fill\(0\)/);
   assert.match(runner, /const immediateIdentity = validatePhase5bPreviewTarget\(targetEnvironment\)/);
   assert.match(runner, /const immediateCertificate = await readAndValidatePhase5bCertificate\(certificatePath\)/);
+  assert.match(runner, /assertPhase5bConnectedPreviewIdentity/);
+  assert.doesNotMatch(runner, /pg_stat_ssl/);
   assert.match(runner, /assertPhase5bMigrationChecksum\(await readFile\(migrationPath, "utf8"\)\)/);
   assert.doesNotMatch(runner, /console\.(log|error)\([^\n]*(directUrl|prismaUrl|password|certificatePath)/);
   assert.doesNotMatch(runner, /db\s+push|migrate\s+dev|migrate\s+reset|seed|cleanup/i);
