@@ -22,6 +22,7 @@
     "test:phase4c": "node --no-warnings --test scripts/phase-4c-admin-cms-unification-test.mjs",
     "test:phase5a": "node --no-warnings --test scripts/phase-5a-workflow-schema-test.mjs",
     "test:phase5b": "node --no-warnings --test scripts/phase-5b-workflow-foundation-test.mjs scripts/phase-5b-preview-migration-safety-test.mjs",
+    "test:phase6": "node --no-warnings --test scripts/phase-6-final-qa-test.mjs",
     "test:hotfix:admin-inquiry-link": "node --no-warnings --test scripts/admin-custom-inquiry-row-link-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",
     "db:preview:phase5b": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase-5b-preview-migration.ps1",

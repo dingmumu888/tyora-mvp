@@ -16,7 +16,11 @@ export const revalidate = 0;
 
 export const metadata = {
   title: "My TYORA | Creator Activity",
-  description: "Your TYORA discussions, comments, liked ideas, and notifications."
+  description: "Your TYORA discussions, comments, liked ideas, and notifications.",
+  robots: {
+    index: false,
+    follow: false
+  }
 };
 
 const myTyoraDesktopNav = [

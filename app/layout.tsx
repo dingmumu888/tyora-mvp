@@ -5,9 +5,10 @@ import AnalyticsPageTracker from "@/components/analytics-page-tracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.tyora.io"),
   title: "TYORA | Product Development & Manufacturing in China",
   description:
-    "Product development, factory sourcing, and small-batch manufacturing support in China for overseas small brands and sellers.",
+    "TYORA helps small brands develop, source, and manufacture consumer products in China with transparent factory pricing and flexible project support.",
   keywords: [
     "product development",
     "manufacturing China",
@@ -18,8 +19,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: "TYORA | Product Development & Manufacturing in China",
     description:
-      "Product development, factory sourcing, and small-batch manufacturing support in China for overseas small brands and sellers.",
-    type: "website"
+      "TYORA helps small brands develop, source, and manufacture consumer products in China with transparent factory pricing and flexible project support.",
+    type: "website",
+    url: "/"
+  },
+  alternates: {
+    canonical: "/"
   }
 };
 

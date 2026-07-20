@@ -35,9 +35,13 @@ function expertReplyText(idea: Awaited<ReturnType<typeof getCommunityIdeaBySlug>
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const idea = await getCommunityIdeaBySlug(slug, await getCurrentIdeaAccessContext());
+  const isPublic = idea?.visibility === "Public" && !idea.hidden;
   return {
     title: idea ? `${idea.title} | Ask TYORA Community` : "Ask TYORA Idea",
-    description: idea?.description || "Manufacturing discussion on Ask TYORA Community."
+    description: idea?.description || "Manufacturing discussion on Ask TYORA Community.",
+    robots: isPublic
+      ? { index: true, follow: true }
+      : { index: false, follow: false }
   };
 }
 
