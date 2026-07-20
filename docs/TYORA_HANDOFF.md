@@ -1,5 +1,45 @@
 # TYORA Handoff
 
+## Phase 5B Checkpoint
+
+- Branch: `phase-5b/workflow-foundation`
+- Base commit: `7a032c15e39833215d45eb3eb515497fcce159bb`
+- Implementation head before this handoff update: `39f47c01418c8ae1c31377f5963c20a94b2da876`
+- Target: isolated `tyora-preview` database only
+- Migration: `20260720010000_phase_5a_submission_workflow`
+- Apply command enforced by the guard: `prisma migrate deploy`
+- Production and `main`: untouched
+
+The guarded Phase 5B migration and bounded backfill completed successfully after revalidating distinct project references, the Preview target, port `5432`, database identity, strict CA-backed PostgreSQL TLS, migration checksum, migration history, and the exact typed Preview confirmation. The guard did not use `db push`, `migrate dev`, reset, seed, cleanup, or a Production target.
+
+Post-apply verification reported:
+
+| Check | Result |
+| --- | --- |
+| Migration workflow | `phase5b_migration_complete` |
+| Total workflows | `1` |
+| Manual-review workflows | `0` |
+| KPI-eligible workflows | `1` |
+
+Phase 5B also adds authenticated Admin-only workflow APIs and server policies for source-record existence, trusted actor snapshots, immutable audit events, valid status transitions, replay-safe idempotency, privacy enforcement, and KPI exclusion for unresolved legacy mappings. Existing Ideas, Custom inquiries, Source requests, Leads, Work Orders, CMS, Inbox, authentication, customer records, and file authorization remain the source systems and were not replaced.
+
+Phase 5B verification:
+
+| Check | Result |
+| --- | --- |
+| Phase 5B workflow and migration-guard tests | Passed, 18/18 |
+| Phase 3B-1 authorization regression tests | Passed, 14/14 |
+| Phase 3B-2 workflow regression tests | Passed, 11/11 |
+| Safety tests | Passed, 42/42 |
+| TypeScript | Passed |
+| ESLint | Passed with 0 errors and 9 pre-existing warnings in untouched files |
+| Safety lint | Passed with 0 errors and 0 warnings |
+| Isolated local production build | Passed |
+| Security scan | Passed |
+| Tracked environment files | Only `.env.example`; local `.env` remains ignored |
+
+Remaining work belongs to a separately approved later phase: connect the accepted Admin workflow UI to the persisted workflow APIs, expose manual-review operations to authorized Admin users, and perform authenticated Preview acceptance. No later phase is started by this checkpoint.
+
 ## Phase 5A Checkpoint
 
 - Branch: `phase-5a/workflow-schema`
