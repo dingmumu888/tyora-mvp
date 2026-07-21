@@ -146,15 +146,21 @@ export default async function MyTyoraPage() {
             </div>
             <div className="mt-3 grid gap-2">
               {customInquiries.length ? customInquiries.map((inquiry) => (
-                <article key={inquiry.id} className="rounded-xl border border-[#e4e8ef] bg-white p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{inquiry.productName}</p>
-                      <p className="mt-1 text-xs text-[#69707d]">{inquiry.status} · {inquiry.fileCount} private file{inquiry.fileCount === 1 ? "" : "s"}</p>
+                <article key={inquiry.id}>
+                  <Link
+                    href={`/me/custom/${encodeURIComponent(inquiry.id)}`}
+                    className="group block min-h-20 cursor-pointer rounded-xl border border-[#e4e8ef] bg-white p-3 transition hover:border-[#a8c5ff] hover:bg-[#f8fbff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2"
+                    aria-label={`Open private Custom inquiry: ${inquiry.productName}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold text-[#101216] underline-offset-4 group-hover:underline">{inquiry.productName}</h3>
+                        <p className="mt-1 text-xs text-[#69707d]">{inquiry.status} · {inquiry.fileCount} private file{inquiry.fileCount === 1 ? "" : "s"}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-[#eef7f4] px-2.5 py-1 text-[11px] font-semibold text-[#0f766e]">Private</span>
                     </div>
-                    <span className="shrink-0 rounded-full bg-[#eef7f4] px-2.5 py-1 text-[11px] font-semibold text-[#0f766e]">Private</span>
-                  </div>
-                  {inquiry.nextStep ? <p className="mt-2 text-xs leading-5 text-[#59616e]">{inquiry.nextStep}</p> : null}
+                    {inquiry.nextStep ? <p className="mt-2 text-xs leading-5 text-[#59616e]">{inquiry.nextStep}</p> : null}
+                  </Link>
                 </article>
               )) : (
                 <p className="rounded-xl bg-white p-3 text-xs leading-5 text-[#69707d]">No private Custom inquiries yet.</p>

@@ -21,6 +21,19 @@ const nextConfig: NextConfig = {
             value: "no-store, no-cache, must-revalidate, proxy-revalidate"
           }
         ]
+      },
+      {
+        source: "/me/custom/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0"
+          },
+          {
+            key: "Pragma",
+            value: "no-cache"
+          }
+        ]
       }
     ];
   }

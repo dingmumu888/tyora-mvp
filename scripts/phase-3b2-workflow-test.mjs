@@ -105,7 +105,8 @@ test("private Custom routes fail closed and never expose Storage URLs or object 
   const fileRoute = await file("app/api/community/custom/[id]/files/[index]/route.ts");
   const adminRoute = await file("app/api/admin/custom-inquiries/route.ts");
   const store = await file("lib/server/custom-inquiry-store.ts");
-  assert.match(itemRoute, /if \(!session && !isAdmin\) return fail\("Not found\.", 404\)/);
+  assert.match(itemRoute, /if \(!session && !isAdmin\) return privateFail\("Not found\.", 404\)/);
+  assert.match(itemRoute, /function privateFail/);
   assert.match(itemRoute, /"Cache-Control": "private, no-store"/);
   assert.match(fileRoute, /createPrivateSignedUrl\(file\.objectPath, 120\)/);
   assert.match(fileRoute, /redirect: "error"/);
