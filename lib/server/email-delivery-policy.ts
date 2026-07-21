@@ -1,6 +1,7 @@
 const PRODUCTION_FROM = "TYORA <login@tyora.io>";
 const PREVIEW_TEST_ADDRESS = "onboarding@resend.dev";
-const PREVIEW_FROM = `TYORA Preview <${PREVIEW_TEST_ADDRESS}>`;
+const PREVIEW_TEST_FROM = `TYORA Preview <${PREVIEW_TEST_ADDRESS}>`;
+const PREVIEW_VERIFIED_FROM = "TYORA Preview <preview-login@tyora.io>";
 
 export type EmailDeployment = "production" | "preview" | "development" | "unknown";
 
@@ -80,10 +81,12 @@ export function resolveEmailDeliveryPlan(
     throw new EmailDeliveryPolicyError("email_environment_unknown");
   }
   if (deployment === "preview") {
-    if (!apiKeyPresent || environment.RESEND_USE_TEST_SENDER !== "true") {
+    const previewSenderMode = environment.RESEND_USE_TEST_SENDER;
+    if (!apiKeyPresent || (previewSenderMode !== "true" && previewSenderMode !== "false")) {
       throw new EmailDeliveryPolicyError("preview_email_disabled");
     }
-    if (configuredSender !== PREVIEW_FROM) {
+    const expectedSender = previewSenderMode === "true" ? PREVIEW_TEST_FROM : PREVIEW_VERIFIED_FROM;
+    if (configuredSender !== expectedSender) {
       throw new EmailDeliveryPolicyError("preview_sender_not_safe");
     }
     if (!previewRecipients(environment.RESEND_PREVIEW_RECIPIENTS).has(recipient)) {

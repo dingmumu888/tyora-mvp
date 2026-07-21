@@ -69,6 +69,41 @@ test("Preview email allows only an allowlisted recipient through the test sender
   });
 });
 
+test("Preview email allows an allowlisted recipient through the exact verified Preview sender", () => {
+  assert.deepEqual(
+    resolveEmailDeliveryPlan("outlook-user@example.com", {
+      ...previewBase,
+      RESEND_FROM: "TYORA Preview <preview-login@tyora.io>",
+      RESEND_USE_TEST_SENDER: "false",
+      RESEND_PREVIEW_RECIPIENTS: "outlook-user@example.com"
+    }),
+    {
+      deployment: "preview",
+      sender: "TYORA Preview <preview-login@tyora.io>",
+      recipient: "outlook-user@example.com"
+    }
+  );
+});
+
+test("Preview verified-sender mode rejects any other sender identity", () => {
+  assert.throws(
+    () =>
+      resolveEmailDeliveryPlan("owner@example.com", {
+        ...previewBase,
+        RESEND_FROM: "TYORA <login@tyora.io>",
+        RESEND_USE_TEST_SENDER: "false"
+      }),
+    (error) => error instanceof EmailDeliveryPolicyError && error.code === "preview_sender_not_safe"
+  );
+});
+
+test("Preview requires an explicit sender mode", () => {
+  assert.throws(
+    () => resolveEmailDeliveryPlan("owner@example.com", { ...previewBase, RESEND_USE_TEST_SENDER: "" }),
+    (error) => error instanceof EmailDeliveryPolicyError && error.code === "preview_email_disabled"
+  );
+});
+
 test("Production keeps its configured verified sender", () => {
   assert.deepEqual(
     resolveEmailDeliveryPlan("customer@example.com", {
@@ -109,4 +144,12 @@ test("email request logging source excludes sensitive raw fields", async () => {
     assert.doesNotMatch(route, new RegExp(forbidden.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
   assert.doesNotMatch(route, /JSON\.stringify\([^)]*body\.email/);
+});
+
+test("failed provider sends remove the unusable login-code row", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../lib/server/email-login.ts", import.meta.url), "utf8");
+  assert.match(source, /const loginCodeId = makeCommunityId\("LOGIN"\)/);
+  assert.match(source, /deleteMany\(\{ where: \{ id: loginCodeId \} \}\)/);
+  assert.match(source, /catch \(error\)[\s\S]*deleteMany[\s\S]*throw error/);
 });

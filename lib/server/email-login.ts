@@ -137,9 +137,10 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
   if (recent >= MAX_REQUESTS_PER_WINDOW) return;
 
   const code = randomInt(100000, 1000000).toString();
+  const loginCodeId = makeCommunityId("LOGIN");
   await prisma.emailLoginCode.create({
     data: {
-      id: makeCommunityId("LOGIN"),
+      id: loginCodeId,
       email,
       codeHash: hashCode(email, code),
       expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000)
@@ -148,7 +149,12 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
   trace?.("create_login_code", {
     created: true
   });
-  await sendLoginEmail(deliveryPlan, code, trace);
+  try {
+    await sendLoginEmail(deliveryPlan, code, trace);
+  } catch (error) {
+    await prisma.emailLoginCode.deleteMany({ where: { id: loginCodeId } }).catch(() => undefined);
+    throw error;
+  }
 }
 
 export async function verifyEmailLoginCode(emailInput: unknown, codeInput: unknown, request: Request) {
