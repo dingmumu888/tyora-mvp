@@ -1,5 +1,17 @@
 # TYORA Handoff
 
+## V1 Pre-launch Acceptance Recheck
+
+- Branch: `release/v1-prelaunch-acceptance`
+- Candidate commit before this documentation-only update: `6d2f2419ec8940750f76c63046e367b96638d6bf`
+- Exact Preview: <https://tyora-juzuv5lar-dingmumu888s-projects.vercel.app>
+- Preview status: Ready
+- Production recommendation: **NO-GO until the documented P0 gates are closed**
+
+The current candidate includes all accepted Phase 0-6 work, the private Custom owner-detail hotfix, the verified Preview email-sender correction, storage-provider portability, and lint cleanup. TypeScript, ESLint, safety lint, all phase/hotfix suites, the production build, and security/credential scans passed. Current acceptance evidence and the remaining Production-readiness blockers are recorded in `docs/qa/v1-rc/V1_PRELAUNCH_RECHECK.md`.
+
+No application code, database, environment variable, Storage setting, domain, Production deployment, or `main` branch was changed by this recheck.
+
 ## Phase 5B Checkpoint
 
 - Branch: `phase-5b/workflow-foundation`
