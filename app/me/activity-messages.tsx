@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Bell, Heart, Loader2, MessageCircle, PackageCheck, Reply, Send, Star, X } from "lucide-react";
+import { Bell, Heart, Loader2, PackageCheck, Reply, Send, Star, X } from "lucide-react";
 
 type ActivityFilter = "all" | "comment" | "like" | "interested" | "review";
 

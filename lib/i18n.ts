@@ -387,8 +387,8 @@ export function loadLanguage(): Language {
   return "en";
 }
 
-export function saveLanguage(_language: Language) {
-  return;
+export function saveLanguage(language: Language) {
+  void language;
 }
 
 function localizeString(current: string, englishDefault: string, chineseDefault: string) {

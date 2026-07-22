@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- This standalone QA runner intentionally uses CommonJS. */
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { chromium } = require("playwright");

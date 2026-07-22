@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
+import { FormEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Loader2, Mail, X } from "lucide-react";
@@ -33,10 +33,10 @@ export default function EmailLogin({
   const emailInputRef = useRef<HTMLInputElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
-  function closeModal() {
+  const closeModal = useCallback(() => {
     if (busy || step === "success") return;
     setOpen(false);
-  }
+  }, [busy, step]);
 
   useEffect(() => {
     if (!open) return;
@@ -58,7 +58,7 @@ export default function EmailLogin({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [busy, open, step]);
+  }, [closeModal, open, step]);
 
   useEffect(() => {
     if (!open) return;

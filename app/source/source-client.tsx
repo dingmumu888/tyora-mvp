@@ -220,12 +220,10 @@ export default function SourceClient() {
   }
 
   function buildSourcePayload(email: string, whatsapp: string, productLink: string) {
-    const {
-      email: _email,
-      whatsappCountryIso: _whatsappCountryIso,
-      whatsappLocalNumber: _whatsappLocalNumber,
-      ...sourceFields
-    } = form;
+    const sourceFields: Partial<FormState> = { ...form };
+    delete sourceFields.email;
+    delete sourceFields.whatsappCountryIso;
+    delete sourceFields.whatsappLocalNumber;
     const descriptionParts = [
       `Category: ${form.category}`,
       `Description: ${form.description || "Not provided"}`,
