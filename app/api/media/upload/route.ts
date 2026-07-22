@@ -1,6 +1,7 @@
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { requireAdminSession } from "@/lib/server/admin-auth";
 import { createMediaAsset } from "@/lib/server/data-store";
+import { uploadPublicObject } from "@/lib/server/public-storage";
 
 export const runtime = "nodejs";
 
@@ -26,41 +27,19 @@ function safeFilename(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
 }
 
-function requiredEnv(name: string) {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} is not configured.`);
-  }
-  return value;
-}
-
-async function uploadToSupabaseStorage(file: File, type: string) {
-  const supabaseUrl = requiredEnv("SUPABASE_URL").replace(/\/$/, "");
-  const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET || "tyora-media";
+async function uploadPublicMedia(file: File, type: string) {
   const now = new Date();
   const filename = `${Date.now()}-${safeFilename(file.name)}`;
   const objectPath = `${type}/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}/${filename}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-
-  const response = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}/${objectPath}`, {
-    method: "POST",
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": file.type,
-      "x-upsert": "false"
-    },
-    body: bytes
-  });
-
-  if (!response.ok) {
-    throw new Error(`Supabase Storage upload failed (${response.status}).`);
-  }
+  const uploaded = await uploadPublicObject(
+    objectPath,
+    await file.arrayBuffer(),
+    file.type
+  );
 
   return {
     filename,
-    publicUrl: `${supabaseUrl}/storage/v1/object/public/${bucket}/${objectPath}`
+    publicUrl: uploaded.publicUrl
   };
 }
 
@@ -86,7 +65,7 @@ export async function POST(request: Request) {
       return fail(`Maximum ${maxSize}MB for ${type} files.`, 400);
     }
 
-    const uploaded = await uploadToSupabaseStorage(file, type);
+    const uploaded = await uploadPublicMedia(file, type);
 
     const asset = await createMediaAsset({
       id: `media-${crypto.randomUUID()}`,

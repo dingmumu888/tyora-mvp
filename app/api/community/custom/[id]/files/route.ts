@@ -2,7 +2,7 @@ import { fail, ok } from "@/lib/server/api-response";
 import { getCommunitySession, refreshCommunitySessionCookieIfNeeded } from "@/lib/server/community-auth";
 import { CustomInquiryNotFoundError } from "@/lib/server/custom-inquiry-policy";
 import { addCustomInquiryFile } from "@/lib/server/custom-inquiry-store";
-import { PrivateStorageConfigurationError } from "@/lib/server/private-storage-config";
+import { PrivateStorageProviderError } from "@/lib/server/private-storage";
 import { PrivateUploadValidationError } from "@/lib/server/private-storage-policy";
 import {
   createPrivateUploadRateLimiter,
@@ -30,8 +30,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (error instanceof CustomInquiryNotFoundError) return fail("Not found.", 404);
     if (error instanceof PrivateUploadRequestError) return fail(error.message, error.status);
     if (error instanceof PrivateUploadValidationError) return fail(error.message, 400);
-    if (error instanceof PrivateStorageConfigurationError) {
-      return fail("Private Custom storage is not configured.", 503);
+    if (error instanceof PrivateStorageProviderError) {
+      return fail("Private Custom storage is temporarily unavailable.", 503);
     }
     return fail("Unable to upload private Custom file.", 503);
   }

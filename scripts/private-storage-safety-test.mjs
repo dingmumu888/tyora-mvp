@@ -148,6 +148,10 @@ test("private Storage configuration never falls back to the public bucket", () =
 test("private Custom access route is admin-only and signs short-lived URLs", async () => {
   const route = await readFile(new URL("../app/api/leads/files/route.ts", import.meta.url), "utf8");
   const storage = await readFile(new URL("../lib/server/private-storage.ts", import.meta.url), "utf8");
+  const supabaseStorage = await readFile(
+    new URL("../lib/server/supabase-storage-provider.ts", import.meta.url),
+    "utf8"
+  );
   const signedUrlPolicy = await readFile(
     new URL("../lib/server/private-storage-signed-url-policy.ts", import.meta.url),
     "utf8"
@@ -160,10 +164,10 @@ test("private Custom access route is admin-only and signs short-lived URLs", asy
   assert.match(route, /cache:\s*["']no-store["']/);
   assert.doesNotMatch(route, /NextResponse\.redirect/);
   assert.doesNotMatch(route, /storage\/v1\/object\/public/);
-  assert.equal(storage.match(/await assertPrivateBucketIsPrivate\(config\)/g)?.length, 2);
+  assert.equal(supabaseStorage.match(/await assertPrivateBucketIsPrivate\(config\)/g)?.length, 2);
   assert.match(storage, /Math\.min\(120,/);
   assert.match(signedUrlPolicy, /signedUrl\.pathname !== signedPath/);
-  assert.match(storage, /Cache-Control["']?:\s*["']private, no-store, max-age=0/);
+  assert.match(supabaseStorage, /Cache-Control["']?:\s*["']private, no-store, max-age=0/);
 });
 
 test("provider-relative Supabase signed URLs normalize under the Storage API base", () => {

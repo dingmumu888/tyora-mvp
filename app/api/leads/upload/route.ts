@@ -6,9 +6,9 @@ import {
   validatePrivateUploadFile
 } from "@/lib/server/private-storage-policy";
 import {
+  PrivateStorageProviderError,
   uploadPrivateObject
 } from "@/lib/server/private-storage";
-import { PrivateStorageConfigurationError } from "@/lib/server/private-storage-config";
 import {
   createPrivateUploadRateLimiter,
   PrivateUploadRequestError,
@@ -44,8 +44,8 @@ export async function POST(request: Request) {
     if (error instanceof PrivateUploadValidationError) {
       return fail(error.message, 400);
     }
-    if (error instanceof PrivateStorageConfigurationError) {
-      return fail("Private project storage is not configured.", 503);
+    if (error instanceof PrivateStorageProviderError) {
+      return fail("Private project storage is temporarily unavailable.", 503);
     }
     return fail("Unable to upload project file.", 503);
   }
