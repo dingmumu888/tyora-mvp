@@ -2,12 +2,23 @@ import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { renderVerificationEmail } from "@/lib/email";
 import { makeCommunityId, usernameFromEmail } from "@/lib/community";
 import { prisma } from "@/lib/server/db";
+import {
+  EmailDeliveryPlan,
+  resolveEmailDeliveryPlan
+} from "@/lib/server/email-delivery-policy";
+import {
+  isVerificationEmail,
+  normalizeVerificationEmail
+} from "@/lib/server/email-verification-policy";
+import {
+  isVerificationAttemptAllowed,
+  recordVerificationFailure,
+  verificationThrottleKeys
+} from "@/lib/server/email-verification-throttle";
 
 const CODE_TTL_MINUTES = 10;
 const REQUEST_WINDOW_MINUTES = 10;
 const MAX_REQUESTS_PER_WINDOW = 3;
-const FALLBACK_FROM = "onboarding@resend.dev";
-const DEFAULT_FROM = "TYORA <login@tyora.io>";
 export type EmailLoginStage =
   | "normalize_email"
   | "validate_email"
@@ -20,30 +31,15 @@ type EmailLoginTrace = (stage: EmailLoginStage, data?: Record<string, unknown>) 
 
 export class ResendEmailError extends Error {
   status: number;
-  statusText: string;
-  responseHeaders: Record<string, string>;
-  responseBody: string;
   errorCode: string | null;
 
-  constructor(status: number, statusText: string, responseHeaders: Record<string, string>, responseBody: string) {
+  constructor(status: number, responseBody: string) {
     const errorCode = parseResendErrorCode(responseBody);
-    super(`Unable to send login code. Resend status=${status} ${statusText}; code=${errorCode || "unknown"}; response=${responseBody}`);
+    super("Unable to send login code through the email provider.");
     this.name = "ResendEmailError";
     this.status = status;
-    this.statusText = statusText;
-    this.responseHeaders = responseHeaders;
-    this.responseBody = responseBody;
     this.errorCode = errorCode;
   }
-}
-
-function normalizeEmail(value: unknown) {
-  if (typeof value !== "string") return "";
-  return value.trim().toLowerCase().slice(0, 254);
-}
-
-function isEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function safeParseJson(value: string) {
@@ -57,19 +53,13 @@ function safeParseJson(value: string) {
 function parseResendErrorCode(responseBody: string) {
   const payload = safeParseJson(responseBody) as { error?: { code?: unknown }; code?: unknown } | null;
   const code = payload?.error?.code ?? payload?.code;
-  return typeof code === "string" ? code : null;
-}
-
-function responseHeaders(response: Response) {
-  const headers: Record<string, string> = {};
-  response.headers.forEach((value, key) => {
-    headers[key] = value;
-  });
-  return headers;
+  return typeof code === "string" && /^[a-z0-9_.-]{1,64}$/i.test(code) ? code : null;
 }
 
 function authSecret() {
-  return process.env.EMAIL_LOGIN_SECRET || process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || "tyora-email-login-dev";
+  const value = process.env.EMAIL_LOGIN_SECRET || process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET;
+  if (!value) throw new Error("Email login is not configured.");
+  return value;
 }
 
 function hashCode(email: string, code: string) {
@@ -82,42 +72,15 @@ function safeEqual(left: string, right: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-function sender() {
-  const configured = process.env.RESEND_FROM || DEFAULT_FROM;
-  const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
-  if (isProduction && configured.includes("onboarding@resend.dev")) return DEFAULT_FROM;
-  return configured;
-}
-
-function shouldUseTestSender() {
-  const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
-  return !isProduction && sender().includes("login@tyora.io") && process.env.RESEND_USE_TEST_SENDER === "true";
-}
-
-export function getEmailLoginDebugContext() {
-  return {
-    hasResendApiKey: Boolean(process.env.RESEND_API_KEY),
-    hasAuthOrigin: Boolean(process.env.AUTH_ORIGIN),
-    authOrigin: process.env.AUTH_ORIGIN || null,
-    configuredSender: sender(),
-    environment: process.env.VERCEL_ENV || process.env.NODE_ENV || null,
-    resendUseTestSender: process.env.RESEND_USE_TEST_SENDER || null,
-    shouldUseTestSender: shouldUseTestSender(),
-    actualSender: shouldUseTestSender() ? FALLBACK_FROM : sender()
-  };
-}
-
-async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTrace) {
+async function sendLoginEmail(plan: EmailDeliveryPlan, code: string, trace?: EmailLoginTrace) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("Email login is not configured.");
 
-  const from = shouldUseTestSender() ? FALLBACK_FROM : sender();
   const emailContent = renderVerificationEmail({ code });
 
   trace?.("before_resend_fetch", {
-    email,
-    from,
-    hasResendApiKey: Boolean(apiKey)
+    deployment: plan.deployment,
+    senderKind: plan.sender.includes("resend.dev") ? "test" : "verified"
   });
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -126,38 +89,38 @@ async function sendLoginEmail(email: string, code: string, trace?: EmailLoginTra
       "content-type": "application/json"
     },
     body: JSON.stringify({
-      from,
-      to: email,
+      from: plan.sender,
+      to: plan.recipient,
       subject: emailContent.subject,
       html: emailContent.html,
       text: emailContent.text
     })
   });
-  const responseText = await response.text().catch((error) => `Unable to read Resend response body: ${error instanceof Error ? error.message : String(error)}`);
-  const headers = responseHeaders(response);
+  const responseText = await response.text().catch(() => "");
+  const errorCode = parseResendErrorCode(responseText);
   trace?.("after_resend_fetch", {
-    email,
     status: response.status,
-    ok: response.ok
+    ok: response.ok,
+    errorCode
   });
 
   if (!response.ok) {
-    throw new ResendEmailError(response.status, response.statusText, headers, responseText);
+    throw new ResendEmailError(response.status, responseText);
   }
 }
 
 export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTrace) {
-  const email = normalizeEmail(input);
+  const email = normalizeVerificationEmail(input);
   trace?.("normalize_email", {
-    inputType: typeof input,
-    email
+    inputType: typeof input
   });
-  const valid = isEmail(email);
+  const valid = isVerificationEmail(email);
   trace?.("validate_email", {
-    email,
     valid
   });
   if (!valid) return;
+
+  const deliveryPlan = resolveEmailDeliveryPlan(email, process.env);
 
   const since = new Date(Date.now() - REQUEST_WINDOW_MINUTES * 60 * 1000);
   const recent = await prisma.emailLoginCode.count({
@@ -167,7 +130,6 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
     }
   });
   trace?.("rate_limit_check", {
-    email,
     recent,
     limit: MAX_REQUESTS_PER_WINDOW,
     limited: recent >= MAX_REQUESTS_PER_WINDOW
@@ -175,57 +137,75 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
   if (recent >= MAX_REQUESTS_PER_WINDOW) return;
 
   const code = randomInt(100000, 1000000).toString();
+  const loginCodeId = makeCommunityId("LOGIN");
   await prisma.emailLoginCode.create({
     data: {
-      id: makeCommunityId("LOGIN"),
+      id: loginCodeId,
       email,
       codeHash: hashCode(email, code),
       expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000)
     }
   });
   trace?.("create_login_code", {
-    email
+    created: true
   });
-  await sendLoginEmail(email, code, trace);
+  try {
+    await sendLoginEmail(deliveryPlan, code, trace);
+  } catch (error) {
+    await prisma.emailLoginCode.deleteMany({ where: { id: loginCodeId } }).catch(() => undefined);
+    throw error;
+  }
 }
 
-export async function verifyEmailLoginCode(emailInput: unknown, codeInput: unknown) {
-  const email = normalizeEmail(emailInput);
+export async function verifyEmailLoginCode(emailInput: unknown, codeInput: unknown, request: Request) {
+  const email = normalizeVerificationEmail(emailInput);
   const code = typeof codeInput === "string" ? codeInput.trim() : "";
-  if (!isEmail(email) || !/^\d{6}$/.test(code)) return null;
+  if (!(await isVerificationAttemptAllowed(email, request))) return null;
+  if (!isVerificationEmail(email) || !/^\d{6}$/.test(code)) {
+    await recordVerificationFailure(email, request);
+    return null;
+  }
 
-  const row = await prisma.emailLoginCode.findFirst({
-    where: {
-      email,
-      usedAt: null,
-      expiresAt: { gt: new Date() }
-    },
-    orderBy: { createdAt: "desc" }
+  const now = new Date();
+  const throttleIds = verificationThrottleKeys(email, request).map((key) => key.id);
+  const user = await prisma.$transaction(async (tx) => {
+    const row = await tx.emailLoginCode.findFirst({
+      where: {
+        email,
+        usedAt: null,
+        expiresAt: { gt: now }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    if (!row || !safeEqual(row.codeHash, hashCode(email, code))) return null;
+
+    const consumed = await tx.emailLoginCode.updateMany({
+      where: { id: row.id, usedAt: null, expiresAt: { gt: now } },
+      data: { usedAt: now }
+    });
+    if (consumed.count !== 1) return null;
+
+    const existing = await tx.communityUser.findUnique({ where: { email } });
+    const username = existing?.username || usernameFromEmail(email);
+    const collision = existing ? null : await tx.communityUser.findUnique({ where: { username } });
+    const finalUsername = collision ? `${username}-${Date.now().toString(36)}` : username;
+    const name = existing?.name || email.split("@")[0] || "TYORA Creator";
+    const verifiedUser = await tx.communityUser.upsert({
+      where: { email },
+      create: {
+        id: makeCommunityId("USER"),
+        email,
+        username: finalUsername,
+        name
+      },
+      update: { name }
+    });
+    await tx.emailVerificationThrottle.deleteMany({
+      where: { id: { in: throttleIds } }
+    });
+    return verifiedUser;
   });
-  if (!row || !safeEqual(row.codeHash, hashCode(email, code))) return null;
 
-  await prisma.emailLoginCode.update({
-    where: { id: row.id },
-    data: { usedAt: new Date() }
-  });
-
-  const existing = await prisma.communityUser.findUnique({ where: { email } });
-  const username = existing?.username || usernameFromEmail(email);
-  const collision = existing ? null : await prisma.communityUser.findUnique({ where: { username } });
-  const finalUsername = collision ? `${username}-${Date.now().toString(36)}` : username;
-  const name = existing?.name || email.split("@")[0] || "TYORA Creator";
-
-  return prisma.communityUser.upsert({
-    where: { email },
-    create: {
-      id: makeCommunityId("USER"),
-      email,
-      username: finalUsername,
-      name
-    },
-    update: {
-      email,
-      name
-    }
-  });
+  if (!user) await recordVerificationFailure(email, request);
+  return user;
 }

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Loader2, RefreshCcw, Save, Search, Trash2 } from "lucide-react";
 import { SourceRequest, SourceStatus, sourceStatuses } from "@/lib/source";
-import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
+import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
+import { AdminActionBar, AdminEmptyState, AdminMetricCard, adminSelectClass } from "@/components/admin/admin-ui";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -152,71 +153,94 @@ export default function SourceAdminClient() {
     }
   }
 
+  function navigateAdmin(section: AdminSectionId) {
+    if (section === "sourceQueue") return;
+    if (section === "inbox") {
+      window.location.assign("/admin/work-orders");
+      return;
+    }
+    window.location.assign(`/admin?section=${encodeURIComponent(section)}`);
+  }
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => undefined);
+    window.location.assign("/admin");
+  }
+
   return (
-    <main className="min-h-screen bg-[#f6f7fb] text-[#111318]">
-      <header className="sticky top-0 z-30 border-b border-[#e3e7ee] bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div>
-            <Link href="/admin" className="text-xs font-semibold uppercase tracking-[0.18em] text-[#687284]">TYORA OS</Link>
-            <h1 className="mt-1 text-2xl font-semibold tracking-normal">Source Products Queue</h1>
-            <p className="mt-1 text-sm text-[#687284]">Review supplier-check leads from /source.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <AdminViewCommunityLink />
-            <Link href="/source" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe5ee] bg-white px-4 text-sm font-semibold">
+    <AdminShell
+      activeSection="sourceQueue"
+      pageTitle="Source Products Queue"
+      pageDescription="Review supplier-check requests submitted through the public Source page."
+      notificationCount={counts.New || 0}
+      searchItems={requests.slice(0, 60).map((request) => ({
+        id: `source-${request.id}`,
+        label: request.productName,
+        description: `${request.status} · ${request.destinationCountry}`,
+        href: "/admin/source",
+        keywords: [request.id, request.email, request.material, ...request.needTypes].join(" ")
+      }))}
+      canSave={false}
+      languageLabel="EN"
+      onNavigate={navigateAdmin}
+      onNewProject={() => window.location.assign("/admin?section=submissions")}
+      onSave={() => undefined}
+      onToggleLanguage={() => undefined}
+      onLogout={() => void logout()}
+    >
+      <div className="space-y-4">
+        <AdminActionBar
+          title="Supplier-check operations"
+          description="Inspect product references, update sourcing status, and keep internal notes in the existing Source workflow."
+          actions={(
+            <>
+            <Link href="/source" className="inline-flex min-h-11 items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-4 text-sm font-semibold text-[#344054] hover:bg-[#f9fafb]">
               View public page <ArrowUpRight size={15} />
             </Link>
-            <button onClick={() => void loadRequests()} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#111318] px-4 text-sm font-semibold text-white">
+            <button onClick={() => void loadRequests()} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white hover:bg-[#004eeb]">
               <RefreshCcw size={15} /> Refresh
             </button>
-          </div>
-        </div>
-      </header>
+            </>
+          )}
+        />
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-5 sm:px-6 lg:px-8">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {summaryCards.map(([label, value]) => (
-            <div key={label} className="rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm">
-              <p className="text-2xl font-semibold">{value}</p>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#687284]">{label}</p>
-            </div>
+            <AdminMetricCard key={label} label={label} value={value} />
           ))}
         </div>
 
-        <div className="grid gap-3 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center">
+        <AdminActionBar className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {(["All", ...sourceStatuses] as Filter[]).map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`shrink-0 rounded-full px-3 py-2 text-sm font-semibold transition ${filter === status ? "bg-[#2563eb] text-white" : "bg-[#f4f6f9] text-[#59616e] hover:bg-[#edf2f8]"}`}
+                className={`min-h-10 shrink-0 rounded-md px-3 py-2 text-sm font-semibold transition ${filter === status ? "bg-[#155eef] text-white" : "bg-[#f2f4f7] text-[#475467] hover:bg-[#eaecf0]"}`}
               >
                 {status}
                 {status !== "All" ? <span className="ml-2 opacity-70">{counts[status]}</span> : <span className="ml-2 opacity-70">{requests.length}</span>}
               </button>
             ))}
           </div>
-          <label className="flex h-11 min-w-64 items-center gap-2 rounded-full border border-[#dfe5ee] bg-white px-3 text-sm">
+          <label className="flex h-11 min-w-0 items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm focus-within:border-[#155eef] focus-within:ring-4 focus-within:ring-[#155eef]/10 sm:min-w-64">
             <Search size={16} className="text-[#8791a0]" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search source requests" className="w-full bg-transparent outline-none" />
           </label>
-        </div>
+        </AdminActionBar>
 
         {message ? <p className="rounded-2xl bg-white p-3 text-sm font-semibold text-[#2563eb] shadow-sm">{message}</p> : null}
         {loading ? (
-          <div className="flex min-h-72 items-center justify-center rounded-3xl border border-[#e1e6ee] bg-white">
+          <div className="flex min-h-72 items-center justify-center rounded-md border border-[#e1e6ee] bg-white">
             <Loader2 className="animate-spin text-[#2563eb]" />
           </div>
         ) : visibleRequests.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-[#cfd8e6] bg-white p-10 text-center">
-            <p className="text-lg font-semibold">No source requests found.</p>
-            <p className="mt-1 text-sm text-[#687284]">New submissions from /source will appear here.</p>
-          </div>
+          <AdminEmptyState title="No source requests found" description="New submissions from the public Source page will appear here." />
         ) : (
           <div className="grid gap-4">
             {visibleRequests.map((request) => (
-              <article key={request.id} className="grid gap-4 rounded-3xl border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[180px_1fr_340px]">
-                <div className="overflow-hidden rounded-2xl bg-[#f4f6f9]">
+              <article key={request.id} className="grid gap-4 rounded-md border border-[#e1e6ee] bg-white p-4 shadow-sm lg:grid-cols-[180px_1fr_340px]">
+                <div className="overflow-hidden rounded-md bg-[#f4f6f9]">
                   {sourceImagesFor(request).length > 0 ? (
                     <div className={`grid aspect-square ${sourceImageGridClass(sourceImagesFor(request).length)} gap-1 p-1`}>
                       {sourceImagesFor(request).slice(0, 9).map((imageUrl, index) => (
@@ -261,7 +285,7 @@ export default function SourceAdminClient() {
                 <form onSubmit={(event) => void saveRequest(event, request.id)} className="grid gap-3">
                   <label className="grid gap-1.5 text-sm font-semibold">
                     Status
-                    <select name="status" defaultValue={request.status} className="h-11 rounded-2xl border border-[#dfe5ee] bg-white px-3 outline-none focus:border-[#2563eb]">
+                    <select name="status" defaultValue={request.status} className={adminSelectClass}>
                       {sourceStatuses.map((status) => (
                         <option key={status}>{status}</option>
                       ))}
@@ -269,12 +293,12 @@ export default function SourceAdminClient() {
                   </label>
                   <label className="grid gap-1.5 text-sm font-semibold">
                     Internal notes
-                    <textarea name="internalNotes" defaultValue={request.internalNotes || ""} className="min-h-36 resize-none rounded-2xl border border-[#dfe5ee] bg-white p-3 text-sm leading-6 outline-none focus:border-[#2563eb]" placeholder="Supplier checked, quoted range, sample next step..." />
+                    <textarea name="internalNotes" defaultValue={request.internalNotes || ""} className="min-h-36 resize-none rounded-md border border-[#d0d5dd] bg-white p-3 text-sm leading-6 outline-none focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10" placeholder="Supplier checked, quoted range, sample next step..." />
                   </label>
-                  <button disabled={savingId === request.id} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#111318] px-4 text-sm font-semibold text-white disabled:opacity-60">
+                  <button disabled={savingId === request.id} className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#101828] px-4 text-sm font-semibold text-white hover:bg-[#1d2939] disabled:opacity-60">
                     {savingId === request.id ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save
                   </button>
-                  <button type="button" disabled={deletingId === request.id} onClick={() => void deleteRequest(request.id)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#fee2e2] bg-[#fff1f2] px-4 text-sm font-semibold text-[#be123c] disabled:opacity-60">
+                  <button type="button" disabled={deletingId === request.id} onClick={() => void deleteRequest(request.id)} className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#fecdca] bg-[#fffafa] px-4 text-sm font-semibold text-[#b42318] hover:bg-[#fef3f2] disabled:opacity-60">
                     {deletingId === request.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />} Delete test/spam
                   </button>
                 </form>
@@ -282,7 +306,7 @@ export default function SourceAdminClient() {
             ))}
           </div>
         )}
-      </section>
-    </main>
+      </div>
+    </AdminShell>
   );
 }

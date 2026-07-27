@@ -1,6 +1,6 @@
 import { analyticsEventTypes, AnalyticsDashboard, AnalyticsEventType, AnalyticsMetric } from "@/lib/analytics";
 import { prisma } from "@/lib/server/db";
-import { hashIpAddress, maskIpAddress, sourceFromTraffic, trafficContext } from "@/lib/server/traffic-context";
+import { trafficContext } from "@/lib/server/traffic-context";
 
 export { hashIpAddress, maskIpAddress, sourceFromTraffic } from "@/lib/server/traffic-context";
 

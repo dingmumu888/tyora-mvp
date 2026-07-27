@@ -6,31 +6,21 @@ const homeClient = fs.readFileSync(path.join(root, "app/home-client.tsx"), "utf8
 
 const checks = [
   {
-    label: "mobile discussion CTA stores collapsed state in sessionStorage",
+    label: "homepage no longer stores state for a duplicate floating discussion CTA",
     pass:
-      homeClient.includes("mobileDiscussionCtaCollapsed") &&
-      homeClient.includes("sessionStorage.getItem") &&
-      homeClient.includes("sessionStorage.setItem")
+      !homeClient.includes("mobileDiscussionCtaCollapsed") &&
+      !homeClient.includes("sessionStorage.getItem") &&
+      !homeClient.includes("sessionStorage.setItem")
   },
   {
-    label: "mobile discussion CTA can render as a slim side tab",
+    label: "homepage removes the legacy floating side tab",
     pass:
-      homeClient.includes('aria-label="Expand start discussion"') &&
-      homeClient.includes("Start") &&
-      homeClient.includes("right-0") &&
-      homeClient.includes("writingMode")
+      !homeClient.includes('aria-label="Expand start discussion"') &&
+      !homeClient.includes("writingMode")
   },
   {
-    label: "expanded mobile discussion CTA is narrower than old full-width banner",
-    pass:
-      homeClient.includes("max-w-[260px]") &&
-      !homeClient.includes("max-w-md overflow-hidden rounded-[22px]")
-  },
-  {
-    label: "expanded mobile discussion CTA has a collapse button",
-    pass:
-      homeClient.includes('aria-label="Collapse start discussion"') &&
-      homeClient.includes("setMobileDiscussionCtaCollapsed(true)")
+    label: "homepage has no application-owned fixed right-side public control",
+    pass: !/fixed[^\n]*(?:right-|inset-x)/.test(homeClient)
   }
 ];
 

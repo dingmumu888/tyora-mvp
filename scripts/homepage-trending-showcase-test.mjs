@@ -4,12 +4,16 @@ const source = readFileSync("app/home-client.tsx", "utf8");
 
 const checks = [
   {
-    name: "homepage computes a ranked top-three community showcase",
-    pass: source.includes("topShowcaseIdeas") && source.includes("homepageIdeaScore") && source.includes(".slice(0, 3)")
+    name: "homepage computes a CMS-limited ranked community showcase",
+    pass: source.includes("eligibleIdeas") && source.includes("ideaScore") && source.includes("homepage.communityLimit")
   },
   {
-    name: "homepage does not filter real community posts out of the showcase request",
-    pass: !source.includes(".filter(isHomepageReadyIdea)")
+    name: "homepage only shows real eligible public reviewed posts",
+    pass:
+      source.includes('idea.visibility === "Public"') &&
+      source.includes("!idea.hidden") &&
+      source.includes("idea.imageUrls.length > 0") &&
+      source.includes("Boolean(reviewSummary(idea))")
   },
   {
     name: "homepage showcase never uses starter examples as fake post cards",
@@ -20,24 +24,24 @@ const checks = [
     pass: !source.includes('key={example.title} href="/ask/new"')
   },
   {
-    name: "real top showcase cards link to all ideas",
-    pass: source.includes('href="/ask"') && source.includes("topShowcaseIdeas.map")
+    name: "real showcase cards link to their exact idea",
+    pass: source.includes('href={`/ask/${idea.slug}`}') && source.includes("eligibleIdeas.map")
   },
   {
-    name: "homepage renders real TYORA review summaries with a two-line clamp",
+    name: "homepage renders real TYORA review summaries with a bounded clamp",
     pass:
-      source.includes("function homepageReviewSummary") &&
-      source.includes("TYORA REVIEW") &&
-      source.includes("TYORA review pending") &&
-      source.includes("line-clamp-2 font-semibold text-[#101216]")
+      source.includes("function reviewSummary") &&
+      source.includes("TYORA Review") &&
+      source.includes("line-clamp-3") &&
+      !source.includes("TYORA review pending")
   },
   {
     name: "homepage no longer renders stored manufacturing question chips",
     pass: !source.includes('idea.questions[0] || "Manufacturing"')
   },
   {
-    name: "HOT badge is rendered inside the homepage image wrapper",
-    pass: /data-testid="homepage-idea-image"[\s\S]{0,500}<HotBadge idea=\{idea\}/.test(source)
+    name: "legacy HOT overlay cannot collide with homepage metadata",
+    pass: !source.includes("function HotBadge") && !source.includes("<HotBadge")
   }
 ];
 

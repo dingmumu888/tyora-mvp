@@ -5,20 +5,24 @@ import { recordCommunityUserLogin } from "@/lib/server/customer-store";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({})) as { email?: string; code?: string };
-  const user = await verifyEmailLoginCode(body.email, body.code);
+  let user: Awaited<ReturnType<typeof verifyEmailLoginCode>>;
+  try {
+    user = await verifyEmailLoginCode(body.email, body.code, request);
+  } catch {
+    return NextResponse.json(
+      { success: false, message: "Email login is temporarily unavailable." },
+      { status: 503 }
+    );
+  }
 
   if (!user) {
-    return NextResponse.json({ success: false, message: "Invalid or expired code." }, { status: 400 });
+    return NextResponse.json({ success: false, message: "Unable to verify code." }, { status: 400 });
   }
 
   try {
     await recordCommunityUserLogin(user.id, request);
-  } catch (error) {
-    console.error("[customer-login-metadata] failed", {
-      userId: user.id,
-      error,
-      stack: error instanceof Error ? error.stack : undefined
-    });
+  } catch {
+    console.error("[customer-login-metadata] failed", { operation: "login_metadata" });
   }
 
   const response = NextResponse.json({

@@ -31,7 +31,7 @@ const buildSupportCards = [
 ] as const;
 
 const buildSteps = [
-  ["1", "Free review", "TYORA reviews the idea, rough cost range, MOQ range, materials, process direction and risk points."],
+  ["1", "Initial assessment", "TYORA reviews the idea, rough cost range, MOQ range, materials, process direction and risk points."],
   ["2", "Factory fit", "If the founder wants to continue, TYORA can introduce a suitable factory or manage the project directly."],
   ["3", "Sample and QC", "TYORA supports sample communication, negotiation, quality checks and production follow-up when needed."],
   ["4", "Ship and repeat", "The goal is not one quote. The goal is a repeatable path from idea to physical product."]
@@ -40,8 +40,8 @@ const buildSteps = [
 const faqItems = [
   ["Is TYORA a factory?", "No. TYORA is a product development and manufacturing support partner."],
   ["Can TYORA introduce factories directly?", "Yes. One model is a factory introduction service when the founder wants to manage communication themselves."],
-  ["Can TYORA manage the factory process?", "Yes. TYORA can also manage communication, samples, quality checks, production and shipping support."],
-  ["Should I start from Build or Community?", "Start from Community if you want free feedback first. Use Build when you are ready to move toward a real supplier path."]
+  ["Can TYORA manage the factory process?", "Yes. TYORA can manage communication, samples, quality checks, production, and handoff to your nominated freight forwarder in China."],
+  ["Should I start from Build or Community?", "Start from Community if you want an initial assessment first. Use Build when you are ready to move toward a real supplier path."]
 ] as const;
 
 export default function BuildClient() {

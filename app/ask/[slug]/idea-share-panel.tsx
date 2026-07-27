@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Copy, ExternalLink, MessageCircle, Share2, Smartphone, X } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { communityActionHeaders } from "@/lib/client/community-action";
 
 type SharePlatform = "facebook" | "x" | "linkedin" | "whatsapp" | "copy" | "native";
 
 type IdeaSharePanelProps = {
   open: boolean;
+  ideaId: string;
   ideaSlug: string;
   ideaTitle: string;
   onClose: () => void;
@@ -21,7 +23,7 @@ function isShareCancellation(error: unknown) {
   return typeof error === "object" && error !== null && "name" in error && (error as { name?: unknown }).name === "AbortError";
 }
 
-export default function IdeaSharePanel({ open, ideaSlug, ideaTitle, onClose }: IdeaSharePanelProps) {
+export default function IdeaSharePanel({ open, ideaId, ideaSlug, ideaTitle, onClose }: IdeaSharePanelProps) {
   const [message, setMessage] = useState("");
   const dialogRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -108,6 +110,11 @@ export default function IdeaSharePanel({ open, ideaSlug, ideaTitle, onClose }: I
 
   function recordShare(platform: SharePlatform) {
     trackAnalyticsEvent("idea_share", sharePath(ideaSlug, platform));
+    void fetch(`/api/community/ideas/${ideaSlug}/share`, {
+      method: "POST",
+      headers: communityActionHeaders(`share:${ideaId}:${platform}`),
+      body: JSON.stringify({ channel: platform })
+    }).catch(() => undefined);
   }
 
   function openPlatform(platform: (typeof platforms)[number]) {

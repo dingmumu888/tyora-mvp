@@ -22,7 +22,7 @@ type SessionUser = { id: string; name: string; email: string; username: string; 
 type Step = 0 | 1 | 2 | 3;
 type ImagePreview = { name: string; url: string };
 
-const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Go Live"] as const;
+const steps = ["Your Idea", "Show It", "Help TYORA Understand", "Submit"] as const;
 const mobileSteps = ["Idea", "Show", "Understand", "Live"] as const;
 const defaultQuestions: CommunityQuestion[] = ["Can this be manufactured?", "Estimated Cost?", "Material Suggestion?"];
 const nextSteps = [
@@ -90,7 +90,10 @@ export default function NewIdeaClient() {
     imageUrls: [] as string[],
     questions: [] as CommunityQuestion[],
     otherQuestion: "",
-    visibility: "Public"
+    visibility: "Public" as "Public" | "Private",
+    publicContentConsent: false,
+    publicImageConsent: false,
+    publicAssessmentConsent: false
   });
 
   useEffect(() => {
@@ -193,6 +196,12 @@ export default function NewIdeaClient() {
     const ideaSummary = form.description.trim() || oneSentence.trim();
     if (!form.title.trim()) return setMessage("Please add a product name.");
     if (!ideaSummary) return setMessage("Please describe your idea.");
+    if (
+      form.visibility === "Public" &&
+      (!form.publicContentConsent || !form.publicImageConsent || !form.publicAssessmentConsent)
+    ) {
+      return setMessage("Please confirm all three public-sharing permissions, or choose Private.");
+    }
     if (!user) {
       setMessage("Log in with email to publish your discussion. Your draft will stay here.");
       setLoginPrompt((current) => current + 1);
@@ -224,6 +233,53 @@ export default function NewIdeaClient() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function submissionPrivacyControls() {
+    const isPublic = form.visibility === "Public";
+    return (
+      <section className="rounded-[20px] border border-[#dbe4f0] bg-[#f8fafc] p-4">
+        <p className="text-sm font-semibold">Who can see this submission?</p>
+        <div className="mt-3 grid grid-cols-2 gap-2 rounded-[14px] bg-white p-1 ring-1 ring-[#e4e8ef]">
+          {(["Public", "Private"] as const).map((visibility) => (
+            <button
+              key={visibility}
+              type="button"
+              aria-pressed={form.visibility === visibility}
+              onClick={() => setForm((current) => ({ ...current, visibility }))}
+              className={cn(
+                "min-h-11 rounded-[11px] px-3 text-sm font-semibold transition",
+                form.visibility === visibility ? "bg-[#101216] text-white" : "text-[#59616e] hover:bg-[#f4f6f8]"
+              )}
+            >
+              {visibility}
+            </button>
+          ))}
+        </div>
+        {isPublic ? (
+          <div className="mt-4 grid gap-3 text-sm leading-5 text-[#59616e]">
+            <p className="text-xs leading-5 text-[#69707d]">Public submissions remain pending until TYORA approves them. Confirm each item below.</p>
+            {([
+              ["publicContentConsent", "I agree that my idea title and description may be published."],
+              ["publicImageConsent", "I agree that the uploaded reference images may be published."],
+              ["publicAssessmentConsent", "I agree that TYORA's initial assessment may be shown publicly."]
+            ] as const).map(([key, label]) => (
+              <label key={key} className="flex cursor-pointer items-start gap-3 rounded-[14px] bg-white p-3 ring-1 ring-[#e4e8ef]">
+                <input
+                  type="checkbox"
+                  checked={form[key]}
+                  onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.checked }))}
+                  className="mt-0.5 size-4 shrink-0 accent-[#2563eb]"
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-xs leading-5 text-[#59616e]">Private submissions are visible only to you and authorized TYORA staff. They never enter the public community feed.</p>
+        )}
+      </section>
+    );
   }
 
   if (checkingSession) {
@@ -287,8 +343,8 @@ export default function NewIdeaClient() {
                 <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#e9f7f3] text-[#0f766e] shadow-sm">
                   <Sparkles size={28} />
                 </div>
-                <h2 className="mt-5 text-3xl font-semibold leading-tight">Your discussion is now live.</h2>
-                <p className="mt-3 text-sm font-medium text-[#69707d]">Redirecting to your discussion...</p>
+                <h2 className="mt-5 text-3xl font-semibold leading-tight">Submitted for TYORA review.</h2>
+                <p className="mt-3 text-sm font-medium text-[#69707d]">Opening your submission. Public ideas stay pending until approved.</p>
               </div>
             </div>
           ) : (
@@ -303,7 +359,7 @@ export default function NewIdeaClient() {
             </div>
 
             <div className="mb-5">
-              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-[11px] font-semibold text-[#315fbd]"><Sparkles size={14} /> FREE TYORA review</p>
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-[11px] font-semibold text-[#315fbd]"><Sparkles size={14} /> Initial TYORA assessment</p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight">Start a Discussion</h2>
               <p className="mt-2 text-sm leading-6 text-[#59616e]">Share the idea quickly. Put details, questions, material, quantity, or target cost in the description.</p>
             </div>
@@ -313,7 +369,7 @@ export default function NewIdeaClient() {
                 <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Magnetic phone stand" className={inputClass} />
               </label>
               <label className="grid gap-2 text-sm font-semibold">Category
-                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone accessories" className={inputClass} />
+                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone & Device Accessories" className={inputClass} />
               </label>
               <label className="grid gap-2 text-sm font-semibold">Description
                 <textarea
@@ -358,6 +414,7 @@ export default function NewIdeaClient() {
                   ))}
                 </div>
               ) : null}
+              {submissionPrivacyControls()}
             </div>
 
             {message ? (
@@ -368,7 +425,7 @@ export default function NewIdeaClient() {
 
             <button disabled={submitting} className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
               {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-              {submitting ? "Publishing..." : "Start Discussion"}
+              {submitting ? "Submitting..." : "Submit for Review"}
             </button>
           </section>
 
@@ -398,7 +455,7 @@ export default function NewIdeaClient() {
                 <div>
                   <h2 className="text-2xl font-semibold leading-tight sm:text-4xl">Start a Discussion</h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e] sm:mt-3 sm:text-base sm:leading-7">
-                    Share an idea. Get free manufacturing feedback.
+                    Share an idea for an initial manufacturing assessment.
                   </p>
                 </div>
                 <p className="w-fit whitespace-nowrap rounded-2xl bg-[#f7f8fa] px-3 py-2 text-xs font-semibold text-[#59616e]">
@@ -466,7 +523,7 @@ export default function NewIdeaClient() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm font-semibold">Category <span className="font-normal text-[#8b93a1]">optional</span>
-                    <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone accessories" className={inputClass} />
+                    <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone & Device Accessories" className={inputClass} />
                   </label>
                   <label className="grid gap-2 text-sm font-semibold">Country <span className="font-normal text-[#8b93a1]">optional</span>
                     <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="United States" className={inputClass} />
@@ -488,7 +545,7 @@ export default function NewIdeaClient() {
                 ) : null}
                 <div className="rounded-[20px] border border-[#dbeafe] bg-[#eff6ff] p-4 text-sm leading-6 text-[#315fbd]">
                   <p className="font-semibold text-[#1d4ed8]">Public community discussion</p>
-                  <p className="mt-1">Your idea will be visible to everyone so founders can comment, react, and share manufacturing feedback.</p>
+                  <p className="mt-1">Your idea becomes visible to everyone only after TYORA approves it for the public community.</p>
                 </div>
               </div>
             </section>
@@ -496,13 +553,13 @@ export default function NewIdeaClient() {
 
           {step === 3 ? (
             <section className="mt-5">
-              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Ready to go live?</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">This is your first version. Publish it, let founders react, and let TYORA help clarify the manufacturing path.</p>
+              <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">Ready to submit?</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">TYORA will review it before it becomes visible in the public community.</p>
               <div className="mt-6 rounded-[20px] border border-[#e4e8ef] bg-[#fbfcff] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Concept"}</span>
-                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">Public</span>
-                  <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">FREE review</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.visibility}</span>
+                  <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">Initial assessment</span>
                 </div>
                 <h3 className="mt-3 text-2xl font-semibold">{form.title || "Product name"}</h3>
                 <p className="mt-2 text-sm leading-6 text-[#59616e]">{form.description || oneSentence || "Your idea summary will appear here."}</p>
@@ -520,6 +577,7 @@ export default function NewIdeaClient() {
                   ))}
                 </div>
               </div>
+              <div className="mt-4">{submissionPrivacyControls()}</div>
             </section>
           ) : null}
 
@@ -542,7 +600,7 @@ export default function NewIdeaClient() {
             ) : (
               <button disabled={submitting} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
                 {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-                {submitting ? "Publishing..." : "Start Discussion"}
+                {submitting ? "Submitting..." : "Submit for Review"}
               </button>
             )}
           </div>

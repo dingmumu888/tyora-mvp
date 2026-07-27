@@ -1,92 +1,69 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import CommunityUserMenu from "@/components/community-user-menu";
+import LegalPageShell, { LegalSection } from "@/components/legal-page-shell";
 
 export const metadata: Metadata = {
-  title: "TYORA Privacy Policy",
-  description: "TYORA Privacy Policy for website visitors and project inquiries."
+  title: "Privacy Policy | TYORA",
+  description: "How TYORA handles website, community, sourcing, and product-development information."
 };
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_36%,#f7f5f0_100%)] text-[#101216]">
-      <header className="border-b border-[#eef1f4] bg-white/86 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="font-semibold tracking-normal">
-            TYORA
-            <span className="block text-[10px] font-medium uppercase text-[#69707d]">
-              Idea2Product
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm font-medium text-[#59616e] hover:text-[#101216]">
-              Back to Home
-            </Link>
-            <div className="hidden md:block">
-              <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
-        <p className="mb-3 text-sm font-medium uppercase tracking-normal text-[#69707d]">
-          Legal
+    <LegalPageShell
+      eyebrow="Legal"
+      title="Privacy Policy"
+      description="This policy explains what information TYORA receives, why it is used, and the choices available when you use our community, sourcing, or product-development services."
+      updatedAt="July 15, 2026"
+    >
+      <LegalSection title="Information we receive">
+        <p>
+          We may receive account and contact details, including your name, email address, WhatsApp number, country, and profile information. We also receive product descriptions, quantities, budgets, links, images, designs, documents, quotations, and other files you choose to submit.
         </p>
-        <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
-          TYORA Privacy Policy
-        </h1>
-        <p className="mt-5 text-base leading-7 text-[#59616e]">
-          TYORA keeps data collection minimal. We collect only the information needed to
-          understand your product inquiry and start a business conversation.
+        <p>
+          Community activity such as posts, comments, likes, and expressions of interest is also recorded. Basic technical and usage data may be collected to secure the service, understand performance, and improve the website.
         </p>
+      </LegalSection>
 
-        <div className="mt-8 space-y-4 text-sm leading-7 text-[#59616e]">
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Information We Collect</h2>
-            <p className="mt-2">
-              We may collect the product name or description you enter, optional uploaded
-              reference files, and contact details shared through WhatsApp or direct
-              communication. We do not ask for sensitive personal data on the homepage.
-            </p>
-          </section>
+      <LegalSection title="Public and private submissions">
+        <p>
+          Content submitted as a public idea may be displayed on TYORA, indexed by search engines, and shared by other visitors. Do not include confidential information in a public post.
+        </p>
+        <p>
+          Private sourcing and custom-product submissions are not intentionally published. Access is limited to authorized TYORA personnel and service providers who need the information to review or support the request.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">How We Use Information</h2>
-            <p className="mt-2">
-              We use submitted information to review your product idea, discuss
-              manufacturing feasibility, coordinate project communication, and improve
-              TYORA&apos;s business services.
-            </p>
-          </section>
+      <LegalSection title="How information is used">
+        <p>
+          Information is used to operate accounts and community features, respond to inquiries, assess product requirements, identify supplier options, coordinate samples or production work, provide customer support, prevent abuse, and maintain business records.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Data Storage</h2>
-            <p className="mt-2">
-              TYORA does not intentionally store sensitive data. Project information is
-              handled for business inquiry purposes and kept only as long as reasonably
-              needed for communication, support, and operational records.
-            </p>
-          </section>
+      <LegalSection title="When information is shared">
+        <p>
+          We do not sell personal information. Relevant project details may be shared with factories, inspectors, logistics providers, hosting providers, email providers, and other service partners when reasonably necessary for the service you requested. We aim to limit each disclosure to the information needed for that purpose.
+        </p>
+        <p>
+          Information may also be disclosed when required by law, to protect rights or safety, or as part of a business reorganization subject to appropriate safeguards.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Sharing</h2>
-            <p className="mt-2">
-              We do not sell personal information. When needed, project details may be
-              shared with manufacturing or service partners only to evaluate or support a
-              requested project.
-            </p>
-          </section>
+      <LegalSection title="Storage, retention, and international processing">
+        <p>
+          TYORA uses third-party infrastructure to store and process information. Because TYORA supports international customers and works with suppliers in China, information may be processed in countries other than your own.
+        </p>
+        <p>
+          Records are retained for as long as reasonably needed to provide the service, support repeat orders, resolve disputes, meet legal or accounting obligations, and protect the service. Retention periods vary by record type and project status.
+        </p>
+      </LegalSection>
 
-          <section className="rounded-2xl border border-[#e4e8ef] bg-white p-5 shadow-sm shadow-[#101216]/4">
-            <h2 className="text-lg font-semibold text-[#101216]">Contact</h2>
-            <p className="mt-2">
-              For privacy questions, contact TYORA through the email or WhatsApp details
-              listed on the website.
-            </p>
-          </section>
-        </div>
-      </section>
-    </main>
+      <LegalSection title="Security and your choices">
+        <p>
+          We use access controls and technical safeguards appropriate to the information handled, but no online system can guarantee absolute security. You may ask to access, correct, or delete eligible personal information, subject to legal and operational retention requirements.
+        </p>
+        <p>
+          The service is intended for business users and is not directed to children. Please contact us if you believe a child has submitted personal information.
+        </p>
+      </LegalSection>
+    </LegalPageShell>
   );
 }

@@ -1,0 +1,102 @@
+[
+  {
+    "name": "home-desktop-1440x900",
+    "route": "/",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "home-desktop-full",
+    "route": "/",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "home-tablet-768x1024",
+    "route": "/",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 768,
+    "documentWidth": 768,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "home-mobile-390x844",
+    "route": "/",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "home-mobile-390-full",
+    "route": "/",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "idea-submit-desktop-1440x900",
+    "route": "/ask/new",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "source-mobile-390x844",
+    "route": "/source",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "my-tyora-anonymous-mobile-390x844",
+    "route": "/me",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "admin-dashboard-desktop-1440x900",
+    "route": "/admin",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  },
+  {
+    "name": "admin-unified-inbox-desktop-1440x900",
+    "route": "/admin/work-orders",
+    "status": 200,
+    "horizontalOverflow": false,
+    "viewportWidth": 1440,
+    "documentWidth": 1440,
+    "bottomNavigationDetected": false,
+    "visibleControlCoveredByBottomNavigation": false
+  }
+]

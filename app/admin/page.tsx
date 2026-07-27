@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
-  AlertCircle,
   BarChart3,
-  ArrowLeft,
   CalendarClock,
   Check,
   Clock,
@@ -15,15 +12,12 @@ import {
   File,
   Flag,
   Globe2,
-  ImagePlus,
   LayoutDashboard,
   Library,
   Lock,
-  LogOut,
   MessageCircle,
   MousePointerClick,
   Plus,
-  Save,
   Search,
   Smartphone,
   TrendingUp,
@@ -36,7 +30,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Textarea } from "@/components/ui/input";
-import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
+import HomepageContentEditor from "@/components/admin/homepage-content-editor";
+import CmsImageField from "@/components/admin/cms-image-field";
+import AdminDashboard from "@/components/admin/admin-dashboard";
+import AdminShell, { AdminSearchItem, AdminSectionId } from "@/components/admin/admin-shell";
+import { AdminActionBar, AdminEmptyState, AdminMetricCard } from "@/components/admin/admin-ui";
 import {
   CaseStudy,
   CaseStudyStatus,
@@ -61,8 +59,8 @@ import {
   uploadMedia
 } from "@/lib/storage";
 import { AnalyticsDashboard } from "@/lib/analytics";
-import { CommunityIdea, CommunityStatus } from "@/lib/community";
-import WorkOrdersAdminClient from "@/app/admin/work-orders/work-orders-admin-client";
+import { CommunityIdea } from "@/lib/community";
+import { WorkOrder } from "@/lib/work-orders";
 
 type TabId =
   | "today"
@@ -299,56 +297,27 @@ const zhText: Record<string, string> = {
   Lost: "已流失"
 };
 
-const osSections: Array<{
-  title: string;
-  items: Array<{ id?: TabId; href?: string; label: string; badge?: string }>;
-}> = [
-  { title: "Operations", items: [{ id: "today", label: "Workbench" }] },
-  {
-    title: "Projects",
-    items: [
-      { id: "submissions", label: "Projects & Team" }
-    ]
-  },
-  {
-    title: "Journeys",
-    items: [
-      { id: "cases", label: "All Journeys" },
-      { id: "cases", label: "Featured" }
-    ]
-  },
-  {
-    title: "Website",
-    items: [
-      { id: "homepage", label: "Homepage" },
-      { id: "sourceContent", label: "Source Page" },
-      { id: "mobileTabs", label: "Mobile Tabs" },
-      { id: "moduleVisibility", label: "Homepage Modules" },
-      { id: "brand", label: "Navigation" },
-      { id: "brand", label: "Footer" },
-      { id: "video", label: "Brand Film" },
-      { id: "pricing", label: "Pricing" },
-      { id: "contact", label: "Contact Settings" },
-      { id: "founder", label: "Founder Profile" }
-    ]
-  },
-  { title: "Media", items: [{ id: "media", label: "Media Library" }] },
-  {
-    title: "Users",
-    items: [
-      { id: "customers", label: "Customers" },
-      { id: "analytics", label: "Traffic Analytics" },
-      { id: "analytics", label: "Roles & Permissions" }
-    ]
-  },
-  {
-    title: "Settings",
-    items: [
-      { id: "brand", label: "General Settings" },
-      { id: "contact", label: "Integrations" }
-    ]
-  }
-];
+const adminSectionMeta: Record<AdminSectionId, { title: string; description: string }> = {
+  today: { title: "Operations Dashboard", description: "Real submissions, follow-ups, and project status at a glance." },
+  inbox: { title: "Unified Inbox", description: "Review submissions, private context, customer updates, and follow-ups." },
+  community: { title: "Ideas Moderation", description: "Moderate public Ideas and publish structured TYORA assessments." },
+  sourceQueue: { title: "Source Products Queue", description: "Review supplier-check requests and sourcing progress." },
+  submissions: { title: "Projects", description: "Manage existing project submissions and project ownership." },
+  customers: { title: "Customers", description: "Review registered customers and their real TYORA activity." },
+  cases: { title: "Cases", description: "Manage TYORA cases and demonstration-project disclosure." },
+  pricing: { title: "Pricing", description: "Maintain the existing central service pricing content." },
+  homepage: { title: "Website Content", description: "Edit homepage campaigns, categories, cases, media, and calls to action." },
+  media: { title: "Media", description: "Manage the existing CMS media library." },
+  team: { title: "Team & Settings", description: "Manage existing team members and roles." },
+  sourceContent: { title: "Source Page", description: "Edit the existing public Source page content." },
+  analytics: { title: "Traffic Analytics", description: "Real Preview traffic and conversion activity." },
+  mobileTabs: { title: "Mobile Navigation", description: "Edit existing mobile-tab labels and destinations." },
+  moduleVisibility: { title: "Homepage Modules", description: "Control existing homepage module visibility." },
+  brand: { title: "Brand & Navigation", description: "Edit navigation, footer, brand assets, and general site settings." },
+  video: { title: "Brand Film", description: "Manage the existing video and cover media." },
+  contact: { title: "Contact Settings", description: "Edit existing public contact destinations." },
+  founder: { title: "Founder Profile", description: "Edit the existing founder profile content." }
+};
 
 const leadStatuses: LeadStatus[] = [
   "New",
@@ -383,7 +352,7 @@ function mediaTypeFromMime(mimeType: string): MediaType {
 function validateFile(file: File, allowed: MediaType[]) {
   const type = mediaTypeFromMime(file.type);
   const validMime =
-    ["image/jpeg", "image/png", "image/webp", "image/svg+xml"].includes(file.type) ||
+    ["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type) ||
     ["video/mp4", "video/webm", "application/pdf"].includes(file.type);
 
   if (!validMime || !allowed.includes(type)) {
@@ -406,7 +375,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block text-sm font-medium">
+    <label className="block text-sm font-medium text-[#344054]">
       {label}
       <div className="mt-2">{children}</div>
     </label>
@@ -423,7 +392,7 @@ function Toggle({
   label: string;
 }) {
   return (
-    <label className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-[#e8ebef] bg-white px-3 text-sm font-medium">
+    <label className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-medium text-[#344054]">
       {label}
       <input
         type="checkbox"
@@ -523,7 +492,7 @@ function MediaUploader({
           <input
             className="sr-only"
             type="file"
-            accept={allowed.includes("image") ? "image/jpeg,image/png,image/webp,image/svg+xml" : allowed.includes("video") ? "video/mp4,video/webm" : "application/pdf"}
+            accept={allowed.includes("image") ? "image/jpeg,image/png,image/webp,image/avif" : allowed.includes("video") ? "video/mp4,video/webm" : "application/pdf"}
             onChange={(event) => void handleFile(event.target.files?.[0])}
           />
         </label>
@@ -558,6 +527,9 @@ export default function AdminPage() {
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [workOrdersLoading, setWorkOrdersLoading] = useState(false);
+  const [workOrdersError, setWorkOrdersError] = useState("");
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [mediaSearch, setMediaSearch] = useState("");
@@ -573,6 +545,21 @@ export default function AdminPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [noteAuthor, setNoteAuthor] = useState("Adam");
   const [noteBody, setNoteBody] = useState("");
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("section");
+    if (requested === "team") {
+      setActiveTab("submissions");
+      setSubmissionView("team");
+      return;
+    }
+    const available: TabId[] = [
+      "today", "analytics", "customers", "homepage", "sourceContent", "mobileTabs",
+      "moduleVisibility", "media", "cases", "video", "brand", "founder", "pricing",
+      "contact", "submissions"
+    ];
+    if (available.includes(requested as TabId)) setActiveTab(requested as TabId);
+  }, []);
 
   useEffect(() => {
     void fetch("/api/admin/session")
@@ -595,6 +582,7 @@ export default function AdminPage() {
     void loadAnalytics();
     void loadCommunityAdminData();
     void loadCustomers();
+    void loadWorkOrders();
   }, [authenticated]);
 
   const t = (value: string) => (cmsLanguage === "zh" ? zhText[value] || value : value);
@@ -642,6 +630,24 @@ export default function AdminPage() {
       setCustomers(response.ok && payload.success && Array.isArray(payload.data) ? payload.data : []);
     } catch {
       setCustomers([]);
+    }
+  }
+
+  async function loadWorkOrders() {
+    setWorkOrdersLoading(true);
+    setWorkOrdersError("");
+    try {
+      const response = await fetch("/api/admin/work-orders", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok || !payload.success || !Array.isArray(payload.data)) {
+        throw new Error("Unable to load operations data.");
+      }
+      setWorkOrders(payload.data);
+    } catch {
+      setWorkOrders([]);
+      setWorkOrdersError("Unable to load operations data.");
+    } finally {
+      setWorkOrdersLoading(false);
     }
   }
 
@@ -803,6 +809,58 @@ export default function AdminPage() {
 
   const leadCountries = useMemo(() => uniqueValues(leads.map((lead) => lead.country || "Unspecified")), [leads]);
   const leadCategories = useMemo(() => uniqueValues(leads.map((lead) => lead.category || "Unspecified")), [leads]);
+  const activeSection: AdminSectionId = activeTab === "submissions" && submissionView === "team"
+    ? "team"
+    : activeTab;
+  const sectionMeta = adminSectionMeta[activeSection];
+  const needsReplyCount = workOrders.filter((order) => order.needsReply).length;
+  const canSaveContent = !["today", "analytics", "customers", "submissions", "media"].includes(activeTab);
+  const adminSearchItems = useMemo<AdminSearchItem[]>(() => [
+    ...workOrders.slice(0, 60).map((order) => ({
+      id: `work-order-${order.id}`,
+      label: order.title,
+      description: `${order.type} · ${order.customerName} · ${order.sourceId}`,
+      href: order.type === "Project" ? undefined : order.adminHref,
+      sectionId: order.type === "Project" ? "submissions" as const : undefined,
+      keywords: [order.status, order.country, order.category, ...order.tags].join(" ")
+    })),
+    ...customers.slice(0, 40).map((customer) => ({
+      id: `customer-${customer.id}`,
+      label: customer.name || customer.username || "Customer",
+      description: `Customer · ${customer.email}`,
+      sectionId: "customers" as const,
+      keywords: [customer.country, customer.city, customer.source].join(" ")
+    })),
+    ...communityIdeas.slice(0, 40).map((idea) => ({
+      id: `idea-${idea.id}`,
+      label: idea.title,
+      description: `Idea · ${idea.author.name} · ${idea.status}`,
+      href: "/admin/community",
+      keywords: [idea.category, idea.visibility, idea.pinned ? "pinned" : ""].join(" ")
+    }))
+  ], [communityIdeas, customers, workOrders]);
+
+  function navigateAdmin(section: AdminSectionId) {
+    if (section === "inbox") {
+      window.location.assign("/admin/work-orders");
+      return;
+    }
+    if (section === "community") {
+      window.location.assign("/admin/community");
+      return;
+    }
+    if (section === "sourceQueue") {
+      window.location.assign("/admin/source");
+      return;
+    }
+    if (section === "team") {
+      setActiveTab("submissions");
+      setSubmissionView("team");
+      return;
+    }
+    setActiveTab(section);
+    if (section === "submissions") setSubmissionView("projects");
+  }
 
   if (checkingSession) {
     return (
@@ -845,85 +903,34 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f7f9] text-[#101216]">
-      <header className="sticky top-0 z-30 border-b border-[#e8ebef] bg-white/92 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="rounded-lg p-2 hover:bg-[#f5f6f8]" aria-label="Back to site">
-              <ArrowLeft size={20} />
-            </Link>
-            <div>
-              <p className="font-semibold">TYORA OS</p>
-              <p className="text-xs text-[#69707d]">Product Creator Operating System</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <AdminViewCommunityLink className="hidden sm:inline-flex" />
-            <Button variant="outline" className="hidden min-h-10 px-3 sm:inline-flex">
-              <Plus size={15} /> Quick Action
-            </Button>
-            <Button variant="outline" onClick={toggleCmsLanguage}>
-              {cmsLanguage === "en" ? "中文" : "EN"}
-            </Button>
-            <Button onClick={() => persistContent()}>
-              <Save size={16} /> {t("Save Changes")}
-            </Button>
-            <Button variant="outline" onClick={() => void logout()}>
-              <LogOut size={16} /> {t("Logout")}
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       {toast ? (
-        <div className="fixed right-5 top-20 z-50 rounded-lg bg-[#101216] px-4 py-3 text-sm text-white shadow-xl">
+        <div className="fixed right-4 top-20 z-[70] rounded-md bg-[#101828] px-4 py-3 text-sm text-white shadow-xl" role="status">
           {toast}
         </div>
       ) : null}
-
-      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8">
-        <aside className="rounded-[22px] border border-[#e8ebef] bg-white p-4 shadow-sm shadow-[#101216]/4 lg:sticky lg:top-22 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-auto">
-          <div className="mb-4 rounded-2xl bg-[#101216] p-4 text-white">
-            <p className="text-sm font-semibold">Admin workspace</p>
-            <p className="mt-1 text-xs leading-5 text-white/68">Workflow-first control for community, projects, journeys, website and media.</p>
-          </div>
-          <div className="space-y-4">
-            {osSections.map((section) => (
-              <div key={section.title}>
-                <p className="px-3 text-[11px] font-semibold uppercase tracking-normal text-[#8b93a1]">{section.title}</p>
-                <div className="mt-1 space-y-1">
-                  {section.items.map((item) => item.href ? (
-                    <Link key={`${section.title}-${item.label}`} href={item.href} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">
-                      <span>{item.label}</span>
-                    </Link>
-                  ) : (
-                    <button
-                      key={`${section.title}-${item.label}`}
-                      onClick={() => item.id && setActiveTab(item.id)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition ${
-                        activeTab === item.id ? "bg-[#101216] text-white shadow-sm shadow-[#101216]/10" : "text-[#59616e] hover:bg-[#f5f6f8]"
-                      }`}
-                    >
-                      <span>{item.label}</span>
-                      {item.badge ? <span className="text-xs opacity-70">{item.badge}</span> : null}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        <section className="min-w-0 space-y-6">
+      <AdminShell
+        activeSection={activeSection}
+        pageTitle={sectionMeta.title}
+        pageDescription={sectionMeta.description}
+        notificationCount={needsReplyCount}
+        searchItems={adminSearchItems}
+        canSave={canSaveContent}
+        languageLabel={cmsLanguage === "en" ? "中文" : "EN"}
+        onNavigate={navigateAdmin}
+        onNewProject={() => navigateAdmin("submissions")}
+        onSave={() => void persistContent()}
+        onToggleLanguage={toggleCmsLanguage}
+        onLogout={() => void logout()}
+      >
+        <section className="min-w-0 space-y-5">
           {activeTab === "today" ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-semibold text-[#69707d]">TYORA OS</p>
-                <h1 className="mt-1 text-3xl font-semibold">Workbench</h1>
-                <p className="mt-1 text-sm text-[#69707d]">Visitors, requests, replies and follow-up in one place.</p>
-              </div>
-              <WorkOrdersAdminClient embedded />
-            </div>
+            <AdminDashboard
+              orders={workOrders}
+              loading={workOrdersLoading}
+              error={workOrdersError}
+              onRefresh={() => void loadWorkOrders()}
+            />
           ) : null}
 
           {activeTab === "customers" ? <CustomersSection customers={customers} refresh={() => void loadCustomers()} /> : null}
@@ -943,59 +950,15 @@ export default function AdminPage() {
                 <LayoutDashboard size={18} />
                 <h1 className="text-xl font-semibold">{t("Homepage Content")}</h1>
               </div>
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Field label={t("Hero tagline")}>
-                  <Input value={content.heroTagline} onChange={(event) => updateContent("heroTagline", event.target.value)} />
-                </Field>
-                <Field label={t("Hero headline")}>
-                  <Input value={content.heroTitle} onChange={(event) => updateContent("heroTitle", event.target.value)} />
-                </Field>
-                <Field label={t("Hero subheadline")}>
-                  <Textarea value={content.heroSubtitle} onChange={(event) => updateContent("heroSubtitle", event.target.value)} />
-                </Field>
-                <Field label={t("Hero input placeholder examples")}>
-                  <Textarea
-                    value={content.heroPlaceholders.join("\n")}
-                    onChange={(event) => updateContent("heroPlaceholders", event.target.value.split("\n").filter(Boolean))}
-                  />
-                </Field>
-                <Field label={t("CTA button text")}>
-                  <Input value={content.ctaText} onChange={(event) => updateContent("ctaText", event.target.value)} />
-                </Field>
-                <Field label={t("Trust badges, one per line")}>
-                  <Textarea
-                    value={content.trustBadges.join("\n")}
-                    onChange={(event) => updateContent("trustBadges", event.target.value.split("\n").filter(Boolean))}
-                  />
-                </Field>
-                <Field label={t("Positioning headline line 1")}>
-                  <Input value={content.positioningHeadlineA} onChange={(event) => updateContent("positioningHeadlineA", event.target.value)} />
-                </Field>
-                <Field label={t("Positioning headline line 2")}>
-                  <Input value={content.positioningHeadlineB} onChange={(event) => updateContent("positioningHeadlineB", event.target.value)} />
-                </Field>
-                <Field label={t("Positioning subtitle")}>
-                  <Textarea value={content.positioningText} onChange={(event) => updateContent("positioningText", event.target.value)} />
-                </Field>
-                <Field label={t("Footer text")}>
-                  <Input value={content.footerSlogan} onChange={(event) => updateContent("footerSlogan", event.target.value)} />
-                </Field>
-              </div>
-
-              <div className="mt-6 grid gap-5 lg:grid-cols-2">
-                <EditableCards
-                  title={t("Product Journey")}
-                  cards={content.journeySteps}
-                  onChange={(journeySteps) => updateContent("journeySteps", journeySteps)}
-                  t={t}
-                />
-                <EditableCards
-                  title={t("How TYORA Helps")}
-                  cards={content.helpCards}
-                  onChange={(helpCards) => updateContent("helpCards", helpCards)}
-                  t={t}
-                />
-              </div>
+              <p className="mb-6 rounded-lg bg-[#eef4ff] p-3 text-sm leading-6 text-[#344054]">
+                Homepage campaign, labels, images, case thresholds, categories, ordering, and CTA copy are managed here. Public visitors never see these edit controls.
+              </p>
+              <HomepageContentEditor
+                value={content.homepage}
+                media={media}
+                onUpload={addMedia}
+                onChange={(homepage) => updateContent("homepage", homepage)}
+              />
             </Card>
           ) : null}
 
@@ -1136,6 +1099,12 @@ export default function AdminPage() {
                 </Field>
                 <Field label="Start Discussion Subtitle">
                   <Input value={content.mobileTabs.startDiscussionSubtitle} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, startDiscussionSubtitle: event.target.value })} />
+                </Field>
+                <Field label="Private Custom Review">
+                  <Input value={content.mobileTabs.privateCustom} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, privateCustom: event.target.value })} />
+                </Field>
+                <Field label="Private Custom Review Subtitle">
+                  <Input value={content.mobileTabs.privateCustomSubtitle} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, privateCustomSubtitle: event.target.value })} />
                 </Field>
                 <Field label="Source Product">
                   <Input value={content.mobileTabs.sourceProduct} onChange={(event) => updateContent("mobileTabs", { ...content.mobileTabs, sourceProduct: event.target.value })} />
@@ -1384,8 +1353,8 @@ export default function AdminPage() {
             />
           ) : null}
         </section>
-      </div>
-    </main>
+      </AdminShell>
+    </>
   );
 }
 
@@ -1398,19 +1367,17 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-[#69707d]">Customers</p>
-          <h1 className="mt-1 text-3xl font-semibold">Email customer records</h1>
-          <p className="mt-1 text-sm text-[#69707d]">People who completed Email Login, with basic activity and acquisition context.</p>
-        </div>
-        <button onClick={refresh} className="h-10 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">Refresh</button>
-      </div>
-      <label className="flex h-11 items-center gap-2 rounded-full border border-[#dfe5ee] bg-white px-4 text-sm">
-        <Search size={16} className="text-[#8791a0]" />
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search email, name, source or country" className="w-full bg-transparent outline-none" />
-      </label>
-      <div className="overflow-x-auto rounded-[22px] border border-[#e1e6ee] bg-white shadow-sm">
+      <AdminActionBar
+        title="Customer directory"
+        description="Email Login accounts with basic activity and acquisition context from the existing customer records."
+        actions={<button onClick={refresh} className="min-h-11 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white hover:bg-[#004eeb]">Refresh</button>}
+      >
+        <label className="flex h-11 max-w-2xl items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm focus-within:border-[#155eef] focus-within:ring-4 focus-within:ring-[#155eef]/10">
+          <Search size={16} className="text-[#667085]" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search email, name, source or country" className="w-full bg-transparent outline-none" />
+        </label>
+      </AdminActionBar>
+      <div className="overflow-x-auto rounded-md border border-[#e4e7ec] bg-white shadow-sm">
         <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="border-b border-[#e8ebef] bg-[#f8fafc] text-xs text-[#687284]">
             <tr>{["Customer", "Source", "Location / IP", "Last login", "Logins", "Ideas", "Comments", "Reactions"].map((label) => <th key={label} className="px-4 py-3 font-semibold">{label}</th>)}</tr>
@@ -1430,178 +1397,10 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
             ))}
           </tbody>
         </table>
-        {!visible.length ? <p className="p-8 text-center text-sm text-[#687284]">No customers found.</p> : null}
+        {!visible.length ? <div className="p-4"><AdminEmptyState title="No customers found" description="Customer records will appear here after a matching Email Login account exists." /></div> : null}
       </div>
     </div>
   );
-}
-
-function TodaySection({
-  analytics,
-  communityIdeas,
-  leads,
-  setActiveTab
-}: {
-  analytics: AnalyticsDashboard | null;
-  communityIdeas: CommunityIdea[];
-  leads: Lead[];
-  setActiveTab: (tab: TabId) => void;
-}) {
-  const waitingIdeas = communityIdeas.filter((idea) => !idea.review && !idea.hidden).slice(0, 8);
-  const recentReviews = communityIdeas.filter((idea) => idea.review).slice(0, 5);
-  const pinnedIdeas = communityIdeas.filter((idea) => idea.pinned).slice(0, 5);
-  const projectsStarted = communityIdeas.filter((idea) => ["Project Started", "Manufacturing", "Shipping", "Completed"].includes(idea.status));
-  const manufacturing = communityIdeas.filter((idea) => idea.status === "Manufacturing").length;
-  const shipping = communityIdeas.filter((idea) => idea.status === "Shipping").length;
-  const completed = communityIdeas.filter((idea) => idea.status === "Completed").length;
-  const likes = communityIdeas.reduce((sum, idea) => sum + idea.likeCount, 0);
-  const liveActivity = [
-    ...communityIdeas.slice(0, 4).map((idea) => `${idea.author.name} uploaded ${idea.title}`),
-    ...recentReviews.map((idea) => `TYORA reviewed ${idea.title}`),
-    ...communityIdeas.flatMap((idea) => idea.comments.slice(-1).map((comment) => `${comment.author.name} commented on ${idea.title}`))
-  ].slice(0, 8);
-
-  const topCards = [
-    ["Ideas Waiting", waitingIdeas.length, "yellow"],
-    ["TYORA Reviews", recentReviews.length, "green"],
-    ["Projects Started", projectsStarted.length, "blue"],
-    ["New Users", Math.max(communityIdeas.length, leads.length), "purple"],
-    ["Total Views", analytics?.summary.pageViewsToday || 0, "gray"],
-    ["Likes", likes, "orange"]
-  ] as const;
-
-  return (
-    <div className="space-y-6">
-      <section className="rounded-[24px] border border-[#e8ebef] bg-white p-6 shadow-sm shadow-[#101216]/4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-sm font-medium text-[#69707d]">Today</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal">Good morning, Adam 👋</h1>
-            <p className="mt-2 text-[#69707d]">Here&apos;s what needs your attention today.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <a href="/ask/new" className="inline-flex h-10 items-center gap-2 rounded-full bg-[#101216] px-4 text-sm font-semibold text-white"><Plus size={15} /> New Idea</a>
-            <button onClick={() => setActiveTab("submissions")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold"><Plus size={15} /> New Project</button>
-            <button onClick={() => setActiveTab("cases")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold"><Plus size={15} /> Publish Journey</button>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-          {topCards.map(([label, value, tone]) => (
-            <div key={label} className={`rounded-2xl border p-4 ${toneClass(tone)}`}>
-              <p className="text-2xl font-semibold">{value}</p>
-              <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Needs Your Reply</h2>
-              <p className="mt-1 text-sm text-[#69707d]">Ideas waiting for TYORA Expert Review.</p>
-            </div>
-            <a href="/admin/community" className="text-sm font-semibold text-[#315fbd]">Open queue</a>
-          </div>
-          <div className="divide-y divide-[#eef1f4]">
-            {waitingIdeas.length === 0 ? <p className="rounded-2xl bg-[#f7f8fa] p-4 text-sm text-[#69707d]">No ideas waiting for review.</p> : null}
-            {waitingIdeas.map((idea) => (
-              <div key={idea.id} className="grid gap-3 py-4 sm:grid-cols-[52px_1fr_auto] sm:items-center">
-                <div className="flex size-13 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e9f7f3] to-[#efe9ff] text-sm font-semibold">
-                  {idea.title.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{idea.title}</p>
-                  <p className="mt-1 text-sm text-[#69707d]">{idea.author.name} · {relativeTime(idea.createdAt)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <OsStatusBadge status={idea.status} waiting={!idea.review} />
-                  <a href="/admin/community" className="rounded-full bg-[#101216] px-3 py-2 text-xs font-semibold text-white">Reply</a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-          <h2 className="text-xl font-semibold">Product Journeys Overview</h2>
-          <div className="mt-5 grid gap-3">
-            {[
-              ["Active Projects", projectsStarted.length, "bg-[#e9f2ff] text-[#1d4ed8]"],
-              ["Manufacturing", manufacturing, "bg-[#f0eaff] text-[#6d28d9]"],
-              ["Shipping", shipping, "bg-[#fff0df] text-[#c2410c]"],
-              ["Completed", completed, "bg-[#e8f8ef] text-[#15803d]"]
-            ].map(([label, value, cls]) => (
-              <div key={label} className="flex items-center justify-between rounded-2xl border border-[#eef1f4] p-4">
-                <span className="font-medium">{label}</span>
-                <span className={`rounded-full px-3 py-1 text-sm font-semibold ${cls}`}>{value}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-3">
-        <OsListCard title="Recent Community Activity" empty="No community activity yet." items={liveActivity} />
-        <OsListCard title="Pinned Ideas" empty="No pinned ideas." items={pinnedIdeas.map((idea) => idea.title)} />
-        <OsListCard title="Recent TYORA Reviews" empty="No TYORA reviews yet." items={recentReviews.map((idea) => idea.title)} />
-      </section>
-
-      <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-        <div className="mb-4 flex items-center gap-2">
-          <AlertCircle size={18} className="text-[#c2410c]" />
-          <h2 className="text-xl font-semibold">Live Activity Feed</h2>
-        </div>
-        <div className="grid gap-2 md:grid-cols-2">
-          {liveActivity.length === 0 ? <p className="text-sm text-[#69707d]">Real activity only. Uploads, comments, TYORA reviews and project changes will appear here.</p> : null}
-          {liveActivity.map((item) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{item}</p>)}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function OsListCard({ title, empty, items }: { title: string; empty: string; items: string[] }) {
-  return (
-    <Card className="rounded-[22px] p-5 shadow-sm shadow-[#101216]/4">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="mt-4 space-y-2">
-        {items.length === 0 ? <p className="text-sm leading-6 text-[#69707d]">{empty}</p> : null}
-        {items.slice(0, 6).map((item) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#59616e]">{item}</p>)}
-      </div>
-    </Card>
-  );
-}
-
-function OsStatusBadge({ status, waiting }: { status: CommunityStatus; waiting?: boolean }) {
-  const label = waiting ? "Waiting TYORA Review" : status === "TYORA Reviewing" ? "TYORA Replied" : status;
-  const cls = waiting
-    ? "bg-[#fff7d6] text-[#8a5a00]"
-    : status === "Completed"
-      ? "bg-[#e8f8ef] text-[#15803d]"
-      : status === "Project Started"
-        ? "bg-[#e9f2ff] text-[#1d4ed8]"
-        : status === "Manufacturing"
-          ? "bg-[#f0eaff] text-[#6d28d9]"
-          : status === "Shipping"
-            ? "bg-[#fff0df] text-[#c2410c]"
-            : "bg-[#f0eaff] text-[#6d28d9]";
-  return <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${cls}`}>{label}</span>;
-}
-
-function toneClass(tone: string) {
-  if (tone === "green") return "border-[#c9efd8] bg-[#f3fbf6]";
-  if (tone === "yellow") return "border-[#ffe89a] bg-[#fffbea]";
-  if (tone === "blue") return "border-[#c9ddff] bg-[#f4f8ff]";
-  if (tone === "purple") return "border-[#ddd0ff] bg-[#f7f3ff]";
-  if (tone === "orange") return "border-[#ffd8ad] bg-[#fff7ed]";
-  return "border-[#eef1f4] bg-[#fbfbfc]";
-}
-
-function relativeTime(value: string) {
-  const hours = Math.max(1, Math.round((Date.now() - new Date(value).getTime()) / 36e5));
-  return hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
 }
 
 function CeoDashboardSection({
@@ -1657,33 +1456,21 @@ function CeoDashboardSection({
 
   return (
     <div className="space-y-6">
-      <Card className="p-5">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <BarChart3 size={18} />
-            <div>
-              <h1 className="text-xl font-semibold">{t("CEO Dashboard")}</h1>
-              <p className="text-sm text-[#69707d]">{t("Today Overview")}</p>
-            </div>
-          </div>
-          <Button variant="outline" className="min-h-9 px-3" onClick={refresh} disabled={loading}>
+      <AdminActionBar
+        title={t("Traffic and conversion overview")}
+        description={t("Today Overview")}
+        actions={(
+          <Button variant="outline" onClick={refresh} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </Button>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+        )}
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           {summaryCards.map((card) => (
-            <div key={card.label} className="rounded-lg border border-[#e8ebef] bg-white p-4">
-              <div className="mb-3 flex items-center justify-between text-[#69707d]">
-                {card.icon}
-                <span className="text-xs">{card.detail}</span>
-              </div>
-              <p className="text-2xl font-semibold">{card.value}</p>
-              <p className="mt-1 text-sm text-[#69707d]">{card.label}</p>
-            </div>
+            <AdminMetricCard key={card.label} label={card.label} value={card.value} detail={card.detail} />
           ))}
         </div>
-      </Card>
+      </AdminActionBar>
 
       {!analytics ? (
         <Card className="p-8 text-center text-sm text-[#69707d]">
@@ -2190,7 +1977,7 @@ function TeamSettings({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-semibold">{t("Team Settings")}</h2>
         <Button variant="outline" className="min-h-9 px-3" onClick={() => persistTeamMembers([...teamMembers, {
           id: id("member"),
@@ -2204,8 +1991,9 @@ function TeamSettings({
         </Button>
       </div>
       <div className="grid gap-4">
+        {teamMembers.length === 0 ? <AdminEmptyState title="No team members" description="Add a team member to assign existing projects and operational ownership." /> : null}
         {teamMembers.map((member) => (
-          <div key={member.id} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+          <div key={member.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center gap-3">
               <Avatar member={member} />
               <div>
@@ -2359,8 +2147,8 @@ function EditableCards({
   t?: (value: string) => string;
 }) {
   return (
-    <div className="rounded-lg border border-[#e8ebef] p-4">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="rounded-md border border-[#e4e7ec] p-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-semibold">{title}</h2>
         <Button variant="outline" className="min-h-9 px-3" onClick={() => onChange([...cards, { title: t("New Item"), description: "" }])}>
           <Plus size={15} /> {t("Add")}
@@ -2368,11 +2156,11 @@ function EditableCards({
       </div>
       <div className="space-y-4">
         {cards.map((card, index) => (
-          <div key={`${card.title}-${index}`} className="rounded-lg bg-[#fbfbfc] p-3">
+          <div key={`${card.title}-${index}`} className="rounded-md bg-[#f9fafb] p-3">
             <div className="grid gap-3">
               <Input value={card.title} onChange={(event) => onChange(cards.map((item, i) => i === index ? { ...item, title: event.target.value } : item))} />
               <Textarea value={card.description} onChange={(event) => onChange(cards.map((item, i) => i === index ? { ...item, description: event.target.value } : item))} />
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => index > 0 && onChange(cards.map((item, i) => i === index - 1 ? cards[index] : i === index ? cards[index - 1] : item))}>{t("Up")}</Button>
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => index < cards.length - 1 && onChange(cards.map((item, i) => i === index + 1 ? cards[index] : i === index ? cards[index + 1] : item))}>{t("Down")}</Button>
                 <Button variant="ghost" className="min-h-9 px-3" onClick={() => window.confirm(t("Delete this item?")) && onChange(cards.filter((_, i) => i !== index))}>
@@ -2406,7 +2194,7 @@ function CaseStudiesEditor({
 
   return (
     <Card className="p-5">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">{t("Case Studies")}</h1>
         <Button onClick={() => updateContent("cases", [...content.cases, {
           id: id("case"),
@@ -2417,11 +2205,24 @@ function CaseStudiesEditor({
           category: "",
           shortDescription: "",
           concept: "Concept",
+          manufacturingReview: "",
+          suggestedMaterial: "",
+          suggestedProcess: "",
           prototype: "Prototype",
+          manufacturing: "Manufacturing",
           final: "Final Product",
           conceptImage: "",
           prototypeImage: "",
+          manufacturingImage: "",
           finalImage: "",
+          coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
+          moq: "",
+          timeline: "",
+          featured: false,
+          projectType: "Real Project",
+          badgeLabel: "TYORA Case",
+          ctaText: "View Custom Manufacturing",
+          ctaHref: "/custom",
           visible: true,
           order: content.cases.length + 1
         }])}>
@@ -2429,11 +2230,12 @@ function CaseStudiesEditor({
         </Button>
       </div>
       <div className="space-y-5">
+        {content.cases.length === 0 ? <AdminEmptyState title="No case studies" description="Add a case study when a real or clearly disclosed demonstration project is ready for CMS publishing." /> : null}
         {content.cases.map((story, index) => (
-          <div key={story.id} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+          <div key={story.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold">{story.name}</h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => updateCase(index, { visible: !story.visible })}>
                   {story.visible ? <Eye size={15} /> : <EyeOff size={15} />}
                   {story.visible ? t("Visible") : t("Hidden")}
@@ -2460,11 +2262,34 @@ function CaseStudiesEditor({
               <Field label={t("Country")}><Input value={story.country} onChange={(event) => updateCase(index, { country: event.target.value })} /></Field>
               <Field label={t("Category")}><Input value={story.category} onChange={(event) => updateCase(index, { category: event.target.value })} /></Field>
               <Field label={t("Display Order")}><Input type="number" value={story.order} onChange={(event) => updateCase(index, { order: Number(event.target.value) })} /></Field>
+              <Field label="Case badge"><Input value={story.badgeLabel} onChange={(event) => updateCase(index, { badgeLabel: event.target.value })} /></Field>
+              <Field label="Card CTA"><Input value={story.ctaText} onChange={(event) => updateCase(index, { ctaText: event.target.value })} /></Field>
+              <Field label="Card CTA route"><Input value={story.ctaHref} onChange={(event) => updateCase(index, { ctaHref: event.target.value })} /></Field>
+              <Field label="Project type">
+                <select className="min-h-11 w-full rounded-lg border border-[#e1e5ea] bg-white px-3 text-sm" value={story.projectType} onChange={(event) => updateCase(index, { projectType: event.target.value as CaseStudy["projectType"] })}>
+                  <option value="Real Project">Real Project</option>
+                  <option value="Demonstration Project">Demonstration Project</option>
+                </select>
+              </Field>
+              <Toggle label="Featured on homepage" checked={story.featured} onChange={(featured) => updateCase(index, { featured })} />
               <Field label={t("Short Description")}><Textarea value={story.shortDescription} onChange={(event) => updateCase(index, { shortDescription: event.target.value })} /></Field>
+              <Field label="Concept summary"><Textarea value={story.concept} onChange={(event) => updateCase(index, { concept: event.target.value })} /></Field>
+              <Field label="Manufacturing Review"><Textarea value={story.manufacturingReview} onChange={(event) => updateCase(index, { manufacturingReview: event.target.value })} /></Field>
+              <Field label="Suggested Material"><Textarea value={story.suggestedMaterial} onChange={(event) => updateCase(index, { suggestedMaterial: event.target.value })} /></Field>
+              <Field label="Suggested Process"><Textarea value={story.suggestedProcess} onChange={(event) => updateCase(index, { suggestedProcess: event.target.value })} /></Field>
+              <Field label="Prototype summary"><Textarea value={story.prototype} onChange={(event) => updateCase(index, { prototype: event.target.value })} /></Field>
+              <Field label="Manufacturing summary"><Textarea value={story.manufacturing} onChange={(event) => updateCase(index, { manufacturing: event.target.value })} /></Field>
+              <Field label="Final product summary"><Textarea value={story.final} onChange={(event) => updateCase(index, { final: event.target.value })} /></Field>
+              <Field label="MOQ"><Input value={story.moq} onChange={(event) => updateCase(index, { moq: event.target.value })} /></Field>
+              <Field label="Timeline"><Input value={story.timeline} onChange={(event) => updateCase(index, { timeline: event.target.value })} /></Field>
+            </div>
+            <div className="mt-4">
+              <CmsImageField label="Homepage case cover" value={story.coverImage} defaultValue={defaultContent.cases[0].coverImage} media={media} onUpload={addMedia} onChange={(coverImage) => updateCase(index, { coverImage })} />
             </div>
             <div className="mt-4 grid gap-4 lg:grid-cols-3">
               <MediaUploader label={t("Concept Image")} value={story.conceptImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { conceptImage: url })} onDelete={() => updateCase(index, { conceptImage: "" })} t={t} />
               <MediaUploader label={t("Prototype Image")} value={story.prototypeImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { prototypeImage: url })} onDelete={() => updateCase(index, { prototypeImage: "" })} t={t} />
+              <MediaUploader label="Manufacturing Image" value={story.manufacturingImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { manufacturingImage: url })} onDelete={() => updateCase(index, { manufacturingImage: "" })} t={t} />
               <MediaUploader label={t("Final Product Image")} value={story.finalImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { finalImage: url })} onDelete={() => updateCase(index, { finalImage: "" })} t={t} />
             </div>
           </div>
@@ -2489,7 +2314,7 @@ function PricingEditor({
 
   return (
     <Card className="p-5">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">{t("Pricing")}</h1>
         <Button onClick={() => updateContent("pricing", [...content.pricing, {
           id: id("plan"),
@@ -2511,11 +2336,12 @@ function PricingEditor({
         <Field label={t("Proof Line 2")}><Input value={content.pricingProofB} onChange={(event) => updateContent("pricingProofB", event.target.value)} /></Field>
       </div>
       <div className="mt-5 space-y-5">
+        {content.pricing.length === 0 ? <AdminEmptyState title="No pricing plans" description="Add a plan to publish editable service pricing through the existing CMS." /> : null}
         {content.pricing.map((plan, index) => (
-          <div key={plan.id} className="rounded-lg border border-[#e8ebef] bg-white p-4">
+          <div key={plan.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold">{plan.name}</h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="min-h-9 px-3" onClick={() => updatePlan(index, { visible: !plan.visible })}>
                   {plan.visible ? t("Visible") : t("Hidden")}
                 </Button>

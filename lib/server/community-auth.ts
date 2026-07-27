@@ -7,7 +7,9 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const SESSION_REFRESH_THRESHOLD_SECONDS = 60 * 60 * 24 * 14;
 
 function secret() {
-  return process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET || "tyora-community-dev-session";
+  const value = process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET;
+  if (!value) throw new Error("Community authentication is not configured.");
+  return value;
 }
 
 function sign(payload: string) {

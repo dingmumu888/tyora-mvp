@@ -1,13 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #101216;
-  --muted: #f5f6f8;
-  --muted-foreground: #69707d;
-  --border: #e8ebef;
-  --accent: #0f766e;
-  --accent-foreground: #ffffff;
+  --color-navy: #071b3a;
+  --color-primary: #155eef;
+  --color-primary-hover: #004eeb;
+  --color-primary-soft: #eef4ff;
+  --color-orange: #f9733d;
+  --color-text: #101828;
+  --color-text-secondary: #475467;
+  --color-border: #e4e7ec;
+  --color-page: #f8fafc;
+  --color-surface: #ffffff;
+  --color-success: #12b76a;
+  --color-warning: #f79009;
+  --color-danger: #f04438;
+
+  --font-sans: Arial, Helvetica, sans-serif;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.125rem;
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.06);
+  --shadow-md: 0 8px 24px rgb(16 24 40 / 0.08);
+  --shadow-lg: 0 20px 56px rgb(16 24 40 / 0.12);
+  --focus-ring: 0 0 0 4px rgb(21 94 239 / 0.16);
+
+  /* Backward-compatible aliases for existing pages. */
+  --background: var(--color-surface);
+  --foreground: var(--color-text);
+  --muted: var(--color-page);
+  --muted-foreground: var(--color-text-secondary);
+  --border: var(--color-border);
+  --accent: var(--color-primary);
+  --accent-foreground: var(--color-surface);
 }
 
 * {
@@ -22,7 +55,7 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: 0;
 }
 
@@ -33,12 +66,18 @@ select {
   font: inherit;
 }
 
+:where(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 ::selection {
-  background: #c7efe8;
+  background: var(--color-primary-soft);
+  color: var(--color-navy);
 }
 
 .soft-shadow {
-  box-shadow: 0 24px 80px rgba(16, 18, 22, 0.08);
+  box-shadow: var(--shadow-lg);
 }
 
 .fine-grid {
