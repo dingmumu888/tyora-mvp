@@ -82,6 +82,8 @@ test("homepage remains honest, image-led, and useful with an empty Preview commu
 
   assert.match(home, /communityEmptyTitle/);
   assert.match(home, /featuredCases/);
+  assert.match(home, /caseHasVisibleCover/);
+  assert.match(home, /defaultContent\.cases\.find/);
   assert.match(home, /badge=\{story\.badgeLabel\}/);
   assert.match(home, /disclosure=\{story\.projectType\}/);
   assert.ok(

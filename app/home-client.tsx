@@ -83,6 +83,10 @@ function reviewSummary(idea: CommunityIdea) {
   ].filter((value): value is string => Boolean(value?.trim())).join(" | ");
 }
 
+function caseHasVisibleCover(story: CaseStudy) {
+  return story.coverImage.visible && Boolean(story.coverImage.desktopUrl?.trim());
+}
+
 function wordSafeExcerpt(value: string, maximum = 108) {
   const compact = value.replace(/\s+/g, " ").trim();
   if (compact.length <= maximum) return compact;
@@ -245,13 +249,19 @@ export default function Home() {
     })
     .slice(0, homepage.communityLimit), [communityIdeas, homepage.communityLimit, homepage.communityMinimumScore]);
 
-  const featuredCases = useMemo(() => content.cases
-    .filter((story) => story.visible)
-    .sort((left, right) => {
+  const featuredCases = useMemo(() => {
+    const candidates = content.cases.filter((story) => story.visible);
+    if (!candidates.some(caseHasVisibleCover)) {
+      const fallbackCase = defaultContent.cases.find((story) => story.visible && caseHasVisibleCover(story));
+      if (fallbackCase && !candidates.some((story) => story.id === fallbackCase.id)) candidates.unshift(fallbackCase);
+    }
+    return candidates.sort((left, right) => {
+      if (caseHasVisibleCover(left) !== caseHasVisibleCover(right)) return Number(caseHasVisibleCover(right)) - Number(caseHasVisibleCover(left));
       if (left.featured !== right.featured) return Number(right.featured) - Number(left.featured);
       return left.order - right.order;
     })
-    .slice(0, homepage.caseLimit), [content.cases, homepage.caseLimit]);
+      .slice(0, homepage.caseLimit);
+  }, [content.cases, homepage.caseLimit]);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white pb-[calc(8.75rem+env(safe-area-inset-bottom))] text-[#101828] md:pb-0">
