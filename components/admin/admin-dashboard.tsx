@@ -120,7 +120,7 @@ export default function AdminDashboard({
       <div className="grid min-h-[420px] place-items-center rounded-lg border border-[#e4e7ec] bg-white">
         <div className="text-center">
           <RefreshCcw className="mx-auto animate-spin text-[#155eef]" />
-          <p className="mt-3 text-sm font-semibold text-[#667085]">Loading real Preview data...</p>
+          <p className="mt-3 text-sm font-semibold text-[#667085]">Loading live dashboard data...</p>
         </div>
       </div>
     );

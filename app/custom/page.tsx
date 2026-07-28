@@ -10,7 +10,8 @@ export const revalidate = 0;
 
 export const metadata = {
   title: "Custom Product Development | TYORA",
-  description: "Send a private custom product project to TYORA for manufacturability, MOQ, mold, sample, and budget review."
+  description: "Send a private custom product project to TYORA for manufacturability, MOQ, mold, sample, and budget review.",
+  alternates: { canonical: "/custom" }
 };
 
 export default async function CustomPage({ searchParams }: { searchParams: Promise<{ idea?: string }> }) {

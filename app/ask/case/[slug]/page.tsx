@@ -11,7 +11,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const content = await getContent();
   const story = content.cases.find((item) => item.visible && item.slug === slug);
-  return { title: story ? `${story.name} | TYORA Case` : "TYORA Case", description: story?.shortDescription || "TYORA manufacturing case." };
+  return {
+    title: story ? `${story.name} | TYORA Case` : "TYORA Case",
+    description: story?.shortDescription || "TYORA manufacturing case.",
+    alternates: story ? { canonical: `/ask/case/${encodeURIComponent(slug)}` } : undefined
+  };
 }
 
 export default async function TyoraCaseDetailPage({ params }: { params: Promise<{ slug: string }> }) {

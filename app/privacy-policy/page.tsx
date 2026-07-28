@@ -3,7 +3,8 @@ import LegalPageShell, { LegalSection } from "@/components/legal-page-shell";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | TYORA",
-  description: "How TYORA handles website, community, sourcing, and product-development information."
+  description: "How TYORA handles website, community, sourcing, and product-development information.",
+  alternates: { canonical: "/privacy-policy" }
 };
 
 export default function PrivacyPolicyPage() {

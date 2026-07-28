@@ -3,7 +3,8 @@ import LegalPageShell, { LegalSection } from "@/components/legal-page-shell";
 
 export const metadata: Metadata = {
   title: "Service Scope | TYORA",
-  description: "The general boundaries of TYORA's idea review, sourcing, and managed production support."
+  description: "The general boundaries of TYORA's idea review, sourcing, and managed production support.",
+  alternates: { canonical: "/service-scope" }
 };
 
 export default function ServiceScopePage() {

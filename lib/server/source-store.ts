@@ -115,13 +115,14 @@ export function validateSourceRequestInput(input: unknown) {
   const email = validEmailOrEmpty(data.email);
   const whatsapp = text(data.whatsapp, 80);
   const needTypes = normalizeSourceNeedTypes(data.needTypes);
+  const productLink = sanitizeOptionalProductLink(data.productLink);
 
   if (!productName && !description) return "Product name or description is required.";
   if (!quantity) return "Quantity needed is required.";
   if (!destinationCountry) return "Destination country is required.";
   if (!email && !whatsapp) return "Email or WhatsApp is required.";
   if (needTypes.length === 0) return "Select at least one sourcing need.";
-  if (sourceImageUrls(data).length === 0) return "Upload a valid product image.";
+  if (sourceImageUrls(data).length === 0 && !productLink) return "Add a valid product link or upload a valid product image.";
 
   return null;
 }

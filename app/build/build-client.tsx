@@ -77,7 +77,7 @@ export default function BuildClient() {
             <Link href="/" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Community</Link>
             <Link href="/source" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Source</Link>
             <Link href="/build" className="rounded-full bg-[#2563eb] px-3 py-2 text-sm font-medium text-white">Build</Link>
-            <Link href="/#pricing" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Pricing</Link>
+            <Link href="/build#pricing" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
             <div className="hidden md:block">

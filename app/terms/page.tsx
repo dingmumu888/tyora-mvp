@@ -3,7 +3,8 @@ import LegalPageShell, { LegalSection } from "@/components/legal-page-shell";
 
 export const metadata: Metadata = {
   title: "Terms of Service | TYORA",
-  description: "General terms for TYORA community, sourcing, and product-development services."
+  description: "General terms for TYORA community, sourcing, and product-development services.",
+  alternates: { canonical: "/terms" }
 };
 
 export default function TermsPage() {
