@@ -31,7 +31,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" translate="no" className="notranslate">
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body>
         <PublicLanguageProvider>
           <AnalyticsPageTracker />

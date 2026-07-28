@@ -38,6 +38,12 @@ requireCheck(
   "The public language provider does not wrap the public application."
 );
 requireCheck(
+  layout.includes('translate="no"')
+    && layout.includes('className="notranslate"')
+    && layout.includes('<meta name="google" content="notranslate" />'),
+  "Browser auto-translation is not disabled and can override TYORA's language selector."
+);
+requireCheck(
   home.includes("localizeHomepage(content.homepage, language)")
     && home.includes("<PublicLanguageSwitcher")
     && home.includes("copy.home.postIdea")
