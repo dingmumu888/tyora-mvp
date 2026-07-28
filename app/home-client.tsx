@@ -278,11 +278,19 @@ export default function Home() {
           <Link href="/" className="flex items-center gap-2" aria-label="TYORA home">
             {content.logoImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={content.logoImage} alt="" className="size-8 rounded-md object-cover" />
+              <img
+                src={content.logoImage}
+                alt={content.showBrandNameWithLogo ? "" : content.brandName}
+                className={content.showBrandNameWithLogo
+                  ? "size-9 rounded-md object-contain"
+                  : "h-10 w-auto max-w-40 object-contain"}
+              />
             ) : (
               <span className="grid size-8 place-items-center rounded-md bg-[#101828] text-white"><Sparkles size={16} /></span>
             )}
-            <span className="text-lg font-bold tracking-normal text-[#101828]">TYORA</span>
+            {content.showBrandNameWithLogo ? (
+              <span className="text-lg font-bold tracking-normal text-[#101828]">{content.brandName}</span>
+            ) : null}
           </Link>
 
           <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary navigation">
@@ -518,7 +526,7 @@ export default function Home() {
 
       <footer className="border-t border-[#e4e7ec] bg-white">
         <div className="mx-auto flex max-w-[1280px] flex-col gap-4 px-5 py-6 text-sm text-[#667085] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          <div><p className="font-bold text-[#101828]">TYORA</p><p className="mt-1 max-w-md">{content.footerSlogan}</p></div>
+          <div><p className="font-bold text-[#101828]">{content.brandName}</p><p className="mt-1 max-w-md">{content.footerSlogan}</p></div>
           <nav className="flex flex-wrap gap-x-5" aria-label="Footer navigation">
             <Link className="inline-flex min-h-11 items-center" href="/privacy-policy">{copy.common.privacy}</Link>
             <Link className="inline-flex min-h-11 items-center" href="/terms">{copy.common.terms}</Link>

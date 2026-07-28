@@ -63,16 +63,24 @@ export default function BuildClient() {
           <Link href="/" className="flex items-center gap-2 font-semibold">
             {content.logoImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={content.logoImage} alt={content.brandName} className="size-8 rounded-lg object-cover" />
+              <img
+                src={content.logoImage}
+                alt={content.showBrandNameWithLogo ? "" : content.brandName}
+                className={content.showBrandNameWithLogo
+                  ? "size-9 rounded-lg object-contain"
+                  : "h-10 w-auto max-w-40 object-contain"}
+              />
             ) : (
               <span className="flex size-8 items-center justify-center rounded-lg bg-[#101216] text-white">
                 <Sparkles size={16} />
               </span>
             )}
-            <span className="leading-tight">
-              {content.brandName}
-              <span className="block text-[10px] font-medium uppercase tracking-normal text-[#69707d]">Build</span>
-            </span>
+            {content.showBrandNameWithLogo ? (
+              <span className="leading-tight">
+                {content.brandName}
+                <span className="block text-[10px] font-medium uppercase tracking-normal text-[#69707d]">Build</span>
+              </span>
+            ) : null}
           </Link>
           <nav className="hidden items-center gap-1 lg:flex">
             <Link href="/" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Community</Link>

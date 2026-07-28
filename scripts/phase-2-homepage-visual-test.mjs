@@ -9,6 +9,7 @@ const admin = read("components/admin/homepage-content-editor.tsx");
 const casesAdmin = read("app/admin/page.tsx");
 const mobileTabs = read("components/mobile-bottom-tabs.tsx");
 const uploadRoute = read("app/api/media/upload/route.ts");
+const logoPath = path.join(root, "public/images/tyora-logo-mark-v1.png");
 const failures = [];
 
 function requireCheck(pass, message) {
@@ -28,7 +29,15 @@ requireCheck(home.includes("HomepagePostCard") && home.includes("<CommunityCard"
 requireCheck(home.includes("story.badgeLabel") && storage.includes('badgeLabel: "TYORA Case"'), "TYORA Case badge is missing or not CMS-managed.");
 requireCheck(!home.includes("/api/community/stats") && !home.includes("sourceRequestCount"), "Homepage still uses activity statistics.");
 requireCheck(!home.includes("fixed right-") && !home.includes("mobileDiscussionCtaCollapsed"), "Duplicate application-owned floating controls remain.");
-requireCheck(home.includes(">TYORA</") && storage.includes('brandName: "TYORA"'), "TYORA brand is not fixed in Latin characters.");
+requireCheck(home.includes("{content.brandName}") && storage.includes('brandName: "TYORA"'), "TYORA brand is not configured from CMS defaults.");
+requireCheck(
+  fs.existsSync(logoPath)
+    && storage.includes('logoImage: "/images/tyora-logo-mark-v1.png"')
+    && storage.includes("showBrandNameWithLogo")
+    && home.includes("content.showBrandNameWithLogo")
+    && casesAdmin.includes('t("Show brand name beside logo")'),
+  "The navigation logo mark or its CMS controls are incomplete."
+);
 requireCheck(!/提奥拉|提拉/.test([home, storage, admin, casesAdmin, mobileTabs].join("\n")), "Translated TYORA brand text was found.");
 requireCheck(storage.includes("navigationLinks") && storage.includes("communityMinimumScore") && storage.includes("caseLimit"), "CMS navigation, thresholds, or case limit is missing.");
 requireCheck(admin.includes("Featured campaigns") && admin.includes("Product categories") && admin.includes("Final production CTA"), "Homepage CMS editor is incomplete.");

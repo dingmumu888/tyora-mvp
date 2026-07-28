@@ -275,6 +275,7 @@ export type CaseStudy = {
 export type SiteContent = {
   brandName: string;
   logoImage: string;
+  showBrandNameWithLogo: boolean;
   favicon: string;
   whatsappLink: string;
   callLink: string;
@@ -402,7 +403,8 @@ export const defaultTeamMembers: TeamMember[] = [
 
 export const defaultContent: SiteContent = {
   brandName: "TYORA",
-  logoImage: "",
+  logoImage: "/images/tyora-logo-mark-v1.png",
+  showBrandNameWithLogo: true,
   favicon: "",
   whatsappLink: WHATSAPP_URL,
   callLink: "",
@@ -1635,8 +1637,11 @@ function cryptoSafeId(prefix: string) {
 export function normalizeContent(value: unknown): SiteContent {
   const item = value && typeof value === "object" ? (value as Partial<SiteContent>) : {};
   const normalized: SiteContent = {
-    brandName: "TYORA",
+    brandName: stringValue(item.brandName, defaultContent.brandName),
     logoImage: stringValue(item.logoImage, defaultContent.logoImage),
+    showBrandNameWithLogo: typeof item.showBrandNameWithLogo === "boolean"
+      ? item.showBrandNameWithLogo
+      : defaultContent.showBrandNameWithLogo,
     favicon: stringValue(item.favicon, defaultContent.favicon),
     whatsappLink: normalizeWhatsAppUrl(stringValue(item.whatsappLink, defaultContent.whatsappLink)),
     callLink: stringValue(item.callLink, defaultContent.callLink),
@@ -1679,6 +1684,9 @@ export function normalizeContent(value: unknown): SiteContent {
     moduleVisibility: normalizeModuleVisibility(item.moduleVisibility)
   };
 
+  if (!normalized.logoImage.trim()) {
+    normalized.logoImage = defaultContent.logoImage;
+  }
   if (normalized.heroSubtitle === legacyContent.heroSubtitle) {
     normalized.heroSubtitle = defaultContent.heroSubtitle;
   }

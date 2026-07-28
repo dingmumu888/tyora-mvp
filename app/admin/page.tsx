@@ -176,6 +176,7 @@ const zhText: Record<string, string> = {
   "Brand name": "品牌名称",
   Tagline: "标语",
   "Logo image": "Logo 图片",
+  "Show brand name beside logo": "在 Logo 旁显示品牌名称",
   Favicon: "网站图标",
   "Footer slogan": "页脚口号",
   "Founder name": "创始人姓名",
@@ -1255,6 +1256,11 @@ export default function AdminPage() {
                   <Input value={content.tagline} onChange={(event) => updateContent("tagline", event.target.value)} />
                 </Field>
                 <MediaUploader label={t("Logo image")} value={content.logoImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateContent("logoImage", url)} onDelete={() => updateContent("logoImage", "")} t={t} />
+                <Toggle
+                  label={t("Show brand name beside logo")}
+                  checked={content.showBrandNameWithLogo}
+                  onChange={(showBrandNameWithLogo) => updateContent("showBrandNameWithLogo", showBrandNameWithLogo)}
+                />
                 <MediaUploader label={t("Favicon")} value={content.favicon} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateContent("favicon", url)} onDelete={() => updateContent("favicon", "")} t={t} />
                 <Field label={t("Footer slogan")}>
                   <Input value={content.footerSlogan} onChange={(event) => updateContent("footerSlogan", event.target.value)} />
