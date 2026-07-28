@@ -256,7 +256,12 @@ export default function SourceClient() {
     setSubmissionNotice("");
     setSubmittedId("");
     try {
-      if (form.imageUrls.length === 0) throw new Error("Please upload a product image.");
+      const productLink = normalizeOptionalProductLink(form.productLink);
+      if (form.imageUrls.length === 0 && !productLink.value) {
+        throw new Error(productLink.omittedInvalid
+          ? "Please enter a valid product link or upload a product image."
+          : "Please add a product link or upload a product image.");
+      }
       if (!form.category.trim()) throw new Error("Please add a category.");
       if (!form.quantity.trim()) throw new Error("Please add the quantity needed.");
       const enteredEmail = form.email.trim();
@@ -264,7 +269,6 @@ export default function SourceClient() {
       const enteredWhatsapp = normalizeWhatsAppNumber(selectedCountry.dialCode, form.whatsappLocalNumber);
       const email = enteredEmail && isValidEmail(enteredEmail) ? enteredEmail : "";
       const whatsapp = enteredWhatsapp.replace(/\D/g, "").length >= 6 ? enteredWhatsapp : "";
-      const productLink = normalizeOptionalProductLink(form.productLink);
       const notices: string[] = [];
 
       if (!enteredEmail && !form.whatsappLocalNumber.trim()) {
@@ -373,6 +377,17 @@ export default function SourceClient() {
               </div>
             </div>
           ) : <div className="grid gap-4">
+            <Field label="Product link or image">
+              <input
+                value={form.productLink}
+                onChange={(event) => update("productLink", event.target.value)}
+                className={inputClass}
+                placeholder="https://www.1688.com/..."
+              />
+              <span className="text-xs font-normal leading-5 text-[#69707d]">
+                Paste a product page link, or leave this blank and upload at least one image below.
+              </span>
+            </Field>
             <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-[#cfd8e6] bg-[#f8fafc] text-left transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
               {form.imageUrls.length > 0 ? (
                 <span className="grid size-full grid-cols-3 gap-1 p-2">
@@ -394,7 +409,7 @@ export default function SourceClient() {
                   <span className="flex size-14 items-center justify-center rounded-2xl bg-white shadow-sm"><ImagePlus size={24} /></span>
                   <span className="font-semibold">Upload product images</span>
                   <span className="max-w-sm text-sm text-[#69707d]">Upload up to 9 product images, including detail photos, screenshots, catalog images, or supplier images.</span>
-                  <span className="text-xs font-semibold text-[#2563eb]">Required</span>
+                  <span className="text-xs font-semibold text-[#2563eb]">Optional if you added a product link</span>
                 </span>
               )}
             </button>
@@ -449,10 +464,6 @@ export default function SourceClient() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Product name">
                     <input value={form.productName} onChange={(event) => update("productName", event.target.value)} className={inputClass} placeholder="Portable blender" />
-                  </Field>
-                  <Field label="Product link">
-                    <input value={form.productLink} onChange={(event) => update("productLink", event.target.value)} className={inputClass} placeholder="https://..." />
-                    <span className="text-xs font-normal leading-5 text-[#69707d]">Optional. Paste a product page link, for example https://www.1688.com/...</span>
                   </Field>
                 </div>
                 <Field label="Product description">

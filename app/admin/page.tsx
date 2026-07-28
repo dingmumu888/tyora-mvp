@@ -310,7 +310,7 @@ const adminSectionMeta: Record<AdminSectionId, { title: string; description: str
   media: { title: "Media", description: "Manage the existing CMS media library." },
   team: { title: "Team & Settings", description: "Manage existing team members and roles." },
   sourceContent: { title: "Source Page", description: "Edit the existing public Source page content." },
-  analytics: { title: "Traffic Analytics", description: "Real Preview traffic and conversion activity." },
+  analytics: { title: "Traffic Analytics", description: "Live traffic and conversion activity." },
   mobileTabs: { title: "Mobile Navigation", description: "Edit existing mobile-tab labels and destinations." },
   moduleVisibility: { title: "Homepage Modules", description: "Control existing homepage module visibility." },
   brand: { title: "Brand & Navigation", description: "Edit navigation, footer, brand assets, and general site settings." },

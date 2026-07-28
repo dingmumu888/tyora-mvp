@@ -7,6 +7,14 @@ export const metadata = {
   robots: { index: false, follow: false }
 };
 
+function deploymentEnvironmentLabel() {
+  const value = process.env.VERCEL_ENV?.trim().toLowerCase();
+  if (value === "production") return "Production";
+  if (value === "preview") return "Preview";
+  if (value === "development") return "Development";
+  return "Current environment";
+}
+
 export default async function WorkOrdersAdminPage({
   searchParams
 }: {
@@ -20,5 +28,11 @@ export default async function WorkOrdersAdminPage({
   const recordKind = typeof params.kind === "string" && params.kind.length <= 64
     ? params.kind.trim()
     : undefined;
-  return <WorkOrdersAdminClient initialSubmissionId={submissionId} initialRecordKind={recordKind} />;
+  return (
+    <WorkOrdersAdminClient
+      initialSubmissionId={submissionId}
+      initialRecordKind={recordKind}
+      environmentLabel={deploymentEnvironmentLabel()}
+    />
+  );
 }

@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: idea ? `${idea.title} | Ask TYORA Community` : "Ask TYORA Idea",
     description: idea?.description || "Manufacturing discussion on Ask TYORA Community.",
+    alternates: isPublic ? { canonical: `/ask/${encodeURIComponent(slug)}` } : undefined,
     robots: isPublic
       ? { index: true, follow: true }
       : { index: false, follow: false }

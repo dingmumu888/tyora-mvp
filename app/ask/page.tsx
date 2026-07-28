@@ -24,7 +24,8 @@ export const revalidate = 0;
 
 export const metadata = {
   title: "Ask TYORA Community",
-  description: "Product creators discussing ideas with Chinese manufacturing expertise."
+  description: "Product creators discussing ideas with Chinese manufacturing expertise.",
+  alternates: { canonical: "/ask" }
 };
 
 const tabs: Array<[CommunityFeedSort, string]> = [
@@ -40,7 +41,7 @@ const topNav = [
   ["Post Idea", "/ask/new"],
   ["Source", "/source"],
   ["Custom", "/custom"],
-  ["Pricing", "/#pricing"]
+  ["Pricing", "/build#pricing"]
 ] as const;
 const statusSteps = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping"];
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";

@@ -20,11 +20,7 @@ export const metadata: Metadata = {
     title: "TYORA | Product Development & Manufacturing in China",
     description:
       "TYORA helps small brands develop, source, and manufacture consumer products in China with transparent factory pricing and flexible project support.",
-    type: "website",
-    url: "/"
-  },
-  alternates: {
-    canonical: "/"
+    type: "website"
   }
 };
 

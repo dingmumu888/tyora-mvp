@@ -50,16 +50,24 @@ const checks = [
       sourceContact.includes('`https://${trimmed}`')
   },
   {
-    name: "product link has optional format guidance",
+    name: "product link is presented as an equal alternative to image upload",
     pass:
-      source.includes("Optional. Paste a product page link") &&
-      source.includes("https://www.1688.com/...")
+      source.includes('<Field label="Product link or image">') &&
+      source.includes("Paste a product page link, or leave this blank and upload at least one image below.") &&
+      source.includes("Optional if you added a product link")
   },
   {
-    name: "invalid optional product links do not block server submission",
+    name: "server requires either a valid product link or a valid image",
     pass:
       sourceStore.includes("sanitizeOptionalProductLink") &&
-      !sourceStore.includes("Product link must start with http:// or https://.")
+      sourceStore.includes("sourceImageUrls(data).length === 0 && !productLink") &&
+      sourceStore.includes("Add a valid product link or upload a valid product image.")
+  },
+  {
+    name: "client requires either a valid product link or an uploaded image",
+    pass:
+      source.includes("form.imageUrls.length === 0 && !productLink.value") &&
+      source.includes("Please add a product link or upload a product image.")
   }
 ];
 

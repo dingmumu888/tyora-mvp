@@ -6,7 +6,8 @@ import CommunityUserMenu from "@/components/community-user-menu";
 
 export const metadata: Metadata = {
   title: "How TYORA Source Works | TYORA",
-  description: "Full TYORA Source process for supplier introduction and managed sourcing."
+  description: "Full TYORA Source process for supplier introduction and managed sourcing.",
+  alternates: { canonical: "/source/how-it-works" }
 };
 
 const supplierSteps = [

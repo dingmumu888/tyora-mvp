@@ -391,10 +391,12 @@ function WorkOrderWorkspace({
 
 function InboxContent({
   initialSubmissionId,
-  initialRecordKind
+  initialRecordKind,
+  environmentLabel
 }: {
   initialSubmissionId?: string;
   initialRecordKind?: string;
+  environmentLabel: string;
 }) {
   const router = useRouter();
   const [orders, setOrders] = useState<WorkOrder[]>([]);
@@ -524,7 +526,7 @@ function InboxContent({
           <div className="flex min-h-12 items-center justify-between border-b border-[#e4e7ec] px-4">
             <div>
               <h2 className="text-sm font-bold">Unified Inbox</h2>
-              <p className="text-xs text-[#667085]">{visibleOrders.length} real Preview record{visibleOrders.length === 1 ? "" : "s"}</p>
+              <p className="text-xs text-[#667085]">{visibleOrders.length} {environmentLabel} record{visibleOrders.length === 1 ? "" : "s"}</p>
             </div>
           </div>
           {loading ? (
@@ -612,11 +614,13 @@ function InboxContent({
 export default function WorkOrdersAdminClient({
   embedded = false,
   initialSubmissionId,
-  initialRecordKind
+  initialRecordKind,
+  environmentLabel = "current environment"
 }: {
   embedded?: boolean;
   initialSubmissionId?: string;
   initialRecordKind?: string;
+  environmentLabel?: string;
 }) {
   const [needsReplyCount, setNeedsReplyCount] = useState(0);
 
@@ -627,7 +631,7 @@ export default function WorkOrdersAdminClient({
       .catch(() => setNeedsReplyCount(0));
   }, []);
 
-  if (embedded) return <InboxContent initialSubmissionId={initialSubmissionId} initialRecordKind={initialRecordKind} />;
+  if (embedded) return <InboxContent initialSubmissionId={initialSubmissionId} initialRecordKind={initialRecordKind} environmentLabel={environmentLabel} />;
 
   function navigateAdmin(section: AdminSectionId) {
     if (section === "inbox") return;
@@ -654,7 +658,7 @@ export default function WorkOrdersAdminClient({
       onToggleLanguage={() => undefined}
       onLogout={() => void logout()}
     >
-      <InboxContent initialSubmissionId={initialSubmissionId} initialRecordKind={initialRecordKind} />
+      <InboxContent initialSubmissionId={initialSubmissionId} initialRecordKind={initialRecordKind} environmentLabel={environmentLabel} />
     </AdminShell>
   );
 }
