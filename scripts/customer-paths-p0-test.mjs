@@ -9,6 +9,7 @@ const mobileTabs = read("components/mobile-bottom-tabs.tsx");
 const search = read("components/site-search.tsx");
 const source = read("app/source/source-client.tsx");
 const custom = read("app/custom/page.tsx");
+const customInquiry = read("app/custom/custom-inquiry-client.tsx");
 const newIdea = read("app/ask/new/new-idea-client.tsx");
 const whatsapp = read("lib/whatsapp.ts");
 
@@ -44,16 +45,19 @@ const checks = [
       source.includes('<section id="service-protection"')
   },
   {
-    label: "Private Custom CTAs open the prefilled WhatsApp review path",
+    label: "Private Custom uses the owned private workflow while Source keeps the prefilled WhatsApp handoff",
     pass:
       whatsapp.includes("PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL") &&
       whatsapp.includes("I'd like a private custom product review") &&
-      custom.includes("href={PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL}") &&
+      custom.includes("<CustomInquiryClient") &&
+      customInquiry.includes('fetch("/api/community/custom"') &&
+      customInquiry.includes("<form onSubmit={submit}") &&
+      customInquiry.includes("Email login is required so the private inquiry remains linked only to your account.") &&
       source.includes("href={PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL}") &&
-      custom.includes("Start Private Review on WhatsApp")
+      source.includes("Start Private Review on WhatsApp")
   },
   {
-    label: "Idea creation is public-only because private reviews use WhatsApp",
+    label: "Idea creation is public-only because private reviews use the dedicated Custom workflow",
     pass:
       newIdea.includes('visibility: "Public"') &&
       !newIdea.includes("visibilityOptions") &&
