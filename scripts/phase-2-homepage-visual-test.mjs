@@ -16,7 +16,12 @@ function requireCheck(pass, message) {
 }
 
 requireCheck(!home.includes("min-h-[calc(100vh-64px)]"), "Legacy full-viewport empty community height remains.");
-requireCheck(home.includes("h-[calc(100svh-96px)]") && home.includes("max-h-[620px]"), "Hero does not reserve a visible hint of the next section.");
+requireCheck(
+  home.indexOf('id="ideas-and-cases"') < home.indexOf('aria-labelledby="homepage-campaign-title"')
+    && home.includes("Post Your Idea")
+    && home.includes("Source a Product"),
+  "Ideas, cases, and their primary actions are not the first homepage content."
+);
 requireCheck(home.includes("heroCampaign") && home.includes("primaryCtaText"), "CMS campaign and primary CTA are not first-class homepage content.");
 requireCheck(home.includes("assessmentPoints") && home.includes("eligibleIdeas") && home.includes("featuredCases"), "Assessment, real ideas, or case fallback is missing.");
 requireCheck(home.includes("HomepagePostCard") && home.includes("<CommunityCard") && home.includes("<CaseCard"), "Community ideas and TYORA cases do not share the same card system.");

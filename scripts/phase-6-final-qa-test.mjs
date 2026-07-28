@@ -84,6 +84,13 @@ test("homepage remains honest, image-led, and useful with an empty Preview commu
   assert.match(home, /featuredCases/);
   assert.match(home, /badge=\{story\.badgeLabel\}/);
   assert.match(home, /disclosure=\{story\.projectType\}/);
+  assert.ok(
+    home.indexOf('id="ideas-and-cases"') < home.indexOf('aria-labelledby="homepage-campaign-title"'),
+    "Ideas and TYORA cases must appear before campaign and service explanation content"
+  );
+  assert.match(home, /Post Your Idea/);
+  assert.match(home, /Source a Product/);
+  assert.match(home, /href=\{`\/ask\/case\/\$\{encodeURIComponent\(story\.slug\)\}`\}/);
   assert.match(cmsImage, /fallback/);
   assert.match(imageField, /CMS image missing/);
   assert.doesNotMatch(combined, /sample customer|fake kpi|invented customer|fabricated testimonial/i);

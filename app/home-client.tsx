@@ -158,8 +158,8 @@ function CaseCard({ story, featured = false }: { story: CaseStudy; featured?: bo
       review={story.manufacturingReview}
       meta={`${story.category} | ${story.status}`}
       disclosure={story.projectType}
-      href={story.ctaHref}
-      ctaText={story.ctaText}
+      href={`/ask/case/${encodeURIComponent(story.slug)}`}
+      ctaText="View TYORA Case"
       featured={featured}
       media={(
         <CmsImage
@@ -176,12 +176,12 @@ function CaseCard({ story, featured = false }: { story: CaseStudy; featured?: bo
 function CommunityCard({ idea }: { idea: CommunityIdea }) {
   return (
     <HomepagePostCard
-      badge={idea.category}
+      badge="Community Idea"
       badgeTone="blue"
       title={idea.title}
       description={idea.description}
       review={reviewSummary(idea)}
-      meta={`${idea.author.name} | ${timeAgo(idea.updatedAt || idea.createdAt)}`}
+      meta={`${idea.category} | ${idea.author.name} | ${timeAgo(idea.updatedAt || idea.createdAt)}`}
       href={`/ask/${idea.slug}`}
       stats={{ likes: idea.likeCount, comments: idea.comments.length }}
       media={(
@@ -300,73 +300,29 @@ export default function Home() {
         ) : null}
       </header>
 
-      <section className="relative h-[calc(100svh-96px)] min-h-[440px] max-h-[620px] overflow-hidden border-b border-[#dfe3e8] md:h-[calc(100vh-128px)] md:min-h-[500px] md:max-h-[620px]" aria-labelledby="homepage-campaign-title">
-        <CmsImage
-          image={heroCampaign.image}
-          fallbackAlt="TYORA manufacturing campaign"
-          sizes="100vw"
-          priority
-          className="absolute inset-0 size-full rounded-none"
-          imageClassName="object-cover"
-        />
-        <div className="absolute inset-0 bg-white/76" />
-        <div className="relative mx-auto flex h-full max-w-[1280px] items-center px-5 sm:px-6 lg:px-8">
-          <div className="max-w-2xl py-8 sm:py-10">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-[#155eef]">
-              <span>{heroCampaign.eyebrow}</span>
-              {heroCampaign.badge ? <span className="rounded-md border border-[#b2ccff] bg-white/90 px-2 py-1 text-[#1849a9]">{heroCampaign.badge}</span> : null}
-            </div>
-            <h1 id="homepage-campaign-title" className="mt-4 max-w-[18ch] text-3xl font-bold leading-[1.1] text-[#101828] sm:mt-5 sm:text-5xl lg:text-6xl">
-              {heroCampaign.title}
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-[#344054] sm:mt-5 sm:text-lg sm:leading-8">{heroCampaign.description}</p>
-            <div className="mt-5 flex flex-col gap-3 sm:mt-7 sm:flex-row">
-              <Link href={heroCampaign.primaryCtaHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#155eef] px-5 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
-                <Upload size={17} /> {heroCampaign.primaryCtaText} <ArrowRight size={16} />
-              </Link>
-              {heroCampaign.secondaryCtaText ? (
-                <Link href={heroCampaign.secondaryCtaHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#98a2b3] bg-white/88 px-5 text-sm font-semibold text-[#101828] transition hover:bg-white">
-                  {heroCampaign.secondaryCtaText} <ArrowRight size={16} />
-                </Link>
-              ) : null}
-            </div>
-            {heroCampaign.disclosure ? <p className="mt-4 text-xs font-medium text-[#667085]">{heroCampaign.disclosure}</p> : null}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#e4e7ec] bg-[#f8fafc]" aria-labelledby="assessment-title">
-        <div className="mx-auto grid max-w-[1280px] gap-5 px-5 py-8 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:items-center lg:px-8">
-          <div>
-            <p className="text-xs font-semibold uppercase text-[#155eef]">{homepage.assessmentEyebrow}</p>
-            <h2 id="assessment-title" className="mt-2 text-2xl font-bold leading-tight sm:text-3xl">{homepage.assessmentTitle}</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#475467] sm:text-base">{homepage.assessmentDescription}</p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-            {homepage.assessmentPoints.map((point) => (
-              <div key={point} className="flex min-h-12 items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-semibold text-[#344054]">
-                <Check size={16} className="shrink-0 text-[#0f766e]" /> {point}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="ideas-and-cases" className="scroll-mt-20 border-b border-[#e4e7ec] bg-white" aria-labelledby="ideas-cases-title">
-        <div className="mx-auto max-w-[1280px] px-5 py-10 sm:px-6 lg:px-8 lg:py-12">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div className="mx-auto max-w-[1280px] px-5 pb-10 pt-7 sm:px-6 sm:pt-9 lg:px-8 lg:pb-12">
+          <div className="grid gap-5 border-b border-[#e4e7ec] pb-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div className="max-w-3xl">
               <p className="text-xs font-semibold uppercase text-[#155eef]">{homepage.communityEyebrow}</p>
-              <h2 id="ideas-cases-title" className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">{homepage.communityTitle}</h2>
+              <h1 id="ideas-cases-title" className="mt-2 text-3xl font-bold leading-tight sm:text-5xl">{homepage.communityTitle}</h1>
               <p className="mt-3 text-sm leading-6 text-[#475467] sm:text-base">{homepage.communityDescription}</p>
             </div>
-            <Link href={homepage.communityCtaHref} className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-md border border-[#d0d5dd] px-4 text-sm font-semibold text-[#344054] hover:bg-[#f8fafc] sm:self-auto">
-              {homepage.communityCtaText} <ArrowRight size={16} />
-            </Link>
+            <div className="grid gap-2 sm:grid-cols-3 lg:flex lg:justify-end">
+              <Link href="/ask/new" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
+                <Upload size={16} /> Post Your Idea
+              </Link>
+              <Link href="/source" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#98a2b3] bg-white px-4 text-sm font-semibold text-[#101828] hover:bg-[#f8fafc]">
+                <PackageSearch size={16} /> Source a Product
+              </Link>
+              <Link href={homepage.communityCtaHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] px-4 text-sm font-semibold text-[#344054] hover:bg-[#f8fafc]">
+                {homepage.communityCtaText} <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
 
           {featuredCases[0] ? (
-            <div className="mt-6">
+            <div className="mt-5">
               <CaseCard story={featuredCases[0]} featured />
             </div>
           ) : null}
@@ -384,6 +340,58 @@ export default function Home() {
               <div><p className="font-semibold text-[#101828]">{homepage.communityEmptyTitle}</p><p className="mt-1">{homepage.communityEmptyBody}</p></div>
             </div>
           ) : null}
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden border-b border-[#dfe3e8] bg-[#f8fafc]" aria-labelledby="homepage-campaign-title">
+        <div className="mx-auto grid max-w-[1280px] lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)]">
+          <div className="order-2 flex items-center px-5 py-8 sm:px-6 lg:order-1 lg:px-8 lg:py-12">
+            <div className="max-w-xl">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-[#155eef]">
+                <span>{heroCampaign.eyebrow}</span>
+                {heroCampaign.badge ? <span className="rounded-md border border-[#b2ccff] bg-white px-2 py-1 text-[#1849a9]">{heroCampaign.badge}</span> : null}
+              </div>
+              <h2 id="homepage-campaign-title" className="mt-3 text-3xl font-bold leading-tight text-[#101828] sm:text-4xl">
+                {heroCampaign.title}
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-[#475467] sm:text-base">{heroCampaign.description}</p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <Link href={heroCampaign.primaryCtaHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
+                  <Upload size={16} /> {heroCampaign.primaryCtaText} <ArrowRight size={16} />
+                </Link>
+                {heroCampaign.secondaryCtaText ? (
+                  <Link href={heroCampaign.secondaryCtaHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#98a2b3] bg-white px-4 text-sm font-semibold text-[#101828] hover:bg-[#f2f4f7]">
+                    {heroCampaign.secondaryCtaText} <ArrowRight size={16} />
+                  </Link>
+                ) : null}
+              </div>
+              {heroCampaign.disclosure ? <p className="mt-3 text-xs font-medium text-[#667085]">{heroCampaign.disclosure}</p> : null}
+            </div>
+          </div>
+          <CmsImage
+            image={heroCampaign.image}
+            fallbackAlt="TYORA manufacturing campaign"
+            sizes="(max-width: 1023px) 100vw, 55vw"
+            className="order-1 aspect-[16/10] w-full rounded-none lg:order-2 lg:aspect-auto lg:min-h-[430px]"
+            imageClassName="object-cover"
+          />
+        </div>
+      </section>
+
+      <section className="border-b border-[#e4e7ec] bg-white" aria-labelledby="assessment-title">
+        <div className="mx-auto grid max-w-[1280px] gap-5 px-5 py-8 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:items-center lg:px-8">
+          <div>
+            <p className="text-xs font-semibold uppercase text-[#155eef]">{homepage.assessmentEyebrow}</p>
+            <h2 id="assessment-title" className="mt-2 text-2xl font-bold leading-tight sm:text-3xl">{homepage.assessmentTitle}</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#475467] sm:text-base">{homepage.assessmentDescription}</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            {homepage.assessmentPoints.map((point) => (
+              <div key={point} className="flex min-h-12 items-center gap-2 rounded-md border border-[#d0d5dd] bg-[#f8fafc] px-3 text-sm font-semibold text-[#344054]">
+                <Check size={16} className="shrink-0 text-[#0f766e]" /> {point}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
