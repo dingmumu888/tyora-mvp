@@ -38,6 +38,11 @@ requireCheck(
     && casesAdmin.includes('t("Show brand name beside logo")'),
   "The navigation logo mark or its CMS controls are incomplete."
 );
+requireCheck(
+  home.includes('className="flex shrink-0 items-center gap-2 pr-6 xl:pr-8"')
+    && home.includes('className="hidden min-w-0 items-center gap-0.5 xl:flex"'),
+  "The homepage brand and primary navigation can crowd each other at medium desktop widths."
+);
 requireCheck(!/提奥拉|提拉/.test([home, storage, admin, casesAdmin, mobileTabs].join("\n")), "Translated TYORA brand text was found.");
 requireCheck(storage.includes("navigationLinks") && storage.includes("communityMinimumScore") && storage.includes("caseLimit"), "CMS navigation, thresholds, or case limit is missing.");
 requireCheck(admin.includes("Featured campaigns") && admin.includes("Product categories") && admin.includes("Final production CTA"), "Homepage CMS editor is incomplete.");

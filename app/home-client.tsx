@@ -275,7 +275,7 @@ export default function Home() {
     <main className="min-h-screen overflow-x-hidden bg-white pb-[calc(8.75rem+env(safe-area-inset-bottom))] text-[#101828] md:pb-0">
       <header className="sticky top-0 z-50 border-b border-[#e4e7ec] bg-white/96 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2" aria-label="TYORA home">
+          <Link href="/" className="flex shrink-0 items-center gap-2 pr-6 xl:pr-8" aria-label="TYORA home">
             {content.logoImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -293,7 +293,7 @@ export default function Home() {
             ) : null}
           </Link>
 
-          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary navigation">
+          <nav className="hidden min-w-0 items-center gap-0.5 xl:flex" aria-label="Primary navigation">
             {navigation.map((link) => (
               <Link key={link.id} href={link.href} className="rounded-md px-3 py-2 text-sm font-medium text-[#475467] transition hover:bg-[#f2f4f7] hover:text-[#101828]">
                 {link.label}
