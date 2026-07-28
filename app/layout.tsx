@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import CommunityProfileGate from "@/components/community-profile-gate";
 import MobileBottomTabs from "@/components/mobile-bottom-tabs";
 import AnalyticsPageTracker from "@/components/analytics-page-tracker";
+import PublicLanguageProvider from "@/components/public-language-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,10 +33,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AnalyticsPageTracker />
-        {children}
-        <CommunityProfileGate />
-        <MobileBottomTabs />
+        <PublicLanguageProvider>
+          <AnalyticsPageTracker />
+          {children}
+          <CommunityProfileGate />
+          <MobileBottomTabs />
+        </PublicLanguageProvider>
       </body>
     </html>
   );

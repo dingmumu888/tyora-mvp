@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { communityQuestions, CommunityQuestion } from "@/lib/community";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { cn } from "@/lib/utils";
 
 type SessionUser = { id: string; name: string; email: string; username: string; avatar?: string; bio?: string; profileCompleted?: boolean };
@@ -295,6 +296,7 @@ export default function NewIdeaClient() {
             TYORA Community
           </Link>
           <div className="flex items-center gap-2">
+            <PublicLanguageSwitcher compact />
             <CommunityUserMenu
               loginOpenSignal={loginPrompt}
               loginOnSuccess={() => setMessage("Logged in successfully. Your draft is still here.")}

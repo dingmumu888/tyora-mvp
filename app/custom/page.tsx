@@ -4,6 +4,7 @@ import { getCommunitySession } from "@/lib/server/community-auth";
 import { getEligibleCustomIdeaContext } from "@/lib/server/custom-inquiry-store";
 import { getContent } from "@/lib/server/data-store";
 import CustomInquiryClient from "./custom-inquiry-client";
+import PublicLanguageSwitcher from "@/components/public-language-switcher";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -41,7 +42,10 @@ export default async function CustomPage({ searchParams }: { searchParams: Promi
             <Link href="/custom" className="rounded-full bg-[#101216] px-3 py-2 text-white">Custom</Link>
             <Link href="/me" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">My TYORA</Link>
           </nav>
-          <span className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-3 text-xs font-semibold"><LockKeyhole size={14} /> Private</span>
+          <div className="flex items-center gap-2">
+            <PublicLanguageSwitcher compact />
+            <span className="hidden min-h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-3 text-xs font-semibold sm:inline-flex"><LockKeyhole size={14} /> Private</span>
+          </div>
         </div>
       </header>
 

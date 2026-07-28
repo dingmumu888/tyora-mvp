@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, SearchCheck } from "lucide-react";
+import { usePublicLanguage } from "@/components/public-language-provider";
 
 type CommunityIdeaResult = {
   slug: string;
@@ -103,6 +104,7 @@ function matches(item: SearchItem, query: string) {
 }
 
 export default function SiteSearch({ className = "" }: { className?: string }) {
+  const { copy } = usePublicLanguage();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
@@ -159,7 +161,7 @@ export default function SiteSearch({ className = "" }: { className?: string }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
-          placeholder="Search"
+          placeholder={copy.common.search}
           className="min-w-0 flex-1 bg-transparent px-1 font-semibold outline-none placeholder:text-[#5f7fb8]"
           aria-label="Search TYORA"
         />
@@ -176,7 +178,7 @@ export default function SiteSearch({ className = "" }: { className?: string }) {
       {showResults ? (
         <div className="absolute right-0 top-12 z-50 w-[min(420px,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-[#dfe6ef] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="border-b border-[#edf1f5] px-4 py-3">
-            <p className="text-xs font-semibold uppercase text-[#69707d]">Search results</p>
+            <p className="text-xs font-semibold uppercase text-[#69707d]">{copy.common.searchResults}</p>
           </div>
           {results.length > 0 ? (
             <div className="max-h-[420px] overflow-y-auto p-2">
@@ -196,7 +198,7 @@ export default function SiteSearch({ className = "" }: { className?: string }) {
               ))}
             </div>
           ) : (
-            <p className="p-4 text-sm font-medium text-[#69707d]">No results found.</p>
+            <p className="p-4 text-sm font-medium text-[#69707d]">{copy.common.noResults}</p>
           )}
         </div>
       ) : null}

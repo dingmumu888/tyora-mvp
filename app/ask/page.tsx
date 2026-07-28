@@ -18,6 +18,7 @@ import { CaseStudy, CommunityPageContent } from "@/lib/storage";
 import CommunityImage from "@/components/community-image";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicLanguageSwitcher from "@/components/public-language-switcher";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -247,6 +248,7 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <PublicLanguageSwitcher compact />
             <div className="hidden h-10 w-64 items-center gap-2 rounded-full border border-[#e1e5ea] bg-white px-3 text-sm text-[#8b93a1] md:flex">
               <Search size={16} /> Search ideas
             </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, FileLock2, MapPin, Sparkles, UserRound } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import EmailLogin from "@/components/email-login";
 import MarkNotificationsRead from "@/components/mark-notifications-read";
 import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
@@ -110,7 +111,8 @@ export default async function MyTyoraPage() {
               </Link>
             ))}
           </nav>
-          <div className="hidden md:block">
+          <div className="hidden items-center gap-2 md:flex">
+            <PublicLanguageSwitcher compact />
             <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
           </div>
         </div>

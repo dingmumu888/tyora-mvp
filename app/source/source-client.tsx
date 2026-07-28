@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Factory, ImagePlus, PackageSearch, ShieldCheck } from "lucide-react";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicLanguageSwitcher from "@/components/public-language-switcher";
+import { usePublicLanguage } from "@/components/public-language-provider";
 import WhatsAppNumberInput from "@/components/whatsapp-number-input";
 import { callingCodeForCountry } from "@/lib/country-calling-codes";
 import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
@@ -146,6 +148,7 @@ function isValidEmail(value: string) {
 }
 
 export default function SourceClient() {
+  const { language, copy } = usePublicLanguage();
   const [content, setContent] = useState<SiteContent>(defaultContent);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
@@ -155,7 +158,13 @@ export default function SourceClient() {
   const [submittedContact, setSubmittedContact] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const whatsappCountryChangedRef = useRef(false);
-  const sourceCopy = content.sourcePage;
+  const sourceCopy = language === "en" ? content.sourcePage : {
+    ...content.sourcePage,
+    eyebrow: copy.home.source.eyebrow,
+    title: copy.home.source.title,
+    subtitle: copy.home.source.description,
+    ctaText: copy.home.source.ctaText
+  };
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
@@ -309,17 +318,18 @@ export default function SourceClient() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="font-semibold">TYORA</Link>
           <nav className="hidden items-center gap-1 text-sm font-semibold text-[#59616e] md:flex">
-            <Link href="/ask" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Discover Ideas</Link>
-            <Link href="/source" className="rounded-full bg-[#101216] px-3 py-2 text-white">Source Products</Link>
-            <Link href="/custom" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Custom</Link>
-            <Link href="/ask/new" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">Ask TYORA</Link>
+            <Link href="/ask" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">{copy.common.ideas}</Link>
+            <Link href="/source" className="rounded-full bg-[#101216] px-3 py-2 text-white">{copy.common.sourceExisting}</Link>
+            <Link href="/custom" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">{copy.common.privateCustom}</Link>
+            <Link href="/ask/new" className="rounded-full px-3 py-2 hover:bg-[#f3f5f8]">{copy.home.postIdea}</Link>
           </nav>
           <div className="flex items-center gap-2">
+            <PublicLanguageSwitcher compact />
             <div className="hidden md:block">
               <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
             </div>
             <Link href="#source-form" className="rounded-full border border-[#dfe3e8] px-3 py-2 text-sm font-semibold sm:px-4">
-              <span className="sm:hidden">Product Match</span>
+              <span className="sm:hidden">{copy.home.source.ctaText}</span>
               <span className="hidden sm:inline">{sourceCopy.ctaText}</span>
             </Link>
           </div>

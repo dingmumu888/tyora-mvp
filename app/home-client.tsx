@@ -24,8 +24,11 @@ import {
 import CmsImage from "@/components/cms-image";
 import CommunityImage from "@/components/community-image";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicLanguageSwitcher from "@/components/public-language-switcher";
+import { usePublicLanguage } from "@/components/public-language-provider";
 import SiteSearch from "@/components/site-search";
 import { CommunityIdea } from "@/lib/community";
+import { localizeHomepage, type PublicLanguage } from "@/lib/public-i18n";
 import { CaseStudy, defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
 type HomepagePostCardProps = {
@@ -52,15 +55,16 @@ const iconMap: Record<string, LucideIcon> = {
   custom: Factory
 };
 
-function timeAgo(value: string) {
+function timeAgo(value: string, language: PublicLanguage, recent: string) {
   const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "Recently";
+  if (!Number.isFinite(timestamp)) return recent;
   const minutes = Math.max(1, Math.floor((Date.now() - timestamp) / 60000));
-  if (minutes < 60) return `${minutes}m ago`;
+  const formatter = new Intl.RelativeTimeFormat(language, { numeric: "auto" });
+  if (minutes < 60) return formatter.format(-minutes, "minute");
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return formatter.format(-hours, "hour");
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return formatter.format(-days, "day");
 }
 
 function ideaScore(idea: CommunityIdea) {
@@ -110,6 +114,7 @@ function HomepagePostCard({
   featured = false,
   stats
 }: HomepagePostCardProps) {
+  const { copy } = usePublicLanguage();
   const reviewExcerpt = wordSafeExcerpt(review);
   return (
     <article className={`flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-[#dde3eb] bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] ${featured ? "md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]" : ""}`}>
@@ -132,7 +137,7 @@ function HomepagePostCard({
         <p className={`${featured ? "line-clamp-3" : "line-clamp-2"} mt-2 text-sm leading-6 text-[#475467]`}>{description}</p>
         {review ? (
           <div className="mt-4 border-l-2 border-[#14b8a6] pl-3">
-            <p className="text-xs font-semibold uppercase text-[#0f766e]">TYORA Review</p>
+            <p className="text-xs font-semibold uppercase text-[#0f766e]">{copy.home.tyoraReview}</p>
             <p className="mt-1 line-clamp-3 text-sm font-semibold leading-6 text-[#101828]" title={review}>{reviewExcerpt}</p>
           </div>
         ) : null}
@@ -144,7 +149,7 @@ function HomepagePostCard({
             </div>
           ) : <span />}
           <Link href={href} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#155eef]">
-            {ctaText || "Open Idea"} <ArrowRight size={15} />
+            {ctaText || copy.home.openIdea} <ArrowRight size={15} />
           </Link>
         </div>
       </div>
@@ -153,6 +158,7 @@ function HomepagePostCard({
 }
 
 function CaseCard({ story, featured = false }: { story: CaseStudy; featured?: boolean }) {
+  const { copy } = usePublicLanguage();
   return (
     <HomepagePostCard
       badge={story.badgeLabel}
@@ -163,7 +169,7 @@ function CaseCard({ story, featured = false }: { story: CaseStudy; featured?: bo
       meta={`${story.category} | ${story.status}`}
       disclosure={story.projectType}
       href={`/ask/case/${encodeURIComponent(story.slug)}`}
-      ctaText="View TYORA Case"
+      ctaText={copy.home.viewCase}
       featured={featured}
       media={(
         <CmsImage
@@ -178,14 +184,15 @@ function CaseCard({ story, featured = false }: { story: CaseStudy; featured?: bo
 }
 
 function CommunityCard({ idea }: { idea: CommunityIdea }) {
+  const { language, copy } = usePublicLanguage();
   return (
     <HomepagePostCard
-      badge="Community Idea"
+      badge={copy.home.communityIdea}
       badgeTone="blue"
       title={idea.title}
       description={idea.description}
       review={reviewSummary(idea)}
-      meta={`${idea.category} | ${idea.author.name} | ${timeAgo(idea.updatedAt || idea.createdAt)}`}
+      meta={`${idea.category} | ${idea.author.name} | ${timeAgo(idea.updatedAt || idea.createdAt, language, copy.home.recent)}`}
       href={`/ask/${idea.slug}`}
       stats={{ likes: idea.likeCount, comments: idea.comments.length }}
       media={(
@@ -201,6 +208,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
 }
 
 export default function Home() {
+  const { language, copy } = usePublicLanguage();
   const [content, setContent] = useState<SiteContent>(defaultContent);
   const [communityIdeas, setCommunityIdeas] = useState<CommunityIdea[]>([]);
   const [communityLoading, setCommunityLoading] = useState(true);
@@ -218,7 +226,7 @@ export default function Home() {
       .finally(() => setCommunityLoading(false));
   }, []);
 
-  const homepage = content.homepage;
+  const homepage = useMemo(() => localizeHomepage(content.homepage, language), [content.homepage, language]);
   const navigation = homepage.navigationLinks.filter((link) => link.visible).sort((left, right) => left.order - right.order);
   const visibleCampaigns = homepage.campaigns
     .filter((campaign) => campaign.visible)
@@ -287,15 +295,19 @@ export default function Home() {
 
           <div className="hidden items-center gap-2 md:flex">
             <SiteSearch className="hidden w-44 xl:block" />
+            <PublicLanguageSwitcher />
             <CommunityUserMenu loginClassName="inline-flex min-h-10 items-center rounded-md border border-[#d0d5dd] px-3 text-sm font-semibold text-[#344054]" />
             <Link href={heroCampaign.primaryCtaHref} className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
               {heroCampaign.primaryCtaText} <ArrowRight size={15} />
             </Link>
           </div>
 
-          <button type="button" onClick={() => setMobileMenuOpen((open) => !open)} className="grid size-11 place-items-center rounded-md border border-[#d0d5dd] text-[#101828] md:hidden" aria-expanded={mobileMenuOpen} aria-label="Toggle navigation">
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <PublicLanguageSwitcher compact />
+            <button type="button" onClick={() => setMobileMenuOpen((open) => !open)} className="grid size-11 place-items-center rounded-md border border-[#d0d5dd] text-[#101828]" aria-expanded={mobileMenuOpen} aria-label="Toggle navigation">
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
         {mobileMenuOpen ? (
           <nav className="border-t border-[#e4e7ec] bg-white px-4 py-3 md:hidden" aria-label="Mobile navigation">
@@ -320,10 +332,10 @@ export default function Home() {
             </div>
             <div className="grid gap-2 sm:grid-cols-3 lg:flex lg:justify-end">
               <Link href="/ask/new" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
-                <Upload size={16} /> Post Your Idea
+                <Upload size={16} /> {copy.home.postIdea}
               </Link>
               <Link href="/source" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#98a2b3] bg-white px-4 text-sm font-semibold text-[#101828] hover:bg-[#f8fafc]">
-                <PackageSearch size={16} /> Source a Product
+                <PackageSearch size={16} /> {copy.home.sourceProduct}
               </Link>
               <Link href={homepage.communityCtaHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] px-4 text-sm font-semibold text-[#344054] hover:bg-[#f8fafc]">
                 {homepage.communityCtaText} <ArrowRight size={16} />
@@ -441,7 +453,7 @@ export default function Home() {
                     <CmsImage image={category.image} fallbackAlt={category.name} sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw" className="aspect-[16/9] w-full rounded-none" />
                   ) : (
                     <div className="flex aspect-[16/9] items-center justify-center bg-[#f2f4f7] px-5 text-[#344054]">
-                      <span className="inline-flex items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 py-2 text-xs font-semibold"><Sparkles size={16} className="text-[#155eef]" /> TYORA Category</span>
+                      <span className="inline-flex items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 py-2 text-xs font-semibold"><Sparkles size={16} className="text-[#155eef]" /> {copy.home.categoryLabel}</span>
                     </div>
                   )}
                   <div className="p-4">
@@ -508,10 +520,10 @@ export default function Home() {
         <div className="mx-auto flex max-w-[1280px] flex-col gap-4 px-5 py-6 text-sm text-[#667085] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <div><p className="font-bold text-[#101828]">TYORA</p><p className="mt-1 max-w-md">{content.footerSlogan}</p></div>
           <nav className="flex flex-wrap gap-x-5" aria-label="Footer navigation">
-            <Link className="inline-flex min-h-11 items-center" href="/privacy-policy">Privacy</Link>
-            <Link className="inline-flex min-h-11 items-center" href="/terms">Terms</Link>
-            <Link className="inline-flex min-h-11 items-center" href="/service-scope">Service Scope</Link>
-            <Link className="inline-flex min-h-11 items-center" href="/me">My TYORA</Link>
+            <Link className="inline-flex min-h-11 items-center" href="/privacy-policy">{copy.common.privacy}</Link>
+            <Link className="inline-flex min-h-11 items-center" href="/terms">{copy.common.terms}</Link>
+            <Link className="inline-flex min-h-11 items-center" href="/service-scope">{copy.common.serviceScope}</Link>
+            <Link className="inline-flex min-h-11 items-center" href="/me">{copy.common.myTyora}</Link>
           </nav>
         </div>
       </footer>

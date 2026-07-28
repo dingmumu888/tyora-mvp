@@ -6,6 +6,7 @@ import { Heart, LogOut, MessageCircle, PenLine, Settings } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityProfileModal, { CommunitySessionUser } from "@/components/community-profile-modal";
 import EmailLogin from "@/components/email-login";
+import { usePublicLanguage } from "@/components/public-language-provider";
 import { cn } from "@/lib/utils";
 
 export default function CommunityUserMenu({
@@ -19,6 +20,7 @@ export default function CommunityUserMenu({
   loginOpenSignal?: number;
   loginOnSuccess?: () => void;
 }) {
+  const { copy } = usePublicLanguage();
   const [user, setUser] = useState<CommunitySessionUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -75,7 +77,7 @@ export default function CommunityUserMenu({
   if (!user) {
     return (
       <EmailLogin className={loginClassName} openSignal={loginOpenSignal} onSuccess={loginOnSuccess}>
-        {loginChildren}
+        {loginChildren === "Email Login" ? copy.common.emailLogin : loginChildren}
       </EmailLogin>
     );
   }

@@ -18,8 +18,8 @@ function requireCheck(pass, message) {
 requireCheck(!home.includes("min-h-[calc(100vh-64px)]"), "Legacy full-viewport empty community height remains.");
 requireCheck(
   home.indexOf('id="ideas-and-cases"') < home.indexOf('aria-labelledby="homepage-campaign-title"')
-    && home.includes("Post Your Idea")
-    && home.includes("Source a Product"),
+    && home.includes("copy.home.postIdea")
+    && home.includes("copy.home.sourceProduct"),
   "Ideas, cases, and their primary actions are not the first homepage content."
 );
 requireCheck(home.includes("heroCampaign") && home.includes("primaryCtaText"), "CMS campaign and primary CTA are not first-class homepage content.");

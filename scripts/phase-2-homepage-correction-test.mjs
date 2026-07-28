@@ -76,7 +76,7 @@ requireCheck(
 );
 requireCheck(
   home.includes("grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3")
-    && home.includes("TYORA Category")
+    && home.includes("copy.home.categoryLabel")
     && !home.includes("PackageCheck size={25}"),
   "Category cards are not readable on mobile or still use the generic cube fallback."
 );

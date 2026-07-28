@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 import { normalizeWhatsAppUrl } from "@/lib/whatsapp";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -80,6 +81,7 @@ export default function BuildClient() {
             <Link href="/build#pricing" className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8]">Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
+            <PublicLanguageSwitcher compact />
             <div className="hidden md:block">
               <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
             </div>

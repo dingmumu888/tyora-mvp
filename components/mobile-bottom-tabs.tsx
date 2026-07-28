@@ -6,6 +6,7 @@ import { Home, Lightbulb, PackageSearch, Plus, UserRound, type LucideIcon } from
 import { useEffect, useState, type MouseEvent } from "react";
 import CommunityAvatar from "@/components/community-avatar";
 import { CommunitySessionUser } from "@/components/community-profile-modal";
+import { usePublicLanguage } from "@/components/public-language-provider";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 
 type MobileTab = {
@@ -33,6 +34,7 @@ function shouldShow(pathname: string) {
 }
 
 export default function MobileBottomTabs() {
+  const { language, copy } = usePublicLanguage();
   const pathname = usePathname();
   const [hash, setHash] = useState("");
   const [notificationCount, setNotificationCount] = useState(0);
@@ -40,7 +42,19 @@ export default function MobileBottomTabs() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingText, setEditingText] = useState(false);
   const [content, setContent] = useState<SiteContent>(defaultContent);
-  const tabCopy = content.mobileTabs;
+  const tabCopy = language === "en" ? content.mobileTabs : {
+    community: copy.common.home,
+    source: copy.common.source,
+    create: copy.common.submit,
+    build: copy.common.ideas,
+    profile: copy.common.account,
+    startDiscussion: copy.common.publicIdea,
+    startDiscussionSubtitle: copy.common.publicIdeaSubtitle,
+    privateCustom: copy.common.privateCustom,
+    privateCustomSubtitle: copy.common.privateCustomSubtitle,
+    sourceProduct: copy.common.sourceExisting,
+    sourceProductSubtitle: copy.common.sourceExistingSubtitle
+  };
 
   useEffect(() => {
     const syncHash = () => setHash(window.location.hash);
