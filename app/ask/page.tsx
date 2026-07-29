@@ -118,7 +118,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
 
   return (
     <article className={`group overflow-hidden rounded-xl border bg-white transition duration-150 hover:border-[#b8c5d8] hover:shadow-[0_12px_32px_rgba(11,20,38,0.08)] ${isUnanswered ? "border-[#f6c894]" : "border-[#dfe5ed]"}`}>
-      <div className="grid min-h-[126px] grid-cols-[minmax(0,1fr)_88px] sm:grid-cols-[58px_minmax(0,1fr)_124px]">
+      <div className="grid min-h-[126px] grid-cols-[minmax(0,1fr)_104px] sm:grid-cols-[58px_minmax(0,1fr)_124px]">
         <div className="hidden border-r border-[#edf0f4] bg-[#fafbfc] px-2 py-3 text-center sm:block">
           <ThumbsUp size={15} className="mx-auto text-[#667085]" />
           <p className="mt-1 text-lg font-bold leading-none text-[#0b1426]">{helpfulCount}</p>
@@ -162,8 +162,8 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
           ) : null}
         </div>
 
-        <Link href={href} className={`relative min-h-[126px] overflow-hidden border-l border-[#edf0f4] bg-gradient-to-br ${story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}`}>
-          <CommunityImage src={imageUrl} alt={title} className="absolute inset-0 size-full object-contain p-2 sm:p-3" fallbackClassName="absolute inset-0 p-4" initialsClassName="bg-white/74" />
+        <Link href={href} className={`relative m-2 aspect-[4/3] self-center overflow-hidden rounded-lg border border-[#e3e8ef] bg-gradient-to-br shadow-sm ${story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}`}>
+          <CommunityImage src={imageUrl} alt={title} className={`absolute inset-0 size-full ${story ? "object-cover" : "object-contain p-1.5"}`} fallbackClassName="absolute inset-0 p-3" initialsClassName="bg-white/74" />
         </Link>
       </div>
     </article>

@@ -52,12 +52,12 @@ test("admin exposes unanswered queue and expert verification controls", async ()
   assert.match(admin, /name="authorExpertVerified"/);
 });
 
-test("community list thumbnails preserve the complete product image", async () => {
+test("community list thumbnails use a balanced mobile-friendly ratio", async () => {
   const page = await read("app/ask/page.tsx");
-  const imageCard = page.match(/<CommunityImage src=\{imageUrl\}[^>]+\/>/)?.[0] || "";
+  const mediaLink = page.match(/<Link href=\{href\} className=\{`relative m-2 aspect-\[4\/3\][^>]+>[\s\S]+?<\/Link>/)?.[0] || "";
 
-  assert.match(imageCard, /object-contain/);
-  assert.match(imageCard, /p-2 sm:p-3/);
-  assert.doesNotMatch(imageCard, /object-cover/);
-  assert.doesNotMatch(imageCard, /group-hover:scale/);
+  assert.match(page, /grid-cols-\[minmax\(0,1fr\)_104px\]/);
+  assert.match(mediaLink, /aspect-\[4\/3\]/);
+  assert.match(mediaLink, /story \? "object-cover" : "object-contain p-1\.5"/);
+  assert.doesNotMatch(mediaLink, /group-hover:scale/);
 });
