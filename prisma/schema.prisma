@@ -254,26 +254,37 @@ model EmailVerificationThrottle {
 }
 
 model SourceRequest {
-  id                 String   @id
-  productName        String
-  description        String
-  productLink        String?
-  material           String?
-  quantity           String
-  targetPrice        String?
-  destinationCountry String
-  email              String?
-  whatsapp           String?
-  needTypesJson      String   @default("[]")
-  imageUrl           String?
-  status             String   @default("New")
-  internalNotes      String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                       String    @id
+  productName              String
+  description              String
+  productLink              String?
+  material                 String?
+  quantity                 String
+  targetPrice              String?
+  destinationCountry       String
+  email                    String?
+  whatsapp                 String?
+  needTypesJson            String    @default("[]")
+  imageUrl                  String?
+  status                    String    @default("New")
+  internalNotes             String?
+  publicShowcaseConsent     Boolean   @default(false)
+  publicShowcasePublished   Boolean   @default(false)
+  publicShowcaseTitle       String?
+  publicShowcaseSummary     String?
+  publicShowcaseCountry     String?
+  publicShowcaseQuantity    String?
+  publicShowcaseImageIndex  Int?
+  publicSupplierCount       Int?
+  publicQuoteCount          Int?
+  publicShowcasePublishedAt DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   @@index([status])
   @@index([createdAt])
   @@index([destinationCountry])
+  @@index([publicShowcasePublished, publicShowcasePublishedAt])
 }
 
 model WorkOrderContactEvent {

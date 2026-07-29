@@ -34,8 +34,33 @@ export type SourceRequest = {
   imageUrls?: string[];
   status: SourceStatus;
   internalNotes?: string;
+  publicShowcaseConsent: boolean;
+  publicShowcasePublished: boolean;
+  publicShowcaseTitle?: string;
+  publicShowcaseSummary?: string;
+  publicShowcaseCountry?: string;
+  publicShowcaseQuantity?: string;
+  publicShowcaseImageIndex?: number;
+  publicSupplierCount?: number;
+  publicQuoteCount?: number;
+  publicShowcasePublishedAt?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PublicSourceActivity = {
+  id: string;
+  title: string;
+  summary: string;
+  countryLabel?: string;
+  quantityLabel?: string;
+  needTypes: SourceNeedType[];
+  status: SourceStatus;
+  imageUrl?: string;
+  supplierCount?: number;
+  quoteCount?: number;
+  updatedAt: string;
+  isDemo: boolean;
 };
 
 export function normalizeSourceStatus(value: unknown): SourceStatus {

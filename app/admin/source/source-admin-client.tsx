@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Loader2, RefreshCcw, Save, Search, Trash2 } from "lucide-react";
+import { ArrowUpRight, Eye, Loader2, RefreshCcw, Save, Search, ShieldCheck, Trash2 } from "lucide-react";
 import { SourceRequest, SourceStatus, sourceStatuses } from "@/lib/source";
 import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
 import { AdminActionBar, AdminEmptyState, AdminMetricCard, adminSelectClass } from "@/components/admin/admin-ui";
@@ -122,7 +122,15 @@ export default function SourceAdminClient() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           status: formData.get("status"),
-          internalNotes: formData.get("internalNotes")
+          internalNotes: formData.get("internalNotes"),
+          publicShowcaseTitle: formData.get("publicShowcaseTitle"),
+          publicShowcaseSummary: formData.get("publicShowcaseSummary"),
+          publicShowcaseCountry: formData.get("publicShowcaseCountry"),
+          publicShowcaseQuantity: formData.get("publicShowcaseQuantity"),
+          publicShowcaseImageIndex: formData.get("publicShowcaseImageIndex"),
+          publicSupplierCount: formData.get("publicSupplierCount"),
+          publicQuoteCount: formData.get("publicQuoteCount"),
+          publicShowcasePublished: formData.get("publicShowcasePublished") === "on"
         })
       });
       const payload = (await response.json()) as ApiResponse<SourceRequest>;
@@ -295,6 +303,58 @@ export default function SourceAdminClient() {
                     Internal notes
                     <textarea name="internalNotes" defaultValue={request.internalNotes || ""} className="min-h-36 resize-none rounded-md border border-[#d0d5dd] bg-white p-3 text-sm leading-6 outline-none focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10" placeholder="Supplier checked, quoted range, sample next step..." />
                   </label>
+                  <div className="grid gap-3 rounded-md border border-[#dbe5f2] bg-[#f8fbff] p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#155eef]"><Eye size={15} /> Public sourcing activity</p>
+                        <p className="mt-1 text-xs leading-5 text-[#667085]">Only these reviewed fields can reach the public Source page.</p>
+                      </div>
+                      <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${request.publicShowcaseConsent ? "bg-[#e8f7f4] text-[#06756f]" : "bg-[#f2f4f7] text-[#667085]"}`}>
+                        <ShieldCheck size={12} /> {request.publicShowcaseConsent ? "Customer approved" : "No permission"}
+                      </span>
+                    </div>
+                    <label className="grid gap-1.5 text-sm font-semibold">
+                      Anonymous public title
+                      <input name="publicShowcaseTitle" defaultValue={request.publicShowcaseTitle || ""} className={adminSelectClass} placeholder="Magnetic phone accessory" />
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-semibold">
+                      Public summary
+                      <textarea name="publicShowcaseSummary" defaultValue={request.publicShowcaseSummary || ""} className="min-h-24 resize-none rounded-md border border-[#d0d5dd] bg-white p-3 text-sm leading-6 outline-none focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10" placeholder="Comparing ready-made supplier options, MOQ, and packaging." />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="grid gap-1.5 text-sm font-semibold">
+                        Public buyer region
+                        <input name="publicShowcaseCountry" defaultValue={request.publicShowcaseCountry || ""} className={adminSelectClass} placeholder="North America buyer" />
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-semibold">
+                        Public quantity range
+                        <input name="publicShowcaseQuantity" defaultValue={request.publicShowcaseQuantity || ""} className={adminSelectClass} placeholder="500–1,000 pcs" />
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-semibold">
+                        Public reference image
+                        <select name="publicShowcaseImageIndex" defaultValue={request.publicShowcaseImageIndex ?? ""} className={adminSelectClass}>
+                          <option value="">No image</option>
+                          {sourceImagesFor(request).map((_, index) => <option key={index} value={index}>Reference image {index + 1}</option>)}
+                        </select>
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-semibold">
+                        Suppliers checked
+                        <input name="publicSupplierCount" type="number" min="0" max="999" defaultValue={request.publicSupplierCount ?? ""} className={adminSelectClass} placeholder="4" />
+                      </label>
+                      <label className="grid gap-1.5 text-sm font-semibold">
+                        Quotes compared
+                        <input name="publicQuoteCount" type="number" min="0" max="999" defaultValue={request.publicQuoteCount ?? ""} className={adminSelectClass} placeholder="2" />
+                      </label>
+                    </div>
+                    <label className={`flex items-start gap-2 rounded-md border p-3 text-sm ${request.publicShowcaseConsent ? "cursor-pointer border-[#b7e4d5] bg-white" : "cursor-not-allowed border-[#eaecf0] bg-[#f2f4f7] text-[#98a2b3]"}`}>
+                      <input name="publicShowcasePublished" type="checkbox" defaultChecked={request.publicShowcasePublished} disabled={!request.publicShowcaseConsent} className="mt-0.5 size-4 accent-[#155eef]" />
+                      <span>
+                        <strong className="block">Publish anonymous activity</strong>
+                        <span className="mt-1 block text-xs leading-5">Requires customer permission and a public title. Uncheck to remove it immediately.</span>
+                      </span>
+                    </label>
+                    <p className="text-xs leading-5 text-[#667085]">Original links, contacts, exact target price, supplier details, and internal notes are excluded from the public response.</p>
+                  </div>
                   <button disabled={savingId === request.id} className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#101828] px-4 text-sm font-semibold text-white hover:bg-[#1d2939] disabled:opacity-60">
                     {savingId === request.id ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save
                   </button>

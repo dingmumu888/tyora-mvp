@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Factory, ImagePlus, PackageSearch, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Factory, ImagePlus, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
+import CommunityText from "@/components/community-text";
 import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import WhatsAppNumberInput from "@/components/whatsapp-number-input";
 import { callingCodeForCountry } from "@/lib/country-calling-codes";
-import { sourceNeedTypes, SourceNeedType } from "@/lib/source";
+import { PublicSourceActivity, sourceNeedTypes, SourceNeedType, SourceStatus } from "@/lib/source";
 import { normalizeOptionalProductLink, normalizeWhatsAppNumber } from "@/lib/source-contact";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
 import { PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL } from "@/lib/whatsapp";
@@ -27,6 +28,7 @@ type FormState = {
   whatsappLocalNumber: string;
   needTypes: SourceNeedType[];
   imageUrls: string[];
+  publicShowcaseConsent: boolean;
 };
 
 const emptyForm: FormState = {
@@ -42,7 +44,8 @@ const emptyForm: FormState = {
   whatsappCountryIso: "US",
   whatsappLocalNumber: "",
   needTypes: ["Find supplier"],
-  imageUrls: []
+  imageUrls: [],
+  publicShowcaseConsent: false
 };
 
 const inputClass = "min-h-11 w-full rounded-2xl border border-[#dfe6ef] bg-white px-3 text-sm font-medium text-[#101216] outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10";
@@ -78,6 +81,61 @@ const pricingOptions = [
     processHref: "/source/how-it-works#managed-sourcing"
   }
 ];
+
+const demonstrationActivities: PublicSourceActivity[] = [
+  {
+    id: "demo-phone-accessory",
+    title: "Magnetic phone accessory",
+    summary: "Comparing existing-product suppliers, MOQ, packaging, and factory-price options.",
+    countryLabel: "North America buyer",
+    quantityLabel: "500–1,000 pcs",
+    needTypes: ["Find supplier", "Get better price"],
+    status: "Checking Supplier",
+    imageUrl: "/images/category-phone-3c-accessories-v1.png",
+    supplierCount: 4,
+    quoteCount: 2,
+    updatedAt: "",
+    isDemo: true
+  },
+  {
+    id: "demo-office-product",
+    title: "Desktop organization product",
+    summary: "Reviewing ready-made options and checking whether samples can be supplied.",
+    countryLabel: "European buyer",
+    quantityLabel: "300–500 pcs",
+    needTypes: ["Find supplier", "Request sample"],
+    status: "Quoted",
+    imageUrl: "/images/category-desktop-office-v1.png",
+    supplierCount: 5,
+    quoteCount: 3,
+    updatedAt: "",
+    isDemo: true
+  },
+  {
+    id: "demo-gift-accessory",
+    title: "Ready-made gift accessory",
+    summary: "Checking stock-style product options, logo packaging, and managed sourcing support.",
+    countryLabel: "Asia-Pacific buyer",
+    quantityLabel: "1,000–2,000 pcs",
+    needTypes: ["Managed sourcing"],
+    status: "Sample Requested",
+    imageUrl: "/images/category-custom-gifts-v1.png",
+    supplierCount: 3,
+    quoteCount: 2,
+    updatedAt: "",
+    isDemo: true
+  }
+];
+
+const publicStatusLabels: Record<SourceStatus, string> = {
+  New: "Request received",
+  "Checking Supplier": "Checking China suppliers",
+  Quoted: "Quote comparison ready",
+  "Sample Requested": "Sample requested",
+  "Factory Introduced": "Factory introduced",
+  "Managed Sourcing": "Managed sourcing active",
+  Completed: "Sourcing completed"
+};
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -129,6 +187,7 @@ async function normalizeSourceImage(file: File) {
 }
 
 type SourceApiPayload = { success?: boolean; message?: string; data?: { id?: string } };
+type SourceActivityApiPayload = { success?: boolean; message?: string; data?: PublicSourceActivity[] };
 
 async function parseApiResponse(response: Response): Promise<SourceApiPayload> {
   const text = await response.text();
@@ -156,6 +215,8 @@ export default function SourceClient() {
   const [submissionNotice, setSubmissionNotice] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const [submittedContact, setSubmittedContact] = useState("");
+  const [submittedShowcaseConsent, setSubmittedShowcaseConsent] = useState(false);
+  const [publicActivities, setPublicActivities] = useState<PublicSourceActivity[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const whatsappCountryChangedRef = useRef(false);
   const sourceCopy = language === "en" ? content.sourcePage : {
@@ -168,6 +229,21 @@ export default function SourceClient() {
 
   useEffect(() => {
     void loadContent().then(setContent).catch(() => setContent(defaultContent));
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/source/activity", { cache: "no-store" })
+      .then((response) => response.json() as Promise<SourceActivityApiPayload>)
+      .then((payload) => {
+        if (active && payload.success && Array.isArray(payload.data)) {
+          setPublicActivities(payload.data);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -303,6 +379,7 @@ export default function SourceClient() {
       if (!response.ok || !payload.success || !payload.data?.id) throw new Error(payload.message || "Unable to submit source request.");
       setSubmittedId(payload.data.id);
       setSubmittedContact(email || whatsapp);
+      setSubmittedShowcaseConsent(form.publicShowcaseConsent);
       setSubmissionNotice(notices.length > 0 ? `Your request was submitted. ${notices.join(" ")}` : "");
       setForm({ ...emptyForm, whatsappCountryIso: form.whatsappCountryIso });
     } catch (error) {
@@ -377,11 +454,11 @@ export default function SourceClient() {
                 <div className="mt-5 grid gap-2 rounded-2xl bg-white p-4 text-left text-sm">
                   <p><span className="font-semibold">Request ID:</span> {submittedId}</p>
                   <p className="break-all"><span className="font-semibold">Saved contact:</span> {submittedContact}</p>
-                  <p><span className="font-semibold">Privacy:</span> Product details and quotes stay private.</p>
+                  <p><span className="font-semibold">Privacy:</span> {submittedShowcaseConsent ? "Anonymous activity may be published only after TYORA review. Contact, links, quotes, and supplier details stay private." : "Product details and quotes stay private."}</p>
                 </div>
                 {submissionNotice ? <p className="mt-3 rounded-2xl bg-[#fffbeb] p-3 text-left text-sm text-[#92400e]">{submissionNotice}</p> : null}
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                  <button type="button" onClick={() => { setSubmittedId(""); setSubmittedContact(""); setSubmissionNotice(""); }} className="h-11 rounded-full border border-[#cfd8e6] bg-white px-4 text-sm font-semibold">Submit another product</button>
+                  <button type="button" onClick={() => { setSubmittedId(""); setSubmittedContact(""); setSubmittedShowcaseConsent(false); setSubmissionNotice(""); }} className="h-11 rounded-full border border-[#cfd8e6] bg-white px-4 text-sm font-semibold">Submit another product</button>
                   <Link href="/" className="inline-flex h-11 items-center justify-center rounded-full bg-[#101216] px-4 text-sm font-semibold text-white">Back to TYORA</Link>
                 </div>
               </div>
@@ -468,6 +545,21 @@ export default function SourceClient() {
             </div>
             <p className="-mt-1 text-xs leading-5 text-[#69707d]">Add an email address or WhatsApp number. You can provide both.</p>
 
+            <label className="flex cursor-pointer items-start gap-3 rounded-3xl border border-[#dbeafe] bg-[#f5f9ff] p-4">
+              <input
+                type="checkbox"
+                checked={form.publicShowcaseConsent}
+                onChange={(event) => update("publicShowcaseConsent", event.target.checked)}
+                className="mt-0.5 size-5 shrink-0 accent-[#2563eb]"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-[#1d4ed8]"><CommunityText text="Allow anonymous sourcing activity" /></span>
+                <span className="mt-1 block text-xs leading-5 text-[#59616e]">
+                  <CommunityText text="Optional. TYORA may show a reviewed, anonymized summary. Your contact, original link, exact target price, supplier details, and private notes are never shown." />
+                </span>
+              </span>
+            </label>
+
             <details className="rounded-3xl border border-[#e7edf5] bg-[#fbfcfe] p-4">
               <summary className="cursor-pointer text-sm font-semibold">More details (optional)</summary>
               <div className="mt-4 grid gap-3">
@@ -511,6 +603,64 @@ export default function SourceClient() {
             </button>
           </div>}
         </form>
+      </section>
+
+      <section id="sourcing-activity" className="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[28px] border border-[#dfe6ef] bg-white p-5 shadow-sm shadow-[#101216]/5 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#2563eb]"><Boxes size={16} /> <CommunityText text="Recent sourcing activity" /></p>
+              <h2 className="mt-1 text-2xl font-semibold sm:text-3xl"><CommunityText text="What buyers are asking TYORA to find" /></h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[#59616e]">
+                <CommunityText text="Existing products submitted by link or image, followed through supplier checking, quote comparison, samples, and factory introduction." />
+              </p>
+            </div>
+            <p className="inline-flex max-w-md items-start gap-2 rounded-2xl bg-[#f2fbf7] px-3 py-2 text-xs font-medium leading-5 text-[#315f56]">
+              <ShieldCheck size={15} className="mt-0.5 shrink-0" />
+              <CommunityText text="Published only with customer permission. Contact and supplier details stay private." />
+            </p>
+          </div>
+
+          <div className="-mx-5 mt-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0">
+            {(publicActivities.length >= 3
+              ? publicActivities.slice(0, 6)
+              : [...publicActivities, ...demonstrationActivities.slice(0, 3 - publicActivities.length)]
+            ).map((activity) => (
+              <article key={activity.id} className="min-w-[82vw] snap-start overflow-hidden rounded-3xl border border-[#e1e7ef] bg-[#fbfcfe] sm:min-w-[360px] lg:min-w-0">
+                <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#f8fafc]">
+                  {activity.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={activity.imageUrl} alt={activity.title} className="size-full object-cover" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-[#2563eb]"><PackageSearch size={42} /></div>
+                  )}
+                  <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+                    <span className="rounded-full bg-[#101216]/90 px-2.5 py-1 text-[11px] font-semibold text-white"><CommunityText text={publicStatusLabels[activity.status]} /></span>
+                    {activity.isDemo ? <span className="rounded-full bg-[#fff7d6] px-2.5 py-1 text-[11px] font-semibold text-[#8a5a00]"><CommunityText text="Sourcing example" /></span> : <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2.5 py-1 text-[11px] font-semibold text-[#06756f]"><BadgeCheck size={12} /> <CommunityText text="Customer approved" /></span>}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-[#101216]"><CommunityText text={activity.title} /></h3>
+                  <p className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-[#59616e]"><CommunityText text={activity.summary} /></p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#59616e]">
+                    {activity.countryLabel ? <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e1e7ef]"><MapPin size={12} /> <CommunityText text={activity.countryLabel} /></span> : null}
+                    {activity.quantityLabel ? <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e1e7ef]">{activity.quantityLabel}</span> : null}
+                    {activity.needTypes.slice(0, 2).map((type) => <span key={type} className="rounded-full bg-[#eef4ff] px-2.5 py-1 text-[#315fbd]"><CommunityText text={type} /></span>)}
+                  </div>
+                  {(activity.supplierCount !== undefined || activity.quoteCount !== undefined) ? (
+                    <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-white p-3 ring-1 ring-[#e8edf3]">
+                      <p className="text-xs leading-5 text-[#69707d]"><strong className="block text-lg text-[#101216]">{activity.supplierCount ?? 0}</strong><CommunityText text="supplier options checked" /></p>
+                      <p className="text-xs leading-5 text-[#69707d]"><strong className="block text-lg text-[#101216]">{activity.quoteCount ?? 0}</strong><CommunityText text="quotes compared" /></p>
+                    </div>
+                  ) : null}
+                  <a href="#source-form" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#2563eb]">
+                    <CommunityText text="Find a similar existing product" /> <ArrowRight size={14} />
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-4 px-4 pb-6 sm:px-6 lg:px-8">

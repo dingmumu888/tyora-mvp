@@ -28,6 +28,7 @@
     "test:i18n": "node scripts/public-i18n-test.mjs",
     "test:community-foundation": "node --no-warnings --test scripts/community-discussion-foundation-test.mjs",
     "test:root-community-entry": "node --no-warnings --test scripts/root-community-entry-test.mjs",
+    "test:source-showcase": "node --no-warnings --test scripts/source-showcase-safety-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",
     "db:preview:phase5b": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase-5b-preview-migration.ps1",
     "db:init": "node scripts/init-db.mjs",

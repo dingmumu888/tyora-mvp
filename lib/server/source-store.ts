@@ -1,4 +1,5 @@
-import { normalizeSourceNeedTypes, normalizeSourceStatus, SourceRequest } from "@/lib/source";
+import { createHash } from "node:crypto";
+import { normalizeSourceNeedTypes, normalizeSourceStatus, PublicSourceActivity, SourceRequest } from "@/lib/source";
 import { sanitizeOptionalProductLink } from "@/lib/source-contact";
 import { prisma } from "@/lib/server/db";
 
@@ -21,6 +22,17 @@ function iso(value: Date | string | null | undefined) {
 
 function text(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function hasOwn(data: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(data, key);
+}
+
+function optionalNonNegativeInt(value: unknown, maximum: number) {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  if (!Number.isInteger(parsed) || parsed < 0) return null;
+  return Math.min(parsed, maximum);
 }
 
 function validEmailOrEmpty(value: unknown) {
@@ -80,6 +92,16 @@ function sourceToPublic(row: {
   imageUrl: string | null;
   status: string;
   internalNotes: string | null;
+  publicShowcaseConsent: boolean;
+  publicShowcasePublished: boolean;
+  publicShowcaseTitle: string | null;
+  publicShowcaseSummary: string | null;
+  publicShowcaseCountry: string | null;
+  publicShowcaseQuantity: string | null;
+  publicShowcaseImageIndex: number | null;
+  publicSupplierCount: number | null;
+  publicQuoteCount: number | null;
+  publicShowcasePublishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }): SourceRequest {
@@ -100,6 +122,16 @@ function sourceToPublic(row: {
     imageUrls,
     status: normalizeSourceStatus(row.status),
     internalNotes: row.internalNotes || undefined,
+    publicShowcaseConsent: row.publicShowcaseConsent,
+    publicShowcasePublished: row.publicShowcasePublished,
+    publicShowcaseTitle: row.publicShowcaseTitle || undefined,
+    publicShowcaseSummary: row.publicShowcaseSummary || undefined,
+    publicShowcaseCountry: row.publicShowcaseCountry || undefined,
+    publicShowcaseQuantity: row.publicShowcaseQuantity || undefined,
+    publicShowcaseImageIndex: row.publicShowcaseImageIndex ?? undefined,
+    publicSupplierCount: row.publicSupplierCount ?? undefined,
+    publicQuoteCount: row.publicQuoteCount ?? undefined,
+    publicShowcasePublishedAt: row.publicShowcasePublishedAt ? iso(row.publicShowcasePublishedAt) : undefined,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt)
   };
@@ -148,7 +180,8 @@ export async function createSourceRequest(input: unknown) {
       whatsapp: text(data.whatsapp, 80) || null,
       needTypesJson: JSON.stringify(normalizeSourceNeedTypes(data.needTypes)),
       imageUrl: serializeSourceImages(imageUrls),
-      status: "New"
+      status: "New",
+      publicShowcaseConsent: data.publicShowcaseConsent === true
     }
   });
 
@@ -165,13 +198,92 @@ export async function getSourceRequestStats() {
   return { total };
 }
 
+export async function getPublicSourceActivities(): Promise<PublicSourceActivity[]> {
+  const rows = await prisma.sourceRequest.findMany({
+    where: {
+      publicShowcaseConsent: true,
+      publicShowcasePublished: true
+    },
+    orderBy: [
+      { publicShowcasePublishedAt: "desc" },
+      { updatedAt: "desc" }
+    ],
+    take: 12,
+    select: {
+      id: true,
+      needTypesJson: true,
+      imageUrl: true,
+      status: true,
+      publicShowcaseTitle: true,
+      publicShowcaseSummary: true,
+      publicShowcaseCountry: true,
+      publicShowcaseQuantity: true,
+      publicShowcaseImageIndex: true,
+      publicSupplierCount: true,
+      publicQuoteCount: true,
+      publicShowcasePublishedAt: true,
+      updatedAt: true
+    }
+  });
+
+  return rows
+    .filter((row) => Boolean(row.publicShowcaseTitle?.trim()))
+    .map((row) => {
+      const images = storedSourceImages(row.imageUrl);
+      const selectedImage = row.publicShowcaseImageIndex === null
+        ? undefined
+        : images[row.publicShowcaseImageIndex];
+
+      return {
+        id: `activity-${createHash("sha256").update(row.id).digest("hex").slice(0, 16)}`,
+        title: row.publicShowcaseTitle!.trim(),
+        summary: row.publicShowcaseSummary?.trim() || "TYORA is checking matching China supplier options.",
+        countryLabel: row.publicShowcaseCountry?.trim() || undefined,
+        quantityLabel: row.publicShowcaseQuantity?.trim() || undefined,
+        needTypes: normalizeSourceNeedTypes(parseJson(row.needTypesJson, [])),
+        status: normalizeSourceStatus(row.status),
+        imageUrl: selectedImage,
+        supplierCount: row.publicSupplierCount ?? undefined,
+        quoteCount: row.publicQuoteCount ?? undefined,
+        updatedAt: iso(row.publicShowcasePublishedAt || row.updatedAt).slice(0, 10),
+        isDemo: false
+      };
+    });
+}
+
 export async function updateSourceRequest(id: string, input: unknown) {
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
+  const existing = await prisma.sourceRequest.findUnique({ where: { id } });
+  if (!existing) throw new Error("Source request not found.");
+
+  const publishProvided = hasOwn(data, "publicShowcasePublished");
+  const publishRequested = publishProvided ? data.publicShowcasePublished === true : existing.publicShowcasePublished;
+  const titleProvided = hasOwn(data, "publicShowcaseTitle");
+  const publicTitle = titleProvided ? text(data.publicShowcaseTitle, 120) : existing.publicShowcaseTitle || "";
+
+  if (publishRequested && !existing.publicShowcaseConsent) {
+    throw new Error("Customer permission is required before publishing an anonymous sourcing activity.");
+  }
+  if (publishRequested && !publicTitle) {
+    throw new Error("Add a public activity title before publishing.");
+  }
+
   const row = await prisma.sourceRequest.update({
     where: { id },
     data: {
       status: normalizeSourceStatus(data.status),
-      ...(typeof data.internalNotes === "string" ? { internalNotes: text(data.internalNotes, 3000) || null } : {})
+      ...(typeof data.internalNotes === "string" ? { internalNotes: text(data.internalNotes, 3000) || null } : {}),
+      ...(titleProvided ? { publicShowcaseTitle: publicTitle || null } : {}),
+      ...(hasOwn(data, "publicShowcaseSummary") ? { publicShowcaseSummary: text(data.publicShowcaseSummary, 320) || null } : {}),
+      ...(hasOwn(data, "publicShowcaseCountry") ? { publicShowcaseCountry: text(data.publicShowcaseCountry, 80) || null } : {}),
+      ...(hasOwn(data, "publicShowcaseQuantity") ? { publicShowcaseQuantity: text(data.publicShowcaseQuantity, 80) || null } : {}),
+      ...(hasOwn(data, "publicShowcaseImageIndex") ? { publicShowcaseImageIndex: optionalNonNegativeInt(data.publicShowcaseImageIndex, 8) } : {}),
+      ...(hasOwn(data, "publicSupplierCount") ? { publicSupplierCount: optionalNonNegativeInt(data.publicSupplierCount, 999) } : {}),
+      ...(hasOwn(data, "publicQuoteCount") ? { publicQuoteCount: optionalNonNegativeInt(data.publicQuoteCount, 999) } : {}),
+      ...(publishProvided ? {
+        publicShowcasePublished: publishRequested,
+        publicShowcasePublishedAt: publishRequested ? existing.publicShowcasePublishedAt || new Date() : null
+      } : {})
     }
   });
   return sourceToPublic(row);
