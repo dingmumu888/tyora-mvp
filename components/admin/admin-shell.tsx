@@ -398,7 +398,7 @@ export default function AdminShell({
             >
               <Plus size={17} /> {t("New Project")}
             </button>
-            <button type="button" onClick={toggleLanguage} className="hidden min-h-11 shrink-0 rounded-md border border-[#e4e7ec] px-3 text-xs font-bold text-[#344054] 2xl:inline-flex 2xl:items-center">
+            <button type="button" onClick={toggleLanguage} className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-[#e4e7ec] px-3 text-xs font-bold text-[#344054]">
               {language === "en" ? "中文" : "EN"}
             </button>
             {canSave ? (

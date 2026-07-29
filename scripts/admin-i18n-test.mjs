@@ -15,6 +15,7 @@ test("admin layout provides one persistent language context", async () => {
   assert.match(provider, /tyora-admin-language/);
   assert.match(provider, /localStorage\.setItem/);
   assert.match(shell, /toggleLanguage/);
+  assert.match(shell, /className="inline-flex min-h-11 shrink-0 items-center/);
   assert.doesNotMatch(shell, /onToggleLanguage/);
   assert.doesNotMatch(shell, /languageLabel/);
 });
