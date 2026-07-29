@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 const siteOrigin = "https://www.tyora.io";
 
 const publicRoutes = [
-  { path: "/", changeFrequency: "weekly", priority: 1 },
-  { path: "/ask", changeFrequency: "daily", priority: 0.9 },
+  { path: "/ask", changeFrequency: "daily", priority: 1 },
+  { path: "/about", changeFrequency: "monthly", priority: 0.6 },
   { path: "/custom", changeFrequency: "monthly", priority: 0.8 },
   { path: "/source", changeFrequency: "monthly", priority: 0.8 },
   { path: "/source/how-it-works", changeFrequency: "monthly", priority: 0.7 },

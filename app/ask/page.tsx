@@ -243,7 +243,7 @@ export default async function AskCommunityPage({
     <main className="min-h-screen overflow-x-hidden bg-[#f4f6f8] pb-28 text-[#0b1426] md:pb-16">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1426] text-white shadow-[0_4px_18px_rgba(11,20,38,0.16)]">
         <div className="mx-auto flex h-[60px] max-w-[1580px] items-center gap-3 px-3 sm:px-5 lg:px-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5 pr-4 lg:pr-7" aria-label={`${content.brandName} home`}>
+          <Link href="/ask" className="flex shrink-0 items-center gap-2.5 pr-4 lg:pr-7" aria-label={`${content.brandName} ideas`}>
             <span className="grid size-9 place-items-center overflow-hidden rounded-lg bg-white p-1">
               {content.logoImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
