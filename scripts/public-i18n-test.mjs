@@ -10,6 +10,8 @@ const layout = read("app/layout.tsx");
 const home = read("app/home-client.tsx");
 const mobileTabs = read("components/mobile-bottom-tabs.tsx");
 const source = read("app/source/source-client.tsx");
+const communityText = read("components/community-text.tsx");
+const communityPage = read("app/ask/page.tsx");
 const failures = [];
 
 function requireCheck(pass, message) {
@@ -64,6 +66,17 @@ requireCheck(
   !i18n.includes("提奥拉") && !i18n.includes("提拉"),
   "The TYORA brand name must never be translated."
 );
+requireCheck(
+  communityPage.includes("<CommunityText text={title} />")
+    && communityPage.includes("<CommunityText text={description} />"),
+  "Community card titles and descriptions are not connected to the language system."
+);
+for (const title of ["Magnetic Phone Stand", "Capybara Night Light", "Pet Grooming Tool"]) {
+  requireCheck(
+    (communityText.match(new RegExp(`\"${title}\"`, "g")) || []).length >= 5,
+    `Curated community case translations are incomplete for ${title}.`
+  );
+}
 
 if (failures.length) {
   console.error("Public i18n checks failed:");

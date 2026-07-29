@@ -145,8 +145,8 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
           </div>
 
           <Link href={href} className="mt-2 block">
-            <h2 className="line-clamp-2 text-[15px] font-bold leading-5 text-[#0b1426] transition group-hover:text-[#155eef] sm:text-base">{title}</h2>
-            <p className="mt-1 line-clamp-2 text-[12px] leading-[1.45] text-[#5f6b7a] sm:text-[13px]">{description}</p>
+            <h2 className="line-clamp-2 text-[15px] font-bold leading-5 text-[#0b1426] transition group-hover:text-[#155eef] sm:text-base"><CommunityText text={title} /></h2>
+            <p className="mt-1 line-clamp-2 text-[12px] leading-[1.45] text-[#5f6b7a] sm:text-[13px]"><CommunityText text={description} /></p>
           </Link>
 
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#667085]">
@@ -431,7 +431,7 @@ export default async function AskCommunityPage({
               <div className="mt-3 divide-y divide-[#edf0f4]">
                 {adviceIdeas.length > 0 ? adviceIdeas.map((idea) => (
                   <Link key={idea.id} href={`/ask/${idea.slug}`} className="group block py-3 first:pt-0">
-                    <p className="line-clamp-2 text-[13px] font-semibold leading-5 group-hover:text-[#155eef]">{idea.title}</p>
+                    <p className="line-clamp-2 text-[13px] font-semibold leading-5 group-hover:text-[#155eef]"><CommunityText text={idea.title} /></p>
                     <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#667085]"><MessageCircle size={12} /> {idea.comments.length} <CommunityText text="replies" /></span>
                   </Link>
                 )) : <p className="text-sm text-[#667085]"><CommunityText text="Every visible idea has received guidance." /></p>}

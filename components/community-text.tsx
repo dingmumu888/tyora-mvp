@@ -78,6 +78,15 @@ const zhCN: Record<string, string> = {
   Shipping: "运输中",
   Completed: "已完成",
   Comment: "评论",
+  "Consumer Electronics": "消费电子",
+  "Home & Lifestyle": "家居与生活",
+  "Pet Products": "宠物用品",
+  "Magnetic Phone Stand": "磁吸手机支架",
+  "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "一款可折叠磁吸手机支架概念，用于原型规划和可制造性评估。",
+  "Capybara Night Light": "水豚夜灯",
+  "A playful night light prepared for small-batch production.": "一款为小批量生产准备的趣味夜灯。",
+  "Pet Grooming Tool": "宠物美容工具",
+  "A pet care product refined through prototype review.": "一款经过原型评估优化的宠物护理产品。",
   "Early founder community": "早期创作者社区",
   "Share an idea for an initial manufacturing assessment.": "分享创意，获得初步制造评估。",
   "Starter community": "社区起步阶段",
@@ -135,7 +144,12 @@ const es: Record<string, string> = {
   "Every useful reply can move a product one step closer to manufacturing.": "Cada respuesta útil puede acercar un producto a la fabricación.",
   Helpful: "Útil", helpful: "útiles", "TYORA Replied": "TYORA respondió", "TYORA Expert:": "Experto TYORA:", "TYORA Case": "Caso TYORA",
   "Demonstration Project": "Proyecto demostrativo", "TYORA case": "Caso TYORA", Discussing: "En debate", "TYORA Reviewing": "En evaluación TYORA",
-  "Project Started": "Proyecto iniciado", Shipping: "Envío", Completed: "Completado", Comment: "Comentario"
+  "Project Started": "Proyecto iniciado", Shipping: "Envío", Completed: "Completado", Comment: "Comentario",
+  "Consumer Electronics": "Electrónica de consumo", "Home & Lifestyle": "Hogar y estilo de vida", "Pet Products": "Productos para mascotas",
+  "Magnetic Phone Stand": "Soporte magnético para teléfono",
+  "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Un concepto de soporte magnético plegable para teléfono, diseñado para planificar el prototipo y evaluar su fabricabilidad.",
+  "Capybara Night Light": "Luz nocturna de capibara", "A playful night light prepared for small-batch production.": "Una divertida luz nocturna preparada para producción en lotes pequeños.",
+  "Pet Grooming Tool": "Herramienta de aseo para mascotas", "A pet care product refined through prototype review.": "Un producto para el cuidado de mascotas perfeccionado mediante la revisión del prototipo."
 };
 
 const fr: Record<string, string> = {
@@ -157,7 +171,12 @@ const fr: Record<string, string> = {
   "Every useful reply can move a product one step closer to manufacturing.": "Chaque réponse utile rapproche un produit de sa fabrication.",
   Helpful: "Utile", helpful: "utiles", "TYORA Replied": "TYORA a répondu", "TYORA Expert:": "Expert TYORA :", "TYORA Case": "Cas TYORA",
   "Demonstration Project": "Projet de démonstration", "TYORA case": "Cas TYORA", Discussing: "En discussion", "TYORA Reviewing": "Évaluation TYORA",
-  "Project Started": "Projet lancé", Shipping: "Expédition", Completed: "Terminé", Comment: "Commentaire"
+  "Project Started": "Projet lancé", Shipping: "Expédition", Completed: "Terminé", Comment: "Commentaire",
+  "Consumer Electronics": "Électronique grand public", "Home & Lifestyle": "Maison et art de vivre", "Pet Products": "Produits pour animaux",
+  "Magnetic Phone Stand": "Support de téléphone magnétique",
+  "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Un concept de support de téléphone magnétique pliable, conçu pour la planification du prototype et l’évaluation de sa fabricabilité.",
+  "Capybara Night Light": "Veilleuse capybara", "A playful night light prepared for small-batch production.": "Une veilleuse ludique préparée pour une production en petite série.",
+  "Pet Grooming Tool": "Outil de toilettage pour animaux", "A pet care product refined through prototype review.": "Un produit de soin pour animaux affiné grâce à l’évaluation du prototype."
 };
 
 const de: Record<string, string> = {
@@ -179,7 +198,12 @@ const de: Record<string, string> = {
   "Every useful reply can move a product one step closer to manufacturing.": "Jede hilfreiche Antwort bringt ein Produkt näher an die Fertigung.",
   Helpful: "Hilfreich", helpful: "hilfreich", "TYORA Replied": "TYORA hat geantwortet", "TYORA Expert:": "TYORA-Experte:", "TYORA Case": "TYORA-Fall",
   "Demonstration Project": "Demonstrationsprojekt", "TYORA case": "TYORA-Fall", Discussing: "In Diskussion", "TYORA Reviewing": "TYORA prüft",
-  "Project Started": "Projekt gestartet", Shipping: "Versand", Completed: "Abgeschlossen", Comment: "Kommentar"
+  "Project Started": "Projekt gestartet", Shipping: "Versand", Completed: "Abgeschlossen", Comment: "Kommentar",
+  "Consumer Electronics": "Unterhaltungselektronik", "Home & Lifestyle": "Wohnen & Lifestyle", "Pet Products": "Haustierprodukte",
+  "Magnetic Phone Stand": "Magnetischer Handyhalter",
+  "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Ein klappbares Konzept für einen magnetischen Handyhalter zur Prototypenplanung und Prüfung der Herstellbarkeit.",
+  "Capybara Night Light": "Capybara-Nachtlicht", "A playful night light prepared for small-batch production.": "Ein verspieltes Nachtlicht, vorbereitet für die Kleinserienproduktion.",
+  "Pet Grooming Tool": "Tierpflegewerkzeug", "A pet care product refined through prototype review.": "Ein durch Prototypenprüfung optimiertes Produkt für die Tierpflege."
 };
 
 const pt: Record<string, string> = {
@@ -201,7 +225,12 @@ const pt: Record<string, string> = {
   "Every useful reply can move a product one step closer to manufacturing.": "Cada resposta útil aproxima um produto da fabricação.",
   Helpful: "Útil", helpful: "úteis", "TYORA Replied": "TYORA respondeu", "TYORA Expert:": "Especialista TYORA:", "TYORA Case": "Caso TYORA",
   "Demonstration Project": "Projeto de demonstração", "TYORA case": "Caso TYORA", Discussing: "Em discussão", "TYORA Reviewing": "Em avaliação TYORA",
-  "Project Started": "Projeto iniciado", Shipping: "Envio", Completed: "Concluído", Comment: "Comentário"
+  "Project Started": "Projeto iniciado", Shipping: "Envio", Completed: "Concluído", Comment: "Comentário",
+  "Consumer Electronics": "Eletrônicos de consumo", "Home & Lifestyle": "Casa e estilo de vida", "Pet Products": "Produtos para animais",
+  "Magnetic Phone Stand": "Suporte magnético para celular",
+  "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Um conceito de suporte magnético dobrável para celular, criado para planejamento de protótipo e avaliação de fabricação.",
+  "Capybara Night Light": "Luminária noturna de capivara", "A playful night light prepared for small-batch production.": "Uma luminária noturna divertida preparada para produção em pequenos lotes.",
+  "Pet Grooming Tool": "Ferramenta de cuidados para animais", "A pet care product refined through prototype review.": "Um produto para cuidados com animais aperfeiçoado por meio da análise do protótipo."
 };
 
 const translations: Partial<Record<PublicLanguage, Record<string, string>>> = {
