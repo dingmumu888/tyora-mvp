@@ -1,15 +1,22 @@
 import Link from "next/link";
 import {
+  BadgeCheck,
+  Boxes,
   ChevronRight,
-  Filter,
+  CircleHelp,
   Flame,
-  Heart,
+  Lightbulb,
   MessageCircle,
+  PackageSearch,
+  PenLine,
   Plus,
+  Rocket,
   Search,
-  Share2,
-  ShoppingBag,
-  Sparkles
+  Sparkles,
+  Tags,
+  ThumbsUp,
+  TrendingUp,
+  Users
 } from "lucide-react";
 import { CommunityFeedSort, CommunityIdea, CommunityStatus } from "@/lib/community";
 import { getCommunityIdeas } from "@/lib/server/community-store";
@@ -17,6 +24,7 @@ import { getContent } from "@/lib/server/data-store";
 import { CaseStudy, CommunityPageContent } from "@/lib/storage";
 import CommunityImage from "@/components/community-image";
 import CommunityAvatar from "@/components/community-avatar";
+import CommunityText, { CommunitySearchInput } from "@/components/community-text";
 import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 
@@ -29,23 +37,23 @@ export const metadata = {
   alternates: { canonical: "/ask" }
 };
 
-const tabs: Array<[CommunityFeedSort, string]> = [
-  ["trending", "Trending"],
-  ["newest", "Newest"],
+type CommunityPageSort = CommunityFeedSort | "unanswered";
+
+const tabs: Array<[CommunityPageSort, string]> = [
+  ["trending", "Hot"],
+  ["newest", "New"],
   ["latest-comments", "Most Discussed"],
-  ["latest-tyora-reply", "Latest TYORA Reply"],
-  ["latest-uploaded", "Recently Uploaded"]
+  ["unanswered", "Unanswered"],
+  ["latest-tyora-reply", "TYORA Reviewed"]
 ];
 
 const topNav = [
   ["Ideas", "/ask"],
-  ["Post Idea", "/ask/new"],
+  ["Manufacturing", "/build"],
   ["Source", "/source"],
-  ["Custom", "/custom"],
   ["Pricing", "/build#pricing"]
 ] as const;
-const statusSteps = ["Idea", "Discussion", "TYORA Review", "Prototype", "Manufacturing", "Shipping"];
-const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
+const primaryButton = "bg-[#1565f9] text-white shadow-sm shadow-[#1565f9]/20 transition hover:bg-[#0b55de] hover:shadow-md hover:shadow-[#1565f9]/25";
 
 const statusStyles: Record<CommunityStatus, string> = {
   Discussing: "bg-[#f0eaff] text-[#6d28d9] ring-[#ddd0ff]",
@@ -67,15 +75,6 @@ function flagFor(country: string) {
   return country.slice(0, 2).toUpperCase() || "GL";
 }
 
-function statusProgress(status: CommunityStatus) {
-  if (status === "Completed") return 6;
-  if (status === "Shipping") return 6;
-  if (status === "Manufacturing") return 5;
-  if (status === "Project Started") return 4;
-  if (status === "TYORA Reviewing") return 3;
-  return 2;
-}
-
 function timeAgo(value: string) {
   const diff = Date.now() - new Date(value).getTime();
   const hours = Math.max(1, Math.round(diff / 36e5));
@@ -93,25 +92,6 @@ function coverTone(idea: CommunityIdea) {
   return tones[idea.title.length % tones.length];
 }
 
-function HotBadge({ idea }: { idea?: CommunityIdea }) {
-  if (!idea?.isHot) return null;
-  return (
-    <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#ff385c] px-2.5 py-1 text-[10px] font-bold uppercase tracking-normal text-white shadow-[0_8px_22px_rgba(255,56,92,0.28)]">
-      <Flame size={11} fill="currentColor" /> Hot
-    </span>
-  );
-}
-
-function activity(ideas: CommunityIdea[]) {
-  const latestReviews = ideas.filter((idea) => idea.review).slice(0, 4);
-  const latestComments = ideas.flatMap((idea) => idea.comments.map((comment) => ({ idea, comment }))).slice(-4).reverse();
-  return [
-    ...ideas.slice(0, 4).map((idea) => `${idea.author.name} uploaded a new idea`),
-    ...latestReviews.map((idea) => `TYORA replied to ${idea.title}`),
-    ...latestComments.map(({ comment }) => `${comment.author.name} commented`)
-  ].slice(0, 7);
-}
-
 function caseStatus(story: CaseStudy): CommunityStatus {
   if (story.status === "Delivered") return "Completed";
   if (story.status === "In Production") return "Manufacturing";
@@ -124,7 +104,6 @@ type InteractionLabels = Pick<CommunityPageContent, "likeText" | "commentText" |
 function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: CaseStudy; labels: InteractionLabels }) {
   if (!idea && !story) return null;
   const status = story ? caseStatus(story) : idea!.status;
-  const progress = statusProgress(status);
   const title = story ? story.name : idea!.title;
   const description = story ? story.shortDescription : idea!.description;
   const category = story ? story.category : idea!.category;
@@ -132,67 +111,59 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
   const imageUrl = story ? story.coverImage.desktopUrl : idea?.imageUrls[0];
   const href = story ? `/ask/case/${encodeURIComponent(story.slug)}` : `/ask/${idea!.slug}`;
   const authorName = story ? "TYORA" : idea!.author.name;
+  const commentCount = idea?.comments.length || 0;
+  const helpfulCount = idea?.likeCount || 0;
+  const isUnanswered = Boolean(idea && commentCount === 0 && !idea.review);
+  const reviewSnippet = idea?.review?.recommendedNextStep || idea?.review?.additionalNotes || idea?.review?.mainRisks;
 
   return (
-    <article className="group relative overflow-hidden rounded-[12px] border border-[#e1e6ee] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-150 hover:-translate-y-0.5 hover:border-[#cfd8e6] hover:shadow-[0_14px_38px_rgba(15,23,42,0.1)]">
-      <HotBadge idea={idea} />
-      <div className="grid grid-cols-[96px_1fr] gap-0 sm:grid-cols-[132px_1fr]">
-        <Link href={href} className={`relative block aspect-square overflow-hidden bg-gradient-to-br ${story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}`}>
-          <CommunityImage src={imageUrl} alt={title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]" fallbackClassName="absolute inset-0 p-6" initialsClassName="bg-white/74" />
-          <span className="absolute left-2 top-2 rounded-full bg-white/88 px-2 py-0.5 text-[10px] font-semibold text-[#101216] backdrop-blur">{category}</span>
-        </Link>
+    <article className={`group overflow-hidden rounded-xl border bg-white transition duration-150 hover:border-[#b8c5d8] hover:shadow-[0_12px_32px_rgba(11,20,38,0.08)] ${isUnanswered ? "border-[#f6c894]" : "border-[#dfe5ed]"}`}>
+      <div className="grid min-h-[126px] grid-cols-[minmax(0,1fr)_88px] sm:grid-cols-[58px_minmax(0,1fr)_124px]">
+        <div className="hidden border-r border-[#edf0f4] bg-[#fafbfc] px-2 py-3 text-center sm:block">
+          <ThumbsUp size={15} className="mx-auto text-[#667085]" />
+          <p className="mt-1 text-lg font-bold leading-none text-[#0b1426]">{helpfulCount}</p>
+          <p className="mt-1 text-[10px] font-medium text-[#667085]"><CommunityText text="Helpful" /></p>
+        </div>
 
-        <div className="min-w-0 p-2.5">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[#69707d]">
-            {country ? <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{flagFor(country)}</span> : null}
-            <span>{authorName}</span>
-            {idea ? <span>{timeAgo(idea.createdAt)}</span> : null}
-            {story ? <span className="rounded-full bg-[#101216] px-2 py-1 font-semibold text-white">{story.badgeLabel || "TYORA Case"}</span> : null}
-            {story?.projectType === "Demonstration Project" ? <span className="rounded-full bg-[#fff7d6] px-2 py-1 font-semibold text-[#8a5a00]">Demonstration Project</span> : null}
-            <span className={`rounded-full px-2.5 py-1 font-semibold ring-1 max-sm:hidden ${statusStyles[status]}`}>{status}</span>
+        <div className="min-w-0 px-3 py-3 sm:px-4">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {idea?.isHot ? <span className="inline-flex items-center gap-1 rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><Flame size={11} fill="currentColor" /> Hot</span> : null}
+            <span className="rounded bg-[#eef4ff] px-2 py-1 text-[10px] font-bold uppercase text-[#155eef]">{category}</span>
+            <span className={`rounded px-2 py-1 text-[10px] font-bold uppercase ring-1 ${statusStyles[status]}`}><CommunityText text={status} /></span>
+            {idea?.review ? <span className="inline-flex items-center gap-1 rounded bg-[#e8f7f4] px-2 py-1 text-[10px] font-bold uppercase text-[#06756f]"><BadgeCheck size={11} /> <CommunityText text="TYORA Replied" /></span> : null}
+            {isUnanswered ? <span className="rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><CommunityText text="Unanswered" /></span> : null}
+            {story ? <span className="rounded bg-[#0b1426] px-2 py-1 text-[10px] font-bold uppercase text-white"><CommunityText text={story.badgeLabel || "TYORA Case"} /></span> : null}
+            {story?.projectType === "Demonstration Project" ? <span className="rounded bg-[#fff7d6] px-2 py-1 text-[10px] font-bold uppercase text-[#8a5a00]"><CommunityText text="Demonstration Project" /></span> : null}
           </div>
 
-          <Link href={href} className="mt-1.5 block">
-            <h2 className="line-clamp-1 text-base font-semibold leading-tight tracking-normal text-[#101216]">{title}</h2>
-            <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#59616e]">{description}</p>
+          <Link href={href} className="mt-2 block">
+            <h2 className="line-clamp-2 text-[15px] font-bold leading-5 text-[#0b1426] transition group-hover:text-[#155eef] sm:text-base">{title}</h2>
+            <p className="mt-1 line-clamp-2 text-[12px] leading-[1.45] text-[#5f6b7a] sm:text-[13px]">{description}</p>
           </Link>
 
-          <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] max-sm:hidden">
-            {(idea?.questions || []).slice(0, 2).map((question) => (
-              <span key={question} className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">{question}</span>
-            ))}
-            <span className="rounded-full border border-[#e8ebef] px-2.5 py-1 text-[#59616e]">{story ? story.status : "Concept"}</span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#667085]">
+            <span className="inline-flex items-center gap-1.5">
+              <CommunityAvatar name={authorName} src={idea?.author.avatar} className="size-5 border text-[8px]" />
+              {authorName}
+            </span>
+            {country ? <span>{flagFor(country)}</span> : null}
+            {idea ? <span>{timeAgo(idea.updatedAt || idea.createdAt)}</span> : <span><CommunityText text="TYORA case" /></span>}
+            <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {commentCount} <CommunityText text={labels.commentText} /></span>
+            {idea ? <span className="inline-flex items-center gap-1"><ThumbsUp size={13} /> {helpfulCount} <CommunityText text="helpful" /></span> : null}
+            {idea?.interestedCount ? <span>{idea.interestedCount} {labels.interestedText}</span> : null}
           </div>
 
-          <div className="mt-2 grid gap-2 max-sm:hidden sm:grid-cols-[1fr_auto] sm:items-center">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1">
-                {statusSteps.map((step, index) => (
-                  <div key={step} className="flex flex-1 items-center gap-1">
-                    <span className={`h-1.5 flex-1 rounded-full ${index < progress ? "bg-[#14b8a6]" : "bg-[#e8ebef]"}`} />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-1 hidden grid-cols-6 text-[10px] text-[#8b93a1] sm:grid">
-                {statusSteps.map((step) => <span key={step} className="truncate">{step}</span>)}
-              </div>
+          {reviewSnippet ? (
+            <div className="mt-2 flex items-start gap-2 rounded-lg border border-[#a8ddd7] bg-[#f1fbf9] px-2.5 py-2 text-[11px] leading-4 text-[#285f5b]">
+              <BadgeCheck size={14} className="mt-0.5 shrink-0 text-[#078a83]" />
+              <p className="line-clamp-2"><strong className="text-[#066a65]"><CommunityText text="TYORA Expert:" /></strong> {reviewSnippet}</p>
             </div>
-
-            <CommunityAvatar name={authorName} src={idea?.author.avatar} className="size-6 border text-[10px]" />
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            {idea ? <div className="flex flex-wrap gap-2 text-[11px] font-medium text-[#69707d] sm:gap-3 sm:text-xs">
-              <span className="inline-flex items-center gap-1"><Heart size={14} /> {idea.likeCount} {labels.likeText}</span>
-              <span className="inline-flex items-center gap-1"><MessageCircle size={14} /> {idea.comments.length} {labels.commentText}</span>
-              <span className="inline-flex items-center gap-1 max-sm:hidden"><ShoppingBag size={14} /> {idea.interestedCount} {labels.interestedText}</span>
-              <span className="inline-flex items-center gap-1 max-sm:hidden"><Share2 size={14} /> {idea.shareCount} {labels.shareText}</span>
-            </div> : <span className="text-xs font-semibold text-[#315fbd]">Case information, process, and disclosure</span>}
-            <Link href={href} className={`hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold sm:inline-flex ${primaryButton}`}>
-              {story ? story.ctaText || "View Case" : "Join Discussion"} <ChevronRight size={14} />
-            </Link>
-          </div>
+          ) : null}
         </div>
+
+        <Link href={href} className={`relative min-h-[126px] overflow-hidden border-l border-[#edf0f4] bg-gradient-to-br ${story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}`}>
+          <CommunityImage src={imageUrl} alt={title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.04]" fallbackClassName="absolute inset-0 p-4" initialsClassName="bg-white/74" />
+        </Link>
       </div>
     </article>
   );
@@ -203,14 +174,14 @@ function StarterCommunityState() {
     <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
       <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
         <div>
-          <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">Starter community</p>
-          <h2 className="mt-3 text-2xl font-semibold leading-tight">Be the first founder to start a discussion.</h2>
+          <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]"><CommunityText text="Starter community" /></p>
+          <h2 className="mt-3 text-2xl font-semibold leading-tight"><CommunityText text="Be the first founder to start a discussion." /></h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#59616e]">
-            Share a product idea for a limited initial manufacturing assessment from TYORA.
+            <CommunityText text="Share a product idea for a limited initial manufacturing assessment from TYORA." />
           </p>
         </div>
         <Link href="/ask/new" className={`inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold ${primaryButton}`}>
-          <Plus size={16} /> Start a Discussion
+          <Plus size={16} /> <CommunityText text="Start a Discussion" />
         </Link>
       </div>
 
@@ -218,145 +189,196 @@ function StarterCommunityState() {
   );
 }
 
-export default async function AskCommunityPage({ searchParams }: { searchParams: Promise<{ sort?: CommunityFeedSort }> }) {
-  const { sort = "trending" } = await searchParams;
-  const [ideas, content] = await Promise.all([getCommunityIdeas(sort), getContent()]);
-  const tyoraCases = content.communityPage.showCasesInFeed
+export default async function AskCommunityPage({
+  searchParams
+}: {
+  searchParams: Promise<{ sort?: CommunityPageSort; category?: string; stage?: string; q?: string }>;
+}) {
+  const params = await searchParams;
+  const sort = tabs.some(([id]) => id === params.sort) ? params.sort as CommunityPageSort : "trending";
+  const dataSort: CommunityFeedSort = sort === "unanswered" ? "newest" : sort;
+  const [rawIdeas, content] = await Promise.all([getCommunityIdeas(dataSort), getContent()]);
+  const query = (params.q || "").trim().toLowerCase();
+  const selectedCategory = (params.category || "").trim();
+  const selectedStage = (params.stage || "").trim();
+
+  const stageMatches = (idea: CommunityIdea) => {
+    if (!selectedStage) return true;
+    if (selectedStage === "Concept") return idea.status === "Discussing";
+    if (selectedStage === "Review") return idea.status === "TYORA Reviewing";
+    if (selectedStage === "Prototype") return idea.status === "Project Started";
+    return ["Manufacturing", "Shipping", "Completed"].includes(idea.status);
+  };
+
+  const ideas = rawIdeas
+    .filter((idea) => !selectedCategory || idea.category === selectedCategory)
+    .filter(stageMatches)
+    .filter((idea) => !query || `${idea.title} ${idea.description} ${idea.category} ${idea.author.name}`.toLowerCase().includes(query))
+    .filter((idea) => sort !== "unanswered" || (idea.comments.length === 0 && !idea.review))
+    .filter((idea) => sort !== "latest-tyora-reply" || Boolean(idea.review))
+    .sort((left, right) => sort === "latest-comments" ? right.comments.length - left.comments.length : 0);
+
+  const showCases = !query && !selectedCategory && !selectedStage && sort !== "unanswered" && sort !== "latest-tyora-reply";
+  const tyoraCases = content.communityPage.showCasesInFeed && showCases
     ? content.cases.filter((story) => story.visible).sort((left, right) => left.order - right.order).slice(0, content.communityPage.caseLimit)
     : [];
-  const latestReviews = ideas.filter((idea) => idea.review);
-  const countries = new Set(ideas.map((idea) => idea.country).filter(Boolean)).size;
-  const recentActivity = activity(ideas);
-  const categories = Array.from(new Set(ideas.map((idea) => idea.category).filter(Boolean))).slice(0, 8);
-  const hasCommunityStats = ideas.length > 0;
-  const communityStats = [
-    ["Ideas Shared", ideas.length],
-    ["TYORA Reviews", latestReviews.length],
-    ["Countries", countries]
-  ] as const;
+  const latestReviews = rawIdeas.filter((idea) => idea.review);
+  const countries = new Set(rawIdeas.map((idea) => idea.country).filter(Boolean)).size;
+  const adviceIdeas = rawIdeas
+    .filter((idea) => !idea.review)
+    .sort((left, right) => left.comments.length - right.comments.length || new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, 3);
+  const categories = Array.from(new Set(rawIdeas.map((idea) => idea.category).filter(Boolean))).slice(0, 7);
+  const categoryCounts = categories.map((category) => ({
+    category,
+    count: rawIdeas.filter((idea) => idea.category === category).length
+  })).sort((left, right) => right.count - left.count);
+  const contributors = Array.from(new Map(
+    rawIdeas.flatMap((idea) => idea.comments.map((comment) => [comment.author.id, comment.author] as const))
+  ).values()).slice(0, 3);
+  const progressedIdeas = rawIdeas.filter((idea) => idea.status !== "Discussing").length;
+  const activeDiscussions = rawIdeas.filter((idea) => idea.comments.length > 0).length;
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f5f7fb_32%,#f7f5f0_72%,#eef2f8_100%)] pb-28 text-[#101216] md:pb-20">
-      <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1520px] items-center gap-4 px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="text-sm font-semibold tracking-normal">TYORA</Link>
-          <nav className="hidden flex-1 items-center gap-1 lg:flex">
+    <main className="min-h-screen overflow-x-hidden bg-[#f4f6f8] pb-28 text-[#0b1426] md:pb-16">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1426] text-white shadow-[0_4px_18px_rgba(11,20,38,0.16)]">
+        <div className="mx-auto flex h-[60px] max-w-[1580px] items-center gap-3 px-3 sm:px-5 lg:px-6">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5 pr-4 lg:pr-7" aria-label={`${content.brandName} home`}>
+            <span className="grid size-9 place-items-center overflow-hidden rounded-lg bg-white p-1">
+              {content.logoImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={content.logoImage} alt="" className="size-full object-contain" />
+              ) : <Sparkles size={17} className="text-[#0b1426]" />}
+            </span>
+            {content.showBrandNameWithLogo ? <span className="text-base font-bold tracking-[0.08em]">{content.brandName}</span> : null}
+          </Link>
+
+          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Community navigation">
             {topNav.map(([label, href]) => (
-              <Link key={label} href={href} className="rounded-full px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f2f4f7] hover:text-[#101216]">
-                {label}
+              <Link key={label} href={href} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${href === "/ask" ? "bg-white/12 text-white" : "text-white/72 hover:bg-white/8 hover:text-white"}`}>
+                <CommunityText text={label} />
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
-            <PublicLanguageSwitcher compact />
-            <div className="hidden h-10 w-64 items-center gap-2 rounded-full border border-[#e1e5ea] bg-white px-3 text-sm text-[#8b93a1] md:flex">
-              <Search size={16} /> Search ideas
-            </div>
-            <CommunityUserMenu loginClassName="hidden rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold sm:inline-flex" />
-            <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${primaryButton}`}>
-              <Plus size={16} /> <span className="hidden sm:inline">Start a Discussion</span>
+
+          <form action="/ask" className="mx-auto hidden h-10 w-full max-w-[500px] items-center gap-2 rounded-lg border border-white/25 bg-white/7 px-3 text-white/65 lg:flex">
+            <Search size={16} />
+            <CommunitySearchInput defaultValue={params.q || ""} placeholder="Search ideas, products, or manufacturing questions" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/48" />
+            <input type="hidden" name="sort" value={sort} />
+          </form>
+
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <PublicLanguageSwitcher compact className="hidden sm:inline-flex" />
+            <CommunityUserMenu loginClassName="hidden h-10 items-center rounded-lg border border-white/20 bg-white/10 px-3 text-sm font-semibold text-white transition hover:bg-white/15 md:inline-flex" />
+            <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold sm:px-4 ${primaryButton}`}>
+              <PenLine size={15} /> <span className="hidden sm:inline"><CommunityText text="Start a discussion" /></span>
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1520px] gap-3 px-3 py-3 sm:px-5 lg:grid-cols-[220px_minmax(0,1fr)_300px] lg:px-6">
-        <aside className="hidden lg:block">
-          <div className="sticky top-20 space-y-3">
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)]">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={18} /></div>
-              <h2 className="mt-3 text-base font-semibold">Creator HQ</h2>
-              <p className="mt-1.5 text-[13px] leading-5 text-[#69707d]">Founders testing ideas with manufacturing experts.</p>
-              <div className="mt-3 grid gap-2 text-sm">
-                <Link href="/ask/new" className={`inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 font-semibold ${primaryButton}`}><Plus size={15} /> Start a Discussion</Link>
-                <a href="#feed" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] font-semibold">Browse Ideas</a>
-                <span className="rounded-2xl bg-[#eef6ff] p-3 text-sm font-semibold text-[#315fbd]">Limited initial manufacturing assessments</span>
-              </div>
+      <div className="mx-auto grid max-w-[1580px] gap-4 px-3 py-4 sm:px-5 xl:grid-cols-[224px_minmax(0,1fr)_292px] xl:px-6">
+        <aside className="hidden xl:block">
+          <div className="sticky top-[76px] space-y-4">
+            <section>
+              <h2 className="text-lg font-bold"><CommunityText text="Creator Community" /></h2>
+              <p className="mt-1 text-xs leading-5 text-[#667085]"><CommunityText text="Turn practical feedback into manufacturing confidence." /></p>
+              <Link href="/ask/new" className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#0b1426] px-4 text-sm font-semibold text-white transition hover:bg-[#17243b]">
+                <PenLine size={16} /> <CommunityText text="Start a Discussion" />
+              </Link>
             </section>
 
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">
-              {[
-                ["Discover Ideas", "/ask"],
-                ["Start a Discussion", "/ask/new"],
-                ["Newest Ideas", "/ask?sort=newest"],
-                ["Latest TYORA Reply", "/ask?sort=latest-tyora-reply"]
-              ].map(([item, href]) => (
-                <Link key={item} href={href} className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8] hover:text-[#101216]">
-                  {item}<ChevronRight size={14} />
+            <nav className="space-y-1 border-b border-[#d8dee8] pb-4">
+              {([
+                ["All Discussions", "/ask", MessageCircle],
+                ["Ideas & Feedback", "/ask?sort=trending", Lightbulb],
+                ["Cost & MOQ", `/ask?category=${encodeURIComponent("Cost & MOQ")}`, Tags],
+                ["Materials", `/ask?category=${encodeURIComponent("Materials")}`, Boxes],
+                ["Prototyping", "/ask?stage=Prototype", Rocket],
+                ["Find a Supplier", "/source", PackageSearch]
+              ] as const).map(([label, href, Icon]) => (
+                <Link key={label} href={href} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition ${label === "All Discussions" && !selectedCategory && !selectedStage ? "bg-[#e8f0ff] text-[#155eef]" : "text-[#475467] hover:bg-white hover:text-[#0b1426]"}`}>
+                  <Icon size={17} /> <CommunityText text={label} />
                 </Link>
               ))}
-            </section>
+            </nav>
 
-            <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">
-              <p className="px-3 text-xs font-semibold uppercase text-[#8b93a1]">My TYORA</p>
-              <div className="mt-2 grid gap-1">
-                {[
-                  ["My Discussions", "/me#discussions"],
-                  ["My Comments", "/me#comments"],
-                  ["Liked Ideas", "/me#liked"],
-                  ["Notifications", "/me#notifications"]
-                ].map(([label, href]) => (
-                  <Link key={label} href={href} className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-[#59616e] transition hover:bg-[#f5f6f8] hover:text-[#101216]">
-                    {label}<ChevronRight size={14} />
+            <section>
+              <p className="px-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#667085]"><CommunityText text="Product stage" /></p>
+              <div className="mt-2 space-y-1">
+                {([
+                  ["Concept", Lightbulb],
+                  ["Review", BadgeCheck],
+                  ["Prototype", Boxes],
+                  ["Production", Rocket]
+                ] as const).map(([stage, Icon]) => (
+                  <Link key={stage} href={`/ask?stage=${stage}`} className={`flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition ${selectedStage === stage ? "bg-white text-[#155eef] shadow-sm" : "text-[#475467] hover:bg-white"}`}>
+                    <Icon size={16} /> <CommunityText text={stage} />
                   </Link>
                 ))}
               </div>
             </section>
 
-            {categories.length > 0 ? <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-2.5 shadow-sm shadow-[#101216]/4">
-              <p className="px-3 text-xs font-semibold uppercase text-[#8b93a1]">Categories</p>
-              <div className="mt-2 grid gap-1.5">
-                {categories.map((item) => <Link key={item} href="/ask" className="rounded-xl bg-[#f8fafc] px-3 py-1.5 text-[13px] text-[#59616e] transition hover:bg-[#eef6ff] hover:text-[#1d4ed8]">{item}</Link>)}
-              </div>
-            </section> : null}
-
-            <section className="rounded-[18px] border border-[#d7f1eb] bg-[#effaf6] p-3">
-              <p className="text-sm font-semibold text-[#0f766e]">Early founder community</p>
-              <p className="mt-1 text-sm leading-6 text-[#3d766d]">Share an idea for an initial manufacturing assessment.</p>
-            </section>
+            {categories.length > 0 ? (
+              <section>
+                <p className="px-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#667085]"><CommunityText text="Browse topics" /></p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {categories.slice(0, 5).map((item) => (
+                    <Link key={item} href={`/ask?category=${encodeURIComponent(item)}`} className={`rounded-md border px-2 py-1.5 text-[11px] font-medium ${selectedCategory === item ? "border-[#155eef] bg-[#e8f0ff] text-[#155eef]" : "border-[#d8dee8] bg-white text-[#475467]"}`}>{item}</Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
         </aside>
 
         <section id="feed" className="min-w-0">
-          <div className="rounded-[16px] border border-[#dfe6ef] bg-white/96 p-3 shadow-[0_10px_36px_rgba(15,23,42,0.07)] sm:p-4">
-            <p className="inline-flex items-center gap-2 rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]">
-              <Sparkles size={14} /> Limited initial manufacturing assessment
-            </p>
-            <div className="mt-2 grid gap-2.5 xl:grid-cols-[1fr_auto] xl:items-end">
-              <div>
-                <h1 className="max-w-3xl text-[1.45rem] font-semibold leading-[1.08] tracking-normal sm:text-3xl">What are founders building next?</h1>
-                <p className="mt-1.5 max-w-[300px] text-sm leading-5 text-[#59616e] sm:mt-2 sm:max-w-2xl sm:leading-6">
-                  Discover product ideas from founders, or share your own for an initial manufacturing assessment.
-                </p>
-                <p className="mt-1.5 max-w-[320px] break-words text-xs font-medium text-[#315fbd] sm:mt-2 sm:max-w-2xl sm:text-sm">Founders are discussing product ideas with TYORA manufacturing experts.</p>
-              </div>
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-                <Link href="/ask/new" className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold sm:h-11 sm:px-5 ${primaryButton}`}><Plus size={16} /> Start a Discussion</Link>
-                <a href="#ideas" className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold sm:h-12 sm:px-5"><Search size={16} /> Browse Ideas</a>
-              </div>
+          <div className="mb-3 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <p className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#155eef]"><Users size={14} /> <CommunityText text="Product creator community" /></p>
+              <h1 className="mt-1 text-2xl font-bold tracking-[-0.02em] sm:text-[30px]"><CommunityText text="Build it with confidence" /></h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-[#5f6b7a]"><CommunityText text="Get practical feedback from buyers, makers, and TYORA manufacturing experts." /></p>
             </div>
-            <div className="mt-3 hidden gap-2 sm:grid sm:grid-cols-2 xl:grid-cols-5">
-              {hasCommunityStats ? communityStats.map(([label, value]) => (
-                <div key={label} className="rounded-xl border border-[#e7edf5] bg-gradient-to-br from-white to-[#f7fbff] p-2.5 shadow-sm shadow-[#101216]/3">
-                  <p className="text-lg font-semibold">{value}</p>
-                  <p className="mt-1 text-xs font-medium text-[#69707d]">{label}</p>
-                </div>
-              )) : null}
+            <div className="flex gap-2 text-xs font-semibold text-[#475467]">
+              <span className="rounded-md border border-[#d8dee8] bg-white px-2.5 py-1.5"><CommunityText text="{count} ideas" values={{ count: rawIdeas.length }} /></span>
+              <span className="rounded-md border border-[#d8dee8] bg-white px-2.5 py-1.5"><CommunityText text="{count} reviewed" values={{ count: latestReviews.length }} /></span>
             </div>
           </div>
 
-          <nav id="ideas" className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto pb-1">
+          <form action="/ask" className="mb-3 flex h-11 items-center gap-2 rounded-xl border border-[#d8dee8] bg-white px-3 shadow-sm lg:hidden">
+            <Search size={16} className="text-[#667085]" />
+            <CommunitySearchInput defaultValue={params.q || ""} placeholder="Search discussions" className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
+            <input type="hidden" name="sort" value={sort} />
+          </form>
+
+          <nav id="ideas" className="no-scrollbar flex overflow-x-auto rounded-xl border border-[#d8dee8] bg-white px-1.5 pt-1.5 shadow-sm">
             {tabs.map(([id, label]) => (
-              <Link key={id} href={`/ask?sort=${id}`} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${sort === id ? "bg-[#101216] text-white" : "border border-[#dfe3e8] bg-white text-[#59616e]"}`}>
-                {label}
+              <Link key={id} href={`/ask?sort=${id}`} className={`relative whitespace-nowrap rounded-t-lg px-3 py-2.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${sort === id ? "bg-[#f7f9fc] text-[#155eef] after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:bg-[#155eef]" : "text-[#5f6b7a] hover:bg-[#f7f9fc] hover:text-[#0b1426]"}`}>
+                <CommunityText text={label} />
               </Link>
             ))}
-            <button className="inline-flex whitespace-nowrap rounded-full border border-[#dfe3e8] bg-white px-4 py-2 text-sm font-semibold text-[#59616e]"><Filter size={15} /> Filter</button>
           </nav>
 
-          <div className="mt-2.5 grid gap-2">
+          {(query || selectedCategory || selectedStage) ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-[#d8dee8] bg-white px-3 py-2 text-xs text-[#5f6b7a]">
+              <span className="font-semibold text-[#0b1426]"><CommunityText text="Active filters:" /></span>
+              {query ? <span className="rounded bg-[#eef4ff] px-2 py-1"><CommunityText text="Search: {query}" values={{ query: params.q || "" }} /></span> : null}
+              {selectedCategory ? <span className="rounded bg-[#eef4ff] px-2 py-1">{selectedCategory}</span> : null}
+              {selectedStage ? <span className="rounded bg-[#eef4ff] px-2 py-1"><CommunityText text={selectedStage} /></span> : null}
+              <Link href="/ask" className="ml-auto font-semibold text-[#155eef]"><CommunityText text="Clear" /></Link>
+            </div>
+          ) : null}
+
+          <div className="mt-2 grid gap-2">
             {ideas.length === 0 && tyoraCases.length === 0 ? (
-              <StarterCommunityState />
+              query || selectedCategory || selectedStage || sort === "unanswered" || sort === "latest-tyora-reply" ? (
+                <div className="rounded-xl border border-[#d8dee8] bg-white p-8 text-center">
+                  <CircleHelp size={26} className="mx-auto text-[#98a2b3]" />
+                  <h2 className="mt-3 text-lg font-bold"><CommunityText text="No discussions match this view yet." /></h2>
+                  <p className="mt-1 text-sm text-[#667085]"><CommunityText text="Try another filter or start the first discussion." /></p>
+                  <Link href="/ask/new" className={`mt-4 inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold ${primaryButton}`}><Plus size={15} /> <CommunityText text="Start a Discussion" /></Link>
+                </div>
+              ) : <StarterCommunityState />
             ) : (
               <>
                 {ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} labels={content.communityPage} />)}
@@ -365,63 +387,79 @@ export default async function AskCommunityPage({ searchParams }: { searchParams:
             )}
           </div>
 
-          <div className="mt-3 hidden gap-3 sm:grid xl:hidden">
-            {recentActivity.length > 0 ? <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4 shadow-sm shadow-[#101216]/4">
-              <h2 className="text-base font-semibold">Recent community activity</h2>
-              <div className="mt-3 grid gap-2 text-sm text-[#59616e]">
-                {recentActivity.slice(0, 2).map((item) => (
-                  <p key={item} className="rounded-2xl bg-[#f7f8fa] p-3">{item}</p>
-                ))}
+          <section className="mt-4 grid grid-cols-3 gap-2 xl:hidden">
+            {[
+              ["Discussions", activeDiscussions],
+              ["TYORA Reviews", latestReviews.length],
+              ["Countries", countries]
+            ].map(([label, value]) => (
+              <div key={label as string} className="rounded-xl border border-[#d8dee8] bg-white p-3 text-center">
+                <p className="text-lg font-bold">{value}</p>
+                <p className="text-[11px] text-[#667085]"><CommunityText text={label as string} /></p>
               </div>
-            </section> : null}
-            {hasCommunityStats ? <section className="rounded-[16px] border border-[#e4e8ef] bg-white p-4">
-              <h2 className="text-base font-semibold">Community Statistics</h2>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs text-[#69707d]">
-                {[
-                  ["Ideas", ideas.length],
-                  ["Reviews", latestReviews.length],
-                  ["Countries", countries]
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
-                    <p className="text-lg font-semibold text-[#101216]">{value}</p>
-                    <p>{label}</p>
-                  </div>
-                ))}
-              </div>
-            </section> : null}
-          </div>
+            ))}
+          </section>
         </section>
 
         <aside className="hidden xl:block">
-          <div className="sticky top-20 space-y-3">
-            {recentActivity.length > 0 ? <section className="rounded-[16px] border border-[#dfe6ef] bg-white p-3.5 shadow-[0_10px_36px_rgba(15,23,42,0.07)]">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold">Recent community activity</h2>
+          <div className="sticky top-[76px] space-y-3">
+            <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <CircleHelp size={17} className="text-[#f59e0b]" />
+                <h2 className="font-bold"><CommunityText text="Needs your advice" /></h2>
               </div>
-              <div className="mt-3 space-y-2">
-                {recentActivity.map((item, index) => <p key={item} className="rounded-2xl bg-[#f7f8fa] p-2.5 text-[13px] text-[#59616e]"><span className={`mr-2 inline-block size-2 rounded-full ${index % 3 === 0 ? "bg-[#14b8a6]" : index % 3 === 1 ? "bg-[#f59e0b]" : "bg-[#2563eb]"}`} />{item}</p>)}
+              <div className="mt-3 divide-y divide-[#edf0f4]">
+                {adviceIdeas.length > 0 ? adviceIdeas.map((idea) => (
+                  <Link key={idea.id} href={`/ask/${idea.slug}`} className="group block py-3 first:pt-0">
+                    <p className="line-clamp-2 text-[13px] font-semibold leading-5 group-hover:text-[#155eef]">{idea.title}</p>
+                    <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#667085]"><MessageCircle size={12} /> {idea.comments.length} <CommunityText text="replies" /></span>
+                  </Link>
+                )) : <p className="text-sm text-[#667085]"><CommunityText text="Every visible idea has received guidance." /></p>}
               </div>
-            </section> : null}
+              <Link href="/ask?sort=unanswered" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#155eef]"><CommunityText text="View all unanswered" /> <ChevronRight size={13} /></Link>
+            </section>
 
-            {hasCommunityStats ? <section className="rounded-[18px] border border-[#e4e8ef] bg-white p-4">
-              <h2 className="text-lg font-semibold">Community Statistics</h2>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                {[
-                  ["Ideas", ideas.length],
-                  ["Reviews", latestReviews.length],
-                  ["Countries", countries]
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl bg-[#f7f8fa] p-3">
-                    <p className="text-lg font-semibold text-[#101216]">{value}</p>
-                    <p className="text-xs text-[#69707d]">{label}</p>
+            {categoryCounts.length > 0 ? (
+              <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2"><TrendingUp size={17} className="text-[#155eef]" /><h2 className="font-bold"><CommunityText text="Trending topics" /></h2></div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {categoryCounts.slice(0, 6).map(({ category, count }) => (
+                    <Link key={category} href={`/ask?category=${encodeURIComponent(category)}`} className="rounded-md border border-[#d8dee8] bg-[#f8fafc] px-2 py-1.5 text-[11px] font-medium text-[#475467] transition hover:border-[#9dbcf7] hover:text-[#155eef]"># {category} · {count}</Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+              <div className="flex items-center gap-2"><BadgeCheck size={17} className="text-[#078a83]" /><h2 className="font-bold"><CommunityText text="People helping" /></h2></div>
+              <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-[#f1fbf9] p-2.5">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#0b1426] text-xs font-bold text-white">T</span>
+                <div className="min-w-0">
+                  <p className="inline-flex items-center gap-1 text-xs font-bold"><CommunityText text="TYORA Manufacturing Team" /> <BadgeCheck size={12} className="text-[#078a83]" /></p>
+                  <p className="text-[11px] text-[#667085]"><CommunityText text="Structured manufacturing assessments" /></p>
+                </div>
+              </div>
+              {contributors.length > 0 ? <div className="mt-2 space-y-1">
+                {contributors.map((person) => (
+                  <div key={person.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
+                    <CommunityAvatar name={person.name} src={person.avatar} className="size-7 text-[9px]" />
+                    <div className="min-w-0"><p className="truncate text-xs font-semibold">{person.name}</p><p className="text-[10px] text-[#667085]"><CommunityText text="Community contributor" /></p></div>
                   </div>
                 ))}
+              </div> : null}
+            </section>
+
+            <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+              <div className="flex items-center gap-2"><Rocket size={17} className="text-[#155eef]" /><h2 className="font-bold"><CommunityText text="Community progress" /></h2></div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-[#eef4ff] p-3"><p className="text-xl font-bold text-[#155eef]">{progressedIdeas}</p><p className="mt-1 text-[11px] leading-4 text-[#475467]"><CommunityText text="ideas moved beyond discussion" /></p></div>
+                <div className="rounded-lg bg-[#f1fbf9] p-3"><p className="text-xl font-bold text-[#078a83]">{latestReviews.length}</p><p className="mt-1 text-[11px] leading-4 text-[#475467]"><CommunityText text="TYORA assessments published" /></p></div>
               </div>
-            </section> : null}
+              <p className="mt-3 text-[11px] leading-4 text-[#667085]"><CommunityText text="Every useful reply can move a product one step closer to manufacturing." /></p>
+            </section>
           </div>
         </aside>
       </div>
-
     </main>
   );
 }
