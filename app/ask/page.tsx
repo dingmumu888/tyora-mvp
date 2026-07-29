@@ -163,7 +163,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
         </div>
 
         <Link href={href} className={`relative min-h-[126px] overflow-hidden border-l border-[#edf0f4] bg-gradient-to-br ${story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}`}>
-          <CommunityImage src={imageUrl} alt={title} className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.04]" fallbackClassName="absolute inset-0 p-4" initialsClassName="bg-white/74" />
+          <CommunityImage src={imageUrl} alt={title} className="absolute inset-0 size-full object-contain p-2 sm:p-3" fallbackClassName="absolute inset-0 p-4" initialsClassName="bg-white/74" />
         </Link>
       </div>
     </article>

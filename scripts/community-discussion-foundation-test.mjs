@@ -51,3 +51,13 @@ test("admin exposes unanswered queue and expert verification controls", async ()
   assert.match(admin, /name="authorExpertRole"/);
   assert.match(admin, /name="authorExpertVerified"/);
 });
+
+test("community list thumbnails preserve the complete product image", async () => {
+  const page = await read("app/ask/page.tsx");
+  const imageCard = page.match(/<CommunityImage src=\{imageUrl\}[^>]+\/>/)?.[0] || "";
+
+  assert.match(imageCard, /object-contain/);
+  assert.match(imageCard, /p-2 sm:p-3/);
+  assert.doesNotMatch(imageCard, /object-cover/);
+  assert.doesNotMatch(imageCard, /group-hover:scale/);
+});
