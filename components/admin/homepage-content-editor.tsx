@@ -14,6 +14,7 @@ import {
   HomepagePath,
   MediaAsset
 } from "@/lib/storage";
+import { useAdminLanguage } from "@/components/admin/admin-language-provider";
 
 type HomepageContentEditorProps = {
   value: HomepageContent;
@@ -27,19 +28,21 @@ function id(prefix: string) {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const { t } = useAdminLanguage();
   return (
     <label className="block text-sm font-medium text-[#344054]">
-      {label}
+      {t(label)}
       <span className="mt-2 block">{children}</span>
     </label>
   );
 }
 
 function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  const { t } = useAdminLanguage();
   return (
     <section className="border-t border-[#e4e7ec] pt-6 first:border-t-0 first:pt-0">
-      <h2 className="text-lg font-semibold text-[#101828]">{title}</h2>
-      <p className="mt-1 text-sm leading-6 text-[#667085]">{description}</p>
+      <h2 className="text-lg font-semibold text-[#101828]">{t(title)}</h2>
+      <p className="mt-1 text-sm leading-6 text-[#667085]">{t(description)}</p>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -56,15 +59,16 @@ function ItemShell({
   onDelete: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useAdminLanguage();
   return (
     <details className="group rounded-lg border border-[#e4e7ec] bg-[#f8fafc]" open>
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
         <span>
-          <span className="block text-sm font-semibold text-[#101828]">{title || "Untitled item"}</span>
-          <span className="block text-xs text-[#667085]">{meta}</span>
+          <span className="block text-sm font-semibold text-[#101828]">{t(title || "Untitled item")}</span>
+          <span className="block text-xs text-[#667085]">{t(meta)}</span>
         </span>
         <span className="flex items-center gap-2">
-          <Button type="button" variant="ghost" className="min-h-10 px-3 text-[#b42318]" onClick={(event) => { event.preventDefault(); onDelete(); }} title="Delete item">
+          <Button type="button" variant="ghost" className="min-h-10 px-3 text-[#b42318]" onClick={(event) => { event.preventDefault(); onDelete(); }} title={t("Delete item")}>
             <Trash2 size={15} />
           </Button>
           <ChevronDown size={17} className="transition group-open:rotate-180" aria-hidden="true" />
@@ -76,15 +80,17 @@ function ItemShell({
 }
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  const { t } = useAdminLanguage();
   return (
     <label className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-medium text-[#344054]">
-      {label}
+      {t(label)}
       <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="size-4" />
     </label>
   );
 }
 
 export default function HomepageContentEditor({ value, media, onUpload, onChange }: HomepageContentEditorProps) {
+  const { t } = useAdminLanguage();
   function patch(next: Partial<HomepageContent>) {
     onChange({ ...value, ...next });
   }
@@ -122,7 +128,7 @@ export default function HomepageContentEditor({ value, media, onUpload, onChange
           ))}
         </div>
         <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => patch({ navigationLinks: [...value.navigationLinks, { id: id("nav"), label: "New link", href: "/", visible: false, order: value.navigationLinks.length + 1 }] })}>
-          <Plus size={16} /> Add Navigation Link
+          <Plus size={16} /> {t("Add Navigation Link")}
         </Button>
       </Section>
 
@@ -151,7 +157,7 @@ export default function HomepageContentEditor({ value, media, onUpload, onChange
           ))}
         </div>
         <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => patch({ campaigns: [...value.campaigns, { ...defaultContent.homepage.campaigns[0], id: id("campaign"), title: "New campaign", active: false, visible: false, order: value.campaigns.length + 1 }] })}>
-          <Plus size={16} /> Add Campaign
+          <Plus size={16} /> {t("Add Campaign")}
         </Button>
       </Section>
 
@@ -188,7 +194,7 @@ export default function HomepageContentEditor({ value, media, onUpload, onChange
                 <Field label="Description"><Textarea value={path.description} onChange={(event) => updatePath(index, { description: event.target.value })} /></Field>
                 <Field label="CTA"><Input value={path.ctaText} onChange={(event) => updatePath(index, { ctaText: event.target.value })} /></Field>
                 <Field label="Route"><Input value={path.href} onChange={(event) => updatePath(index, { href: event.target.value })} /></Field>
-                <Field label="Icon"><select className="min-h-11 w-full rounded-md border border-[#d0d5dd] bg-white px-3 text-sm" value={path.icon} onChange={(event) => updatePath(index, { icon: event.target.value as HomepagePath["icon"] })}><option value="idea">Idea</option><option value="source">Source</option><option value="custom">Custom</option></select></Field>
+                <Field label="Icon"><select className="min-h-11 w-full rounded-md border border-[#d0d5dd] bg-white px-3 text-sm" value={path.icon} onChange={(event) => updatePath(index, { icon: event.target.value as HomepagePath["icon"] })}><option value="idea">{t("Idea")}</option><option value="source">{t("Source")}</option><option value="custom">{t("Custom")}</option></select></Field>
                 <Field label="Order"><Input type="number" min={1} max={99} value={path.order} onChange={(event) => updatePath(index, { order: Number(event.target.value) })} /></Field>
                 <Toggle label="Visible" checked={path.visible} onChange={(visible) => updatePath(index, { visible })} />
               </div>
@@ -219,7 +225,7 @@ export default function HomepageContentEditor({ value, media, onUpload, onChange
           ))}
         </div>
         <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => patch({ categories: [...value.categories, { ...defaultContent.homepage.categories[0], id: id("category"), name: "New category", visible: false, order: value.categories.length + 1 }] })}>
-          <Plus size={16} /> Add Category
+          <Plus size={16} /> {t("Add Category")}
         </Button>
       </Section>
 

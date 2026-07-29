@@ -129,8 +129,8 @@ test("Admin CMS surfaces expose honest empty states and responsive, accessible c
   ]);
   const combined = [ui, admin, community, source].join("\n");
 
-  assert.match(shell, /aria-label="Open navigation"/);
-  assert.match(shell, /aria-label="Close navigation overlay"/);
+  assert.match(shell, /aria-label=\{t\("Open navigation"\)\}/);
+  assert.match(shell, /aria-label=\{t\("Close navigation overlay"\)\}/);
   assert.match(shell, /lg:pl-\[220px\]/);
   assert.match(combined, /min-h-11/);
   assert.match(combined, /focus-visible|focus-within/);

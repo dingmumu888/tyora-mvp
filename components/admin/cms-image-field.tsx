@@ -5,6 +5,7 @@ import CmsImage from "@/components/cms-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CmsImageValue, MediaAsset } from "@/lib/storage";
+import { useAdminLanguage } from "@/components/admin/admin-language-provider";
 
 type CmsImageFieldProps = {
   label: string;
@@ -35,6 +36,7 @@ export default function CmsImageField({
   onUpload,
   onChange
 }: CmsImageFieldProps) {
+  const { t } = useAdminLanguage();
   const assets = eligibleAssets(media);
 
   function patch(next: Partial<CmsImageValue>) {
@@ -45,7 +47,7 @@ export default function CmsImageField({
     if (!file) return;
     const message = validateImage(file);
     if (message) {
-      window.alert(message);
+      window.alert(t(message));
       return;
     }
     const asset = await onUpload(file);
@@ -56,13 +58,13 @@ export default function CmsImageField({
     <section className="rounded-lg border border-[#e4e7ec] bg-white p-4" aria-label={label}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-[#101828]">{label}</h3>
-          <p className="mt-1 text-xs text-[#667085]">Desktop and mobile images come from the public CMS media library.</p>
-          {!value.desktopUrl ? <p className="mt-1 text-xs font-semibold text-[#b54708]">CMS image missing. The public page will use the branded fallback.</p> : null}
+          <h3 className="text-sm font-semibold text-[#101828]">{t(label)}</h3>
+          <p className="mt-1 text-xs text-[#667085]">{t("Desktop and mobile images come from the public CMS media library.")}</p>
+          {!value.desktopUrl ? <p className="mt-1 text-xs font-semibold text-[#b54708]">{t("CMS image missing. The public page will use the branded fallback.")}</p> : null}
         </div>
         <label className="inline-flex min-h-11 items-center gap-2 text-sm font-medium">
           <input type="checkbox" checked={value.visible} onChange={(event) => patch({ visible: event.target.checked })} className="size-4" />
-          Visible
+          {t("Visible")}
         </label>
       </div>
 
@@ -75,7 +77,7 @@ export default function CmsImageField({
 
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
         <ImageSourceControl
-          title="Desktop image"
+          title={t("Desktop image")}
           value={value.desktopUrl}
           assets={assets}
           onSelect={(desktopUrl) => patch({ desktopUrl })}
@@ -83,7 +85,7 @@ export default function CmsImageField({
           onRemove={() => patch({ desktopUrl: "" })}
         />
         <ImageSourceControl
-          title="Mobile image"
+          title={t("Mobile image")}
           value={value.mobileUrl}
           assets={assets}
           onSelect={(mobileUrl) => patch({ mobileUrl })}
@@ -95,17 +97,17 @@ export default function CmsImageField({
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_180px]">
         <label className="text-sm font-medium text-[#344054]">
-          Alt text
-          <Input className="mt-2" value={value.alt} onChange={(event) => patch({ alt: event.target.value })} placeholder="Describe the image for accessibility" />
+          {t("Alt text")}
+          <Input className="mt-2" value={value.alt} onChange={(event) => patch({ alt: event.target.value })} placeholder={t("Describe the image for accessibility")} />
         </label>
         <label className="text-sm font-medium text-[#344054]">
-          Object position
+          {t("Object position")}
           <Input className="mt-2" value={value.objectPosition} onChange={(event) => patch({ objectPosition: event.target.value })} placeholder="center center" />
         </label>
       </div>
 
       <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={() => onChange({ ...defaultValue })}>
-        <RotateCcw size={16} /> Restore Default
+        <RotateCcw size={16} /> {t("Restore Default")}
       </Button>
     </section>
   );
@@ -128,22 +130,23 @@ function ImageSourceControl({
   onRemove: () => void;
   optional?: boolean;
 }) {
+  const { t } = useAdminLanguage();
   return (
     <div className="rounded-lg bg-[#f8fafc] p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-[#344054]">{title}</p>
-        {optional ? <span className="text-xs text-[#667085]">Optional</span> : null}
+        <p className="text-sm font-semibold text-[#344054]">{t(title)}</p>
+        {optional ? <span className="text-xs text-[#667085]">{t("Optional")}</span> : null}
       </div>
       <select className="mt-2 min-h-11 w-full rounded-md border border-[#d0d5dd] bg-white px-3 text-sm" value={assets.some((asset) => asset.url === value) ? value : ""} onChange={(event) => onSelect(event.target.value)}>
-        <option value="">Select from Media Library</option>
+        <option value="">{t("Select from Media Library")}</option>
         {assets.map((asset) => <option key={asset.id} value={asset.url}>{asset.name}</option>)}
       </select>
       <div className="mt-2 flex gap-2">
         <label className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-semibold hover:bg-[#f2f4f7]">
-          <Upload size={15} /> {value ? "Replace" : "Upload"}
+          <Upload size={15} /> {t(value ? "Replace" : "Upload")}
           <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="sr-only" onChange={(event) => onUpload(event.target.files?.[0])} />
         </label>
-        <Button type="button" variant="ghost" className="min-h-11 px-3" onClick={onRemove} disabled={!value} title={`Remove ${title.toLowerCase()}`}>
+        <Button type="button" variant="ghost" className="min-h-11 px-3" onClick={onRemove} disabled={!value} title={`${t("Remove")} ${t(title)}`}>
           {value ? <Trash2 size={16} /> : <ImagePlus size={16} />}
         </Button>
       </div>

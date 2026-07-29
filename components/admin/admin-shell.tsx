@@ -26,6 +26,7 @@ import {
   X
 } from "lucide-react";
 import { AdminViewCommunityLink } from "@/components/admin-view-community-link";
+import { useAdminLanguage } from "@/components/admin/admin-language-provider";
 
 export type AdminSectionId =
   | "today"
@@ -125,11 +126,9 @@ export default function AdminShell({
   notificationCount,
   searchItems,
   canSave,
-  languageLabel,
   onNavigate,
   onNewProject,
   onSave,
-  onToggleLanguage,
   onLogout,
   children
 }: {
@@ -139,14 +138,13 @@ export default function AdminShell({
   notificationCount: number;
   searchItems: AdminSearchItem[];
   canSave: boolean;
-  languageLabel: string;
   onNavigate: (section: AdminSectionId) => void;
   onNewProject: () => void;
   onSave: () => void;
-  onToggleLanguage: () => void;
   onLogout: () => void;
   children: React.ReactNode;
 }) {
+  const { language, t, toggleLanguage } = useAdminLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -167,13 +165,13 @@ export default function AdminShell({
   const staticSearchItems = useMemo<AdminSearchItem[]>(
     () => [...navGroups.flatMap((group) => group.items), ...settingsNav].map((item) => ({
       id: `nav-${navKey(item)}`,
-      label: item.label,
-      description: item.href ? "Open admin workspace" : "Open admin section",
+      label: t(item.label),
+      description: t(item.href ? "Open admin workspace" : "Open admin section"),
       href: item.href,
       sectionId: item.sectionId,
       keywords: item.keywords
     })),
-    []
+    [t]
   );
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -205,24 +203,24 @@ export default function AdminShell({
           <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#155eef] text-sm font-bold">TY</span>
           <span className="min-w-0">
             <span className="block text-base font-bold">TYORA OS</span>
-            <span className="block truncate text-[11px] text-white/58">Operations workspace</span>
+            <span className="block truncate text-[11px] text-white/58">{t("Operations workspace")}</span>
           </span>
         </Link>
         <button
           type="button"
           onClick={() => setMobileOpen(false)}
           className="grid size-10 place-items-center rounded-md text-white/72 hover:bg-white/10 lg:hidden"
-          aria-label="Close navigation"
+          aria-label={t("Close navigation")}
         >
           <X size={20} />
         </button>
       </div>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label={t("Admin navigation")}>
         <div className="space-y-5">
           {navGroups.map((group) => (
             <div key={group.label}>
-              <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/42">{group.label}</p>
+              <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/42">{t(group.label)}</p>
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
@@ -233,12 +231,12 @@ export default function AdminShell({
                   return item.href ? (
                     <Link key={navKey(item)} href={item.href} className={className} onClick={() => setMobileOpen(false)}>
                       <Icon size={17} aria-hidden="true" />
-                      <span>{item.label}</span>
+                      <span>{t(item.label)}</span>
                     </Link>
                   ) : (
                     <button key={navKey(item)} type="button" onClick={() => item.sectionId && chooseSection(item.sectionId)} className={className}>
                       <Icon size={17} aria-hidden="true" />
-                      <span>{item.label}</span>
+                      <span>{t(item.label)}</span>
                     </button>
                   );
                 })}
@@ -253,7 +251,7 @@ export default function AdminShell({
               className="flex min-h-10 w-full items-center justify-between rounded-md px-3 text-left text-sm font-semibold text-white/72 hover:bg-white/8 hover:text-white"
               aria-expanded={settingsOpen}
             >
-              <span className="flex items-center gap-3"><Settings size={17} /> Site settings</span>
+              <span className="flex items-center gap-3"><Settings size={17} /> {t("Site settings")}</span>
               <ChevronRight size={15} className={`transition ${settingsOpen ? "rotate-90" : ""}`} />
             </button>
             {settingsOpen ? (
@@ -269,7 +267,7 @@ export default function AdminShell({
                         itemIsActive(item, activeSection) ? "bg-white/12 text-white" : "text-white/58 hover:bg-white/8 hover:text-white"
                       }`}
                     >
-                      <Icon size={14} /> {item.label}
+                      <Icon size={14} /> {t(item.label)}
                     </button>
                   );
                 })}
@@ -283,12 +281,12 @@ export default function AdminShell({
         <div className="mb-2 flex items-center gap-3 rounded-md bg-white/6 p-3">
           <span className="grid size-8 place-items-center rounded-full bg-white text-xs font-bold text-[#071b3a]">A</span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Admin</span>
-            <span className="block truncate text-[11px] text-white/52">TYORA Operations</span>
+            <span className="block text-sm font-semibold">{t("Admin")}</span>
+            <span className="block truncate text-[11px] text-white/52">{t("TYORA Operations")}</span>
           </span>
         </div>
         <button type="button" onClick={onLogout} className="flex min-h-10 w-full items-center gap-3 rounded-md px-3 text-sm font-semibold text-white/64 hover:bg-white/8 hover:text-white">
-          <LogOut size={16} /> Log out
+          <LogOut size={16} /> {t("Log out")}
         </button>
       </div>
     </div>
@@ -299,7 +297,7 @@ export default function AdminShell({
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[220px] lg:block">{sidebar}</aside>
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" className="absolute inset-0 bg-[#071b3a]/55" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />
+          <button type="button" className="absolute inset-0 bg-[#071b3a]/55" onClick={() => setMobileOpen(false)} aria-label={t("Close navigation overlay")} />
           <aside className="absolute inset-y-0 left-0 w-[min(280px,86vw)] shadow-2xl">{sidebar}</aside>
         </div>
       ) : null}
@@ -311,21 +309,21 @@ export default function AdminShell({
               type="button"
               onClick={() => setMobileOpen(true)}
               className="grid size-11 shrink-0 place-items-center rounded-md border border-[#e4e7ec] text-[#344054] lg:hidden"
-              aria-label="Open navigation"
+              aria-label={t("Open navigation")}
               aria-expanded={mobileOpen}
             >
               <Menu size={20} />
             </button>
 
             <div className="hidden min-w-0 xl:block">
-              <h1 className="truncate text-lg font-bold">{pageTitle}</h1>
-              <p className="truncate text-xs text-[#667085]">{pageDescription}</p>
+              <h1 className="truncate text-lg font-bold">{t(pageTitle)}</h1>
+              <p className="truncate text-xs text-[#667085]">{t(pageDescription)}</p>
             </div>
 
             <div className="relative mx-auto w-full max-w-xl">
               <label className="flex h-11 items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 shadow-sm focus-within:border-[#155eef] focus-within:ring-4 focus-within:ring-[#155eef]/10">
                 <Search size={17} className="shrink-0 text-[#667085]" aria-hidden="true" />
-                <span className="sr-only">Search admin</span>
+                <span className="sr-only">{t("Search admin")}</span>
                 <input
                   ref={searchRef}
                   value={query}
@@ -340,7 +338,7 @@ export default function AdminShell({
                       chooseSearchItem(results[0]);
                     }
                   }}
-                  placeholder="Search admin sections and submissions"
+                  placeholder={t("Search admin sections and submissions")}
                   className="min-w-0 flex-1 bg-transparent text-sm outline-none"
                   role="combobox"
                   aria-autocomplete="list"
@@ -349,7 +347,7 @@ export default function AdminShell({
                   aria-controls="admin-search-results"
                 />
                 {query ? (
-                  <button type="button" onClick={() => setQuery("")} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f2f4f7]" aria-label="Clear search">
+                  <button type="button" onClick={() => setQuery("")} className="grid size-8 place-items-center rounded-md text-[#667085] hover:bg-[#f2f4f7]" aria-label={t("Clear search")}>
                     <X size={15} />
                   </button>
                 ) : null}
@@ -357,8 +355,8 @@ export default function AdminShell({
               {searchOpen ? (
                 <div id="admin-search-results" className="absolute inset-x-0 top-12 z-50 overflow-hidden rounded-md border border-[#e4e7ec] bg-white shadow-xl" role="listbox">
                   <div className="flex items-center justify-between border-b border-[#eaecf0] px-3 py-2">
-                    <span className="text-xs font-semibold text-[#667085]">Search results</span>
-                    <button type="button" onClick={() => setSearchOpen(false)} className="text-xs font-semibold text-[#155eef]">Close</button>
+                    <span className="text-xs font-semibold text-[#667085]">{t("Search results")}</span>
+                    <button type="button" onClick={() => setSearchOpen(false)} className="text-xs font-semibold text-[#155eef]">{t("Close")}</button>
                   </div>
                   <div className="max-h-80 overflow-y-auto p-1.5">
                     {results.length ? results.map((item) => (
@@ -376,7 +374,7 @@ export default function AdminShell({
                         </span>
                         <ChevronRight size={15} className="shrink-0 text-[#98a2b3]" />
                       </button>
-                    )) : <p className="px-3 py-6 text-center text-sm text-[#667085]">No matching admin items.</p>}
+                    )) : <p className="px-3 py-6 text-center text-sm text-[#667085]">{t("No matching admin items.")}</p>}
                   </div>
                 </div>
               ) : null}
@@ -387,8 +385,8 @@ export default function AdminShell({
               type="button"
               onClick={() => window.location.assign("/admin/work-orders")}
               className="relative grid size-11 shrink-0 place-items-center rounded-md border border-[#e4e7ec] bg-white text-[#344054] hover:bg-[#f9fafb]"
-              aria-label={notificationCount ? `${notificationCount} items need a reply` : "No pending notifications"}
-              title="Needs reply"
+              aria-label={t(notificationCount ? `${notificationCount} items need a reply` : "No pending notifications")}
+              title={t("Needs reply")}
             >
               <Bell size={18} />
               {notificationCount ? <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[#f04438]" aria-hidden="true" /> : null}
@@ -398,13 +396,13 @@ export default function AdminShell({
               onClick={onNewProject}
               className="hidden min-h-11 shrink-0 items-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-bold text-white hover:bg-[#004eeb] sm:inline-flex"
             >
-              <Plus size={17} /> New Project
+              <Plus size={17} /> {t("New Project")}
             </button>
-            <button type="button" onClick={onToggleLanguage} className="hidden min-h-11 shrink-0 rounded-md border border-[#e4e7ec] px-3 text-xs font-bold text-[#344054] 2xl:inline-flex 2xl:items-center">
-              {languageLabel}
+            <button type="button" onClick={toggleLanguage} className="hidden min-h-11 shrink-0 rounded-md border border-[#e4e7ec] px-3 text-xs font-bold text-[#344054] 2xl:inline-flex 2xl:items-center">
+              {language === "en" ? "中文" : "EN"}
             </button>
             {canSave ? (
-              <button type="button" onClick={onSave} className="grid size-11 shrink-0 place-items-center rounded-md border border-[#e4e7ec] bg-white text-[#344054] hover:bg-[#f9fafb]" aria-label="Save changes" title="Save changes">
+              <button type="button" onClick={onSave} className="grid size-11 shrink-0 place-items-center rounded-md border border-[#e4e7ec] bg-white text-[#344054] hover:bg-[#f9fafb]" aria-label={t("Save changes")} title={t("Save changes")}>
                 <Save size={18} />
               </button>
             ) : null}
@@ -413,8 +411,8 @@ export default function AdminShell({
 
         <div className="px-3 py-4 sm:px-5 sm:py-5 xl:px-7 xl:py-6">
           <div className="mb-4 xl:hidden">
-            <h1 className="text-xl font-bold">{pageTitle}</h1>
-            <p className="mt-1 text-sm text-[#667085]">{pageDescription}</p>
+            <h1 className="text-xl font-bold">{t(pageTitle)}</h1>
+            <p className="mt-1 text-sm text-[#667085]">{t(pageDescription)}</p>
           </div>
           {children}
         </div>

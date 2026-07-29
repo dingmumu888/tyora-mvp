@@ -33,6 +33,8 @@ import { Input, Textarea } from "@/components/ui/input";
 import HomepageContentEditor from "@/components/admin/homepage-content-editor";
 import CmsImageField from "@/components/admin/cms-image-field";
 import AdminDashboard from "@/components/admin/admin-dashboard";
+import { useAdminLanguage } from "@/components/admin/admin-language-provider";
+import { translateAdminText } from "@/lib/admin-i18n";
 import AdminShell, { AdminSearchItem, AdminSectionId } from "@/components/admin/admin-shell";
 import { AdminActionBar, AdminEmptyState, AdminMetricCard } from "@/components/admin/admin-ui";
 import {
@@ -78,8 +80,6 @@ type TabId =
   | "pricing"
   | "contact"
   | "submissions";
-
-type CmsLanguage = "en" | "zh";
 
 type AdminCustomer = {
   id: string;
@@ -375,9 +375,10 @@ function Field({
   label: string;
   children: React.ReactNode;
 }) {
+  const { t } = useAdminLanguage();
   return (
     <label className="block text-sm font-medium text-[#344054]">
-      {label}
+      {t(label)}
       <div className="mt-2">{children}</div>
     </label>
   );
@@ -392,9 +393,10 @@ function Toggle({
   onChange: (checked: boolean) => void;
   label: string;
 }) {
+  const { t } = useAdminLanguage();
   return (
     <label className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-medium text-[#344054]">
-      {label}
+      {t(label)}
       <input
         type="checkbox"
         checked={checked}
@@ -424,6 +426,7 @@ function MediaUploader({
   onDelete: () => void;
   t?: (value: string) => string;
 }) {
+  const { t: translate } = useAdminLanguage();
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const available = media.filter((asset) => allowed.includes(asset.type));
@@ -446,7 +449,7 @@ function MediaUploader({
   return (
     <div className="rounded-lg border border-[#e8ebef] bg-white p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium">{label}</p>
+        <p className="text-sm font-medium">{translate(label)}</p>
         {value ? (
           <Button variant="ghost" className="min-h-9 px-2" onClick={onDelete}>
             <Trash2 size={15} />
@@ -515,9 +518,9 @@ function MediaUploader({
 }
 
 export default function AdminPage() {
+  const { language: cmsLanguage } = useAdminLanguage();
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
-  const [cmsLanguage, setCmsLanguage] = useState<CmsLanguage>("en");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [activeTab, setActiveTab] = useState<TabId>("today");
@@ -586,12 +589,7 @@ export default function AdminPage() {
     void loadWorkOrders();
   }, [authenticated]);
 
-  const t = (value: string) => (cmsLanguage === "zh" ? zhText[value] || value : value);
-
-  function toggleCmsLanguage() {
-    const next = cmsLanguage === "en" ? "zh" : "en";
-    setCmsLanguage(next);
-  }
+  const t = (value: string) => (cmsLanguage === "zh" ? zhText[value] || translateAdminText("zh", value) : value);
 
   function showToast(message: string) {
     setToast(message);
@@ -868,7 +866,7 @@ export default function AdminPage() {
       <main className="flex min-h-screen items-center justify-center bg-[#fbfbfc] p-4">
         <Card className="w-full max-w-sm p-6 text-center">
           <p className="font-semibold">TYORA OS</p>
-          <p className="mt-1 text-xs text-[#69707d]">Product Creator Operating System</p>
+          <p className="mt-1 text-xs text-[#69707d]">{t("Product Creator Operating System")}</p>
         </Card>
       </main>
     );
@@ -883,7 +881,7 @@ export default function AdminPage() {
               <Lock size={18} />
               <div>
                 <h1 className="text-xl font-semibold">TYORA OS</h1>
-                <p className="text-xs text-[#69707d]">Product Creator Operating System</p>
+                <p className="text-xs text-[#69707d]">{t("Product Creator Operating System")}</p>
               </div>
             </div>
             <Field label={t("Password")}>
@@ -917,11 +915,9 @@ export default function AdminPage() {
         notificationCount={needsReplyCount}
         searchItems={adminSearchItems}
         canSave={canSaveContent}
-        languageLabel={cmsLanguage === "en" ? "中文" : "EN"}
         onNavigate={navigateAdmin}
         onNewProject={() => navigateAdmin("submissions")}
         onSave={() => void persistContent()}
-        onToggleLanguage={toggleCmsLanguage}
         onLogout={() => void logout()}
       >
         <section className="min-w-0 space-y-5">
@@ -967,7 +963,7 @@ export default function AdminPage() {
             <Card className="p-5">
               <div className="mb-5 flex items-center gap-2">
                 <Globe2 size={18} />
-                <h1 className="text-xl font-semibold">Source Page</h1>
+                <h1 className="text-xl font-semibold">{t("Source Page")}</h1>
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 <Field label="Eyebrow">
@@ -1026,8 +1022,8 @@ export default function AdminPage() {
               <div className="mt-6 rounded-2xl border border-[#e8ebef] bg-[#fbfcfe] p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="font-semibold">Source Trust Toast</h2>
-                    <p className="mt-1 text-sm text-[#69707d]">Generic activity prompts only. Do not use names, countries, or fake exact numbers.</p>
+                    <h2 className="font-semibold">{t("Source Trust Toast")}</h2>
+                    <p className="mt-1 text-sm text-[#69707d]">{t("Generic activity prompts only. Do not use names, countries, or fake exact numbers.")}</p>
                   </div>
                   <Toggle
                     checked={content.sourcePage.trustToastEnabled}
@@ -1074,7 +1070,7 @@ export default function AdminPage() {
             <Card className="p-5">
               <div className="mb-5 flex items-center gap-2">
                 <Smartphone size={18} />
-                <h1 className="text-xl font-semibold">Mobile Tabs</h1>
+                <h1 className="text-xl font-semibold">{t("Mobile Tabs")}</h1>
               </div>
               <p className="mb-5 rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#69707d]">
                 Routes are fixed for safety. Edit labels and create-menu copy only.
@@ -1121,7 +1117,7 @@ export default function AdminPage() {
             <Card className="p-5">
               <div className="mb-5 flex items-center gap-2">
                 <Eye size={18} />
-                <h1 className="text-xl font-semibold">Homepage Modules</h1>
+                <h1 className="text-xl font-semibold">{t("Homepage Modules")}</h1>
               </div>
               <p className="mb-5 rounded-2xl bg-[#f7f8fa] p-3 text-sm text-[#69707d]">
                 Hide or show major homepage sections. Community feed always stays visible.
@@ -1365,6 +1361,7 @@ export default function AdminPage() {
 }
 
 function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; refresh: () => void }) {
+  const { language, t } = useAdminLanguage();
   const [query, setQuery] = useState("");
   const visible = customers.filter((customer) => {
     const haystack = [customer.email, customer.name, customer.username, customer.source, customer.country, customer.city].join(" ").toLowerCase();
@@ -1374,19 +1371,19 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
   return (
     <div className="space-y-4">
       <AdminActionBar
-        title="Customer directory"
-        description="Email Login accounts with basic activity and acquisition context from the existing customer records."
-        actions={<button onClick={refresh} className="min-h-11 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white hover:bg-[#004eeb]">Refresh</button>}
+        title={t("Customer directory")}
+        description={t("Email Login accounts with basic activity and acquisition context from the existing customer records.")}
+        actions={<button onClick={refresh} className="min-h-11 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white hover:bg-[#004eeb]">{t("Refresh")}</button>}
       >
         <label className="flex h-11 max-w-2xl items-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm focus-within:border-[#155eef] focus-within:ring-4 focus-within:ring-[#155eef]/10">
           <Search size={16} className="text-[#667085]" />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search email, name, source or country" className="w-full bg-transparent outline-none" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Search email, name, source or country")} className="w-full bg-transparent outline-none" />
         </label>
       </AdminActionBar>
       <div className="overflow-x-auto rounded-md border border-[#e4e7ec] bg-white shadow-sm">
         <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="border-b border-[#e8ebef] bg-[#f8fafc] text-xs text-[#687284]">
-            <tr>{["Customer", "Source", "Location / IP", "Last login", "Logins", "Ideas", "Comments", "Reactions"].map((label) => <th key={label} className="px-4 py-3 font-semibold">{label}</th>)}</tr>
+            <tr>{["Customer", "Source", "Location / IP", "Last login", "Logins", "Ideas", "Comments", "Reactions"].map((label) => <th key={label} className="px-4 py-3 font-semibold">{t(label)}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-[#eef1f4]">
             {visible.map((customer) => (
@@ -1394,7 +1391,7 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
                 <td className="px-4 py-3"><p className="font-semibold">{customer.name || customer.username}</p><p className="text-xs text-[#687284]">{customer.email}</p></td>
                 <td className="px-4 py-3"><span className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-xs font-semibold text-[#315fbd]">{customer.source}</span></td>
                 <td className="px-4 py-3"><p>{[customer.city, customer.country].filter(Boolean).join(", ")}</p><p className="text-xs text-[#8791a0]">{customer.maskedIp || "IP unavailable"}</p></td>
-                <td className="px-4 py-3">{customer.lastLoginAt ? new Date(customer.lastLoginAt).toLocaleString() : "-"}</td>
+                <td className="px-4 py-3">{customer.lastLoginAt ? new Date(customer.lastLoginAt).toLocaleString(language === "zh" ? "zh-CN" : "en") : "-"}</td>
                 <td className="px-4 py-3">{customer.loginCount}</td>
                 <td className="px-4 py-3">{customer.ideaCount}</td>
                 <td className="px-4 py-3">{customer.commentCount}</td>
@@ -1403,7 +1400,7 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
             ))}
           </tbody>
         </table>
-        {!visible.length ? <div className="p-4"><AdminEmptyState title="No customers found" description="Customer records will appear here after a matching Email Login account exists." /></div> : null}
+        {!visible.length ? <div className="p-4"><AdminEmptyState title={t("No customers found")} description={t("Customer records will appear here after a matching Email Login account exists.")} /></div> : null}
       </div>
     </div>
   );
@@ -1425,37 +1422,37 @@ function CeoDashboardSection({
     {
       label: t("Unique Visitors Today"),
       value: summary?.visitorsToday ?? 0,
-      detail: `${summary?.visitors7Days ?? 0} last 7 days`,
+      detail: `${summary?.visitors7Days ?? 0} ${t("last 7 days")}`,
       icon: <Globe2 size={17} />
     },
     {
       label: t("Page Views"),
       value: summary?.pageViewsToday ?? 0,
-      detail: "Today",
+      detail: t("Today"),
       icon: <BarChart3 size={17} />
     },
     {
       label: t("WhatsApp Clicks"),
       value: summary?.whatsappClicksToday ?? 0,
-      detail: "Today",
+      detail: t("Today"),
       icon: <MessageCircle size={17} />
     },
     {
       label: t("New Leads"),
       value: summary?.newLeadsToday ?? 0,
-      detail: "Today",
+      detail: t("Today"),
       icon: <Users size={17} />
     },
     {
       label: t("Conversion Rate"),
       value: `${summary?.conversionRateToday ?? 0}%`,
-      detail: "Lead / unique visitor",
+      detail: t("Lead / unique visitor"),
       icon: <TrendingUp size={17} />
     },
     {
       label: t("Average Session Duration"),
       value: formatDuration(summary?.averageSessionDurationSeconds ?? 0),
-      detail: "Estimated",
+      detail: t("Estimated"),
       icon: <Clock size={17} />
     }
   ];
@@ -1467,7 +1464,7 @@ function CeoDashboardSection({
         description={t("Today Overview")}
         actions={(
           <Button variant="outline" onClick={refresh} disabled={loading}>
-            {loading ? "Loading..." : "Refresh"}
+            {t(loading ? "Loading..." : "Refresh")}
           </Button>
         )}
       >
@@ -1480,7 +1477,7 @@ function CeoDashboardSection({
 
       {!analytics ? (
         <Card className="p-8 text-center text-sm text-[#69707d]">
-          {loading ? "Loading analytics..." : t("No analytics data yet.")}
+          {loading ? t("Loading analytics...") : t("No analytics data yet.")}
         </Card>
       ) : (
         <>
@@ -1502,11 +1499,11 @@ function CeoDashboardSection({
                 <table className="w-full min-w-[620px] text-left text-sm">
                   <thead className="text-xs uppercase text-[#69707d]">
                     <tr>
-                      <th className="px-3 py-2">Date</th>
-                      <th className="px-3 py-2">Unique Visitors</th>
-                      <th className="px-3 py-2">Page Views</th>
+                      <th className="px-3 py-2">{t("Date")}</th>
+                      <th className="px-3 py-2">{t("Unique Visitors")}</th>
+                      <th className="px-3 py-2">{t("Page Views")}</th>
                       <th className="px-3 py-2">WhatsApp</th>
-                      <th className="px-3 py-2">Leads</th>
+                      <th className="px-3 py-2">{t("Leads")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1555,11 +1552,11 @@ function CeoDashboardSection({
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead className="text-xs uppercase text-[#69707d]">
                   <tr>
-                    <th className="px-3 py-2">Name</th>
-                    <th className="px-3 py-2">Country</th>
-                    <th className="px-3 py-2">Company</th>
-                    <th className="px-3 py-2">Status</th>
-                    <th className="px-3 py-2">Submission Time</th>
+                    <th className="px-3 py-2">{t("Name")}</th>
+                    <th className="px-3 py-2">{t("Country")}</th>
+                    <th className="px-3 py-2">{t("Company")}</th>
+                    <th className="px-3 py-2">{t("Status")}</th>
+                    <th className="px-3 py-2">{t("Submission Time")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1703,7 +1700,7 @@ function ProjectSubmissionsSection({
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">{t("Project Submissions")}</h1>
-          <p className="mt-1 text-sm text-[#69707d]">Lightweight internal CRM for TYORA project management.</p>
+          <p className="mt-1 text-sm text-[#69707d]">{t("Lightweight internal CRM for TYORA project management.")}</p>
         </div>
         <div className="inline-flex rounded-lg border border-[#e1e5ea] bg-white p-1">
           <button className={viewButtonClass(submissionView === "projects")} onClick={() => setSubmissionView("projects")}>
@@ -1922,7 +1919,7 @@ function ProjectDetail({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[#69707d]">No files uploaded.</p>
+            <p className="text-sm text-[#69707d]">{t("No files uploaded.")}</p>
           )}
         </DetailPanel>
       </div>
@@ -2058,9 +2055,10 @@ function DetailPanel({ title, children }: { title: string; children: React.React
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+  const { t } = useAdminLanguage();
   return (
     <p className="text-sm">
-      <span className="font-medium">{label}:</span> <span className="text-[#59616e]">{value}</span>
+      <span className="font-medium">{t(label)}:</span> <span className="text-[#59616e]">{t(value)}</span>
     </p>
   );
 }
@@ -2268,23 +2266,23 @@ function CaseStudiesEditor({
               <Field label={t("Country")}><Input value={story.country} onChange={(event) => updateCase(index, { country: event.target.value })} /></Field>
               <Field label={t("Category")}><Input value={story.category} onChange={(event) => updateCase(index, { category: event.target.value })} /></Field>
               <Field label={t("Display Order")}><Input type="number" value={story.order} onChange={(event) => updateCase(index, { order: Number(event.target.value) })} /></Field>
-              <Field label="Case badge"><Input value={story.badgeLabel} onChange={(event) => updateCase(index, { badgeLabel: event.target.value })} /></Field>
-              <Field label="Card CTA"><Input value={story.ctaText} onChange={(event) => updateCase(index, { ctaText: event.target.value })} /></Field>
-              <Field label="Card CTA route"><Input value={story.ctaHref} onChange={(event) => updateCase(index, { ctaHref: event.target.value })} /></Field>
-              <Field label="Project type">
+              <Field label={t("Case badge")}><Input value={story.badgeLabel} onChange={(event) => updateCase(index, { badgeLabel: event.target.value })} /></Field>
+              <Field label={t("Card CTA")}><Input value={story.ctaText} onChange={(event) => updateCase(index, { ctaText: event.target.value })} /></Field>
+              <Field label={t("Card CTA route")}><Input value={story.ctaHref} onChange={(event) => updateCase(index, { ctaHref: event.target.value })} /></Field>
+              <Field label={t("Project type")}>
                 <select className="min-h-11 w-full rounded-lg border border-[#e1e5ea] bg-white px-3 text-sm" value={story.projectType} onChange={(event) => updateCase(index, { projectType: event.target.value as CaseStudy["projectType"] })}>
-                  <option value="Real Project">Real Project</option>
-                  <option value="Demonstration Project">Demonstration Project</option>
+                  <option value="Real Project">{t("Real Project")}</option>
+                  <option value="Demonstration Project">{t("Demonstration Project")}</option>
                 </select>
               </Field>
-              <Toggle label="Featured on homepage" checked={story.featured} onChange={(featured) => updateCase(index, { featured })} />
+              <Toggle label={t("Featured on homepage")} checked={story.featured} onChange={(featured) => updateCase(index, { featured })} />
               <Field label={t("Short Description")}><Textarea value={story.shortDescription} onChange={(event) => updateCase(index, { shortDescription: event.target.value })} /></Field>
-              <Field label="Concept summary"><Textarea value={story.concept} onChange={(event) => updateCase(index, { concept: event.target.value })} /></Field>
-              <Field label="Manufacturing Review"><Textarea value={story.manufacturingReview} onChange={(event) => updateCase(index, { manufacturingReview: event.target.value })} /></Field>
-              <Field label="Suggested Material"><Textarea value={story.suggestedMaterial} onChange={(event) => updateCase(index, { suggestedMaterial: event.target.value })} /></Field>
-              <Field label="Suggested Process"><Textarea value={story.suggestedProcess} onChange={(event) => updateCase(index, { suggestedProcess: event.target.value })} /></Field>
-              <Field label="Prototype summary"><Textarea value={story.prototype} onChange={(event) => updateCase(index, { prototype: event.target.value })} /></Field>
-              <Field label="Manufacturing summary"><Textarea value={story.manufacturing} onChange={(event) => updateCase(index, { manufacturing: event.target.value })} /></Field>
+              <Field label={t("Concept summary")}><Textarea value={story.concept} onChange={(event) => updateCase(index, { concept: event.target.value })} /></Field>
+              <Field label={t("Manufacturing Review")}><Textarea value={story.manufacturingReview} onChange={(event) => updateCase(index, { manufacturingReview: event.target.value })} /></Field>
+              <Field label={t("Suggested Material")}><Textarea value={story.suggestedMaterial} onChange={(event) => updateCase(index, { suggestedMaterial: event.target.value })} /></Field>
+              <Field label={t("Suggested Process")}><Textarea value={story.suggestedProcess} onChange={(event) => updateCase(index, { suggestedProcess: event.target.value })} /></Field>
+              <Field label={t("Prototype summary")}><Textarea value={story.prototype} onChange={(event) => updateCase(index, { prototype: event.target.value })} /></Field>
+              <Field label={t("Manufacturing summary")}><Textarea value={story.manufacturing} onChange={(event) => updateCase(index, { manufacturing: event.target.value })} /></Field>
               <Field label="Final product summary"><Textarea value={story.final} onChange={(event) => updateCase(index, { final: event.target.value })} /></Field>
               <Field label="MOQ"><Input value={story.moq} onChange={(event) => updateCase(index, { moq: event.target.value })} /></Field>
               <Field label="Timeline"><Input value={story.timeline} onChange={(event) => updateCase(index, { timeline: event.target.value })} /></Field>

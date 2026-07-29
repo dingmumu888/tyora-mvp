@@ -23,6 +23,8 @@ import {
   X
 } from "lucide-react";
 import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
+import { useAdminLanguage } from "@/components/admin/admin-language-provider";
+import { AdminLanguage } from "@/lib/admin-i18n";
 import {
   findWorkOrderByDetailTarget,
   workOrderDetailHref,
@@ -62,9 +64,9 @@ const typeTone: Record<WorkOrderType, string> = {
   Project: "bg-[#ecfdf5] text-[#047857]"
 };
 
-function formatDate(value?: string) {
+function formatDate(value: string | undefined, language: AdminLanguage) {
   if (!value) return "Not recorded";
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -115,6 +117,7 @@ function Section({
   tone?: "plain" | "internal" | "customer";
   children: React.ReactNode;
 }) {
+  const { t } = useAdminLanguage();
   const toneClass = tone === "internal"
     ? "border-amber-200 bg-amber-50/55"
     : tone === "customer"
@@ -124,7 +127,7 @@ function Section({
     <section className={`rounded-md border ${toneClass}`}>
       <div className="flex min-h-11 items-center gap-2 border-b border-inherit px-3 text-sm font-bold">
         {icon}
-        <h3>{title}</h3>
+        <h3>{t(title)}</h3>
       </div>
       <div className="p-3">{children}</div>
     </section>
@@ -132,14 +135,15 @@ function Section({
 }
 
 function DetailList({ items }: { items: Array<{ label: string; value?: string }> }) {
+  const { t } = useAdminLanguage();
   const visible = items.filter((item) => item.value?.trim());
-  if (!visible.length) return <p className="text-sm text-[#667085]">No additional information recorded.</p>;
+  if (!visible.length) return <p className="text-sm text-[#667085]">{t("No additional information recorded.")}</p>;
   return (
     <dl className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
       {visible.map((item) => (
         <div key={`${item.label}-${item.value}`} className="min-w-0">
-          <dt className="text-[11px] font-bold uppercase text-[#667085]">{item.label}</dt>
-          <dd className="mt-1 break-words text-sm text-[#101828]">{item.value}</dd>
+          <dt className="text-[11px] font-bold uppercase text-[#667085]">{t(item.label)}</dt>
+          <dd className="mt-1 break-words text-sm text-[#101828]">{t(item.value || "")}</dd>
         </div>
       ))}
     </dl>
@@ -155,6 +159,7 @@ function WorkOrderWorkspace({
   onClose: () => void;
   onSaved: (order: WorkOrder) => void;
 }) {
+  const { language, t } = useAdminLanguage();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [status, setStatus] = useState(order.status);
   const [internalNotes, setInternalNotes] = useState(order.internalNotes || "");
@@ -185,7 +190,7 @@ function WorkOrderWorkspace({
         body: JSON.stringify({ id: order.id, ...body })
       });
       const payload = await response.json() as ApiResponse<WorkOrder>;
-      if (!payload.success || !payload.data) throw new Error(payload.message || "Unable to update this item.");
+      if (!payload.success || !payload.data) throw new Error(t(payload.message || "Unable to update this item."));
       onSaved(payload.data);
       setStatus(payload.data.status);
       setInternalNotes(payload.data.internalNotes || "");
@@ -193,7 +198,7 @@ function WorkOrderWorkspace({
       setFeedback(successMessage);
       return true;
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Unable to update this item.");
+      setFeedback(t(error instanceof Error ? error.message : "Unable to update this item."));
       return false;
     } finally {
       setSaving(false);
@@ -244,23 +249,23 @@ function WorkOrderWorkspace({
       <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[#e4e7ec] bg-white p-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded px-2 py-1 text-[11px] font-bold ${typeTone[order.type]}`}>{order.type}</span>
-            <span className={`rounded px-2 py-1 text-[11px] font-bold ring-1 ${statusTone[order.status]}`}>{order.status}</span>
+            <span className={`rounded px-2 py-1 text-[11px] font-bold ${typeTone[order.type]}`}>{t(order.type)}</span>
+            <span className={`rounded px-2 py-1 text-[11px] font-bold ring-1 ${statusTone[order.status]}`}>{t(order.status)}</span>
           </div>
-          <h2 className="mt-2 break-words text-lg font-bold">{order.title}</h2>
+          <h2 className="mt-2 break-words text-lg font-bold">{t(order.title)}</h2>
           <p className="mt-1 break-all text-xs text-[#667085]">{order.sourceId}</p>
           <p className="mt-2 inline-flex items-center gap-1.5 rounded bg-amber-50 px-2 py-1 text-xs font-bold text-amber-900 ring-1 ring-amber-200">
-            <LockKeyhole size={13} aria-hidden="true" /> Private and confidential · {order.documents?.length || 0} file{order.documents?.length === 1 ? "" : "s"}
+            <LockKeyhole size={13} aria-hidden="true" /> {t("Private and confidential")} · {t(`${order.documents?.length || 0} files`)}
           </p>
         </div>
-        <button ref={closeRef} type="button" onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-md border border-[#d0d5dd] bg-white hover:bg-[#f2f4f7]" aria-label="Close detail workspace">
+        <button ref={closeRef} type="button" onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-md border border-[#d0d5dd] bg-white hover:bg-[#f2f4f7]" aria-label={t("Close detail workspace")}>
           <X size={19} />
         </button>
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
         <Section title="Product information" icon={<FileText size={17} />}>
-          <p className="mb-3 whitespace-pre-wrap text-sm leading-6 text-[#475467]">{order.description || "No description provided."}</p>
+          <p className="mb-3 whitespace-pre-wrap text-sm leading-6 text-[#475467]">{t(order.description || "No description provided.")}</p>
           <DetailList items={[
             { label: "Customer", value: order.customerName },
             { label: "Country / market", value: order.country },
@@ -268,13 +273,13 @@ function WorkOrderWorkspace({
             { label: "Quantity", value: order.quantity },
             { label: "Budget", value: order.budget },
             { label: "Target price", value: order.targetPrice },
-            { label: "Submitted", value: formatDate(order.submittedAt) },
+            { label: "Submitted", value: formatDate(order.submittedAt, language) },
             ...(order.detailItems || [])
           ]} />
         </Section>
 
         <Section title="Documents and private files" icon={<LockKeyhole size={17} />} tone="internal">
-          <p className="mb-3 text-xs leading-5 text-amber-900">Access remains enforced by the existing owner/Admin private-file routes. This workspace never exposes Storage paths or signed URLs.</p>
+          <p className="mb-3 text-xs leading-5 text-amber-900">{t("Access remains enforced by the existing owner/Admin private-file routes. This workspace never exposes Storage paths or signed URLs.")}</p>
           {order.documents?.length ? (
             <div className="grid gap-2">
               {order.documents.map((document) => (
@@ -284,16 +289,16 @@ function WorkOrderWorkspace({
                 </a>
               ))}
             </div>
-          ) : <p className="text-sm text-[#667085]">No private documents attached.</p>}
+          ) : <p className="text-sm text-[#667085]">{t("No private documents attached.")}</p>}
         </Section>
 
         <Section title="Qualification" icon={<ClipboardCheck size={17} />}>
-          <p className="text-sm text-[#667085]">Qualification is not tracked as a structured field in the current system.</p>
+          <p className="text-sm text-[#667085]">{t("Qualification is not tracked as a structured field in the current system.")}</p>
         </Section>
 
         <Section title="Structured TYORA assessment" icon={<ShieldCheck size={17} />} tone="customer">
-          {assessmentItems.length ? <DetailList items={assessmentItems} /> : <p className="text-sm text-[#667085]">No structured assessment recorded.</p>}
-          {order.assessment?.disclaimer ? <p className="mt-3 rounded-md border border-blue-200 bg-white p-3 text-xs leading-5 text-[#344054]">{order.assessment.disclaimer}</p> : null}
+          {assessmentItems.length ? <DetailList items={assessmentItems} /> : <p className="text-sm text-[#667085]">{t("No structured assessment recorded.")}</p>}
+          {order.assessment?.disclaimer ? <p className="mt-3 rounded-md border border-blue-200 bg-white p-3 text-xs leading-5 text-[#344054]">{t(order.assessment.disclaimer)}</p> : null}
         </Section>
 
         <Section title="Service model and fee status" icon={<CheckCircle2 size={17} />}>
@@ -305,57 +310,57 @@ function WorkOrderWorkspace({
         </Section>
 
         <Section title="Internal notes" icon={<LockKeyhole size={17} />} tone="internal">
-          <p className="mb-2 text-xs font-semibold text-amber-900">Internal only. Never shown on public pages or customer APIs.</p>
+          <p className="mb-2 text-xs font-semibold text-amber-900">{t("Internal only. Never shown on public pages or customer APIs.")}</p>
           {canEditInternalNotes(order) ? (
-            <textarea value={internalNotes} onChange={(event) => setInternalNotes(event.target.value)} rows={4} maxLength={3000} placeholder="Add internal progress or handoff notes" className="w-full resize-y rounded-md border border-[#d0d5dd] bg-white p-3 text-sm outline-none focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10" />
+            <textarea value={internalNotes} onChange={(event) => setInternalNotes(event.target.value)} rows={4} maxLength={3000} placeholder={t("Add internal progress or handoff notes")} className="w-full resize-y rounded-md border border-[#d0d5dd] bg-white p-3 text-sm outline-none focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10" />
           ) : order.internalContext ? (
-            <p className="whitespace-pre-wrap text-sm leading-6 text-[#475467]">{order.internalContext}</p>
+            <p className="whitespace-pre-wrap text-sm leading-6 text-[#475467]">{t(order.internalContext)}</p>
           ) : (
-            <p className="text-sm text-[#667085]">This record type has no editable internal-notes field.</p>
+            <p className="text-sm text-[#667085]">{t("This record type has no editable internal-notes field.")}</p>
           )}
         </Section>
 
         <Section title="Customer-visible update" icon={<MessageCircle size={17} />} tone="customer">
-          <p className="mb-2 text-xs font-semibold text-blue-900">Visible to the customer through the existing Idea assessment or Custom inquiry flow.</p>
+          <p className="mb-2 text-xs font-semibold text-blue-900">{t("Visible to the customer through the existing Idea assessment or Custom inquiry flow.")}</p>
           {canEditCustomerUpdate(order) ? (
-            <textarea value={customerVisibleUpdate} onChange={(event) => setCustomerVisibleUpdate(event.target.value)} rows={4} maxLength={3000} placeholder="Write the next step or customer-facing assessment note" className="w-full resize-y rounded-md border border-[#d0d5dd] bg-white p-3 text-sm outline-none focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10" />
+            <textarea value={customerVisibleUpdate} onChange={(event) => setCustomerVisibleUpdate(event.target.value)} rows={4} maxLength={3000} placeholder={t("Write the next step or customer-facing assessment note")} className="w-full resize-y rounded-md border border-[#d0d5dd] bg-white p-3 text-sm outline-none focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10" />
           ) : (
-            <p className="text-sm text-[#667085]">No customer-visible update field exists for this record type.</p>
+            <p className="text-sm text-[#667085]">{t("No customer-visible update field exists for this record type.")}</p>
           )}
         </Section>
 
         <Section title="Status and follow-up" icon={<CalendarClock size={17} />} tone="internal">
           <div className="grid gap-3">
-            <label className="grid gap-1 text-xs font-bold text-[#475467]">Status
+            <label className="grid gap-1 text-xs font-bold text-[#475467]">{t("Status")}
               <select value={status} onChange={(event) => setStatus(event.target.value as WorkOrderStatus)} className="h-11 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-normal">
-                {statusOptions(order).map((item) => <option key={item}>{item}</option>)}
+                {statusOptions(order).map((item) => <option key={item} value={item}>{t(item)}</option>)}
               </select>
             </label>
             <button type="button" onClick={() => void saveRecord()} disabled={saving} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-bold text-white hover:bg-[#004eeb] disabled:opacity-50">
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save changes
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} {t("Save changes")}
             </button>
 
             <div className="mt-1 border-t border-amber-200 pt-3">
-              <p className="text-sm font-bold">Record customer contact</p>
-              <p className="mt-1 text-xs text-[#667085]">Internal history only. Recording this does not send a message.</p>
+              <p className="text-sm font-bold">{t("Record customer contact")}</p>
+              <p className="mt-1 text-xs text-[#667085]">{t("Internal history only. Recording this does not send a message.")}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-1 text-xs font-bold text-[#475467]">Channel
+              <label className="grid gap-1 text-xs font-bold text-[#475467]">{t("Channel")}
                 <select value={contactChannel} onChange={(event) => setContactChannel(event.target.value)} className="h-11 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-normal">
-                  {['Email', 'WhatsApp', 'Phone', 'Other'].map((channel) => <option key={channel}>{channel}</option>)}
+                  {['Email', 'WhatsApp', 'Phone', 'Other'].map((channel) => <option key={channel} value={channel}>{t(channel)}</option>)}
                 </select>
               </label>
-              <label className="grid gap-1 text-xs font-bold text-[#475467]">Contacted at
+              <label className="grid gap-1 text-xs font-bold text-[#475467]">{t("Contacted at")}
                 <input type="datetime-local" value={contactedAt} onChange={(event) => setContactedAt(event.target.value)} className="h-11 min-w-0 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-normal" />
               </label>
-              <label className="grid gap-1 text-xs font-bold text-[#475467] sm:col-span-2">Next follow-up
+              <label className="grid gap-1 text-xs font-bold text-[#475467] sm:col-span-2">{t("Next follow-up")}
                 <input type="datetime-local" value={nextFollowUpAt} min={contactedAt} onChange={(event) => setNextFollowUpAt(event.target.value)} className="h-11 min-w-0 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-normal" />
               </label>
             </div>
-            <label className="grid gap-1 text-xs font-bold text-[#475467]">Contact note
-              <textarea value={contactNote} onChange={(event) => setContactNote(event.target.value)} rows={2} maxLength={1000} className="resize-y rounded-md border border-[#d0d5dd] bg-white p-3 text-sm font-normal" placeholder="What was discussed?" />
+            <label className="grid gap-1 text-xs font-bold text-[#475467]">{t("Contact note")}
+              <textarea value={contactNote} onChange={(event) => setContactNote(event.target.value)} rows={2} maxLength={1000} className="resize-y rounded-md border border-[#d0d5dd] bg-white p-3 text-sm font-normal" placeholder={t("What was discussed?")} />
             </label>
-            <button type="button" onClick={() => void recordContact()} disabled={saving || !contactedAt} className="min-h-11 rounded-md border border-[#101828] bg-white px-4 text-sm font-bold disabled:opacity-50">Add contact record</button>
+            <button type="button" onClick={() => void recordContact()} disabled={saving || !contactedAt} className="min-h-11 rounded-md border border-[#101828] bg-white px-4 text-sm font-bold disabled:opacity-50">{t("Add contact record")}</button>
           </div>
         </Section>
 
@@ -366,24 +371,24 @@ function WorkOrderWorkspace({
                 <li key={item.id} className="grid grid-cols-[10px_minmax(0,1fr)] gap-3">
                   <span className="mt-1.5 size-2 rounded-full bg-[#155eef]" aria-hidden="true" />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold">{item.label}</p>
-                    <p className="mt-0.5 text-xs text-[#667085]">{formatDate(item.createdAt)} · {item.visibility}{item.actor ? ` · ${item.actor}` : ""}</p>
-                    {item.detail ? <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-[#475467]">{item.detail}</p> : null}
+                    <p className="text-sm font-semibold">{t(item.label)}</p>
+                    <p className="mt-0.5 text-xs text-[#667085]">{formatDate(item.createdAt, language)} · {t(item.visibility)}{item.actor ? ` · ${item.actor}` : ""}</p>
+                    {item.detail ? <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-[#475467]">{t(item.detail)}</p> : null}
                   </div>
                 </li>
               ))}
             </ol>
-          ) : <p className="text-sm text-[#667085]">No activity recorded.</p>}
+          ) : <p className="text-sm text-[#667085]">{t("No activity recorded.")}</p>}
         </Section>
 
-        {feedback ? <p role="status" className={`rounded-md p-3 text-sm font-semibold ${["Changes saved", "Contact recorded"].includes(feedback) ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800"}`}>{feedback}</p> : null}
+        {feedback ? <p role="status" className={`rounded-md p-3 text-sm font-semibold ${["Changes saved", "Contact recorded"].includes(feedback) ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800"}`}>{t(feedback)}</p> : null}
       </div>
 
       <div className="grid gap-2 border-t border-[#e4e7ec] bg-white p-3 sm:grid-cols-2">
         {order.contactEmail ? <a href={`mailto:${order.contactEmail}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] text-sm font-bold"><Mail size={16} /> Email</a> : null}
         {whatsApp ? <a href={whatsApp} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] text-sm font-bold"><MessageCircle size={16} /> WhatsApp</a> : null}
-        {order.publicHref ? <a href={order.publicHref} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] text-sm font-bold">Public page <ArrowUpRight size={16} /></a> : null}
-        <Link href={order.adminHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#101828] px-3 text-center text-sm font-bold text-white">Advanced workspace <ArrowUpRight size={16} /></Link>
+        {order.publicHref ? <a href={order.publicHref} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] text-sm font-bold">{t("Public page")} <ArrowUpRight size={16} /></a> : null}
+        <Link href={order.adminHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#101828] px-3 text-center text-sm font-bold text-white">{t("Advanced workspace")} <ArrowUpRight size={16} /></Link>
       </div>
     </div>
   );
@@ -398,6 +403,7 @@ function InboxContent({
   initialRecordKind?: string;
   environmentLabel: string;
 }) {
+  const { language, t } = useAdminLanguage();
   const router = useRouter();
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
@@ -409,23 +415,23 @@ function InboxContent({
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     setMessage("");
     try {
       const response = await fetch("/api/admin/work-orders", { cache: "no-store" });
       const payload = await response.json() as ApiResponse<WorkOrder[]>;
-      if (!payload.success || !payload.data) throw new Error(payload.message || "Unable to load the unified Inbox.");
+      if (!payload.success || !payload.data) throw new Error(t(payload.message || "Unable to load the unified Inbox."));
       setOrders(payload.data);
       setSelectedId((current) => current && payload.data?.some((order) => order.id === current) ? current : undefined);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to load the unified Inbox.");
+      setMessage(t(error instanceof Error ? error.message : "Unable to load the unified Inbox."));
     } finally {
       setLoading(false);
     }
-  }
+  }, [t]);
 
-  useEffect(() => { void loadOrders(); }, []);
+  useEffect(() => { void loadOrders(); }, [loadOrders]);
   useEffect(() => {
     if (loading || !initialSubmissionId) {
       if (!initialSubmissionId) setSelectionMissing(false);
@@ -490,25 +496,25 @@ function InboxContent({
         <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto_auto_auto]">
           <label className="flex min-h-11 min-w-0 items-center gap-2 rounded-md border border-[#d0d5dd] px-3 focus-within:border-[#155eef] focus-within:ring-4 focus-within:ring-[#155eef]/10">
             <Search size={17} className="shrink-0 text-[#667085]" />
-            <span className="sr-only">Search Inbox</span>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search product, customer, country, or ID" className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
+            <span className="sr-only">{t("Search Inbox")}</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Search product, customer, country, or ID")} className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
           </label>
-          <label className="grid min-w-0 grid-cols-[auto_1fr] items-center gap-2 text-xs font-bold text-[#475467]">Status
+          <label className="grid min-w-0 grid-cols-[auto_1fr] items-center gap-2 text-xs font-bold text-[#475467]">{t("Status")}
             <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "All" | WorkOrderStatus)} className="h-11 min-w-0 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-normal">
-              <option>All</option>{Object.keys(statusTone).map((status) => <option key={status}>{status}</option>)}
+              <option value="All">{t("All")}</option>{Object.keys(statusTone).map((status) => <option key={status} value={status}>{t(status)}</option>)}
             </select>
           </label>
-          <label className="grid min-w-0 grid-cols-[auto_1fr] items-center gap-2 text-xs font-bold text-[#475467]">Category
+          <label className="grid min-w-0 grid-cols-[auto_1fr] items-center gap-2 text-xs font-bold text-[#475467]">{t("Category")}
             <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="h-11 min-w-0 max-w-52 rounded-md border border-[#d0d5dd] bg-white px-3 text-sm font-normal">
-              {categories.map((category) => <option key={category}>{category}</option>)}
+              {categories.map((category) => <option key={category} value={category}>{t(category)}</option>)}
             </select>
           </label>
-          <button type="button" onClick={() => void loadOrders()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-4 text-sm font-bold hover:bg-[#f9fafb]"><RefreshCcw size={16} /> Refresh</button>
+          <button type="button" onClick={() => void loadOrders()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] bg-white px-4 text-sm font-bold hover:bg-[#f9fafb]"><RefreshCcw size={16} /> {t("Refresh")}</button>
         </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label="Inbox type filters">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label={t("Inbox type filters")}>
           {queueFilters.map((item) => (
             <button key={item} type="button" onClick={() => setFilter(item)} className={`min-h-10 shrink-0 rounded-md px-3 text-sm font-bold ${filter === item ? "bg-[#155eef] text-white" : "bg-[#f2f4f7] text-[#475467] hover:bg-[#eaecf0]"}`}>
-              {item} <span className="ml-1 opacity-70">{counts[item] || 0}</span>
+              {t(item)} <span className="ml-1 opacity-70">{counts[item] || 0}</span>
             </button>
           ))}
         </div>
@@ -517,24 +523,24 @@ function InboxContent({
       {message ? <p className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">{message}</p> : null}
       {selectionMissing && !loading ? (
         <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
-          <div><strong>Submission not found.</strong> It may have been removed or is no longer accessible to this Admin session.</div>
-          <Link href="/admin/work-orders" onClick={() => setSelectionMissing(false)} className="rounded-md bg-white px-3 py-2 font-bold ring-1 ring-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155eef]">Return to Inbox</Link>
+          <div><strong>{t("Submission not found.")}</strong> {t("It may have been removed or is no longer accessible to this Admin session.")}</div>
+          <Link href="/admin/work-orders" onClick={() => setSelectionMissing(false)} className="rounded-md bg-white px-3 py-2 font-bold ring-1 ring-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155eef]">{t("Return to Inbox")}</Link>
         </div>
       ) : null}
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <section className="min-w-0 overflow-hidden rounded-md border border-[#e4e7ec] bg-white shadow-sm" aria-label="Unified Inbox">
+        <section className="min-w-0 overflow-hidden rounded-md border border-[#e4e7ec] bg-white shadow-sm" aria-label={t("Unified Inbox")}>
           <div className="flex min-h-12 items-center justify-between border-b border-[#e4e7ec] px-4">
             <div>
-              <h2 className="text-sm font-bold">Unified Inbox</h2>
-              <p className="text-xs text-[#667085]">{visibleOrders.length} {environmentLabel} record{visibleOrders.length === 1 ? "" : "s"}</p>
+              <h2 className="text-sm font-bold">{t("Unified Inbox")}</h2>
+              <p className="text-xs text-[#667085]">{t(`${visibleOrders.length} ${environmentLabel} records`)}</p>
             </div>
           </div>
           {loading ? (
-            <div className="grid min-h-72 place-items-center"><Loader2 className="animate-spin text-[#155eef]" aria-label="Loading Inbox" /></div>
+            <div className="grid min-h-72 place-items-center"><Loader2 className="animate-spin text-[#155eef]" aria-label={t("Loading Inbox")} /></div>
           ) : visibleOrders.length === 0 ? (
             <div className="p-10 text-center">
-              <p className="font-bold">No matching submissions.</p>
-              <p className="mt-1 text-sm text-[#667085]">This is an honest empty state. No sample records are shown.</p>
+              <p className="font-bold">{t("No matching submissions.")}</p>
+              <p className="mt-1 text-sm text-[#667085]">{t("This is an honest empty state. No sample records are shown.")}</p>
             </div>
           ) : (
             <div className="divide-y divide-[#eaecf0]">
@@ -553,15 +559,15 @@ function InboxContent({
                     openOrder(order);
                   }}
                   className={`grid min-h-[112px] w-full cursor-pointer grid-cols-[52px_minmax(0,1fr)] gap-3 p-3 text-left hover:bg-[#f9fafb] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#155eef] sm:grid-cols-[60px_minmax(0,1fr)_150px] sm:p-4 ${selectedId === order.id ? "bg-[#eef4ff]" : ""}`}
-                  aria-label={`Open ${order.title} submission`}
+                  aria-label={t(`Open ${order.title} submission`)}
                 >
                   <span className="grid size-[52px] place-items-center overflow-hidden rounded-md bg-[#f2f4f7] sm:size-[60px]">
                     {order.imageUrls[0] ? <img src={order.imageUrls[0]} alt="" className="size-full object-contain p-1" /> : <span className="text-xs font-bold text-[#667085]">{order.type.slice(0, 2).toUpperCase()}</span>}
                   </span>
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-1.5">
-                      <span className={`rounded px-2 py-1 text-[10px] font-bold ${typeTone[order.type]}`}>{order.type}</span>
-                      <span className={`rounded px-2 py-1 text-[10px] font-bold ring-1 ${statusTone[order.status]}`}>{order.status}</span>
+                      <span className={`rounded px-2 py-1 text-[10px] font-bold ${typeTone[order.type]}`}>{t(order.type)}</span>
+                      <span className={`rounded px-2 py-1 text-[10px] font-bold ring-1 ${statusTone[order.status]}`}>{t(order.status)}</span>
                     </span>
                     <Link
                       href={workOrderDetailHref(order)}
@@ -572,13 +578,13 @@ function InboxContent({
                       }}
                       className="mt-1.5 block truncate text-sm font-bold text-[#101828] underline-offset-2 hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155eef] sm:text-base"
                     >
-                      {order.title}
+                      {t(order.title)}
                     </Link>
-                    <span className="mt-1 block truncate text-xs text-[#667085]">{order.customerName} · {order.country}</span>
-                    <span className="mt-1 block truncate text-xs text-[#98a2b3]">{order.category || "Uncategorized"} · {formatDate(order.submittedAt)}</span>
+                    <span className="mt-1 block truncate text-xs text-[#667085]">{order.customerName} · {t(order.country)}</span>
+                    <span className="mt-1 block truncate text-xs text-[#98a2b3]">{t(order.category || "Uncategorized")} · {formatDate(order.submittedAt, language)}</span>
                   </span>
                   <span className="hidden min-w-0 self-center text-xs text-[#667085] sm:block">
-                    {order.nextFollowUpAt ? <><span className="block font-bold text-[#155eef]">Follow-up</span><span className="mt-1 block">{formatDate(order.nextFollowUpAt)}</span></> : <><span className="block font-bold text-[#475467]">Updated</span><span className="mt-1 block">{formatDate(order.updatedAt)}</span></>}
+                    {order.nextFollowUpAt ? <><span className="block font-bold text-[#155eef]">{t("Follow-up")}</span><span className="mt-1 block">{formatDate(order.nextFollowUpAt, language)}</span></> : <><span className="block font-bold text-[#475467]">{t("Updated")}</span><span className="mt-1 block">{formatDate(order.updatedAt, language)}</span></>}
                   </span>
                 </div>
               ))}
@@ -593,15 +599,15 @@ function InboxContent({
             </div>
           ) : (
             <div className="sticky top-[92px] grid min-h-[420px] place-items-center rounded-md border border-dashed border-[#d0d5dd] bg-white p-8 text-center">
-              <div><UserRound className="mx-auto text-[#98a2b3]" /><p className="mt-3 font-bold">Select an Inbox item</p><p className="mt-1 text-sm text-[#667085]">Product, private context, assessment, and follow-up details will open here.</p></div>
+              <div><UserRound className="mx-auto text-[#98a2b3]" /><p className="mt-3 font-bold">{t("Select an Inbox item")}</p><p className="mt-1 text-sm text-[#667085]">{t("Product, private context, assessment, and follow-up details will open here.")}</p></div>
             </div>
           )}
         </aside>
       </div>
 
       {selected ? (
-        <div className="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal="true" aria-label={`${selected.title} detail workspace`}>
-          <button type="button" className="absolute inset-0 bg-[#101828]/55" onClick={closeWorkspace} aria-label="Close detail overlay" />
+        <div className="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal="true" aria-label={`${t(selected.title)} ${t("detail workspace")}`}>
+          <button type="button" className="absolute inset-0 bg-[#101828]/55" onClick={closeWorkspace} aria-label={t("Close detail overlay")} />
           <aside className="absolute inset-y-0 right-0 w-[min(620px,100vw)] overflow-hidden shadow-2xl">
             <WorkOrderWorkspace order={selected} onClose={closeWorkspace} onSaved={saveWorkOrder} />
           </aside>
@@ -651,11 +657,9 @@ export default function WorkOrdersAdminClient({
       notificationCount={needsReplyCount}
       searchItems={[]}
       canSave={false}
-      languageLabel="EN"
       onNavigate={navigateAdmin}
       onNewProject={() => window.location.assign("/admin?section=submissions")}
       onSave={() => undefined}
-      onToggleLanguage={() => undefined}
       onLogout={() => void logout()}
     >
       <InboxContent initialSubmissionId={initialSubmissionId} initialRecordKind={initialRecordKind} environmentLabel={environmentLabel} />

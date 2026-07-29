@@ -81,7 +81,7 @@ test("detail workspace is accessible and responsive at desktop, tablet, and mobi
   assert.match(client, /w-\[min\(620px,100vw\)\]/);
   assert.match(client, /role="dialog"/);
   assert.match(client, /aria-modal="true"/);
-  assert.match(client, /aria-label="Close detail workspace"/);
+  assert.match(client, /aria-label=\{t\("Close detail workspace"\)\}/);
   assert.match(client, /focus-visible:outline/);
   assert.match(client, /min-h-11/);
   assert.match(client, /event\.key === "Escape"/);

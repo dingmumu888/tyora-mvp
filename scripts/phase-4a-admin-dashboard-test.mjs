@@ -137,8 +137,8 @@ test("admin shell and dashboard preserve navigation, privacy, responsive behavio
 
   assert.match(shell, /w-\[220px\]/);
   assert.match(shell, /lg:pl-\[220px\]/);
-  assert.match(shell, /aria-label="Open navigation"/);
-  assert.match(shell, /aria-label="Close navigation overlay"/);
+  assert.match(shell, /aria-label=\{t\("Open navigation"\)\}/);
+  assert.match(shell, /aria-label=\{t\("Close navigation overlay"\)\}/);
   assert.match(shell, /Search admin sections and submissions/);
   assert.match(shell, /New Project/);
   assert.match(shell, /AdminViewCommunityLink className="hidden xl:inline-flex"/);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminLanguage } from "@/components/admin/admin-language-provider";
 import { cn } from "@/lib/utils";
 
 export const adminSelectClass = "min-h-11 w-full rounded-md border border-[#d0d5dd] bg-white px-3 text-sm text-[#101828] outline-none transition focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10";
@@ -17,13 +18,14 @@ export function AdminActionBar({
   children?: React.ReactNode;
   className?: string;
 }) {
+  const { t } = useAdminLanguage();
   return (
     <section className={cn("rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm sm:p-5", className)}>
       {(title || description || actions) ? (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            {title ? <h2 className="text-base font-bold text-[#101828] sm:text-lg">{title}</h2> : null}
-            {description ? <p className="mt-1 max-w-3xl text-sm leading-6 text-[#667085]">{description}</p> : null}
+            {title ? <h2 className="text-base font-bold text-[#101828] sm:text-lg">{t(title)}</h2> : null}
+            {description ? <p className="mt-1 max-w-3xl text-sm leading-6 text-[#667085]">{t(description)}</p> : null}
           </div>
           {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
         </div>
@@ -48,6 +50,7 @@ export function AdminPanel({
   children: React.ReactNode;
   className?: string;
 }) {
+  const { t } = useAdminLanguage();
   return (
     <section className={cn("rounded-md border border-[#e4e7ec] bg-white shadow-sm", className)}>
       {(title || description || actions) ? (
@@ -55,8 +58,8 @@ export function AdminPanel({
           <div className="flex min-w-0 gap-3">
             {icon ? <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-md bg-[#eef4ff] text-[#155eef]">{icon}</span> : null}
             <div className="min-w-0">
-              {title ? <h2 className="font-bold text-[#101828]">{title}</h2> : null}
-              {description ? <p className="mt-1 text-sm leading-5 text-[#667085]">{description}</p> : null}
+              {title ? <h2 className="font-bold text-[#101828]">{t(title)}</h2> : null}
+              {description ? <p className="mt-1 text-sm leading-5 text-[#667085]">{t(description)}</p> : null}
             </div>
           </div>
           {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
@@ -80,11 +83,12 @@ export function AdminMetricCard({
   active?: boolean;
   onClick?: () => void;
 }) {
+  const { t } = useAdminLanguage();
   const content = (
     <>
       <span className="block text-2xl font-bold">{value}</span>
-      <span className={cn("mt-1 block text-xs font-bold uppercase", active ? "text-white/70" : "text-[#667085]")}>{label}</span>
-      {detail ? <span className={cn("mt-1 block text-xs", active ? "text-white/60" : "text-[#98a2b3]")}>{detail}</span> : null}
+      <span className={cn("mt-1 block text-xs font-bold uppercase", active ? "text-white/70" : "text-[#667085]")}>{t(label)}</span>
+      {detail ? <span className={cn("mt-1 block text-xs", active ? "text-white/60" : "text-[#98a2b3]")}>{t(detail)}</span> : null}
     </>
   );
   const className = cn(
@@ -96,11 +100,12 @@ export function AdminMetricCard({
 }
 
 export function AdminEmptyState({ title, description }: { title: string; description: string }) {
+  const { t } = useAdminLanguage();
   return (
     <div className="grid min-h-48 place-items-center rounded-md border border-dashed border-[#d0d5dd] bg-[#f9fafb] p-8 text-center">
       <div className="max-w-md">
-        <p className="font-bold text-[#101828]">{title}</p>
-        <p className="mt-1 text-sm leading-6 text-[#667085]">{description}</p>
+        <p className="font-bold text-[#101828]">{t(title)}</p>
+        <p className="mt-1 text-sm leading-6 text-[#667085]">{t(description)}</p>
       </div>
     </div>
   );
