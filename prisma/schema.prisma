@@ -200,6 +200,8 @@ model CommunityUser {
   bio                    String?
   profileCompleted       Boolean             @default(false)
   country                String?
+  expertRole             String?
+  expertVerified         Boolean             @default(false)
   lastNotificationSeenAt DateTime?
   lastLoginAt            DateTime?
   loginCount             Int                 @default(0)
@@ -218,6 +220,7 @@ model CommunityUser {
 
   @@index([joinedAt])
   @@index([country])
+  @@index([expertVerified])
   @@index([lastLoginAt])
   @@index([firstTrafficSource])
 }
@@ -383,6 +386,8 @@ model CommunityIdea {
   title                 String
   description           String
   category              String
+  postType              String              @default("Idea Feedback")
+  productStage          String              @default("Concept")
   country               String
   imageUrlsJson         String              @default("[]")
   questionsJson         String              @default("[]")
@@ -410,6 +415,8 @@ model CommunityIdea {
 
   @@index([authorId])
   @@index([status])
+  @@index([postType])
+  @@index([productStage])
   @@index([visibility])
   @@index([moderationStatus])
   @@index([hidden])

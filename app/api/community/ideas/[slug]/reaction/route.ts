@@ -10,7 +10,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   const { slug } = await params;
   if (!session) {
     return await getCommunityIdeaBySlug(slug)
-      ? ok({ liked: false, interested: false })
+      ? ok({ helpful: false, liked: false, interested: false })
       : fail("Not found.", 404);
   }
   try {
@@ -29,8 +29,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       ? fail("Email login is required.", 401)
       : fail("Not found.", 404);
   }
-  const body = await request.json() as { type?: "Like" | "Interested" };
-  if (body.type !== "Like" && body.type !== "Interested") return fail("Invalid reaction.", 400);
+  const body = await request.json() as { type?: "Helpful" | "Like" | "Interested" };
+  if (body.type !== "Helpful" && body.type !== "Like" && body.type !== "Interested") return fail("Invalid reaction.", 400);
   try {
     return refreshCommunitySessionCookieIfNeeded(ok(await toggleCommunityReaction(slug, body.type, session.userId, request, await getCurrentIdeaAccessContext())), session);
   } catch (error) {

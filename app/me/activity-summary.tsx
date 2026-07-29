@@ -193,7 +193,7 @@ export default function ActivitySummary({
       const response = await fetch(`/api/community/ideas/${idea.slug}/reaction`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ type: "Like" })
+        body: JSON.stringify({ type: "Helpful" })
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to cancel like.");

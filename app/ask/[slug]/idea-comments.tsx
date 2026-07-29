@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Heart, Loader2, MessageCircle, Reply, Trash2 } from "lucide-react";
+import { BadgeCheck, Loader2, MessageCircle, Reply, ThumbsUp, Trash2 } from "lucide-react";
 import { CommunityComment } from "@/lib/community";
 import CommunityAvatar from "@/components/community-avatar";
 import EmailLogin from "@/components/email-login";
@@ -62,10 +62,10 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
     }
   }
 
-  async function likeComment(comment: CommunityComment) {
+  async function markCommentHelpful(comment: CommunityComment) {
     if (!sessionChecked) return;
     if (!user) {
-      setMessage("Email login is required to like comments.");
+      setMessage("Email login is required to mark replies helpful.");
       return;
     }
     setLikingId(comment.id);
@@ -76,10 +76,10 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
         headers: communityActionHeaders(`comment-reaction:${comment.id}`)
       });
       const payload = await response.json();
-      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to like comment.");
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to update helpful vote.");
       window.location.reload();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to like comment.");
+      setMessage(error instanceof Error ? error.message : "Unable to update helpful vote.");
     } finally {
       setLikingId("");
     }
@@ -118,6 +118,11 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
           <p className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold">
             <CommunityAvatar name={comment.author.name} src={comment.author.avatar} className="size-7 border-0 text-[10px]" />
             <span className="truncate">{comment.author.name}</span>
+            {comment.author.expertVerified ? (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e8f7f4] px-2 py-0.5 text-[10px] font-bold text-[#06756f]">
+                <BadgeCheck size={11} /> {comment.author.expertRole || "Verified expert"}
+              </span>
+            ) : null}
           </p>
           <div className="flex items-center gap-2">
             <span className="text-xs text-[#8b93a1]">{timeLabel(comment.createdAt)}</span>
@@ -135,12 +140,12 @@ export default function IdeaComments({ slug, comments }: { slug: string; comment
               <Loader2 className="animate-spin" size={13} /> Checking
             </button>
           ) : user ? (
-            <button type="button" onClick={() => void likeComment(comment)} className={`inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition ${comment.viewerLiked ? "bg-[#fff1f2] text-[#be123c]" : "bg-white hover:bg-[#eef2f7]"}`}>
-              {likingId === comment.id ? <Loader2 className="animate-spin" size={13} /> : <Heart size={13} />} {comment.likeCount} Like
+            <button type="button" onClick={() => void markCommentHelpful(comment)} className={`inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition ${comment.viewerHelpful || comment.viewerLiked ? "bg-[#e8f0ff] text-[#155eef]" : "bg-white hover:bg-[#eef2f7]"}`}>
+              {likingId === comment.id ? <Loader2 className="animate-spin" size={13} /> : <ThumbsUp size={13} />} {comment.helpfulCount} Helpful
             </button>
           ) : (
             <EmailLogin className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white px-2.5 transition hover:bg-[#eef2f7]">
-              <Heart size={13} /> {comment.likeCount} Like
+              <ThumbsUp size={13} /> {comment.helpfulCount} Helpful
             </EmailLogin>
           )}
           <button type="button" onClick={() => {

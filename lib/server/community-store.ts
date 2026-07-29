@@ -3,6 +3,8 @@ import {
   CommunityIdea,
   CommunityUser,
   makeCommunityId,
+  normalizeCommunityPostType,
+  normalizeCommunityProductStage,
   normalizeQuestions,
   normalizeStatus,
   normalizeVisibility,
@@ -38,6 +40,8 @@ type UserRow = {
   bio: string | null;
   profileCompleted: boolean;
   country: string | null;
+  expertRole: string | null;
+  expertVerified: boolean;
   lastNotificationSeenAt?: Date | null;
   joinedAt: Date;
 };
@@ -238,7 +242,7 @@ function hotSignals(
   const since = now - config.hotWindowDays * 24 * 60 * 60 * 1000;
   const reactions = Array.isArray(row.reactions) ? row.reactions : [];
   const comments = Array.isArray(row.comments) ? row.comments.filter((comment: any) => !comment.hidden) : [];
-  const recentLikes = reactions.filter((reaction: any) => reaction.type === "Like" && new Date(reaction.createdAt).getTime() >= since);
+  const recentLikes = reactions.filter((reaction: any) => ["Helpful", "Like"].includes(reaction.type) && new Date(reaction.createdAt).getTime() >= since);
   const recentInterested = reactions.filter((reaction: any) => reaction.type === "Interested" && new Date(reaction.createdAt).getTime() >= since);
   const recentComments = comments.filter((comment: any) => new Date(comment.createdAt).getTime() >= since);
   const score = recentLikes.length * 2 + recentComments.length * 3 + recentInterested.length * 4;
@@ -277,7 +281,9 @@ function userPublic(user: UserRow) {
     avatar: publicCommunityAvatar(user.avatar, user.id) || undefined,
     bio: user.bio || undefined,
     profileCompleted: Boolean(user.profileCompleted),
-    country: user.country || undefined
+    country: user.country || undefined,
+    expertRole: user.expertRole || undefined,
+    expertVerified: Boolean(user.expertVerified)
   };
 }
 
@@ -301,6 +307,8 @@ function ideaToCommunityIdea(
     title: row.title,
     description: row.description,
     category: row.category,
+    postType: normalizeCommunityPostType(row.postType),
+    productStage: normalizeCommunityProductStage(row.productStage),
     country: row.country,
     imageUrls: ideaImageUrls(row.imageUrlsJson, row.slug, !isApprovedPublicIdea(row)),
     questions: normalizeQuestions(parseJson(row.questionsJson, [])),
@@ -325,8 +333,10 @@ function ideaToCommunityIdea(
         hidden: Boolean(comment.hidden),
         parentId: comment.parentId || undefined,
         author: userPublic(comment.author),
-        likeCount: (comment.reactions || []).filter((reaction: any) => reaction.type === "Like").length,
+        likeCount: (comment.reactions || []).filter((reaction: any) => ["Helpful", "Like"].includes(reaction.type)).length,
         viewerLiked: false,
+        helpfulCount: (comment.reactions || []).filter((reaction: any) => ["Helpful", "Like"].includes(reaction.type)).length,
+        viewerHelpful: false,
         createdAt: iso(comment.createdAt)
       })),
     review: review
@@ -352,7 +362,8 @@ function ideaToCommunityIdea(
           updatedAt: iso(review.updatedAt)
         }
       : undefined,
-    likeCount: reactions.filter((reaction: any) => reaction.type === "Like").length,
+    likeCount: reactions.filter((reaction: any) => ["Helpful", "Like"].includes(reaction.type)).length,
+    helpfulCount: reactions.filter((reaction: any) => ["Helpful", "Like"].includes(reaction.type)).length,
     interestedCount: reactions.filter((reaction: any) => reaction.type === "Interested").length,
     shareCount: shares.length,
     hotScore: hot.hotScore,
@@ -431,6 +442,8 @@ export async function upsertCommunityUser(input: {
     bio: row.bio || undefined,
     profileCompleted: row.profileCompleted,
     country: row.country || undefined,
+    expertRole: row.expertRole || undefined,
+    expertVerified: Boolean(row.expertVerified),
     joinedAt: iso(row.joinedAt)
   };
 }
@@ -448,6 +461,8 @@ export async function getCommunityUser(userId: string) {
         bio: row.bio || undefined,
         profileCompleted: row.profileCompleted,
         country: row.country || undefined,
+        expertRole: row.expertRole || undefined,
+        expertVerified: Boolean(row.expertVerified),
         joinedAt: iso(row.joinedAt)
       }
     : null;
@@ -501,6 +516,8 @@ export async function updateCommunityProfile(userId: string, input: unknown) {
     bio: row.bio || undefined,
     profileCompleted: row.profileCompleted,
     country: row.country || undefined,
+    expertRole: row.expertRole || undefined,
+    expertVerified: Boolean(row.expertVerified),
     joinedAt: iso(row.joinedAt)
   };
 }
@@ -775,7 +792,7 @@ export async function getCommunityUserActivity(userId: string) {
     })
   ]);
 
-  const receivedLikes = receivedReactions.filter((reaction) => reaction.type === "Like").length;
+  const receivedLikes = receivedReactions.filter((reaction) => ["Helpful", "Like"].includes(reaction.type)).length;
   const receivedInterested = receivedReactions.filter((reaction) => reaction.type === "Interested").length;
   const isUnread = (value: Date | string | null | undefined) => {
     if (!lastSeenAt || !value) return true;
@@ -799,7 +816,7 @@ export async function getCommunityUserActivity(userId: string) {
     ...receivedReactions.map((reaction) => ({
       id: `reaction-${reaction.id}`,
       type: reaction.type === "Interested" ? "interested" as const : "like" as const,
-      title: `${reaction.user.name} ${reaction.type === "Interested" ? "is interested in" : "liked"} your idea`,
+      title: `${reaction.user.name} ${reaction.type === "Interested" ? "is interested in" : "found your idea helpful"}`,
       body: reaction.idea?.title || "Your idea",
       href: reaction.idea ? `/ask/${reaction.idea.slug}` : "/ask",
       ideaSlug: reaction.idea?.slug,
@@ -837,12 +854,14 @@ export async function getCommunityUserActivity(userId: string) {
       bio: user.bio || undefined,
       profileCompleted: user.profileCompleted,
       country: user.country || undefined,
+      expertRole: user.expertRole || undefined,
+      expertVerified: Boolean(user.expertVerified),
       joinedAt: iso(user.joinedAt)
     },
     stats: {
       ideasPosted: ideas.length,
       commentsMade: comments.length,
-      likedIdeas: reactions.filter((reaction) => reaction.type === "Like").length,
+      likedIdeas: reactions.filter((reaction) => ["Helpful", "Like"].includes(reaction.type)).length,
       interestedIdeas: reactions.filter((reaction) => reaction.type === "Interested").length,
       receivedComments: receivedComments.length,
       receivedLikes,
@@ -861,7 +880,7 @@ export async function getCommunityUserActivity(userId: string) {
       idea: ideaToCommunityIdea(comment.idea)
     })),
     likedIdeas: reactions
-      .filter((reaction) => reaction.type === "Like" && reaction.idea)
+      .filter((reaction) => ["Helpful", "Like"].includes(reaction.type) && reaction.idea)
       .map((reaction) => ({ id: reaction.id, createdAt: iso(reaction.createdAt), idea: ideaToCommunityIdea(reaction.idea) })),
     interestedIdeas: reactions
       .filter((reaction) => reaction.type === "Interested" && reaction.idea)
@@ -927,6 +946,8 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
   const title = typeof data.title === "string" ? data.title.trim().slice(0, 140) : "";
   const description = typeof data.description === "string" ? data.description.trim().slice(0, 5000) : "";
   const category = typeof data.category === "string" ? data.category.trim().slice(0, 120) : "";
+  const postType = normalizeCommunityPostType(data.postType);
+  const productStage = normalizeCommunityProductStage(data.productStage);
   const country = typeof data.country === "string" ? data.country.trim().slice(0, 120) : "";
   if (!title || !description || !category || !country) {
     throw new Error("Title, description, category, and country are required.");
@@ -954,6 +975,8 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
       title,
       description,
       category,
+      postType,
+      productStage,
       country,
       imageUrlsJson: JSON.stringify(imageUrls),
       questionsJson: JSON.stringify(normalizeQuestions(data.questions)),
@@ -1013,7 +1036,7 @@ export async function addCommunityComment(
 
 export async function toggleCommunityReaction(
   slug: string,
-  type: "Like" | "Interested",
+  type: "Helpful" | "Like" | "Interested",
   userId: string,
   request: Request,
   context: IdeaAccessContext = { userId }
@@ -1026,14 +1049,17 @@ export async function toggleCommunityReaction(
     action: "reaction",
     resourceId: `${idea.id}:${type}`,
     execute: async (tx) => {
+      const compatibleTypes = type === "Helpful" ? ["Helpful", "Like"] : [type];
       const existing = await tx.communityReaction.findFirst({
-        where: { ideaId: idea.id, userId, type }
+        where: { ideaId: idea.id, userId, type: { in: compatibleTypes } }
       });
       if (existing) {
-        await tx.communityReaction.delete({ where: { id: existing.id } });
+        await tx.communityReaction.deleteMany({
+          where: { ideaId: idea.id, userId, type: { in: compatibleTypes } }
+        });
       } else {
         await tx.communityReaction.create({
-          data: { id: makeCommunityId("REACTION"), ideaId: idea.id, userId, type }
+          data: { id: makeCommunityId("REACTION"), ideaId: idea.id, userId, type: type === "Like" ? "Helpful" : type }
         });
       }
       await tx.communityIdea.update({
@@ -1072,13 +1098,15 @@ export async function toggleCommunityCommentReaction(
     resourceId: comment.id,
     execute: async (tx) => {
       const existing = await tx.communityReaction.findFirst({
-        where: { commentId: comment.id, userId, type: "Like" }
+        where: { commentId: comment.id, userId, type: { in: ["Helpful", "Like"] } }
       });
       if (existing) {
-        await tx.communityReaction.delete({ where: { id: existing.id } });
+        await tx.communityReaction.deleteMany({
+          where: { commentId: comment.id, userId, type: { in: ["Helpful", "Like"] } }
+        });
       } else {
         await tx.communityReaction.create({
-          data: { id: makeCommunityId("REACTION"), commentId: comment.id, userId, type: "Like" }
+          data: { id: makeCommunityId("REACTION"), commentId: comment.id, userId, type: "Helpful" }
         });
       }
       await tx.communityIdea.update({
@@ -1138,7 +1166,8 @@ export async function getCommunityReactionState(
     select: { type: true }
   });
   return {
-    liked: reactions.some((reaction) => reaction.type === "Like"),
+    helpful: reactions.some((reaction) => ["Helpful", "Like"].includes(reaction.type)),
+    liked: reactions.some((reaction) => ["Helpful", "Like"].includes(reaction.type)),
     interested: reactions.some((reaction) => reaction.type === "Interested")
   };
 }
@@ -1152,6 +1181,12 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
   const title = typeof data.title === "string" ? data.title.trim().slice(0, 140) : existing.title;
   const description = typeof data.description === "string" ? data.description.trim().slice(0, 5000) : existing.description;
   const category = typeof data.category === "string" ? data.category.trim().slice(0, 120) : existing.category;
+  const postType = Object.prototype.hasOwnProperty.call(data, "postType")
+    ? normalizeCommunityPostType(data.postType)
+    : normalizeCommunityPostType(existing.postType);
+  const productStage = Object.prototype.hasOwnProperty.call(data, "productStage")
+    ? normalizeCommunityProductStage(data.productStage)
+    : normalizeCommunityProductStage(existing.productStage);
   const imageUrls = Array.isArray(data.imageUrls)
     ? await ownerIdeaImageUrls(data.imageUrls, existing.imageUrlsJson, existing.slug)
     : storedIdeaImageUrls(existing.imageUrlsJson);
@@ -1164,6 +1199,8 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
       title,
       description,
       category,
+      postType,
+      productStage,
       imageUrlsJson: JSON.stringify(imageUrls),
       moderationStatus: "Pending",
       homepageFeatured: false,
@@ -1230,6 +1267,18 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
     ? stringOrNull(data.moderationNote)
     : existing.moderationNote;
   const moderationChanged = moderationStatus !== existing.moderationStatus;
+  const postType = Object.prototype.hasOwnProperty.call(data, "postType")
+    ? normalizeCommunityPostType(data.postType)
+    : normalizeCommunityPostType(existing.postType);
+  const productStage = Object.prototype.hasOwnProperty.call(data, "productStage")
+    ? normalizeCommunityProductStage(data.productStage)
+    : normalizeCommunityProductStage(existing.productStage);
+  const authorExpertRole = Object.prototype.hasOwnProperty.call(data, "authorExpertRole")
+    ? stringOrNull(data.authorExpertRole)?.slice(0, 120) || null
+    : undefined;
+  const authorExpertVerified = typeof data.authorExpertVerified === "boolean"
+    ? data.authorExpertVerified
+    : undefined;
   const homepageFeaturedRequested = typeof data.homepageFeatured === "boolean" ? data.homepageFeatured : existing.homepageFeatured;
   const rawHomepageOrder = Number(data.homepageFeaturedOrder);
   const requestedHomepageOrder = Number.isInteger(rawHomepageOrder) && rawHomepageOrder >= 1 && rawHomepageOrder <= 3
@@ -1347,6 +1396,8 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
       where: { slug },
       data: {
         status: normalizeStatus(data.status),
+        postType,
+        productStage,
         moderationStatus,
         moderatedAt: moderationChanged ? new Date() : existing.moderatedAt,
         moderationNote,
@@ -1357,6 +1408,16 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
         homepageFeaturedOrder
       }
     });
+
+    if (authorExpertRole !== undefined || authorExpertVerified !== undefined) {
+      await tx.communityUser.update({
+        where: { id: existing.authorId },
+        data: {
+          ...(authorExpertRole !== undefined ? { expertRole: authorExpertRole } : {}),
+          ...(authorExpertVerified !== undefined ? { expertVerified: authorExpertVerified } : {})
+        }
+      });
+    }
 
     if (structuredReview) {
       await tx.tyoraReview.upsert({

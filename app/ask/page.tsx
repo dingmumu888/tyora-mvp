@@ -112,7 +112,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
   const href = story ? `/ask/case/${encodeURIComponent(story.slug)}` : `/ask/${idea!.slug}`;
   const authorName = story ? "TYORA" : idea!.author.name;
   const commentCount = idea?.comments.length || 0;
-  const helpfulCount = idea?.likeCount || 0;
+  const helpfulCount = idea?.helpfulCount || 0;
   const isUnanswered = Boolean(idea && commentCount === 0 && !idea.review);
   const reviewSnippet = idea?.review?.recommendedNextStep || idea?.review?.additionalNotes || idea?.review?.mainRisks;
 
@@ -128,8 +128,9 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
         <div className="min-w-0 px-3 py-3 sm:px-4">
           <div className="flex flex-wrap items-center gap-1.5">
             {idea?.isHot ? <span className="inline-flex items-center gap-1 rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><Flame size={11} fill="currentColor" /> Hot</span> : null}
-            <span className="rounded bg-[#eef4ff] px-2 py-1 text-[10px] font-bold uppercase text-[#155eef]">{category}</span>
-            <span className={`rounded px-2 py-1 text-[10px] font-bold uppercase ring-1 ${statusStyles[status]}`}><CommunityText text={status} /></span>
+            <span className="rounded bg-[#eef4ff] px-2 py-1 text-[10px] font-bold uppercase text-[#155eef]"><CommunityText text={idea?.postType || category} /></span>
+            <span className="rounded bg-[#f3f0ff] px-2 py-1 text-[10px] font-bold uppercase text-[#6d28d9]"><CommunityText text={idea?.productStage || status} /></span>
+            {idea && status !== "Discussing" ? <span className={`rounded px-2 py-1 text-[10px] font-bold uppercase ring-1 ${statusStyles[status]}`}><CommunityText text={status} /></span> : null}
             {idea?.review ? <span className="inline-flex items-center gap-1 rounded bg-[#e8f7f4] px-2 py-1 text-[10px] font-bold uppercase text-[#06756f]"><BadgeCheck size={11} /> <CommunityText text="TYORA Replied" /></span> : null}
             {isUnanswered ? <span className="rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><CommunityText text="Unanswered" /></span> : null}
             {story ? <span className="rounded bg-[#0b1426] px-2 py-1 text-[10px] font-bold uppercase text-white"><CommunityText text={story.badgeLabel || "TYORA Case"} /></span> : null}
@@ -192,7 +193,7 @@ function StarterCommunityState() {
 export default async function AskCommunityPage({
   searchParams
 }: {
-  searchParams: Promise<{ sort?: CommunityPageSort; category?: string; stage?: string; q?: string }>;
+  searchParams: Promise<{ sort?: CommunityPageSort; category?: string; stage?: string; type?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const sort = tabs.some(([id]) => id === params.sort) ? params.sort as CommunityPageSort : "trending";
@@ -201,31 +202,30 @@ export default async function AskCommunityPage({
   const query = (params.q || "").trim().toLowerCase();
   const selectedCategory = (params.category || "").trim();
   const selectedStage = (params.stage || "").trim();
+  const selectedPostType = (params.type || "").trim();
 
   const stageMatches = (idea: CommunityIdea) => {
     if (!selectedStage) return true;
-    if (selectedStage === "Concept") return idea.status === "Discussing";
-    if (selectedStage === "Review") return idea.status === "TYORA Reviewing";
-    if (selectedStage === "Prototype") return idea.status === "Project Started";
-    return ["Manufacturing", "Shipping", "Completed"].includes(idea.status);
+    return idea.productStage === selectedStage;
   };
 
   const ideas = rawIdeas
     .filter((idea) => !selectedCategory || idea.category === selectedCategory)
+    .filter((idea) => !selectedPostType || idea.postType === selectedPostType)
     .filter(stageMatches)
     .filter((idea) => !query || `${idea.title} ${idea.description} ${idea.category} ${idea.author.name}`.toLowerCase().includes(query))
     .filter((idea) => sort !== "unanswered" || (idea.comments.length === 0 && !idea.review))
     .filter((idea) => sort !== "latest-tyora-reply" || Boolean(idea.review))
     .sort((left, right) => sort === "latest-comments" ? right.comments.length - left.comments.length : 0);
 
-  const showCases = !query && !selectedCategory && !selectedStage && sort !== "unanswered" && sort !== "latest-tyora-reply";
+  const showCases = !query && !selectedCategory && !selectedStage && !selectedPostType && sort !== "unanswered" && sort !== "latest-tyora-reply";
   const tyoraCases = content.communityPage.showCasesInFeed && showCases
     ? content.cases.filter((story) => story.visible).sort((left, right) => left.order - right.order).slice(0, content.communityPage.caseLimit)
     : [];
   const latestReviews = rawIdeas.filter((idea) => idea.review);
   const countries = new Set(rawIdeas.map((idea) => idea.country).filter(Boolean)).size;
   const adviceIdeas = rawIdeas
-    .filter((idea) => !idea.review)
+    .filter((idea) => !idea.review && idea.comments.length === 0)
     .sort((left, right) => left.comments.length - right.comments.length || new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
     .slice(0, 3);
   const categories = Array.from(new Set(rawIdeas.map((idea) => idea.category).filter(Boolean))).slice(0, 7);
@@ -235,8 +235,8 @@ export default async function AskCommunityPage({
   })).sort((left, right) => right.count - left.count);
   const contributors = Array.from(new Map(
     rawIdeas.flatMap((idea) => idea.comments.map((comment) => [comment.author.id, comment.author] as const))
-  ).values()).slice(0, 3);
-  const progressedIdeas = rawIdeas.filter((idea) => idea.status !== "Discussing").length;
+  ).values()).sort((left, right) => Number(right.expertVerified) - Number(left.expertVerified)).slice(0, 3);
+  const progressedIdeas = rawIdeas.filter((idea) => idea.productStage !== "Concept").length;
   const activeDiscussions = rawIdeas.filter((idea) => idea.comments.length > 0).length;
 
   return (
@@ -291,13 +291,13 @@ export default async function AskCommunityPage({
             <nav className="space-y-1 border-b border-[#d8dee8] pb-4">
               {([
                 ["All Discussions", "/ask", MessageCircle],
-                ["Ideas & Feedback", "/ask?sort=trending", Lightbulb],
-                ["Cost & MOQ", `/ask?category=${encodeURIComponent("Cost & MOQ")}`, Tags],
-                ["Materials", `/ask?category=${encodeURIComponent("Materials")}`, Boxes],
+                ["Ideas & Feedback", `/ask?type=${encodeURIComponent("Idea Feedback")}`, Lightbulb],
+                ["Cost & MOQ", `/ask?type=${encodeURIComponent("Cost & MOQ")}`, Tags],
+                ["Manufacturing Advice", `/ask?type=${encodeURIComponent("Manufacturing Advice")}`, Boxes],
                 ["Prototyping", "/ask?stage=Prototype", Rocket],
                 ["Find a Supplier", "/source", PackageSearch]
               ] as const).map(([label, href, Icon]) => (
-                <Link key={label} href={href} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition ${label === "All Discussions" && !selectedCategory && !selectedStage ? "bg-[#e8f0ff] text-[#155eef]" : "text-[#475467] hover:bg-white hover:text-[#0b1426]"}`}>
+                <Link key={label} href={href} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition ${label === "All Discussions" && !selectedCategory && !selectedStage && !selectedPostType ? "bg-[#e8f0ff] text-[#155eef]" : "text-[#475467] hover:bg-white hover:text-[#0b1426]"}`}>
                   <Icon size={17} /> <CommunityText text={label} />
                 </Link>
               ))}
@@ -308,8 +308,9 @@ export default async function AskCommunityPage({
               <div className="mt-2 space-y-1">
                 {([
                   ["Concept", Lightbulb],
-                  ["Review", BadgeCheck],
+                  ["Design", BadgeCheck],
                   ["Prototype", Boxes],
+                  ["Pre-production", PackageSearch],
                   ["Production", Rocket]
                 ] as const).map(([stage, Icon]) => (
                   <Link key={stage} href={`/ask?stage=${stage}`} className={`flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition ${selectedStage === stage ? "bg-white text-[#155eef] shadow-sm" : "text-[#475467] hover:bg-white"}`}>
@@ -359,11 +360,12 @@ export default async function AskCommunityPage({
             ))}
           </nav>
 
-          {(query || selectedCategory || selectedStage) ? (
+          {(query || selectedCategory || selectedStage || selectedPostType) ? (
             <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-[#d8dee8] bg-white px-3 py-2 text-xs text-[#5f6b7a]">
               <span className="font-semibold text-[#0b1426]"><CommunityText text="Active filters:" /></span>
               {query ? <span className="rounded bg-[#eef4ff] px-2 py-1"><CommunityText text="Search: {query}" values={{ query: params.q || "" }} /></span> : null}
               {selectedCategory ? <span className="rounded bg-[#eef4ff] px-2 py-1">{selectedCategory}</span> : null}
+              {selectedPostType ? <span className="rounded bg-[#eef4ff] px-2 py-1">{selectedPostType}</span> : null}
               {selectedStage ? <span className="rounded bg-[#eef4ff] px-2 py-1"><CommunityText text={selectedStage} /></span> : null}
               <Link href="/ask" className="ml-auto font-semibold text-[#155eef]"><CommunityText text="Clear" /></Link>
             </div>
@@ -371,7 +373,7 @@ export default async function AskCommunityPage({
 
           <div className="mt-2 grid gap-2">
             {ideas.length === 0 && tyoraCases.length === 0 ? (
-              query || selectedCategory || selectedStage || sort === "unanswered" || sort === "latest-tyora-reply" ? (
+              query || selectedCategory || selectedStage || selectedPostType || sort === "unanswered" || sort === "latest-tyora-reply" ? (
                 <div className="rounded-xl border border-[#d8dee8] bg-white p-8 text-center">
                   <CircleHelp size={26} className="mx-auto text-[#98a2b3]" />
                   <h2 className="mt-3 text-lg font-bold"><CommunityText text="No discussions match this view yet." /></h2>
@@ -443,7 +445,13 @@ export default async function AskCommunityPage({
                 {contributors.map((person) => (
                   <div key={person.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
                     <CommunityAvatar name={person.name} src={person.avatar} className="size-7 text-[9px]" />
-                    <div className="min-w-0"><p className="truncate text-xs font-semibold">{person.name}</p><p className="text-[10px] text-[#667085]"><CommunityText text="Community contributor" /></p></div>
+                    <div className="min-w-0">
+                      <p className="inline-flex max-w-full items-center gap-1 truncate text-xs font-semibold">
+                        {person.name}
+                        {person.expertVerified ? <BadgeCheck size={12} className="shrink-0 text-[#078a83]" /> : null}
+                      </p>
+                      <p className="text-[10px] text-[#667085]">{person.expertVerified ? person.expertRole || "Verified expert" : <CommunityText text="Community contributor" />}</p>
+                    </div>
                   </div>
                 ))}
               </div> : null}

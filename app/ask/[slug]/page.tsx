@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Sparkles } from "lucide-react";
 import { CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import { getCurrentIdeaAccessContext } from "@/lib/server/idea-access-context";
@@ -70,7 +70,9 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
     [labels.recommendedNextStep, idea.review.recommendedNextStep]
   ].filter((entry): entry is [string, string] => Boolean(entry[1])) : [];
   const compactMeta = [
-    { value: idea.category, tone: "bg-[#edf4ff] text-[#2563eb]" },
+    { value: idea.postType, tone: "bg-[#edf4ff] text-[#2563eb]" },
+    { value: idea.productStage, tone: "bg-[#f3f0ff] text-[#6d28d9]" },
+    { value: idea.category, tone: "bg-[#eef6f4] text-[#06756f]" },
     { value: idea.country, tone: "bg-[#f4f6f8] text-[#667085]" }
   ].filter((item) => item.value && item.value !== "Not specified");
 
@@ -95,6 +97,11 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
             <div className="min-w-0">
               <p className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm font-semibold">
                 <span className="truncate">{idea.author.name}</span>
+                {idea.author.expertVerified ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2 py-0.5 text-[11px] font-bold text-[#06756f]">
+                    <BadgeCheck size={12} /> {idea.author.expertRole || "Verified expert"}
+                  </span>
+                ) : null}
                 {compactMeta[0] ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${compactMeta[0].tone}`}>{compactMeta[0].value}</span> : null}
               </p>
               <p className="text-xs text-[#8b93a1]">{timeLabel(idea.createdAt)} · {idea.visibility}</p>

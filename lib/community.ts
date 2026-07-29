@@ -16,12 +16,30 @@ export const communityQuestions = [
   "Other"
 ] as const;
 
+export const communityPostTypes = [
+  "Idea Feedback",
+  "Design Feedback",
+  "Manufacturing Advice",
+  "Cost & MOQ",
+  "Progress Update"
+] as const;
+
+export const communityProductStages = [
+  "Concept",
+  "Design",
+  "Prototype",
+  "Pre-production",
+  "Production"
+] as const;
+
 export const customInquiryStatuses = ["Submitted", "In Review", "Need Information", "Qualified", "Closed"] as const;
 
 export type CommunityStatus = (typeof communityStatuses)[number];
 export type CommunityModerationStatus = "Pending" | "Approved" | "Rejected" | "Draft";
 export type CommunityVisibility = "Public" | "Private";
 export type CommunityQuestion = (typeof communityQuestions)[number];
+export type CommunityPostType = (typeof communityPostTypes)[number];
+export type CommunityProductStage = (typeof communityProductStages)[number];
 export type CustomInquiryStatus = (typeof customInquiryStatuses)[number];
 
 export type CommunityUser = {
@@ -34,6 +52,8 @@ export type CommunityUser = {
   bio?: string;
   profileCompleted: boolean;
   country?: string;
+  expertRole?: string;
+  expertVerified: boolean;
   joinedAt: string;
 };
 
@@ -42,9 +62,11 @@ export type CommunityComment = {
   body: string;
   hidden: boolean;
   parentId?: string;
-  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country">;
+  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country" | "expertRole" | "expertVerified">;
   likeCount: number;
   viewerLiked?: boolean;
+  helpfulCount: number;
+  viewerHelpful?: boolean;
   createdAt: string;
 };
 
@@ -76,6 +98,8 @@ export type CommunityIdea = {
   title: string;
   description: string;
   category: string;
+  postType: CommunityPostType;
+  productStage: CommunityProductStage;
   country: string;
   imageUrls: string[];
   questions: CommunityQuestion[];
@@ -91,10 +115,11 @@ export type CommunityIdea = {
   publicConsentAt?: string;
   moderatedAt?: string;
   moderationNote?: string;
-  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country">;
+  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country" | "expertRole" | "expertVerified">;
   comments: CommunityComment[];
   review?: TyoraReview;
   likeCount: number;
+  helpfulCount: number;
   interestedCount: number;
   shareCount: number;
   hotScore: number;
@@ -166,6 +191,18 @@ export function normalizeStatus(value: unknown): CommunityStatus {
 
 export function normalizeVisibility(value: unknown): CommunityVisibility {
   return value === "Private" ? "Private" : "Public";
+}
+
+export function normalizeCommunityPostType(value: unknown): CommunityPostType {
+  return communityPostTypes.includes(value as CommunityPostType)
+    ? (value as CommunityPostType)
+    : "Idea Feedback";
+}
+
+export function normalizeCommunityProductStage(value: unknown): CommunityProductStage {
+  return communityProductStages.includes(value as CommunityProductStage)
+    ? (value as CommunityProductStage)
+    : "Concept";
 }
 
 export function normalizeQuestions(value: unknown): CommunityQuestion[] {

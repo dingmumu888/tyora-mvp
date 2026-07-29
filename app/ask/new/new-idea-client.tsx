@@ -14,7 +14,14 @@ import {
   Trash2,
   Upload
 } from "lucide-react";
-import { communityQuestions, CommunityQuestion } from "@/lib/community";
+import {
+  communityPostTypes,
+  communityProductStages,
+  communityQuestions,
+  CommunityPostType,
+  CommunityProductStage,
+  CommunityQuestion
+} from "@/lib/community";
 import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { cn } from "@/lib/utils";
@@ -87,6 +94,8 @@ export default function NewIdeaClient() {
     title: "",
     description: "",
     category: "",
+    postType: "Idea Feedback" as CommunityPostType,
+    productStage: "Concept" as CommunityProductStage,
     country: "",
     imageUrls: [] as string[],
     questions: [] as CommunityQuestion[],
@@ -373,6 +382,18 @@ export default function NewIdeaClient() {
               <label className="grid gap-2 text-sm font-semibold">Category
                 <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Phone & Device Accessories" className={inputClass} />
               </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="grid gap-2 text-sm font-semibold">Post type
+                  <select value={form.postType} onChange={(event) => setForm({ ...form, postType: event.target.value as CommunityPostType })} className={inputClass}>
+                    {communityPostTypes.map((postType) => <option key={postType} value={postType}>{postType}</option>)}
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm font-semibold">Product stage
+                  <select value={form.productStage} onChange={(event) => setForm({ ...form, productStage: event.target.value as CommunityProductStage })} className={inputClass}>
+                    {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{productStage}</option>)}
+                  </select>
+                </label>
+              </div>
               <label className="grid gap-2 text-sm font-semibold">Description
                 <textarea
                   rows={8}
@@ -530,6 +551,16 @@ export default function NewIdeaClient() {
                   <label className="grid gap-2 text-sm font-semibold">Country <span className="font-normal text-[#8b93a1]">optional</span>
                     <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="United States" className={inputClass} />
                   </label>
+                  <label className="grid gap-2 text-sm font-semibold">Post type
+                    <select value={form.postType} onChange={(event) => setForm({ ...form, postType: event.target.value as CommunityPostType })} className={inputClass}>
+                      {communityPostTypes.map((postType) => <option key={postType} value={postType}>{postType}</option>)}
+                    </select>
+                  </label>
+                  <label className="grid gap-2 text-sm font-semibold">Product stage
+                    <select value={form.productStage} onChange={(event) => setForm({ ...form, productStage: event.target.value as CommunityProductStage })} className={inputClass}>
+                      {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{productStage}</option>)}
+                    </select>
+                  </label>
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Question type <span className="font-normal text-[#8b93a1]">optional</span></p>
@@ -560,6 +591,8 @@ export default function NewIdeaClient() {
               <div className="mt-6 rounded-[20px] border border-[#e4e8ef] bg-[#fbfcff] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || "Concept"}</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.postType}</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.productStage}</span>
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.visibility}</span>
                   <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">Initial assessment</span>
                 </div>

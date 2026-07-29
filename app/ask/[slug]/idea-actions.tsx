@@ -1,8 +1,14 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Heart, Loader2, MessageCircle, Pencil, Share2, Star, Trash2, X } from "lucide-react";
-import { CommunityIdea } from "@/lib/community";
+import { Loader2, MessageCircle, Pencil, Share2, Star, ThumbsUp, Trash2, X } from "lucide-react";
+import {
+  communityPostTypes,
+  communityProductStages,
+  CommunityIdea,
+  CommunityPostType,
+  CommunityProductStage
+} from "@/lib/community";
 import EmailLogin from "@/components/email-login";
 import IdeaSharePanel from "./idea-share-panel";
 import { communityActionHeaders } from "@/lib/client/community-action";
@@ -16,12 +22,14 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
   const [user, setUser] = useState<SessionUser | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [body, setBody] = useState("");
-  const [reactionState, setReactionState] = useState({ liked: false, interested: false });
+  const [reactionState, setReactionState] = useState({ helpful: false, liked: false, interested: false });
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     title: idea.title,
     category: idea.category,
+    postType: idea.postType,
+    productStage: idea.productStage,
     description: idea.description
   });
   const [busy, setBusy] = useState("");
@@ -49,7 +57,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
       .then((data) => {
         if (data.success) setReactionState(data.data);
       })
-      .catch(() => setReactionState({ liked: false, interested: false }));
+      .catch(() => setReactionState({ helpful: false, liked: false, interested: false }));
   }, [idea.slug, user?.id]);
 
   function appendCommentEmoji(emoji: string) {
@@ -84,7 +92,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
     }
   }
 
-  async function react(type: "Like" | "Interested") {
+  async function react(type: "Helpful" | "Interested") {
     if (!sessionChecked) return;
     if (!user) {
       setMessage("Email login is required.");
@@ -202,12 +210,12 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
             <Loader2 className="animate-spin" size={14} /> Checking
           </button>
         ) : user ? (
-          <button onClick={() => void react("Like")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.liked ? "bg-[#fff1f2] text-[#be123c]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
-            {busy === "Like" ? <Loader2 className="animate-spin" size={14} /> : <Heart size={14} />} {idea.likeCount} {labels.likeText}
+          <button onClick={() => void react("Helpful")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.helpful || reactionState.liked ? "bg-[#e8f0ff] text-[#155eef]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
+            {busy === "Helpful" ? <Loader2 className="animate-spin" size={14} /> : <ThumbsUp size={14} />} {idea.helpfulCount} Helpful
           </button>
         ) : (
           <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
-            <Heart size={14} /> {idea.likeCount} {labels.likeText}
+            <ThumbsUp size={14} /> {idea.helpfulCount} Helpful
           </EmailLogin>
         )}
         {!sessionChecked ? (
@@ -246,6 +254,18 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
                 <label className="grid gap-2 text-sm font-semibold text-[#101216]">Category
                   <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="grid gap-2 text-sm font-semibold text-[#101216]">Post type
+                    <select value={editForm.postType} onChange={(event) => setEditForm({ ...editForm, postType: event.target.value as CommunityPostType })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
+                      {communityPostTypes.map((postType) => <option key={postType} value={postType}>{postType}</option>)}
+                    </select>
+                  </label>
+                  <label className="grid gap-2 text-sm font-semibold text-[#101216]">Product stage
+                    <select value={editForm.productStage} onChange={(event) => setEditForm({ ...editForm, productStage: event.target.value as CommunityProductStage })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
+                      {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{productStage}</option>)}
+                    </select>
+                  </label>
+                </div>
                 <label className="grid gap-2 text-sm font-semibold text-[#101216]">Description
                   <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
@@ -294,12 +314,12 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
             <Loader2 className="animate-spin" size={16} /> Checking
           </button>
         ) : user ? (
-          <button onClick={() => void react("Like")} className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${reactionState.liked ? "border-[#fecdd3] bg-[#fff1f2] text-[#be123c]" : "border-[#dfe3e8] bg-white hover:bg-[#f7f8fa]"}`}>
-            {busy === "Like" ? <Loader2 className="animate-spin" size={16} /> : <Heart size={16} />} {idea.likeCount} {labels.likeText}
+          <button onClick={() => void react("Helpful")} className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${reactionState.helpful || reactionState.liked ? "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]" : "border-[#dfe3e8] bg-white hover:bg-[#f7f8fa]"}`}>
+            {busy === "Helpful" ? <Loader2 className="animate-spin" size={16} /> : <ThumbsUp size={16} />} {idea.helpfulCount} Helpful
           </button>
         ) : (
           <EmailLogin className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
-            <Heart size={16} /> {idea.likeCount} {labels.likeText}
+            <ThumbsUp size={16} /> {idea.helpfulCount} Helpful
           </EmailLogin>
         )}
         {!sessionChecked ? (
@@ -339,6 +359,18 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
               <label className="grid gap-2 text-sm font-semibold">Category
                 <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
               </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="grid gap-2 text-sm font-semibold">Post type
+                  <select value={editForm.postType} onChange={(event) => setEditForm({ ...editForm, postType: event.target.value as CommunityPostType })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
+                    {communityPostTypes.map((postType) => <option key={postType} value={postType}>{postType}</option>)}
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm font-semibold">Product stage
+                  <select value={editForm.productStage} onChange={(event) => setEditForm({ ...editForm, productStage: event.target.value as CommunityProductStage })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
+                    {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{productStage}</option>)}
+                  </select>
+                </label>
+              </div>
               <label className="grid gap-2 text-sm font-semibold">Description
                 <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
               </label>

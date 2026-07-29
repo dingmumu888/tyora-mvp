@@ -3,15 +3,21 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Loader2, MessageSquare, Save, Settings2, Trash2, X } from "lucide-react";
-import { CommunityIdea, CommunityModerationStatus } from "@/lib/community";
+import {
+  communityPostTypes,
+  communityProductStages,
+  CommunityIdea,
+  CommunityModerationStatus
+} from "@/lib/community";
 import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
 import { AdminActionBar, AdminEmptyState, AdminMetricCard } from "@/components/admin/admin-ui";
 import { CommunityPageContent, CustomPageContent, defaultContent, SiteContent } from "@/lib/storage";
 
-type QueueFilter = "pending" | "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
+type QueueFilter = "pending" | "unanswered" | "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
 
 const buckets: Array<[QueueFilter, string]> = [
   ["pending", "Pending Approval"],
+  ["unanswered", "Awaiting First Answer"],
   ["needs-reply", "Needs Reply"],
   ["replied", "Replied"],
   ["featured", "Homepage Featured"],
@@ -51,6 +57,8 @@ function normalizeCommunityIdea(value: unknown): CommunityIdea {
     title: idea.title || "Untitled idea",
     description: idea.description || "",
     category: idea.category || "General",
+    postType: idea.postType || "Idea Feedback",
+    productStage: idea.productStage || "Concept",
     country: idea.country || "Not specified",
     imageUrls: Array.isArray(idea.imageUrls) ? idea.imageUrls : [],
     questions: Array.isArray(idea.questions) ? idea.questions : [],
@@ -61,6 +69,7 @@ function normalizeCommunityIdea(value: unknown): CommunityIdea {
     homepageFeatured: Boolean(idea.homepageFeatured),
     comments: Array.isArray(idea?.comments) ? idea.comments : [],
     likeCount: Number(idea?.likeCount || 0),
+    helpfulCount: Number(idea?.helpfulCount ?? idea?.likeCount ?? 0),
     interestedCount: Number(idea?.interestedCount || 0),
     hotScore: Number(idea.hotScore || 0),
     isHot: Boolean(idea.isHot),
@@ -107,6 +116,7 @@ export default function CommunityAdminClient() {
   const counts = useMemo(() => {
     return {
       pending: ideas.filter((idea) => idea.moderationStatus === "Pending").length,
+      unanswered: ideas.filter((idea) => idea.moderationStatus === "Approved" && !idea.hidden && idea.comments.length === 0 && idea.review?.assessmentStatus !== "Published").length,
       "needs-reply": ideas.filter((idea) => !idea.review && !idea.hidden).length,
       replied: ideas.filter((idea) => idea.review && !idea.hidden).length,
       featured: ideas.filter((idea) => idea.homepageFeatured && !idea.hidden).length,
@@ -122,7 +132,11 @@ export default function CommunityAdminClient() {
     setSaving(idea.slug);
     const body = {
       status: form.get("status"),
+      postType: form.get("postType"),
+      productStage: form.get("productStage"),
       moderationStatus: form.get("moderationStatus"),
+      authorExpertRole: form.get("authorExpertRole"),
+      authorExpertVerified: form.get("authorExpertVerified") === "on",
       hidden: form.get("hidden") === "on",
       locked: form.get("locked") === "on",
       pinned: form.get("pinned") === "on",
@@ -261,6 +275,7 @@ export default function CommunityAdminClient() {
 
   const filtered = ideas.filter((idea) => {
     if (active === "pending") return idea.moderationStatus === "Pending";
+    if (active === "unanswered") return idea.moderationStatus === "Approved" && !idea.hidden && idea.comments.length === 0 && idea.review?.assessmentStatus !== "Published";
     if (active === "needs-reply") return !idea.review && !idea.hidden;
     if (active === "replied") return Boolean(idea.review) && !idea.hidden;
     if (active === "featured") return idea.homepageFeatured && !idea.hidden;
@@ -290,7 +305,7 @@ export default function CommunityAdminClient() {
       activeSection="community"
       pageTitle="Ideas Moderation"
       pageDescription="Moderate public Ideas and publish structured TYORA assessments."
-      notificationCount={counts["needs-reply"]}
+      notificationCount={counts.unanswered + counts.pending}
       searchItems={ideas.slice(0, 60).map((idea) => ({
         id: `idea-${idea.id}`,
         label: idea.title,
@@ -320,7 +335,7 @@ export default function CommunityAdminClient() {
           )}
         />
 
-        <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7">
+        <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8">
           {buckets.map(([status, label]) => (
             <AdminMetricCard key={status} label={label} value={counts[status] || 0} detail="posts" active={active === status} onClick={() => setActive(status)} />
           ))}
@@ -336,6 +351,8 @@ export default function CommunityAdminClient() {
                     <p className="text-xs text-[#69707d]">{idea.id} · {idea.visibility} · {idea.author.name}</p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                       <span className="rounded-full bg-[#fff7d6] px-2.5 py-1 text-[#8a5a00]">{idea.moderationStatus}</span>
+                      <span className="rounded-full bg-[#edf4ff] px-2.5 py-1 text-[#2563eb]">{idea.postType}</span>
+                      <span className="rounded-full bg-[#f3f0ff] px-2.5 py-1 text-[#6d28d9]">{idea.productStage}</span>
                       {idea.homepageFeatured ? (
                         <span className="rounded-full bg-[#edf4ff] px-2.5 py-1 text-[#2563eb]">Homepage #{idea.homepageFeaturedOrder || "?"}</span>
                       ) : null}
@@ -346,7 +363,7 @@ export default function CommunityAdminClient() {
                     <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#59616e]">{idea.description}</p>
                     <div className="mt-4 flex flex-wrap gap-2 text-xs text-[#69707d]">
                       <span>{idea.comments.length} comments</span>
-                      <span>{idea.likeCount} likes</span>
+                      <span>{idea.helpfulCount} helpful</span>
                       <span>{idea.interestedCount} interested</span>
                     </div>
                   </div>
@@ -408,6 +425,24 @@ export default function CommunityAdminClient() {
               </label>
               <label className="flex min-h-11 items-center gap-2 self-end rounded-[14px] border border-[#dbeafe] bg-[#eff6ff] px-3 text-sm font-semibold text-[#315fbd]">
                 <input name="customEligible" type="checkbox" defaultChecked={Boolean(replyingTo.review?.customEligible)} /> Eligible for Custom
+              </label>
+            </div>
+            <div className="mt-4 grid gap-4 rounded-[18px] border border-[#e4e7ec] bg-[#f9fafb] p-4 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="grid gap-2 text-sm font-semibold">Post type
+                <select name="postType" defaultValue={replyingTo.postType} className="h-11 rounded-[14px] border border-[#dfe3e8] bg-white px-3 text-sm">
+                  {communityPostTypes.map((postType) => <option key={postType} value={postType}>{postType}</option>)}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold">Product stage
+                <select name="productStage" defaultValue={replyingTo.productStage} className="h-11 rounded-[14px] border border-[#dfe3e8] bg-white px-3 text-sm">
+                  {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{productStage}</option>)}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold">Author expert role
+                <input name="authorExpertRole" defaultValue={replyingTo.author.expertRole || ""} placeholder="Manufacturing engineer" className="h-11 rounded-[14px] border border-[#dfe3e8] bg-white px-3 text-sm" />
+              </label>
+              <label className="flex min-h-11 items-center gap-2 self-end rounded-[14px] border border-[#a8ddd7] bg-[#f1fbf9] px-3 text-sm font-semibold text-[#06756f]">
+                <input name="authorExpertVerified" type="checkbox" defaultChecked={replyingTo.author.expertVerified} /> Verified expert
               </label>
             </div>
             <label className="mt-4 grid gap-2 text-sm font-semibold">Internal moderation note
