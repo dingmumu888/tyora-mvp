@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage";
 import { prisma } from "@/lib/server/db";
 import type { PublicLeadSubmission } from "@/lib/server/lead-submission-policy";
+import { cache } from "react";
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== "string" || !value) return fallback;
@@ -123,12 +124,12 @@ function mediaData(asset: MediaAsset) {
   };
 }
 
-export async function getContent(): Promise<SiteContent> {
+export const getContent = cache(async (): Promise<SiteContent> => {
   const row = await prisma.siteContent.findUnique({
     where: { id: "default" }
   });
   return row ? normalizeContent(parseJson(row.data, defaultContent)) : defaultContent;
-}
+});
 
 export async function putContent(content: unknown): Promise<SiteContent> {
   const normalized = normalizeContent(content);

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   BadgeCheck,
@@ -92,6 +93,12 @@ function coverTone(idea: CommunityIdea) {
   return tones[idea.title.length % tones.length];
 }
 
+function canOptimizeStoryImage(src?: string) {
+  if (!src) return false;
+  return src.startsWith("/images/") ||
+    /^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/public\//.test(src);
+}
+
 function caseStatus(story: CaseStudy): CommunityStatus {
   if (story.status === "Delivered") return "Completed";
   if (story.status === "In Production") return "Manufacturing";
@@ -163,7 +170,18 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
         </div>
 
         <Link href={href} className={`relative m-2 aspect-[4/3] self-center overflow-hidden rounded-lg border border-[#e3e8ef] bg-gradient-to-br shadow-sm ${story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}`}>
-          <CommunityImage src={imageUrl} alt={title} className={`absolute inset-0 size-full ${story ? "object-cover" : "object-contain p-1.5"}`} fallbackClassName="absolute inset-0 p-3" initialsClassName="bg-white/74" />
+          {story && canOptimizeStoryImage(imageUrl) ? (
+            <Image
+              src={imageUrl!}
+              alt={title}
+              fill
+              sizes="(max-width: 639px) 104px, 124px"
+              className="object-cover"
+              style={{ objectPosition: story.coverImage.objectPosition || "center center" }}
+            />
+          ) : (
+            <CommunityImage src={imageUrl} alt={title} className={`absolute inset-0 size-full ${story ? "object-cover" : "object-contain p-1.5"}`} fallbackClassName="absolute inset-0 p-3" initialsClassName="bg-white/74" />
+          )}
         </Link>
       </div>
     </article>

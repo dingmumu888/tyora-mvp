@@ -1,5 +1,6 @@
 "use client";
 
+import NextImage from "next/image";
 import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Factory, ImagePlus, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
@@ -136,6 +137,10 @@ const publicStatusLabels: Record<SourceStatus, string> = {
   "Managed Sourcing": "Managed sourcing active",
   Completed: "Sourcing completed"
 };
+
+function isOptimizableLocalImage(value?: string) {
+  return Boolean(value?.startsWith("/images/"));
+}
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -629,8 +634,18 @@ export default function SourceClient() {
               <article key={activity.id} className="min-w-[82vw] snap-start overflow-hidden rounded-3xl border border-[#e1e7ef] bg-[#fbfcfe] sm:min-w-[360px] lg:min-w-0">
                 <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#f8fafc]">
                   {activity.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={activity.imageUrl} alt={activity.title} className="size-full object-cover" />
+                    isOptimizableLocalImage(activity.imageUrl) ? (
+                      <NextImage
+                        src={activity.imageUrl}
+                        alt={activity.title}
+                        fill
+                        sizes="(max-width: 639px) 82vw, (max-width: 1023px) 360px, 33vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={activity.imageUrl} alt={activity.title} loading="lazy" decoding="async" className="size-full object-cover" />
+                    )
                   ) : (
                     <div className="flex size-full items-center justify-center text-[#2563eb]"><PackageSearch size={42} /></div>
                   )}

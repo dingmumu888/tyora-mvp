@@ -534,8 +534,6 @@ export async function getCommunityIdeas(
   context: IdeaAccessContext = {},
   limit = 50
 ) {
-  const content = await getContent();
-  const ranking = content.communityPage;
   const requestedLimit = Number.isFinite(limit) ? Math.round(limit) : 50;
   const safeLimit = Math.min(50, Math.max(1, requestedLimit));
   const orderBy =
@@ -547,16 +545,20 @@ export async function getCommunityIdeas(
           ? [{ pinned: "desc" as const }, { updatedAt: "desc" as const }]
           : { createdAt: "desc" as const };
 
-  const rows = await prisma.communityIdea.findMany({
-    where: context.isAdmin
-      ? {}
-      : context.userId
-        ? { OR: [approvedPublicIdeaWhere, { authorId: context.userId }] }
-        : approvedPublicIdeaWhere,
-    orderBy,
-    take: sort === "trending" ? 50 : safeLimit,
-    include: ideaInclude
-  });
+  const [content, rows] = await Promise.all([
+    getContent(),
+    prisma.communityIdea.findMany({
+      where: context.isAdmin
+        ? {}
+        : context.userId
+          ? { OR: [approvedPublicIdeaWhere, { authorId: context.userId }] }
+          : approvedPublicIdeaWhere,
+      orderBy,
+      take: sort === "trending" ? 50 : safeLimit,
+      include: ideaInclude
+    })
+  ]);
+  const ranking = content.communityPage;
   const ideas = rows.map((row) => ideaToCommunityIdea(row, {
     includeAdminFields: Boolean(context.isAdmin),
     ranking
