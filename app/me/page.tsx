@@ -7,6 +7,7 @@ import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import EmailLogin from "@/components/email-login";
 import MarkNotificationsRead from "@/components/mark-notifications-read";
 import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
+import ProfileEncouragementCard from "@/components/profile-encouragement-card";
 import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityUserActivity } from "@/lib/server/community-store";
 import { getCustomInquiriesForUser } from "@/lib/server/custom-inquiry-store";
@@ -138,6 +139,7 @@ export default async function MyTyoraPage() {
             ))}
           </div>
           {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]">Set up your profile so founders know who they're talking to.</p>}
+          <ProfileEncouragementCard userId={user.id} />
           <ActivitySummary items={compactStats} ideas={ideas} comments={comments} likedIdeas={likedIdeas} interestedIdeas={interestedIdeas} />
           <ActivityMessages notifications={notifications} unreadCount={totalUnread} />
           <section id="custom-inquiries" className="mt-4 scroll-mt-24 rounded-2xl border border-[#dfe6ef] bg-[#fbfcff] p-4">

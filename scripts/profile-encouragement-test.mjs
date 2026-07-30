@@ -20,14 +20,20 @@ test("profile encouragements are CMS-managed in all public languages", async () 
   assert.match(admin, /profileEncouragements-\$\{code\}/);
 });
 
-test("the profile modal selects one stable localized message per account and day", async () => {
-  const modal = await read("components/community-profile-modal.tsx");
+test("the My TYORA profile card selects one stable localized message per account and day", async () => {
+  const [card, modal, profilePage] = await Promise.all([
+    read("components/profile-encouragement-card.tsx"),
+    read("components/community-profile-modal.tsx"),
+    read("app/me/page.tsx")
+  ]);
 
-  assert.match(modal, /dailyEncouragementIndex/);
-  assert.match(modal, /`\$\{userId\}:\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}`/);
-  assert.match(modal, /encouragements\[language\]/);
-  assert.match(modal, /fetch\("\/api\/content"/);
-  assert.match(modal, /<Sparkles/);
+  assert.match(card, /dailyEncouragementIndex/);
+  assert.match(card, /`\$\{userId\}:\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}`/);
+  assert.match(card, /encouragements\[language\]/);
+  assert.match(card, /fetch\("\/api\/content"/);
+  assert.match(card, /<Sparkles/);
+  assert.match(profilePage, /<ProfileEncouragementCard userId=\{user\.id\} \/>/);
+  assert.doesNotMatch(modal, /profileEncouragement|dailyEncouragementIndex|<Sparkles/);
 });
 
 test("default encouragements stay grounded and avoid celebrity promises", async () => {
