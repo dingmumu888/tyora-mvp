@@ -93,8 +93,34 @@ type CommonTranslation = {
   sourceExistingSubtitle: string;
 };
 
+type EmailLoginTranslation = {
+  brandSubtitle: string;
+  close: string;
+  title: string;
+  subtitle: string;
+  emailLabel: string;
+  emailHelp: string;
+  sending: string;
+  continue: string;
+  codeLabel: string;
+  verifying: string;
+  verify: string;
+  differentEmail: string;
+  successTitle: string;
+  openingProfile: string;
+  loadingProfile: string;
+  codeSent: string;
+  resumeHint: string;
+  codeExpired: string;
+  sendAgain: string;
+  resending: string;
+  sendError: string;
+  invalidCode: string;
+};
+
 export type PublicLocaleCopy = {
   common: CommonTranslation;
+  login: EmailLoginTranslation;
   home: HomeTranslation;
 };
 
@@ -123,6 +149,30 @@ const en: PublicLocaleCopy = {
     privateCustomSubtitle: "Send a confidential concept directly to TYORA.",
     sourceExisting: "Source Existing Product",
     sourceExistingSubtitle: "Upload a product reference for supplier check."
+  },
+  login: {
+    brandSubtitle: "Product creator community",
+    close: "Close login",
+    title: "Log in to TYORA",
+    subtitle: "Continue discussing and building product ideas.",
+    emailLabel: "Email",
+    emailHelp: "We'll send you a secure 6-digit verification code.",
+    sending: "Sending...",
+    continue: "Continue",
+    codeLabel: "6-digit code",
+    verifying: "Verifying...",
+    verify: "Verify & Continue",
+    differentEmail: "Use a different email",
+    successTitle: "Login successful.",
+    openingProfile: "Opening My TYORA...",
+    loadingProfile: "Loading profile",
+    codeSent: "A 6-digit code was sent to {email}. Time remaining: {time}.",
+    resumeHint: "Closing this window will not cancel the code. Reopen Email Login before it expires to continue.",
+    codeExpired: "This code has expired. Send a new code to continue.",
+    sendAgain: "Send a new code",
+    resending: "Sending a new code...",
+    sendError: "Unable to send a code right now. Please try again later.",
+    invalidCode: "The code is invalid or has expired."
   },
   home: {
     navigation: {
@@ -208,6 +258,30 @@ const zhCN: PublicLocaleCopy = {
     privateCustom: "私密定制评估", privateCustomSubtitle: "将保密产品概念直接发送给 TYORA。",
     sourceExisting: "寻找现有产品", sourceExistingSubtitle: "上传产品参考，核查供应商。"
   },
+  login: {
+    brandSubtitle: "产品创作者社区",
+    close: "关闭登录窗口",
+    title: "登录 TYORA",
+    subtitle: "继续讨论并推进你的产品创意。",
+    emailLabel: "邮箱",
+    emailHelp: "我们会向你发送一个安全的 6 位验证码。",
+    sending: "正在发送…",
+    continue: "继续",
+    codeLabel: "6 位验证码",
+    verifying: "正在验证…",
+    verify: "验证并继续",
+    differentEmail: "使用其他邮箱",
+    successTitle: "登录成功",
+    openingProfile: "正在打开“我的 TYORA”…",
+    loadingProfile: "正在加载个人资料",
+    codeSent: "已向 {email} 发送 6 位验证码，剩余有效时间：{time}。",
+    resumeHint: "关闭此窗口不会使验证码失效；有效期内再次打开“邮箱登录”可继续输入。",
+    codeExpired: "验证码已过期，请重新发送后继续。",
+    sendAgain: "重新发送验证码",
+    resending: "正在重新发送…",
+    sendError: "暂时无法发送验证码，请稍后再试。",
+    invalidCode: "验证码无效或已过期。"
+  },
   home: {
     navigation: { ideas: "创意案例", custom: "定制生产", source: "产品找货", process: "服务流程", pricing: "价格", account: "我的 TYORA" },
     communityEyebrow: "创意与制造案例",
@@ -270,6 +344,30 @@ const es: PublicLocaleCopy = {
     publicIdea: "Idea pública", publicIdeaSubtitle: "Comparte una idea para que la comunidad y TYORA la revisen.",
     privateCustom: "Revisión privada", privateCustomSubtitle: "Envía un concepto confidencial directamente a TYORA.",
     sourceExisting: "Buscar un producto", sourceExistingSubtitle: "Sube una referencia para verificar proveedores."
+  },
+  login: {
+    brandSubtitle: "Comunidad de creadores de productos",
+    close: "Cerrar acceso",
+    title: "Inicia sesión en TYORA",
+    subtitle: "Sigue conversando y desarrollando tus ideas de producto.",
+    emailLabel: "Correo electrónico",
+    emailHelp: "Te enviaremos un código seguro de 6 dígitos.",
+    sending: "Enviando...",
+    continue: "Continuar",
+    codeLabel: "Código de 6 dígitos",
+    verifying: "Verificando...",
+    verify: "Verificar y continuar",
+    differentEmail: "Usar otro correo",
+    successTitle: "Sesión iniciada.",
+    openingProfile: "Abriendo Mi TYORA...",
+    loadingProfile: "Cargando perfil",
+    codeSent: "Enviamos un código de 6 dígitos a {email}. Tiempo restante: {time}.",
+    resumeHint: "Cerrar esta ventana no cancela el código. Vuelve a abrir el acceso por email antes de que caduque.",
+    codeExpired: "El código ha caducado. Envía uno nuevo para continuar.",
+    sendAgain: "Enviar un código nuevo",
+    resending: "Enviando un código nuevo...",
+    sendError: "No se puede enviar el código ahora. Inténtalo más tarde.",
+    invalidCode: "El código no es válido o ha caducado."
   },
   home: {
     navigation: { ideas: "Ideas", custom: "Fabricación a medida", source: "Buscar productos", process: "Cómo funciona", pricing: "Precios", account: "Mi TYORA" },
@@ -334,6 +432,30 @@ const fr: PublicLocaleCopy = {
     privateCustom: "Étude privée", privateCustomSubtitle: "Envoyez un concept confidentiel directement à TYORA.",
     sourceExisting: "Sourcer un produit", sourceExistingSubtitle: "Ajoutez une référence pour vérifier les fournisseurs."
   },
+  login: {
+    brandSubtitle: "Communauté de créateurs de produits",
+    close: "Fermer la connexion",
+    title: "Connectez-vous à TYORA",
+    subtitle: "Continuez à discuter et à développer vos idées de produits.",
+    emailLabel: "E-mail",
+    emailHelp: "Nous vous enverrons un code sécurisé à 6 chiffres.",
+    sending: "Envoi...",
+    continue: "Continuer",
+    codeLabel: "Code à 6 chiffres",
+    verifying: "Vérification...",
+    verify: "Vérifier et continuer",
+    differentEmail: "Utiliser un autre e-mail",
+    successTitle: "Connexion réussie.",
+    openingProfile: "Ouverture de Mon TYORA...",
+    loadingProfile: "Chargement du profil",
+    codeSent: "Un code à 6 chiffres a été envoyé à {email}. Temps restant : {time}.",
+    resumeHint: "Fermer cette fenêtre n’annule pas le code. Rouvrez la connexion avant son expiration.",
+    codeExpired: "Ce code a expiré. Envoyez-en un nouveau pour continuer.",
+    sendAgain: "Envoyer un nouveau code",
+    resending: "Envoi d’un nouveau code...",
+    sendError: "Impossible d’envoyer un code pour le moment. Réessayez plus tard.",
+    invalidCode: "Le code est incorrect ou a expiré."
+  },
   home: {
     navigation: { ideas: "Idées", custom: "Fabrication sur mesure", source: "Sourcing produit", process: "Fonctionnement", pricing: "Tarifs", account: "Mon TYORA" },
     communityEyebrow: "Idées et preuves de fabrication",
@@ -397,6 +519,30 @@ const de: PublicLocaleCopy = {
     privateCustom: "Private Prüfung", privateCustomSubtitle: "Sende ein vertrauliches Konzept direkt an TYORA.",
     sourceExisting: "Produkt sourcen", sourceExistingSubtitle: "Lade eine Referenz zur Lieferantenprüfung hoch."
   },
+  login: {
+    brandSubtitle: "Community für Produktentwickler",
+    close: "Anmeldung schließen",
+    title: "Bei TYORA anmelden",
+    subtitle: "Diskutiere weiter und entwickle deine Produktideen.",
+    emailLabel: "E-Mail",
+    emailHelp: "Wir senden dir einen sicheren 6-stelligen Bestätigungscode.",
+    sending: "Wird gesendet...",
+    continue: "Weiter",
+    codeLabel: "6-stelliger Code",
+    verifying: "Wird geprüft...",
+    verify: "Prüfen und fortfahren",
+    differentEmail: "Andere E-Mail verwenden",
+    successTitle: "Anmeldung erfolgreich.",
+    openingProfile: "Mein TYORA wird geöffnet...",
+    loadingProfile: "Profil wird geladen",
+    codeSent: "Ein 6-stelliger Code wurde an {email} gesendet. Verbleibende Zeit: {time}.",
+    resumeHint: "Das Schließen dieses Fensters macht den Code nicht ungültig. Öffne die Anmeldung vor Ablauf erneut.",
+    codeExpired: "Der Code ist abgelaufen. Sende einen neuen Code, um fortzufahren.",
+    sendAgain: "Neuen Code senden",
+    resending: "Neuer Code wird gesendet...",
+    sendError: "Der Code kann derzeit nicht gesendet werden. Versuche es später erneut.",
+    invalidCode: "Der Code ist ungültig oder abgelaufen."
+  },
   home: {
     navigation: { ideas: "Ideen", custom: "Sonderanfertigung", source: "Produkte sourcen", process: "So funktioniert es", pricing: "Preise", account: "Mein TYORA" },
     communityEyebrow: "Ideen und Fertigungsnachweise",
@@ -459,6 +605,30 @@ const pt: PublicLocaleCopy = {
     publicIdea: "Ideia pública", publicIdeaSubtitle: "Compartilhe uma ideia para análise da comunidade e da TYORA.",
     privateCustom: "Análise privada", privateCustomSubtitle: "Envie um conceito confidencial diretamente à TYORA.",
     sourceExisting: "Encontrar produto", sourceExistingSubtitle: "Envie uma referência para verificar fornecedores."
+  },
+  login: {
+    brandSubtitle: "Comunidade de criadores de produtos",
+    close: "Fechar login",
+    title: "Entre na TYORA",
+    subtitle: "Continue discutindo e desenvolvendo suas ideias de produto.",
+    emailLabel: "E-mail",
+    emailHelp: "Enviaremos um código de verificação seguro de 6 dígitos.",
+    sending: "Enviando...",
+    continue: "Continuar",
+    codeLabel: "Código de 6 dígitos",
+    verifying: "Verificando...",
+    verify: "Verificar e continuar",
+    differentEmail: "Usar outro e-mail",
+    successTitle: "Login realizado.",
+    openingProfile: "Abrindo Meu TYORA...",
+    loadingProfile: "Carregando perfil",
+    codeSent: "Um código de 6 dígitos foi enviado para {email}. Tempo restante: {time}.",
+    resumeHint: "Fechar esta janela não cancela o código. Reabra o login antes que ele expire.",
+    codeExpired: "Este código expirou. Envie um novo código para continuar.",
+    sendAgain: "Enviar novo código",
+    resending: "Enviando novo código...",
+    sendError: "Não foi possível enviar um código agora. Tente novamente mais tarde.",
+    invalidCode: "O código é inválido ou expirou."
   },
   home: {
     navigation: { ideas: "Ideias", custom: "Fabricação personalizada", source: "Encontrar produtos", process: "Como funciona", pricing: "Preços", account: "Meu TYORA" },

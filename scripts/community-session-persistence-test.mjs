@@ -35,3 +35,25 @@ test("the login dialog explains persistent login using localized copy", async ()
   assert.match(i18n, /rememberLogin:\s*string/);
   assert.equal((i18n.match(/rememberLogin:/g) || []).length, 7);
 });
+
+test("pending email verification survives an accidental close until the real code expiry", async () => {
+  const [login, constants, requestRoute, emailLoginServer, i18n] = await Promise.all([
+    read("components/email-login.tsx"),
+    read("lib/email-login-constants.ts"),
+    read("app/api/community/auth/email/request/route.ts"),
+    read("lib/server/email-login.ts"),
+    read("lib/public-i18n.ts")
+  ]);
+
+  assert.match(constants, /EMAIL_LOGIN_CODE_TTL_MINUTES = 10/);
+  assert.match(login, /PENDING_EMAIL_LOGIN_STORAGE_KEY/);
+  assert.match(login, /window\.localStorage\.setItem/);
+  assert.match(login, /readPendingEmailLogin/);
+  assert.match(login, /formatCountdown/);
+  assert.match(login, /codeExpired/);
+  assert.match(login, /copy\.login\.sendAgain/);
+  assert.match(requestRoute, /expiresInSeconds:\s*EMAIL_LOGIN_CODE_TTL_SECONDS/);
+  assert.match(emailLoginServer, /EMAIL_LOGIN_CODE_TTL_MINUTES \* 60 \* 1000/);
+  assert.equal((i18n.match(/brandSubtitle:/g) || []).length, 7);
+  assert.equal((i18n.match(/resumeHint:/g) || []).length, 7);
+});

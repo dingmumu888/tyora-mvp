@@ -2,6 +2,7 @@ import { EmailCodeCard } from "@/lib/email/components/EmailCodeCard";
 import { EmailFooter } from "@/lib/email/components/EmailFooter";
 import { EmailHeader } from "@/lib/email/components/EmailHeader";
 import { EmailLayout } from "@/lib/email/components/EmailLayout";
+import { EMAIL_LOGIN_CODE_TTL_MINUTES } from "@/lib/email-login-constants";
 
 type VerificationEmailInput = {
   code: string;
@@ -9,7 +10,7 @@ type VerificationEmailInput = {
 
 export function renderVerificationEmail({ code }: VerificationEmailInput) {
   const subject = `TYORA code: ${code}`;
-  const preheader = `Your TYORA login code is ${code}. Expires in 10 minutes.`;
+  const preheader = `Your TYORA login code is ${code}. Expires in ${EMAIL_LOGIN_CODE_TTL_MINUTES} minutes.`;
   const html = EmailLayout({
     preheader,
     children: `${EmailHeader()}
@@ -26,7 +27,7 @@ ${EmailCodeCard({ code })}
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
   <tr>
     <td>
-      <p class="tyora-muted" style="margin:0;font-size:14px;line-height:23px;color:#566172;">This verification code expires in 10 minutes.</p>
+      <p class="tyora-muted" style="margin:0;font-size:14px;line-height:23px;color:#566172;">This verification code expires in ${EMAIL_LOGIN_CODE_TTL_MINUTES} minutes.</p>
       <p class="tyora-muted" style="margin:8px 0 0;font-size:14px;line-height:23px;color:#566172;">Never share this code with anyone. TYORA staff will never ask for your verification code.</p>
       <p class="tyora-muted" style="margin:24px 0 0;font-size:14px;line-height:23px;color:#566172;">Need help? <a href="mailto:support@tyora.io" style="color:#2563eb;text-decoration:none;">support@tyora.io</a></p>
     </td>
@@ -36,7 +37,7 @@ ${EmailFooter()}`
   });
   const text = [
     `Your TYORA login code is ${code}.`,
-    "This code expires in 10 minutes.",
+    `This code expires in ${EMAIL_LOGIN_CODE_TTL_MINUTES} minutes.`,
     "If you did not request it, ignore this email.",
     "",
     "TYORA",
@@ -51,7 +52,7 @@ ${EmailFooter()}`
     "",
     code,
     "",
-    "This verification code expires in 10 minutes.",
+    `This verification code expires in ${EMAIL_LOGIN_CODE_TTL_MINUTES} minutes.`,
     "Never share this code with anyone.",
     "TYORA staff will never ask for your verification code.",
     "",

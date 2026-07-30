@@ -1,5 +1,6 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { renderVerificationEmail } from "@/lib/email";
+import { EMAIL_LOGIN_CODE_TTL_MINUTES } from "@/lib/email-login-constants";
 import { makeCommunityId, usernameFromEmail } from "@/lib/community";
 import { prisma } from "@/lib/server/db";
 import {
@@ -16,7 +17,6 @@ import {
   verificationThrottleKeys
 } from "@/lib/server/email-verification-throttle";
 
-const CODE_TTL_MINUTES = 10;
 const REQUEST_WINDOW_MINUTES = 10;
 const MAX_REQUESTS_PER_WINDOW = 3;
 export type EmailLoginStage =
@@ -143,7 +143,7 @@ export async function requestEmailLoginCode(input: unknown, trace?: EmailLoginTr
       id: loginCodeId,
       email,
       codeHash: hashCode(email, code),
-      expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000)
+      expiresAt: new Date(Date.now() + EMAIL_LOGIN_CODE_TTL_MINUTES * 60 * 1000)
     }
   });
   trace?.("create_login_code", {

@@ -4,11 +4,12 @@ import path from "node:path";
 const root = process.cwd();
 const componentPath = path.join(root, "components", "email-login.tsx");
 const source = fs.readFileSync(componentPath, "utf8");
+const i18n = fs.readFileSync(path.join(root, "lib", "public-i18n.ts"), "utf8");
 
 const checks = [
   {
     name: "success screen tells the user My TYORA is opening",
-    pass: source.includes("Opening My TYORA")
+    pass: source.includes("copy.login.openingProfile") && i18n.includes('openingProfile: "Opening My TYORA..."')
   },
   {
     name: "success screen uses a loading spinner while redirecting",

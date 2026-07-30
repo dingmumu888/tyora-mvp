@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { EMAIL_LOGIN_CODE_TTL_SECONDS } from "@/lib/email-login-constants";
 import { EmailDeliveryPolicyError } from "@/lib/server/email-delivery-policy";
 import { EmailLoginStage, ResendEmailError, requestEmailLoginCode } from "@/lib/server/email-login";
 
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     success: true,
-    message: "If the email can receive TYORA login codes, a code has been sent."
+    message: "If the email can receive TYORA login codes, a code has been sent.",
+    expiresInSeconds: EMAIL_LOGIN_CODE_TTL_SECONDS
   });
 }

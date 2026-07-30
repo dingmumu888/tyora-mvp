@@ -1,0 +1,3 @@
+export const EMAIL_LOGIN_CODE_TTL_MINUTES = 10;
+export const EMAIL_LOGIN_CODE_TTL_SECONDS = EMAIL_LOGIN_CODE_TTL_MINUTES * 60;
+export const PENDING_EMAIL_LOGIN_STORAGE_KEY = "tyora-pending-email-login";
