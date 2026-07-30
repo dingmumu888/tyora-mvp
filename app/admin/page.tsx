@@ -2414,7 +2414,7 @@ function CaseStudiesEditor({
               <Field label="Timeline"><Input value={story.timeline} onChange={(event) => updateCase(index, { timeline: event.target.value })} /></Field>
             </div>
             <div className="mt-4">
-              <CmsImageField label="Homepage case cover" value={story.coverImage} defaultValue={defaultContent.cases[0].coverImage} media={media} onUpload={addMedia} onChange={(coverImage) => updateCase(index, { coverImage })} />
+              <CmsImageField label="Homepage case cover" value={story.coverImage} defaultValue={story.coverImage} media={media} onUpload={addMedia} onChange={(coverImage) => updateCase(index, { coverImage })} />
             </div>
             <div className="mt-4 grid gap-4 lg:grid-cols-3">
               <MediaUploader label={t("Concept Image")} value={story.conceptImage} media={media} allowed={["image"]} onUpload={addMedia} onChange={(url) => updateCase(index, { conceptImage: url })} onDelete={() => updateCase(index, { conceptImage: "" })} t={t} />

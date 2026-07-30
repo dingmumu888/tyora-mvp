@@ -407,6 +407,37 @@ export const defaultTeamMembers: TeamMember[] = [
   { id: "kevin", name: "Kevin", avatar: "K", email: "kevin@tyora.co", role: "Project Manager", active: true }
 ];
 
+const emptyCaseTemplate: CaseStudy = {
+  id: "",
+  name: "New Project",
+  slug: "new-project",
+  status: "Concept",
+  country: "",
+  category: "",
+  shortDescription: "",
+  concept: "Concept",
+  manufacturingReview: "",
+  suggestedMaterial: "",
+  suggestedProcess: "",
+  prototype: "Prototype",
+  manufacturing: "Manufacturing",
+  final: "Final Product",
+  conceptImage: "",
+  prototypeImage: "",
+  manufacturingImage: "",
+  finalImage: "",
+  coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
+  moq: "",
+  timeline: "",
+  featured: false,
+  projectType: "Real Project",
+  badgeLabel: "TYORA Case",
+  ctaText: "View Custom Manufacturing",
+  ctaHref: "/custom",
+  visible: true,
+  order: 1
+};
+
 export const defaultContent: SiteContent = {
   brandName: "TYORA",
   logoImage: "/images/tyora-logo-mark-v1.png",
@@ -833,135 +864,7 @@ export const defaultContent: SiteContent = {
       bottomNote: "If design, material, packaging, supplier, or quality standard changes, TYORA will review pricing again."
     }
   ],
-  cases: [
-    {
-      id: "tyora-phone-stand-demonstration",
-      name: "Magnetic Phone Stand Development",
-      slug: "tyora-phone-stand-demonstration",
-      status: "Prototype Approved",
-      country: "",
-      category: "Phone & Device Accessories",
-      shortDescription:
-        "A TYORA demonstration case showing how a rough accessory concept can be reviewed before factory matching.",
-      concept: "A compact magnetic stand intended to fold flat and support common phone sizes.",
-      manufacturingReview: "The hinge, magnet stack, device clearance, and surface finish need confirmation before quotation.",
-      suggestedMaterial: "CNC aluminium prototype followed by die-cast aluminium review for suitable production volume.",
-      suggestedProcess: "CAD refinement, functional prototype, hinge-cycle review, then supplier quotation against confirmed dimensions.",
-      prototype: "Functional form and hinge movement reviewed before production tooling decisions.",
-      manufacturing: "Factory matching begins only after the dimensions, finish, magnet requirement, and target quantity are confirmed.",
-      final: "Demonstration only. No customer production result is claimed.",
-      conceptImage: "/images/tyora-manufacturing-campaign-v1.png",
-      prototypeImage: "/images/tyora-manufacturing-campaign-v1.png",
-      manufacturingImage: "/images/tyora-manufacturing-campaign-v1.png",
-      finalImage: "/images/tyora-manufacturing-campaign-v1.png",
-      coverImage: {
-        desktopUrl: "/images/tyora-manufacturing-campaign-v1.png",
-        mobileUrl: "",
-        alt: "Magnetic phone stand concept and prototype on a manufacturing workbench",
-        objectPosition: "center center",
-        visible: true
-      },
-      moq: "Confirmed after material and process selection",
-      timeline: "Confirmed after prototype scope",
-      featured: true,
-      projectType: "Demonstration Project",
-        badgeLabel: "TYORA Case",
-        ctaText: "Review Custom Path",
-        ctaHref: "/custom",
-        visible: true,
-      order: 1
-    },
-    {
-      id: "magnetic-phone-stand",
-      name: "Magnetic Phone Stand",
-      slug: "magnetic-phone-stand",
-      status: "Delivered",
-      country: "United States",
-      category: "Consumer Electronics",
-      shortDescription: "A foldable magnetic phone stand developed from concept to shipment.",
-      concept: "Concept",
-      manufacturingReview: "",
-      suggestedMaterial: "",
-      suggestedProcess: "",
-      prototype: "Prototype",
-      manufacturing: "",
-      final: "Final Product",
-      conceptImage: "",
-      prototypeImage: "",
-      manufacturingImage: "",
-      finalImage: "",
-      coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
-      moq: "",
-      timeline: "",
-      featured: false,
-      projectType: "Demonstration Project",
-        badgeLabel: "TYORA Case",
-        ctaText: "View Custom Manufacturing",
-        ctaHref: "/custom",
-        visible: false,
-      order: 2
-    },
-    {
-      id: "capybara-night-light",
-      name: "Capybara Night Light",
-      slug: "capybara-night-light",
-      status: "In Production",
-      country: "United States",
-      category: "Home & Lifestyle",
-      shortDescription: "A playful night light prepared for small-batch production.",
-      concept: "Concept",
-      manufacturingReview: "",
-      suggestedMaterial: "",
-      suggestedProcess: "",
-      prototype: "Prototype",
-      manufacturing: "",
-      final: "Final Product",
-      conceptImage: "",
-      prototypeImage: "",
-      manufacturingImage: "",
-      finalImage: "",
-      coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
-      moq: "",
-      timeline: "",
-      featured: false,
-      projectType: "Demonstration Project",
-        badgeLabel: "TYORA Case",
-        ctaText: "View Custom Manufacturing",
-        ctaHref: "/custom",
-        visible: false,
-      order: 3
-    },
-    {
-      id: "pet-grooming-tool",
-      name: "Pet Grooming Tool",
-      slug: "pet-grooming-tool",
-      status: "Prototype Approved",
-      country: "United States",
-      category: "Pet Products",
-      shortDescription: "A pet care product refined through prototype review.",
-      concept: "Concept",
-      manufacturingReview: "",
-      suggestedMaterial: "",
-      suggestedProcess: "",
-      prototype: "Prototype",
-      manufacturing: "",
-      final: "Final Product",
-      conceptImage: "",
-      prototypeImage: "",
-      manufacturingImage: "",
-      finalImage: "",
-      coverImage: { desktopUrl: "", mobileUrl: "", alt: "", objectPosition: "center center", visible: false },
-      moq: "",
-      timeline: "",
-      featured: false,
-      projectType: "Demonstration Project",
-        badgeLabel: "TYORA Case",
-        ctaText: "View Custom Manufacturing",
-        ctaHref: "/custom",
-        visible: false,
-      order: 4
-    }
-  ]
+  cases: []
 };
 
 const legacyContent = {
@@ -1460,7 +1363,7 @@ function normalizeCases(value: unknown): CaseStudy[] {
     .map((entry, index) => {
       const item = entry as Partial<CaseStudy>;
       const storedId = typeof item.id === "string" ? item.id : "";
-      const fb = defaultContent.cases.find((study) => study.id === storedId) || defaultContent.cases[index] || defaultContent.cases[0];
+      const fb = defaultContent.cases.find((study) => study.id === storedId) || defaultContent.cases[index] || emptyCaseTemplate;
       const name = stringValue(item.name, fb.name);
       const status = ["Concept", "Prototype Approved", "In Production", "Delivered"].includes(item.status || "")
         ? item.status

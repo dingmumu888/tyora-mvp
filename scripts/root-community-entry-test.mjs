@@ -32,3 +32,25 @@ test("community is the primary indexed entry and logo stays in Ideas", async () 
   assert.doesNotMatch(sitemap, /\{ path: "\/",/);
   assert.match(askPage, /<Link href="\/ask"[^>]+aria-label=\{`\$\{content\.brandName\} ideas`\}>/);
 });
+
+test("a clean installation starts with no fabricated community case cards", async () => {
+  const [storage, i18n, askPage, admin, dataStore] = await Promise.all([
+    read("lib/storage.ts"),
+    read("lib/i18n.ts"),
+    read("app/ask/page.tsx"),
+    read("app/admin/page.tsx"),
+    read("lib/server/data-store.ts")
+  ]);
+
+  assert.match(storage, /cases: \[\]\n};/);
+  assert.doesNotMatch(storage, /id: "magnetic-phone-stand"/);
+  assert.doesNotMatch(storage, /id: "capybara-night-light"/);
+  assert.doesNotMatch(storage, /id: "pet-grooming-tool"/);
+  assert.match(i18n, /cases: \[\]\n};/);
+  assert.match(askPage, /<StarterCommunityState \/>/);
+  assert.doesNotMatch(admin, /defaultContent\.cases\[0\]\.coverImage/);
+  assert.match(dataStore, /function withoutDemonstrationCases/);
+  assert.match(dataStore, /projectType !== "Demonstration Project"/);
+  assert.match(dataStore, /sanitized\.removedCount > 0/);
+  assert.match(dataStore, /prisma\.siteContent\.update/);
+});

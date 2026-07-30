@@ -70,29 +70,7 @@ export const zhContent: SiteContent = {
     }
   ],
   trustBadges: ["产品开发", "制造伙伴匹配", "样品管理", "质量检查", "生产跟进", "发货支持"],
-  cases: [
-    {
-      ...defaultContent.cases[0],
-      name: "磁吸手机支架",
-      concept: "概念图",
-      prototype: "样品图",
-      final: "成品图"
-    },
-    {
-      ...defaultContent.cases[1],
-      name: "水豚小夜灯",
-      concept: "概念图",
-      prototype: "样品图",
-      final: "成品图"
-    },
-    {
-      ...defaultContent.cases[2],
-      name: "宠物美容工具",
-      concept: "概念图",
-      prototype: "样品图",
-      final: "成品图"
-    }
-  ]
+  cases: []
 };
 
 export const ui = {

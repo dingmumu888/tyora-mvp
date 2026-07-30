@@ -42,6 +42,24 @@ function withProfileEncouragementDefaults(value: unknown) {
   };
 }
 
+function withoutDemonstrationCases(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { value, removedCount: 0 };
+  }
+  const content = value as Record<string, unknown>;
+  if (!Array.isArray(content.cases)) {
+    return { value, removedCount: 0 };
+  }
+  const cases = content.cases.filter((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return true;
+    return (entry as Record<string, unknown>).projectType !== "Demonstration Project";
+  });
+  return {
+    value: cases.length === content.cases.length ? value : { ...content, cases },
+    removedCount: content.cases.length - cases.length
+  };
+}
+
 function dateToIso(value: Date | string | null | undefined) {
   if (!value) return new Date().toISOString();
   return value instanceof Date ? value.toISOString() : value;
@@ -148,11 +166,19 @@ export const getContent = cache(async (): Promise<SiteContent> => {
     where: { id: "default" }
   });
   const stored = row ? parseJson(row.data, defaultContent) : defaultContent;
-  return normalizeContent(withProfileEncouragementDefaults(stored));
+  const sanitized = withoutDemonstrationCases(stored);
+  if (row && sanitized.removedCount > 0) {
+    await prisma.siteContent.update({
+      where: { id: "default" },
+      data: { data: JSON.stringify(sanitized.value) }
+    });
+  }
+  return normalizeContent(withProfileEncouragementDefaults(sanitized.value));
 });
 
 export async function putContent(content: unknown): Promise<SiteContent> {
-  const normalized = normalizeContent(withProfileEncouragementDefaults(content));
+  const sanitized = withoutDemonstrationCases(content);
+  const normalized = normalizeContent(withProfileEncouragementDefaults(sanitized.value));
   await prisma.siteContent.upsert({
     where: { id: "default" },
     create: {
