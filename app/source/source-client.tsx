@@ -6,6 +6,7 @@ import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Factory, ImagePlus, MapPin, PackageSearch, ShieldCheck } from "lucide-react";
 import CommunityText from "@/components/community-text";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicUploadImagePreview from "@/components/public-upload-image-preview";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import SourceWeeklyShowcase from "@/components/source-weekly-showcase";
 import { usePublicLanguage } from "@/components/public-language-provider";
@@ -14,6 +15,7 @@ import { callingCodeForCountry } from "@/lib/country-calling-codes";
 import { PublicSourceActivity, sourceNeedTypes, SourceNeedType, SourceStatus } from "@/lib/source";
 import { normalizeOptionalProductLink, normalizeWhatsAppNumber } from "@/lib/source-contact";
 import { defaultContent, loadContent, SiteContent } from "@/lib/storage";
+import { preparePublicImage } from "@/lib/public-image-processing";
 import { PRIVATE_CUSTOM_REVIEW_WHATSAPP_URL } from "@/lib/whatsapp";
 
 type FormState = {
@@ -54,7 +56,6 @@ const inputClass = "min-h-11 w-full rounded-2xl border border-[#dfe6ef] bg-white
 const textareaClass = `${inputClass} min-h-28 resize-none py-3 leading-6`;
 
 const MAX_SOURCE_IMAGES = 9;
-const SOURCE_IMAGE_MAX_DIMENSION = 1200;
 const SOURCE_IMAGE_MAX_DATA_URL_LENGTH = 280000;
 const MAX_SOURCE_REQUEST_BYTES = 3600000;
 
@@ -98,53 +99,14 @@ function isOptimizableLocalImage(value?: string) {
   return Boolean(value?.startsWith("/images/"));
 }
 
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Unable to read image."));
-    reader.readAsDataURL(file);
-  });
-}
-
-function loadImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("This image format is not supported by your browser."));
-    image.src = src;
-  });
-}
-
 async function normalizeSourceImage(file: File) {
-  const source = await fileToDataUrl(file);
-  const image = await loadImage(source);
-  let maxDimension = SOURCE_IMAGE_MAX_DIMENSION;
-  let quality = 0.82;
-  let result = "";
-
-  for (let attempt = 0; attempt < 7; attempt += 1) {
-    const scale = Math.min(1, maxDimension / image.naturalWidth, maxDimension / image.naturalHeight);
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Unable to prepare this image.");
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    result = canvas.toDataURL("image/jpeg", quality);
-    if (result.length <= SOURCE_IMAGE_MAX_DATA_URL_LENGTH) return result;
-    maxDimension = Math.max(600, Math.round(maxDimension * 0.82));
-    quality = Math.max(0.52, quality - 0.06);
-  }
-
-  if (result.length > SOURCE_IMAGE_MAX_DATA_URL_LENGTH) {
-    throw new Error(`Image ${file.name || "file"} is too large to prepare. Please choose a smaller image.`);
-  }
-  return result;
+  const prepared = await preparePublicImage(file, {
+    maxDimension: 1200,
+    quality: 0.82,
+    maxDataUrlLength: SOURCE_IMAGE_MAX_DATA_URL_LENGTH,
+    background: "#ffffff"
+  });
+  return prepared.dataUrl;
 }
 
 type SourceApiPayload = { success?: boolean; message?: string; data?: { id?: string } };
@@ -438,41 +400,35 @@ export default function SourceClient() {
                 Paste a product page link, or leave this blank and upload at least one image below.
               </span>
             </Field>
-            <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-[#cfd8e6] bg-[#f8fafc] text-left transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
-              {form.imageUrls.length > 0 ? (
-                <span className="grid size-full grid-cols-3 gap-1 p-2">
-                  {form.imageUrls.slice(0, 9).map((imageUrl, index) => (
-                    <span key={`${imageUrl.slice(0, 32)}-${index}`} className="relative min-h-20 overflow-hidden rounded-2xl bg-white">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={imageUrl} alt={`Product reference ${index + 1}`} className="absolute inset-0 size-full object-cover" />
-                      <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-xs font-semibold text-white">{index + 1}</span>
-                    </span>
-                  ))}
-                  {form.imageUrls.length < MAX_SOURCE_IMAGES ? (
-                    <span className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed border-[#cfd8e6] bg-white/70 text-xs font-semibold text-[#2563eb]">
-                      Add more
-                    </span>
-                  ) : null}
-                </span>
-              ) : (
+            {form.imageUrls.length === 0 ? (
+              <button type="button" onClick={() => fileRef.current?.click()} className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-[#cfd8e6] bg-[#f8fafc] text-left transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
                 <span className="flex flex-col items-center gap-3 text-center">
                   <span className="flex size-14 items-center justify-center rounded-2xl bg-white shadow-sm"><ImagePlus size={24} /></span>
                   <span className="font-semibold">Upload product images</span>
                   <span className="max-w-sm text-sm text-[#69707d]">Upload up to 9 product images, including detail photos, screenshots, catalog images, or supplier images.</span>
                   <span className="text-xs font-semibold text-[#2563eb]">Optional if you added a product link</span>
                 </span>
-              )}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(event) => void handleImages(event.target.files)} />
-            {form.imageUrls.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              </button>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {form.imageUrls.map((imageUrl, index) => (
-                  <button key={`${imageUrl.slice(0, 32)}-remove-${index}`} type="button" onClick={() => removeImage(index)} className="rounded-full border border-[#dfe6ef] bg-white px-3 py-1.5 text-xs font-semibold text-[#59616e] hover:border-[#fecdd3] hover:bg-[#fff1f2] hover:text-[#be123c]">
-                    Remove image {index + 1}
-                  </button>
+                  <PublicUploadImagePreview
+                    key={`${imageUrl.slice(0, 32)}-${index}`}
+                    src={imageUrl}
+                    alt={`Product reference ${index + 1}`}
+                    index={index}
+                    onRemove={() => removeImage(index)}
+                    removeLabel={`Remove image ${index + 1}`}
+                  />
                 ))}
+                {form.imageUrls.length < MAX_SOURCE_IMAGES ? (
+                  <button type="button" onClick={() => fileRef.current?.click()} className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-dashed border-[#cfd8e6] bg-white/70 text-sm font-semibold text-[#2563eb] transition hover:border-[#93c5fd] hover:bg-[#f2f7ff]">
+                    <ImagePlus size={18} className="mr-2" /> Add more
+                  </button>
+                ) : null}
               </div>
-            ) : null}
+            )}
+            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(event) => void handleImages(event.target.files)} />
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Category">

@@ -11,7 +11,6 @@ import {
   PackageCheck,
   SearchCheck,
   Sparkles,
-  Trash2,
   Upload
 } from "lucide-react";
 import {
@@ -21,9 +20,11 @@ import {
   CommunityQuestion
 } from "@/lib/community";
 import CommunityUserMenu from "@/components/community-user-menu";
+import PublicUploadImagePreview from "@/components/public-upload-image-preview";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
+import { preparePublicImage } from "@/lib/public-image-processing";
 import { cn } from "@/lib/utils";
 
 type SessionUser = { id: string; name: string; email: string; username: string; avatar?: string; bio?: string; profileCompleted?: boolean; country?: string };
@@ -47,45 +48,19 @@ const nextSteps = [
   ["decideBuild", PackageCheck]
 ] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const PRODUCT_IMAGE_MAX_SIZE = 1600;
-const PRODUCT_IMAGE_QUALITY = 0.86;
 const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
-function fileToDataUrl(file: File, t: Translator) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error(t("unableReadImage")));
-    reader.readAsDataURL(file);
-  });
-}
-
-function loadImage(src: string, t: Translator) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(t("unsupportedImage")));
-    image.src = src;
-  });
-}
-
 async function normalizeProductImage(file: File, t: Translator) {
-  const source = await fileToDataUrl(file, t);
-  const image = await loadImage(source, t);
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error(t("unablePrepareImage"));
-
-  const scale = Math.min(1, PRODUCT_IMAGE_MAX_SIZE / image.naturalWidth, PRODUCT_IMAGE_MAX_SIZE / image.naturalHeight);
-  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-  context.fillStyle = "#f8fafc";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = "high";
-  context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-  return canvas.toDataURL("image/jpeg", PRODUCT_IMAGE_QUALITY);
+  const prepared = await preparePublicImage(file, {
+    maxDimension: 1600,
+    quality: 0.86,
+    errors: {
+      read: t("unableReadImage"),
+      unsupported: t("unsupportedImage"),
+      prepare: t("unablePrepareImage")
+    }
+  });
+  return prepared.dataUrl;
 }
 
 type NewIdeaClientProps = {
@@ -465,14 +440,14 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
               {imagePreviews.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2">
                   {imagePreviews.map((image, index) => (
-                    <div key={image.name} className="group relative overflow-hidden rounded-2xl border border-[#e4e8ef] bg-white">
-                      <span className="absolute left-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded-full bg-white/92 text-[11px] font-semibold text-[#2563eb] shadow-sm">{index + 1}</span>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={image.url} alt={image.name} className="aspect-square w-full bg-[#f8fafc] object-contain" />
-                      <button type="button" onClick={() => removeImage(image.name)} className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-white/92 text-[#59616e] shadow-sm" aria-label={t("removeImage", { name: image.name })}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <PublicUploadImagePreview
+                      key={image.name}
+                      src={image.url}
+                      alt={image.name}
+                      index={index}
+                      onRemove={() => removeImage(image.name)}
+                      removeLabel={t("removeImage", { name: image.name })}
+                    />
                   ))}
                 </div>
               ) : null}
@@ -553,15 +528,15 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
               {imagePreviews.length > 0 ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {imagePreviews.map((image, index) => (
-                    <div key={image.name} className="group relative overflow-hidden rounded-2xl border border-[#e4e8ef] bg-white">
-                      <span className="absolute left-2 top-2 z-10 flex size-7 items-center justify-center rounded-full bg-white/92 text-xs font-semibold text-[#2563eb] shadow-sm">{index + 1}</span>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={image.url} alt={image.name} className="aspect-square w-full bg-[#f8fafc] object-contain" />
-                      <button type="button" onClick={() => removeImage(image.name)} className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/92 text-[#59616e] shadow-sm transition hover:bg-[#fff1f2] hover:text-[#be123c]" aria-label={t("removeImage", { name: image.name })}>
-                        <Trash2 size={15} />
-                      </button>
-                      <p className="truncate px-3 py-2 text-xs font-medium text-[#69707d]">{image.name}</p>
-                    </div>
+                    <PublicUploadImagePreview
+                      key={image.name}
+                      src={image.url}
+                      alt={image.name}
+                      index={index}
+                      caption={image.name}
+                      onRemove={() => removeImage(image.name)}
+                      removeLabel={t("removeImage", { name: image.name })}
+                    />
                   ))}
                 </div>
               ) : null}
@@ -634,8 +609,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                 {imagePreviews.length > 0 ? (
                   <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
                     {imagePreviews.map((image) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={image.name} src={image.url} alt={image.name} className="size-24 shrink-0 rounded-2xl bg-[#f8fafc] object-contain" />
+                      <PublicUploadImagePreview key={image.name} src={image.url} alt={image.name} className="w-28 shrink-0" />
                     ))}
                   </div>
                 ) : null}

@@ -36,6 +36,7 @@
     "test:profile-encouragement": "node --no-warnings --test scripts/profile-encouragement-test.mjs",
     "test:my-tyora-i18n": "node --no-warnings --test scripts/my-tyora-i18n-test.mjs",
     "test:new-idea-i18n": "node --no-warnings --test scripts/new-idea-i18n-test.mjs",
+    "test:public-images": "node --no-warnings --test scripts/public-upload-image-consistency-test.mjs",
     "test:source-showcase": "node --no-warnings --test scripts/source-showcase-safety-test.mjs",
     "test:source-weekly": "node --no-warnings --test scripts/source-weekly-showcase-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",

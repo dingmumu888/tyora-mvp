@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 const source = readFileSync("app/ask/new/new-idea-client.tsx", "utf8");
+const copy = readFileSync("lib/new-idea-i18n.ts", "utf8");
 
 const checks = [
   {
@@ -17,7 +18,7 @@ const checks = [
   },
   {
     name: "upload copy tells mobile users they can select up to five at once",
-    pass: source.includes("Select up to 5 images at once")
+    pass: copy.includes("Select up to 5 images at once")
   }
 ];
 

@@ -4,6 +4,8 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, FileText, Loader2, LockKeyhole, Upload, X } from "lucide-react";
 import EmailLogin from "@/components/email-login";
+import PublicUploadImagePreview from "@/components/public-upload-image-preview";
+import { preparePublicImage } from "@/lib/public-image-processing";
 import type { CommunityPageContent, CustomPageContent } from "@/lib/storage";
 
 type EligibleIdea = {
@@ -22,6 +24,12 @@ type Props = {
   eligibleIdea: EligibleIdea | null;
   signedIn: boolean;
   sessionEmail?: string;
+};
+
+type PrivateAttachment = {
+  file: File;
+  originalName: string;
+  previewUrl?: string;
 };
 
 export default function CustomInquiryClient({
@@ -43,7 +51,7 @@ export default function CustomInquiryClient({
     contactEmail: sessionEmail,
     contactWhatsapp: ""
   });
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<PrivateAttachment[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [submittedId, setSubmittedId] = useState("");
@@ -57,10 +65,27 @@ export default function CustomInquiryClient({
     ].filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1]));
   }, [eligibleIdea?.assessment, communityContent.assessmentLabels]);
 
-  function selectFiles(nextFiles: FileList | null) {
+  async function selectFiles(nextFiles: FileList | null) {
     if (!nextFiles) return;
-    const next = [...files, ...Array.from(nextFiles)].slice(0, 5);
-    setFiles(next);
+    const remainingSlots = Math.max(0, 5 - files.length);
+    const selected = Array.from(nextFiles).slice(0, remainingSlots);
+    if (selected.length === 0) return;
+    setMessage("");
+    try {
+      const prepared = await Promise.all(selected.map(async (file): Promise<PrivateAttachment> => {
+        if (!file.type.startsWith("image/")) return { file, originalName: file.name };
+        const image = await preparePublicImage(file, {
+          maxDimension: 1600,
+          quality: 0.86,
+          maxDataUrlLength: 1400000
+        });
+        return { file: image.file, originalName: file.name, previewUrl: image.dataUrl };
+      }));
+      setFiles((current) => [...current, ...prepared].slice(0, 5));
+      if (selected.length < nextFiles.length) setMessage("Only 5 confidential files can be uploaded.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to prepare these files.");
+    }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -82,9 +107,9 @@ export default function CustomInquiryClient({
         throw new Error(payload.message || "Unable to submit private Custom inquiry.");
       }
       const inquiryId = payload.data.id as string;
-      for (const file of files) {
+      for (const attachment of files) {
         const upload = new FormData();
-        upload.set("file", file);
+        upload.set("file", attachment.file);
         const fileResponse = await fetch(`/api/community/custom/${encodeURIComponent(inquiryId)}/files`, {
           method: "POST",
           body: upload
@@ -187,16 +212,26 @@ export default function CustomInquiryClient({
           <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[#a8b9d4] bg-[#f8fbff] px-4 text-center">
             <Upload size={19} className="text-[#2563eb]" />
             <span className="mt-2 text-sm font-semibold">Add confidential files</span>
-            <span className="mt-1 text-xs text-[#69707d]">Up to 5 JPG, PNG, WebP, or PDF files. Maximum 20MB each.</span>
-            <input className="sr-only" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" multiple onChange={(event) => selectFiles(event.target.files)} />
+            <span className="mt-1 text-xs text-[#69707d]">Up to 5 JPG, PNG, WebP, or PDF files. Images are resized without cropping; PDFs stay unchanged.</span>
+            <input className="sr-only" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" multiple onChange={(event) => void selectFiles(event.target.files)} />
           </label>
           {files.length ? (
-            <div className="grid gap-2">
-              {files.map((file, index) => (
-                <div key={`${file.name}-${index}`} className="flex min-h-11 items-center gap-2 rounded-xl border border-[#e4e8ef] px-3 text-sm">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {files.map((attachment, index) => attachment.previewUrl ? (
+                <PublicUploadImagePreview
+                  key={`${attachment.originalName}-${index}`}
+                  src={attachment.previewUrl}
+                  alt={attachment.originalName}
+                  index={index}
+                  caption={attachment.originalName}
+                  onRemove={() => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                  removeLabel={`Remove ${attachment.originalName}`}
+                />
+              ) : (
+                <div key={`${attachment.originalName}-${index}`} className="flex min-h-11 items-center gap-2 rounded-xl border border-[#e4e8ef] px-3 text-sm">
                   <FileText size={15} className="shrink-0 text-[#59616e]" />
-                  <span className="min-w-0 flex-1 truncate">{file.name}</span>
-                  <button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="flex size-9 items-center justify-center rounded-full hover:bg-[#f3f4f6]"><X size={15} /></button>
+                  <span className="min-w-0 flex-1 truncate">{attachment.originalName}</span>
+                  <button type="button" aria-label={`Remove ${attachment.originalName}`} onClick={() => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="flex size-9 items-center justify-center rounded-full hover:bg-[#f3f4f6]"><X size={15} /></button>
                 </div>
               ))}
             </div>

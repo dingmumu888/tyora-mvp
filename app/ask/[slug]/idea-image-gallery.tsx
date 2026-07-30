@@ -22,7 +22,7 @@ export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: stri
             key={`${src || "fallback"}-${index}`}
             type="button"
             onClick={() => imageUrls.length > 0 ? setActiveIndex(index) : undefined}
-            className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[18px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff]"
+            className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[18px] bg-gradient-to-br from-[#e9f7f3] via-white to-[#efe9ff]"
           >
             <CommunityImage src={src} alt={`${title} image ${index + 1}`} className="size-full object-contain" fallbackClassName="absolute inset-0 p-5" initialsClassName="size-16 rounded-2xl text-xl" />
             {index === 2 && extraCount > 0 ? (

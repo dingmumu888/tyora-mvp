@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 
 const source = readFileSync("app/source/source-client.tsx", "utf8");
+const imageProcessing = readFileSync("lib/public-image-processing.ts", "utf8");
 const failures = [];
 
 const requirements = [
-  ["source images are resized before being added", source.includes("normalizeSourceImage") && source.includes("canvas.toDataURL")],
+  ["source images are resized before being added", source.includes("normalizeSourceImage") && source.includes("preparePublicImage") && imageProcessing.includes('document.createElement("canvas")')],
   ["each source image has an encoded size target", source.includes("SOURCE_IMAGE_MAX_DATA_URL_LENGTH")],
   ["the complete JSON request is size checked", source.includes("MAX_SOURCE_REQUEST_BYTES") && source.includes("new Blob([requestBody]).size")],
   ["API responses are read safely as text", source.includes("response.text()") && source.includes("parseApiResponse")],
