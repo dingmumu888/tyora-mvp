@@ -54,12 +54,20 @@ test("admin exposes unanswered queue and expert verification controls", async ()
   assert.match(admin, /name="authorExpertVerified"/);
 });
 
-test("community list thumbnails use a balanced mobile-friendly ratio", async () => {
-  const page = await read("app/ask/page.tsx");
-  const mediaLink = page.match(/<Link href=\{href\} className=\{`relative m-2 aspect-\[4\/3\][^>]+>[\s\S]+?<\/Link>/)?.[0] || "";
+test("community cards use an independent mobile image rail without changing desktop media", async () => {
+  const [page, rail] = await Promise.all([
+    read("app/ask/page.tsx"),
+    read("components/community-card-image-rail.tsx")
+  ]);
 
   assert.match(page, /grid-cols-\[minmax\(0,1fr\)_104px\]/);
-  assert.match(mediaLink, /aspect-\[4\/3\]/);
-  assert.match(mediaLink, /story \? "object-cover" : "object-contain p-1\.5"/);
-  assert.doesNotMatch(mediaLink, /group-hover:scale/);
+  assert.match(page, /<Link href=\{href\} className="min-w-0 px-3 py-3 sm:px-4">/);
+  assert.match(page, /<CommunityCardImageRail[\s\S]+imageUrls=\{imageUrls\}/);
+  assert.match(page, /relative m-2 hidden aspect-\[4\/3\][^"]+sm:block/);
+
+  assert.match(rail, /const visibleRows = Math\.min\(Math\.max\(images\.length, 1\), 3\)/);
+  assert.match(rail, /data-testid="mobile-card-image-rail"/);
+  assert.match(rail, /overflow-y-auto/);
+  assert.match(rail, /onClick=\{\(\) => src && setActiveIndex\(index\)\}/);
+  assert.match(rail, /fixed inset-0 z-\[100\]/);
 });
