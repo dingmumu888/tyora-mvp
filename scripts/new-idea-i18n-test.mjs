@@ -61,3 +61,11 @@ test("the new discussion header uses the admin-configurable site brand", async (
   assert.match(page, /brand\.brandName/);
   assert.doesNotMatch(page, /<Sparkles size=\{15\} \/><\/span>\s*\{t\("community"\)\}/);
 });
+
+test("uploaded idea images are previewed without cropping", async () => {
+  const page = await read("app/ask/new/new-idea-client.tsx");
+
+  assert.match(page, /aspect-square w-full bg-\[#f8fafc\] object-contain/);
+  assert.match(page, /size-24 shrink-0 rounded-2xl bg-\[#f8fafc\] object-contain/);
+  assert.doesNotMatch(page, /image\.url[^>]+object-cover/);
+});

@@ -481,7 +481,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                     <div key={image.name} className="group relative overflow-hidden rounded-2xl border border-[#e4e8ef] bg-white">
                       <span className="absolute left-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded-full bg-white/92 text-[11px] font-semibold text-[#2563eb] shadow-sm">{index + 1}</span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={image.url} alt={image.name} className="aspect-square w-full object-cover" />
+                      <img src={image.url} alt={image.name} className="aspect-square w-full bg-[#f8fafc] object-contain" />
                       <button type="button" onClick={() => removeImage(image.name)} className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-white/92 text-[#59616e] shadow-sm" aria-label={t("removeImage", { name: image.name })}>
                         <Trash2 size={14} />
                       </button>
@@ -569,7 +569,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                     <div key={image.name} className="group relative overflow-hidden rounded-2xl border border-[#e4e8ef] bg-white">
                       <span className="absolute left-2 top-2 z-10 flex size-7 items-center justify-center rounded-full bg-white/92 text-xs font-semibold text-[#2563eb] shadow-sm">{index + 1}</span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={image.url} alt={image.name} className="aspect-square w-full object-cover" />
+                      <img src={image.url} alt={image.name} className="aspect-square w-full bg-[#f8fafc] object-contain" />
                       <button type="button" onClick={() => removeImage(image.name)} className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-white/92 text-[#59616e] shadow-sm transition hover:bg-[#fff1f2] hover:text-[#be123c]" aria-label={t("removeImage", { name: image.name })}>
                         <Trash2 size={15} />
                       </button>
@@ -654,7 +654,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
                     {imagePreviews.map((image) => (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img key={image.name} src={image.url} alt={image.name} className="size-24 shrink-0 rounded-2xl object-cover" />
+                      <img key={image.name} src={image.url} alt={image.name} className="size-24 shrink-0 rounded-2xl bg-[#f8fafc] object-contain" />
                     ))}
                   </div>
                 ) : null}
