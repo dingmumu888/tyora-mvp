@@ -15,3 +15,9 @@
 - Also flag layouts that hide the emotional invitation, weaken sharing motivation, or make the next action unclear.
 - When changing public copy, keep all supported languages aligned: English, Simplified Chinese, Spanish, French, German, and Portuguese.
 
+## Knowledge-base handoff
+
+- During launch testing, keep accepted product decisions and operating rules suitable for the future TYORA knowledge base.
+- When the user confirms the end-to-end website test has passed, proactively remind them that the TYORA knowledge base is the agreed finalization task.
+- Then consolidate product positioning, feature logic, brand voice, customer journeys, admin operations, production procedures, privacy rules, internationalization, and verified QA results into a structured knowledge base.
+- Separate confirmed decisions from open ideas, and include the date, status, affected pages, and practical operating instructions where relevant.
