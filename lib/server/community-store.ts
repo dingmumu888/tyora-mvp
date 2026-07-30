@@ -16,6 +16,7 @@ import { getContent } from "@/lib/server/data-store";
 import { executeGuardedCommunityAction } from "@/lib/server/community-action-guard";
 import { defaultContent } from "@/lib/storage";
 import type { Prisma } from "@prisma/client";
+import { createHash } from "node:crypto";
 import {
   assertCanInteractWithIdea,
   assertCanReadIdea,
@@ -224,7 +225,8 @@ function publicCommunityAvatar(value: unknown, userId: string) {
   const url = value.trim();
   if (!url) return null;
   if (DATA_IMAGE_PATTERN.test(url)) {
-    return `/api/community/users/${encodeURIComponent(userId)}/avatar`;
+    const version = createHash("sha256").update(url).digest("hex").slice(0, 12);
+    return `/api/community/users/${encodeURIComponent(userId)}/avatar?v=${version}`;
   }
   return safePublicImageUrl(url, MAX_INLINE_AVATAR_LENGTH);
 }

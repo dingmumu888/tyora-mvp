@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, FileLock2, MapPin, Sparkles, UserRound } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
+import CommunityProfileEditor from "@/components/community-profile-editor";
 import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import EmailLogin from "@/components/email-login";
@@ -126,6 +127,7 @@ export default async function MyTyoraPage() {
               <h1 className="truncate text-xl font-semibold">{user.name}</h1>
               <p className="truncate text-sm text-[#69707d]">@{user.username}</p>
             </div>
+            <CommunityProfileEditor user={user} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {profileMeta.map(([label, Icon]) => (

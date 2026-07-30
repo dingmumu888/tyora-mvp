@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Heart, LogOut, MessageCircle, PenLine, Settings } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
@@ -20,6 +21,7 @@ export default function CommunityUserMenu({
   loginOpenSignal?: number;
   loginOnSuccess?: () => void;
 }) {
+  const router = useRouter();
   const { copy } = usePublicLanguage();
   const [user, setUser] = useState<CommunitySessionUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -84,10 +86,13 @@ export default function CommunityUserMenu({
 
   return (
     <div ref={menuRef} className="relative">
-      <Link
-        href="/me"
+      <button
+        type="button"
+        onClick={() => setMenuOpen((current) => !current)}
         className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-2.5 pr-3 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]"
         aria-label="Community profile menu"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
       >
         <span className="relative">
           <CommunityAvatar name={user.name} src={user.avatar} className="size-7 text-[10px]" />
@@ -96,17 +101,17 @@ export default function CommunityUserMenu({
           ) : null}
         </span>
         <span className="hidden max-w-28 truncate sm:inline">{user.name}</span>
-      </Link>
+      </button>
 
       {menuOpen ? (
-        <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-3xl border border-[#e4e8ef] bg-white p-2 shadow-[0_22px_70px_rgba(16,18,22,0.16)]">
-          <div className="flex items-center gap-3 rounded-2xl bg-[#f7f8fa] p-3">
+        <div role="menu" className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-3xl border border-[#e4e8ef] bg-white p-2 shadow-[0_22px_70px_rgba(16,18,22,0.16)]">
+          <Link href="/me" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 rounded-2xl bg-[#f7f8fa] p-3 transition hover:bg-[#eef2f7]">
             <CommunityAvatar name={user.name} src={user.avatar} className="size-11 text-sm" />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{user.name}</p>
               <p className="truncate text-xs text-[#69707d]">@{user.username}</p>
             </div>
-          </div>
+          </Link>
           <div className="mt-2 grid gap-1">
             {[
               ["My Discussions", "/me#discussions", PenLine],
@@ -143,7 +148,16 @@ export default function CommunityUserMenu({
         </div>
       ) : null}
 
-      <CommunityProfileModal open={profileOpen} user={user} mode="edit" onClose={() => setProfileOpen(false)} onSaved={(nextUser) => setUser(nextUser)} />
+      <CommunityProfileModal
+        open={profileOpen}
+        user={user}
+        mode="edit"
+        onClose={() => setProfileOpen(false)}
+        onSaved={(nextUser) => {
+          setUser(nextUser);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }
