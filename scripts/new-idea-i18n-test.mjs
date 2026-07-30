@@ -48,3 +48,16 @@ test("every visible stage of the new discussion page uses its localized copy", a
     assert.doesNotMatch(page, new RegExp(rawEnglish));
   }
 });
+
+test("the new discussion header uses the admin-configurable site brand", async () => {
+  const route = await read("app/ask/new/page.tsx");
+  const page = await read("app/ask/new/new-idea-client.tsx");
+
+  assert.match(route, /getContent\(\)/);
+  assert.match(route, /logoImage: content\.logoImage/);
+  assert.match(route, /showBrandNameWithLogo: content\.showBrandNameWithLogo/);
+  assert.match(page, /brand\.logoImage/);
+  assert.match(page, /brand\.showBrandNameWithLogo/);
+  assert.match(page, /brand\.brandName/);
+  assert.doesNotMatch(page, /<Sparkles size=\{15\} \/><\/span>\s*\{t\("community"\)\}/);
+});

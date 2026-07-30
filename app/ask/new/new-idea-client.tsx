@@ -92,7 +92,15 @@ async function normalizeProductImage(file: File, t: Translator) {
   return canvas.toDataURL("image/jpeg", PRODUCT_IMAGE_QUALITY);
 }
 
-export default function NewIdeaClient() {
+type NewIdeaClientProps = {
+  brand: {
+    brandName: string;
+    logoImage: string;
+    showBrandNameWithLogo: boolean;
+  };
+};
+
+export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
   const { language } = usePublicLanguage();
   const t: Translator = (key, values) => translateNewIdea(language, key, values);
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -331,9 +339,22 @@ export default function NewIdeaClient() {
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_34%,#f7f5f0_100%)] pb-28 text-[#101216] md:pb-12">
       <header className="hidden border-b border-[#e8ebef]/90 bg-white/86 backdrop-blur-xl md:sticky md:top-0 md:z-40 md:block">
         <div className="mx-auto flex h-16 max-w-[1560px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/ask" className="flex items-center gap-2 text-sm font-semibold">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-[#101216] text-white"><Sparkles size={15} /></span>
-            {t("community")}
+          <Link href="/ask" className="flex shrink-0 items-center gap-2 pr-4" aria-label={`${brand.brandName} ideas`}>
+            {brand.logoImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={brand.logoImage}
+                alt={brand.showBrandNameWithLogo ? "" : brand.brandName}
+                className={brand.showBrandNameWithLogo
+                  ? "size-9 rounded-md object-contain"
+                  : "h-10 w-auto max-w-40 object-contain"}
+              />
+            ) : (
+              <span className="grid size-8 place-items-center rounded-md bg-[#101828] text-white"><Sparkles size={16} /></span>
+            )}
+            {brand.showBrandNameWithLogo ? (
+              <span className="text-lg font-bold tracking-normal text-[#101828]">{brand.brandName}</span>
+            ) : null}
           </Link>
           <div className="flex items-center gap-2">
             <PublicLanguageSwitcher compact />
