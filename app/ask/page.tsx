@@ -2,11 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BadgeCheck,
-  Boxes,
   ChevronRight,
   CircleHelp,
   Flame,
-  Lightbulb,
   MessageCircle,
   PackageSearch,
   PenLine,
@@ -14,7 +12,6 @@ import {
   Rocket,
   Search,
   Sparkles,
-  Tags,
   ThumbsUp,
   TrendingUp,
   Users
@@ -135,8 +132,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
         <div className="min-w-0 px-3 py-3 sm:px-4">
           <div className="flex flex-wrap items-center gap-1.5">
             {idea?.isHot ? <span className="inline-flex items-center gap-1 rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><Flame size={11} fill="currentColor" /> Hot</span> : null}
-            <span className="rounded bg-[#eef4ff] px-2 py-1 text-[10px] font-bold uppercase text-[#155eef]"><CommunityText text={idea?.postType || category} /></span>
-            <span className="rounded bg-[#f3f0ff] px-2 py-1 text-[10px] font-bold uppercase text-[#6d28d9]"><CommunityText text={idea?.productStage || status} /></span>
+            {category ? <span className="rounded bg-[#eef4ff] px-2 py-1 text-[10px] font-bold uppercase text-[#155eef]"><CommunityText text={category} /></span> : null}
             {idea && status !== "Discussing" ? <span className={`rounded px-2 py-1 text-[10px] font-bold uppercase ring-1 ${statusStyles[status]}`}><CommunityText text={status} /></span> : null}
             {idea?.review ? <span className="inline-flex items-center gap-1 rounded bg-[#e8f7f4] px-2 py-1 text-[10px] font-bold uppercase text-[#06756f]"><BadgeCheck size={11} /> <CommunityText text="TYORA Replied" /></span> : null}
             {isUnanswered ? <span className="rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><CommunityText text="Unanswered" /></span> : null}
@@ -309,10 +305,6 @@ export default async function AskCommunityPage({
             <nav className="space-y-1 border-b border-[#d8dee8] pb-4">
               {([
                 ["All Discussions", "/ask", MessageCircle],
-                ["Ideas & Feedback", `/ask?type=${encodeURIComponent("Idea Feedback")}`, Lightbulb],
-                ["Cost & MOQ", `/ask?type=${encodeURIComponent("Cost & MOQ")}`, Tags],
-                ["Manufacturing Advice", `/ask?type=${encodeURIComponent("Manufacturing Advice")}`, Boxes],
-                ["Prototyping", "/ask?stage=Prototype", Rocket],
                 ["Find a Supplier", "/source", PackageSearch]
               ] as const).map(([label, href, Icon]) => (
                 <Link key={label} href={href} className={`flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium transition ${label === "All Discussions" && !selectedCategory && !selectedStage && !selectedPostType ? "bg-[#e8f0ff] text-[#155eef]" : "text-[#475467] hover:bg-white hover:text-[#0b1426]"}`}>
@@ -320,23 +312,6 @@ export default async function AskCommunityPage({
                 </Link>
               ))}
             </nav>
-
-            <section>
-              <p className="px-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[#667085]"><CommunityText text="Product stage" /></p>
-              <div className="mt-2 space-y-1">
-                {([
-                  ["Concept", Lightbulb],
-                  ["Design", BadgeCheck],
-                  ["Prototype", Boxes],
-                  ["Pre-production", PackageSearch],
-                  ["Production", Rocket]
-                ] as const).map(([stage, Icon]) => (
-                  <Link key={stage} href={`/ask?stage=${stage}`} className={`flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition ${selectedStage === stage ? "bg-white text-[#155eef] shadow-sm" : "text-[#475467] hover:bg-white"}`}>
-                    <Icon size={16} /> <CommunityText text={stage} />
-                  </Link>
-                ))}
-              </div>
-            </section>
 
             {categories.length > 0 ? (
               <section>

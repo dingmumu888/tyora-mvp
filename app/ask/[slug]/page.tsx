@@ -70,8 +70,6 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
     [labels.recommendedNextStep, idea.review.recommendedNextStep]
   ].filter((entry): entry is [string, string] => Boolean(entry[1])) : [];
   const compactMeta = [
-    { value: idea.postType, tone: "bg-[#edf4ff] text-[#2563eb]" },
-    { value: idea.productStage, tone: "bg-[#f3f0ff] text-[#6d28d9]" },
     { value: idea.category, tone: "bg-[#eef6f4] text-[#06756f]" },
     { value: idea.country, tone: "bg-[#f4f6f8] text-[#667085]" }
   ].filter((item) => item.value && item.value !== "Not specified");

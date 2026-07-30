@@ -15,8 +15,6 @@ import {
   Upload
 } from "lucide-react";
 import {
-  communityPostTypes,
-  communityProductStages,
   communityQuestions,
   CommunityPostType,
   CommunityProductStage,
@@ -25,7 +23,6 @@ import {
 import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { usePublicLanguage } from "@/components/public-language-provider";
-import { translateCommunityText } from "@/components/community-text";
 import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
 import { cn } from "@/lib/utils";
 
@@ -436,18 +433,6 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
               <label className="grid gap-2 text-sm font-semibold">{t("category")}
                 <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder={t("categoryPlaceholder")} className={inputClass} />
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="grid gap-2 text-sm font-semibold">{t("postType")}
-                  <select value={form.postType} onChange={(event) => setForm({ ...form, postType: event.target.value as CommunityPostType })} className={inputClass}>
-                    {communityPostTypes.map((postType) => <option key={postType} value={postType}>{translateCommunityText(language, postType)}</option>)}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm font-semibold">{t("productStage")}
-                  <select value={form.productStage} onChange={(event) => setForm({ ...form, productStage: event.target.value as CommunityProductStage })} className={inputClass}>
-                    {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{translateCommunityText(language, productStage)}</option>)}
-                  </select>
-                </label>
-              </div>
               <label className="grid gap-2 text-sm font-semibold">{t("description")}
                 <textarea
                   rows={8}
@@ -605,16 +590,6 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   <label className="grid gap-2 text-sm font-semibold">{t("country")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span>
                     <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder={t("countryPlaceholder")} className={inputClass} />
                   </label>
-                  <label className="grid gap-2 text-sm font-semibold">{t("postType")}
-                    <select value={form.postType} onChange={(event) => setForm({ ...form, postType: event.target.value as CommunityPostType })} className={inputClass}>
-                      {communityPostTypes.map((postType) => <option key={postType} value={postType}>{translateCommunityText(language, postType)}</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-2 text-sm font-semibold">{t("productStage")}
-                    <select value={form.productStage} onChange={(event) => setForm({ ...form, productStage: event.target.value as CommunityProductStage })} className={inputClass}>
-                      {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{translateCommunityText(language, productStage)}</option>)}
-                    </select>
-                  </label>
                 </div>
                 <div>
                   <p className="text-sm font-semibold">{t("questionType")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span></p>
@@ -650,9 +625,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">{t("readySubmitHelp")}</p>
               <div className="mt-6 rounded-[20px] border border-[#e4e8ef] bg-[#fbfcff] p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#69707d]">
-                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category || translateCommunityText(language, "Concept")}</span>
-                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{translateCommunityText(language, form.postType)}</span>
-                  <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{translateCommunityText(language, form.productStage)}</span>
+                  {form.category ? <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{form.category}</span> : null}
                   <span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-[#e8ebef]">{t(form.visibility === "Public" ? "public" : "private")}</span>
                   <span className="rounded-full bg-[#e9f7f3] px-2.5 py-1 text-[#0f766e]">{t("initialAssessmentBadge")}</span>
                 </div>

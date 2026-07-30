@@ -17,14 +17,16 @@ test("community migration is additive and gives legacy rows safe defaults", asyn
   assert.doesNotMatch(sql, /\bTRUNCATE\b/i);
 });
 
-test("new submissions persist discussion classification", async () => {
+test("new submissions keep internal classification defaults without customer-facing selectors", async () => {
   const [form, store] = await Promise.all([
     read("app/ask/new/new-idea-client.tsx"),
     read("lib/server/community-store.ts")
   ]);
 
-  assert.match(form, /communityPostTypes/);
-  assert.match(form, /communityProductStages/);
+  assert.match(form, /postType: "Idea Feedback" as CommunityPostType/);
+  assert.match(form, /productStage: "Concept" as CommunityProductStage/);
+  assert.doesNotMatch(form, /communityPostTypes\.map/);
+  assert.doesNotMatch(form, /communityProductStages\.map/);
   assert.match(store, /postType: normalizeCommunityPostType/);
   assert.match(store, /productStage: normalizeCommunityProductStage/);
   assert.match(store, /postType,\s+productStage,\s+country,/);

@@ -35,8 +35,10 @@ test("every visible stage of the new discussion page uses its localized copy", a
 
   assert.match(page, /usePublicLanguage\(\)/);
   assert.match(page, /translateNewIdea\(language/);
-  assert.match(page, /translateCommunityText\(language, postType\)/);
-  assert.match(page, /translateCommunityText\(language, productStage\)/);
+  assert.match(page, /postType: "Idea Feedback" as CommunityPostType/);
+  assert.match(page, /productStage: "Concept" as CommunityProductStage/);
+  assert.doesNotMatch(page, /communityPostTypes\.map/);
+  assert.doesNotMatch(page, /communityProductStages\.map/);
   assert.match(page, /t\("whoCanSee"\)/);
   assert.match(page, /t\("readySubmit"\)/);
   assert.match(page, /t\("afterPublish"\)/);

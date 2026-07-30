@@ -2,13 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Loader2, MessageCircle, Pencil, Share2, Star, ThumbsUp, Trash2, X } from "lucide-react";
-import {
-  communityPostTypes,
-  communityProductStages,
-  CommunityIdea,
-  CommunityPostType,
-  CommunityProductStage
-} from "@/lib/community";
+import { CommunityIdea } from "@/lib/community";
 import EmailLogin from "@/components/email-login";
 import IdeaSharePanel from "./idea-share-panel";
 import { communityActionHeaders } from "@/lib/client/community-action";
@@ -254,18 +248,6 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
                 <label className="grid gap-2 text-sm font-semibold text-[#101216]">Category
                   <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="grid gap-2 text-sm font-semibold text-[#101216]">Post type
-                    <select value={editForm.postType} onChange={(event) => setEditForm({ ...editForm, postType: event.target.value as CommunityPostType })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
-                      {communityPostTypes.map((postType) => <option key={postType} value={postType}>{postType}</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-2 text-sm font-semibold text-[#101216]">Product stage
-                    <select value={editForm.productStage} onChange={(event) => setEditForm({ ...editForm, productStage: event.target.value as CommunityProductStage })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
-                      {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{productStage}</option>)}
-                    </select>
-                  </label>
-                </div>
                 <label className="grid gap-2 text-sm font-semibold text-[#101216]">Description
                   <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
@@ -359,18 +341,6 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
               <label className="grid gap-2 text-sm font-semibold">Category
                 <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="grid gap-2 text-sm font-semibold">Post type
-                  <select value={editForm.postType} onChange={(event) => setEditForm({ ...editForm, postType: event.target.value as CommunityPostType })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
-                    {communityPostTypes.map((postType) => <option key={postType} value={postType}>{postType}</option>)}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm font-semibold">Product stage
-                  <select value={editForm.productStage} onChange={(event) => setEditForm({ ...editForm, productStage: event.target.value as CommunityProductStage })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb]">
-                    {communityProductStages.map((productStage) => <option key={productStage} value={productStage}>{productStage}</option>)}
-                  </select>
-                </label>
-              </div>
               <label className="grid gap-2 text-sm font-semibold">Description
                 <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
               </label>
