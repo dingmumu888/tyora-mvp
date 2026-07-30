@@ -23,3 +23,15 @@ export async function uploadPublicObject(
     throw new PublicStorageProviderError();
   }
 }
+
+export async function deletePublicObject(objectPath: string) {
+  if (!isAllowedPublicObjectPath(objectPath)) {
+    throw new PublicStorageProviderError();
+  }
+
+  try {
+    await getStorageProvider().deletePublicObject(objectPath);
+  } catch {
+    throw new PublicStorageProviderError();
+  }
+}

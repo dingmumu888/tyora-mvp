@@ -36,6 +36,7 @@
     "test:profile-encouragement": "node --no-warnings --test scripts/profile-encouragement-test.mjs",
     "test:my-tyora-i18n": "node --no-warnings --test scripts/my-tyora-i18n-test.mjs",
     "test:source-showcase": "node --no-warnings --test scripts/source-showcase-safety-test.mjs",
+    "test:source-weekly": "node --no-warnings --test scripts/source-weekly-showcase-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",
     "db:preview:phase5b": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase-5b-preview-migration.ps1",
     "db:init": "node scripts/init-db.mjs",

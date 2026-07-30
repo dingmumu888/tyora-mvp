@@ -7,6 +7,7 @@ import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Factory, ImagePlus, MapPin
 import CommunityText from "@/components/community-text";
 import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
+import SourceWeeklyShowcase from "@/components/source-weekly-showcase";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import WhatsAppNumberInput from "@/components/whatsapp-number-input";
 import { callingCodeForCountry } from "@/lib/country-calling-codes";
@@ -417,6 +418,8 @@ export default function SourceClient() {
           </div>
         </div>
       </header>
+
+      <SourceWeeklyShowcase />
 
       <section className="mx-auto grid max-w-7xl gap-4 px-4 py-3 sm:gap-5 sm:px-6 sm:py-5 lg:grid-cols-[0.86fr_1.14fr] lg:px-8">
         <div className="self-start rounded-[28px] border border-[#dfe6ef] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] sm:p-5 lg:sticky lg:top-24 lg:p-6">

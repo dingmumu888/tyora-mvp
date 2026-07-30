@@ -8,6 +8,7 @@ import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
 import { AdminActionBar, AdminEmptyState, AdminMetricCard, adminSelectClass } from "@/components/admin/admin-ui";
 import { useAdminLanguage } from "@/components/admin/admin-language-provider";
 import { AdminLanguage } from "@/lib/admin-i18n";
+import SourceWeeklyAdmin from "./source-weekly-admin";
 
 type ApiResponse<T> = {
   success: boolean;
@@ -198,6 +199,8 @@ export default function SourceAdminClient() {
       onLogout={() => void logout()}
     >
       <div className="space-y-4">
+        <SourceWeeklyAdmin />
+
         <AdminActionBar
           title={t("Supplier-check operations")}
           description={t("Inspect product references, update sourcing status, and keep internal notes in the existing Source workflow.")}

@@ -13,6 +13,7 @@ export type PublicStorageUpload = {
 export interface StorageProvider {
   readonly kind: string;
   uploadPublicObject(input: StorageUploadInput): Promise<PublicStorageUpload>;
+  deletePublicObject(objectPath: string): Promise<void>;
   uploadPrivateObject(input: StorageUploadInput): Promise<void>;
   createPrivateSignedUrl(objectPath: string, expiresInSeconds: number): Promise<string>;
 }

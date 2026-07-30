@@ -9,7 +9,7 @@ import {
 import { StorageProviderConfigurationError } from "./storage-provider-policy";
 
 class SupabaseStorageProviderError extends Error {
-  constructor(operation: "verify" | "upload" | "sign") {
+  constructor(operation: "verify" | "upload" | "delete" | "sign") {
     super(`Object storage ${operation} failed.`);
     this.name = "SupabaseStorageProviderError";
   }
@@ -110,6 +110,22 @@ export function createSupabaseStorageProvider(
       return {
         publicUrl: `${config.supabaseUrl}/storage/v1/object/public/${encodeURIComponent(config.bucket)}/${encodedPath}`
       };
+    },
+
+    async deletePublicObject(objectPath: string) {
+      const config = publicStorageConfig(environment);
+      const endpoint = `${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(config.bucket)}`;
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers: {
+          ...headers(config.serviceRoleKey),
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prefixes: [objectPath] })
+      });
+      if (!response.ok) {
+        throw new SupabaseStorageProviderError("delete");
+      }
     },
 
     async uploadPrivateObject(input: StorageUploadInput) {

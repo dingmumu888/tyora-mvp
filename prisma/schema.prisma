@@ -290,6 +290,55 @@ model SourceRequest {
   @@index([publicShowcasePublished, publicShowcasePublishedAt])
 }
 
+model SourceWeeklyProduct {
+  id              String                 @id
+  productCode     String                 @unique
+  title           String
+  titleZh         String?
+  summary         String?
+  summaryZh       String?
+  factoryPrice    String?
+  moq             String?
+  imageUrl        String
+  imageObjectPath String
+  status          String                 @default("DRAFT")
+  publishedAt     DateTime?
+  expiresAt       DateTime?
+  purgeAt         DateTime?
+  interestCount   Int                    @default(0)
+  interests       SourceWeeklyInterest[]
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  @@index([status, publishedAt, expiresAt])
+  @@index([purgeAt])
+  @@index([createdAt])
+}
+
+model SourceWeeklyInterest {
+  id          String              @id
+  productId   String
+  product     SourceWeeklyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  visitorHash String
+  dayBucket   String
+  createdAt   DateTime            @default(now())
+
+  @@unique([productId, visitorHash, dayBucket])
+  @@index([productId, createdAt])
+  @@index([createdAt])
+}
+
+model SourceWeeklyArchive {
+  id            String   @id
+  productCode   String   @unique
+  publishedAt   DateTime?
+  expiredAt     DateTime?
+  interestCount Int      @default(0)
+  purgedAt      DateTime @default(now())
+
+  @@index([purgedAt])
+}
+
 model WorkOrderContactEvent {
   id             String    @id
   workOrderId    String
