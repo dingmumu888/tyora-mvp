@@ -26,7 +26,10 @@ requireCheck(
   provider.includes("URLSearchParams(window.location.search)")
     && provider.includes("window.localStorage.setItem(publicLanguageStorageKey")
     && provider.includes("document.documentElement.lang = language")
-    && provider.includes("max-age=31536000"),
+    && provider.includes("max-age=31536000")
+    && provider.includes('return "en";')
+    && !provider.includes("window.navigator")
+    && !provider.includes("detectBrowserLanguage"),
   "Language selection is not URL-aware, persistent, or reflected in the document language."
 );
 requireCheck(

@@ -2,7 +2,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  detectBrowserLanguage,
   normalizePublicLanguage,
   publicLanguageQueryKey,
   publicLanguageStorageKey,
@@ -25,7 +24,7 @@ function requestedLanguage() {
   if (fromUrl) return fromUrl;
   const fromStorage = normalizePublicLanguage(window.localStorage.getItem(publicLanguageStorageKey));
   if (fromStorage) return fromStorage;
-  return detectBrowserLanguage(window.navigator.languages || [window.navigator.language]);
+  return "en";
 }
 
 export default function PublicLanguageProvider({ children }: { children: ReactNode }) {
