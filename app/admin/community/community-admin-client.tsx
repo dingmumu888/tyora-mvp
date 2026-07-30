@@ -44,6 +44,14 @@ const reviewFields = [
 
 const assessmentLabelFields = Object.keys(defaultContent.communityPage.assessmentLabels) as Array<keyof CommunityPageContent["assessmentLabels"]>;
 const customPageFields = Object.keys(defaultContent.customPage) as Array<keyof CustomPageContent>;
+const encouragementLanguages = [
+  ["en", "English"],
+  ["zh-CN", "简体中文"],
+  ["es", "Español"],
+  ["fr", "Français"],
+  ["de", "Deutsch"],
+  ["pt", "Português"]
+] as const;
 
 function listFromTextarea(value: FormDataEntryValue | null) {
   return String(value || "").split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
@@ -217,6 +225,13 @@ export default function CommunityAdminClient() {
       commentText: String(form.get("commentText") || "").trim(),
       shareText: String(form.get("shareText") || "").trim(),
       interestedText: String(form.get("interestedText") || "").trim(),
+      profileEncouragements: encouragementLanguages.reduce<CommunityPageContent["profileEncouragements"]>(
+        (result, [code]) => {
+          result[code] = listFromTextarea(form.get(`profileEncouragements-${code}`));
+          return result;
+        },
+        { ...current.profileEncouragements }
+      ),
       assessmentDisclaimer: String(form.get("assessmentDisclaimer") || "").trim(),
       assessmentLabels: labels,
       feasibilityOptions: listFromTextarea(form.get("feasibilityOptions")),
@@ -532,6 +547,23 @@ export default function CommunityAdminClient() {
                 <label key={key} className="grid gap-2 text-sm font-semibold">{t(key)}<input name={key} defaultValue={communitySettings[key]} className="h-11 rounded-[14px] border border-[#dfe3e8] px-3 text-sm" /></label>
               ))}
               <label className="grid gap-2 text-sm font-semibold sm:col-span-2">{t("Default assessment disclaimer")}<textarea name="assessmentDisclaimer" defaultValue={communitySettings.assessmentDisclaimer} rows={3} className="rounded-[14px] border border-[#dfe3e8] p-3 text-sm" /></label>
+              <section className="sm:col-span-2">
+                <h3 className="text-lg font-semibold">{t("Profile encouragements")}</h3>
+                <p className="mt-1 text-xs leading-5 text-[#69707d]">{t("One message per line. Each customer sees one stable message per day based on their account.")}</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {encouragementLanguages.map(([code, label]) => (
+                    <label key={code} className="grid gap-2 text-sm font-semibold">
+                      {label}
+                      <textarea
+                        name={`profileEncouragements-${code}`}
+                        defaultValue={communitySettings.profileEncouragements[code].join("\n")}
+                        rows={8}
+                        className="rounded-[14px] border border-[#dfe3e8] p-3 text-sm leading-6"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </section>
               <label className="grid gap-2 text-sm font-semibold">{t("Feasibility options, one per line")}<textarea name="feasibilityOptions" defaultValue={communitySettings.feasibilityOptions.join("\n")} rows={5} className="rounded-[14px] border border-[#dfe3e8] p-3 text-sm" /></label>
               <label className="grid gap-2 text-sm font-semibold">{t("Confidence options, one per line")}<textarea name="confidenceOptions" defaultValue={communitySettings.confidenceOptions.join("\n")} rows={5} className="rounded-[14px] border border-[#dfe3e8] p-3 text-sm" /></label>
             </div>

@@ -383,6 +383,8 @@ const zh: Record<string, string> = {
   "Manage the existing video and cover media.": "管理现有视频和封面媒体。",
   "Edit existing public contact destinations.": "编辑现有公开联系方式。",
   "Edit the existing founder profile content.": "编辑现有创始人资料内容。",
+  "Profile encouragements": "个人资料激励语",
+  "One message per line. Each customer sees one stable message per day based on their account.": "每行一句。系统会根据客户账号每天稳定显示一句，不会在同一天反复变化。",
   "Loading live dashboard data...": "正在加载实时仪表盘数据……",
   "Dashboard data is unavailable": "仪表盘数据暂不可用",
   "No fallback or sample records are shown.": "页面未显示备用或虚构的示例记录。",

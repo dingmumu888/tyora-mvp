@@ -2,8 +2,14 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Camera, CheckCircle2, Loader2, X } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, Sparkles, X } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
+import { usePublicLanguage } from "@/components/public-language-provider";
+import {
+  normalizeProfileEncouragements,
+  profileEncouragementFallbacks,
+  type ProfileEncouragements
+} from "@/lib/profile-encouragements";
 
 export type CommunitySessionUser = {
   id: string;
@@ -26,6 +32,17 @@ type CommunityProfileModalProps = {
 const AVATAR_SIZE = 320;
 const AVATAR_QUALITY = 0.84;
 const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
+
+function dailyEncouragementIndex(userId: string, count: number) {
+  if (count <= 1) return 0;
+  const seed = `${userId}:${new Date().toISOString().slice(0, 10)}`;
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash) % count;
+}
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -79,6 +96,7 @@ async function readJsonSafely(response: Response) {
 }
 
 export default function CommunityProfileModal({ open, user, mode = "setup", onClose, onSaved }: CommunityProfileModalProps) {
+  const { language } = usePublicLanguage();
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -86,8 +104,17 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
   const [avatar, setAvatar] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [encouragements, setEncouragements] = useState<ProfileEncouragements>(
+    profileEncouragementFallbacks
+  );
   const nameRef = useRef<HTMLInputElement>(null);
   const titleId = useMemo(() => `tyora-profile-${mode}`, [mode]);
+  const encouragement = useMemo(() => {
+    if (!user) return "";
+    const localized = encouragements[language];
+    const choices = localized.length ? localized : encouragements.en;
+    return choices[dailyEncouragementIndex(user.id, choices.length)] || "";
+  }, [encouragements, language, user]);
 
   useEffect(() => {
     setMounted(true);
@@ -102,6 +129,26 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
     setMessage("");
     window.setTimeout(() => nameRef.current?.focus(), 80);
   }, [open, user]);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    void fetch("/api/content", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load profile encouragements.");
+        const payload = await response.json();
+        return normalizeProfileEncouragements(payload?.data?.communityPage?.profileEncouragements);
+      })
+      .then((next) => {
+        if (active) setEncouragements(next);
+      })
+      .catch(() => {
+        if (active) setEncouragements(profileEncouragementFallbacks);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -184,6 +231,14 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
         <div className="mt-7">
           <h2 id={titleId} className="text-3xl font-semibold tracking-normal">Set up your TYORA profile</h2>
           <p className="mt-3 text-sm leading-6 text-[#59616e]">Help other founders know who they&apos;re talking to.</p>
+          {encouragement ? (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[#dbe7ff] bg-gradient-to-br from-[#f2f7ff] to-[#f8fbff] px-4 py-3 text-[#274b87]">
+              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-[#2563eb] shadow-sm">
+                <Sparkles size={15} aria-hidden="true" />
+              </span>
+              <p className="text-sm font-medium leading-6">{encouragement}</p>
+            </div>
+          ) : null}
         </div>
 
         <form onSubmit={saveProfile} className="mt-6 grid gap-4">

@@ -11,6 +11,7 @@ import {
   TeamMember
 } from "@/lib/storage";
 import { prisma } from "@/lib/server/db";
+import { defaultProfileEncouragements } from "@/lib/server/profile-encouragement-defaults";
 import type { PublicLeadSubmission } from "@/lib/server/lead-submission-policy";
 import { cache } from "react";
 
@@ -21,6 +22,24 @@ function parseJson<T>(value: unknown, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+function withProfileEncouragementDefaults(value: unknown) {
+  const content = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+  const communityPage = content.communityPage && typeof content.communityPage === "object" && !Array.isArray(content.communityPage)
+    ? content.communityPage as Record<string, unknown>
+    : {};
+  const existing = communityPage.profileEncouragements;
+  if (existing && typeof existing === "object" && !Array.isArray(existing)) return value;
+  return {
+    ...content,
+    communityPage: {
+      ...communityPage,
+      profileEncouragements: defaultProfileEncouragements
+    }
+  };
 }
 
 function dateToIso(value: Date | string | null | undefined) {
@@ -128,11 +147,12 @@ export const getContent = cache(async (): Promise<SiteContent> => {
   const row = await prisma.siteContent.findUnique({
     where: { id: "default" }
   });
-  return row ? normalizeContent(parseJson(row.data, defaultContent)) : defaultContent;
+  const stored = row ? parseJson(row.data, defaultContent) : defaultContent;
+  return normalizeContent(withProfileEncouragementDefaults(stored));
 });
 
 export async function putContent(content: unknown): Promise<SiteContent> {
-  const normalized = normalizeContent(content);
+  const normalized = normalizeContent(withProfileEncouragementDefaults(content));
   await prisma.siteContent.upsert({
     where: { id: "default" },
     create: {

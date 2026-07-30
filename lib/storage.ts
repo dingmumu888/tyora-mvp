@@ -1,4 +1,9 @@
 import { normalizeWhatsAppUrl, WHATSAPP_URL } from "@/lib/whatsapp";
+import {
+  normalizeProfileEncouragements,
+  profileEncouragementFallbacks,
+  type ProfileEncouragements
+} from "@/lib/profile-encouragements";
 
 export type EditableCard = {
   title: string;
@@ -164,6 +169,7 @@ export type CommunityPageContent = {
   commentText: string;
   shareText: string;
   interestedText: string;
+  profileEncouragements: ProfileEncouragements;
   assessmentDisclaimer: string;
   assessmentLabels: CommunityAssessmentLabels;
   feasibilityOptions: string[];
@@ -665,6 +671,7 @@ export const defaultContent: SiteContent = {
     commentText: "Comment",
     shareText: "Share",
     interestedText: "I Want One",
+    profileEncouragements: profileEncouragementFallbacks,
     assessmentDisclaimer: "Preliminary estimate only. Final pricing, MOQ, and production feasibility depend on confirmed specifications, samples, and factory quotations.",
     assessmentLabels: {
       feasibility: "Manufacturing feasibility",
@@ -1317,6 +1324,7 @@ function normalizeCommunityPage(value: unknown): CommunityPageContent {
     commentText: stringValue(item.commentText, fallback.commentText),
     shareText: stringValue(item.shareText, fallback.shareText),
     interestedText: stringValue(item.interestedText, fallback.interestedText),
+    profileEncouragements: normalizeProfileEncouragements(item.profileEncouragements, fallback.profileEncouragements),
     assessmentDisclaimer: stringValue(item.assessmentDisclaimer, fallback.assessmentDisclaimer),
     assessmentLabels: {
       feasibility: stringValue(labels.feasibility, fallback.assessmentLabels.feasibility),
