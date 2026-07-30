@@ -73,6 +73,7 @@ type CommonTranslation = {
   searchResults: string;
   noResults: string;
   emailLogin: string;
+  rememberLogin: string;
   profile: string;
   privacy: string;
   terms: string;
@@ -103,6 +104,7 @@ const en: PublicLocaleCopy = {
     searchResults: "Search results",
     noResults: "No results found.",
     emailLogin: "Email Login",
+    rememberLogin: "Stay signed in on this browser for 30 days. Sign out when using a shared device.",
     profile: "Profile",
     privacy: "Privacy",
     terms: "Terms",
@@ -196,6 +198,7 @@ const en: PublicLocaleCopy = {
 const zhCN: PublicLocaleCopy = {
   common: {
     chooseLanguage: "选择语言", search: "搜索", searchResults: "搜索结果", noResults: "未找到结果。", emailLogin: "邮箱登录",
+    rememberLogin: "登录成功后，此浏览器将保持登录 30 天。使用公共设备时请记得退出登录。",
     profile: "个人资料", privacy: "隐私政策", terms: "使用条款", serviceScope: "服务范围", myTyora: "我的 TYORA",
     home: "首页", ideas: "创意", source: "找货", submit: "发布", account: "账户",
     publicIdea: "公开创意", publicIdeaSubtitle: "分享产品创意，获得社区和 TYORA 的评估。",
@@ -257,6 +260,7 @@ const zhCN: PublicLocaleCopy = {
 const es: PublicLocaleCopy = {
   common: {
     chooseLanguage: "Elegir idioma", search: "Buscar", searchResults: "Resultados de búsqueda", noResults: "No se encontraron resultados.", emailLogin: "Acceso por email",
+    rememberLogin: "Mantén la sesión iniciada en este navegador durante 30 días. Cierra la sesión en dispositivos compartidos.",
     profile: "Perfil", privacy: "Privacidad", terms: "Términos", serviceScope: "Alcance del servicio", myTyora: "Mi TYORA",
     home: "Inicio", ideas: "Ideas", source: "Abastecer", submit: "Publicar", account: "Cuenta",
     publicIdea: "Idea pública", publicIdeaSubtitle: "Comparte una idea para que la comunidad y TYORA la revisen.",
@@ -318,6 +322,7 @@ const es: PublicLocaleCopy = {
 const fr: PublicLocaleCopy = {
   common: {
     chooseLanguage: "Choisir la langue", search: "Rechercher", searchResults: "Résultats de recherche", noResults: "Aucun résultat.", emailLogin: "Connexion par e-mail",
+    rememberLogin: "Restez connecté sur ce navigateur pendant 30 jours. Déconnectez-vous sur un appareil partagé.",
     profile: "Profil", privacy: "Confidentialité", terms: "Conditions", serviceScope: "Périmètre du service", myTyora: "Mon TYORA",
     home: "Accueil", ideas: "Idées", source: "Sourcing", submit: "Publier", account: "Compte",
     publicIdea: "Idée publique", publicIdeaSubtitle: "Partagez une idée pour l’avis de la communauté et de TYORA.",
@@ -379,6 +384,7 @@ const fr: PublicLocaleCopy = {
 const de: PublicLocaleCopy = {
   common: {
     chooseLanguage: "Sprache wählen", search: "Suchen", searchResults: "Suchergebnisse", noResults: "Keine Ergebnisse gefunden.", emailLogin: "E-Mail-Anmeldung",
+    rememberLogin: "Bleibe in diesem Browser 30 Tage angemeldet. Melde dich auf gemeinsam genutzten Geräten ab.",
     profile: "Profil", privacy: "Datenschutz", terms: "Bedingungen", serviceScope: "Leistungsumfang", myTyora: "Mein TYORA",
     home: "Start", ideas: "Ideen", source: "Sourcing", submit: "Veröffentlichen", account: "Konto",
     publicIdea: "Öffentliche Idee", publicIdeaSubtitle: "Teile eine Produktidee zur Prüfung durch Community und TYORA.",
@@ -440,6 +446,7 @@ const de: PublicLocaleCopy = {
 const pt: PublicLocaleCopy = {
   common: {
     chooseLanguage: "Escolher idioma", search: "Pesquisar", searchResults: "Resultados da pesquisa", noResults: "Nenhum resultado encontrado.", emailLogin: "Entrar com e-mail",
+    rememberLogin: "Mantenha a sessão iniciada neste navegador por 30 dias. Saia da conta em dispositivos compartilhados.",
     profile: "Perfil", privacy: "Privacidade", terms: "Termos", serviceScope: "Escopo do serviço", myTyora: "Meu TYORA",
     home: "Início", ideas: "Ideias", source: "Fornecimento", submit: "Publicar", account: "Conta",
     publicIdea: "Ideia pública", publicIdeaSubtitle: "Compartilhe uma ideia para análise da comunidade e da TYORA.",

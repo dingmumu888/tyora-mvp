@@ -3,7 +3,8 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle2, Loader2, Mail, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Mail, ShieldCheck, X } from "lucide-react";
+import { usePublicLanguage } from "@/components/public-language-provider";
 
 type Step = "email" | "code" | "success";
 
@@ -23,6 +24,7 @@ export default function EmailLogin({
   refreshOnSuccess?: boolean;
 }) {
   const router = useRouter();
+  const { copy } = usePublicLanguage();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -208,6 +210,10 @@ export default function EmailLogin({
                   </label>
                   <p className="-mt-2 text-sm leading-6 text-[#69707d]">
                     We'll send you a secure verification code.
+                  </p>
+                  <p className="flex items-start gap-2 rounded-2xl bg-[#f2f7ff] px-3 py-2.5 text-sm leading-5 text-[#35537a]">
+                    <ShieldCheck className="mt-0.5 shrink-0 text-[#2563eb]" size={16} aria-hidden="true" />
+                    <span>{copy.common.rememberLogin}</span>
                   </p>
                   <button
                     disabled={busy}
