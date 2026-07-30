@@ -20,19 +20,24 @@ test("profile encouragements are CMS-managed in all public languages", async () 
   assert.match(admin, /profileEncouragements-\$\{code\}/);
 });
 
-test("the My TYORA profile card selects one stable localized message per account and day", async () => {
-  const [card, modal, profilePage] = await Promise.all([
+test("the My TYORA profile card rotates per login, stays stable in-session, and supports another message", async () => {
+  const [card, modal, profilePage, auth] = await Promise.all([
     read("components/profile-encouragement-card.tsx"),
     read("components/community-profile-modal.tsx"),
-    read("app/me/page.tsx")
+    read("app/me/page.tsx"),
+    read("lib/server/community-auth.ts")
   ]);
 
-  assert.match(card, /dailyEncouragementIndex/);
-  assert.match(card, /`\$\{userId\}:\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}`/);
-  assert.match(card, /encouragements\[language\]/);
+  assert.match(card, /sessionSeed/);
+  assert.match(card, /tyora-profile-encouragement:/);
+  assert.match(card, /previous\?\.sessionSeed === sessionSeed/);
+  assert.match(card, /nextIndex === previous\.index/);
+  assert.match(card, /showAnother/);
+  assert.match(card, /anotherEncouragement/);
   assert.match(card, /fetch\("\/api\/content"/);
   assert.match(card, /<Sparkles/);
-  assert.match(profilePage, /<ProfileEncouragementCard userId=\{user\.id\} \/>/);
+  assert.match(profilePage, /sessionSeed=\{session\.issuedAt\}/);
+  assert.match(auth, /issuedAt: session\.iat/);
   assert.doesNotMatch(modal, /profileEncouragement|dailyEncouragementIndex|<Sparkles/);
 });
 

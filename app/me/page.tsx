@@ -143,7 +143,7 @@ export default async function MyTyoraPage() {
             ))}
           </div>
           {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]"><MyTyoraText textKey="setupBio" /></p>}
-          <ProfileEncouragementCard userId={user.id} />
+          <ProfileEncouragementCard userId={user.id} sessionSeed={session.issuedAt} />
           <ActivitySummary items={compactStats} ideas={ideas} comments={comments} likedIdeas={likedIdeas} interestedIdeas={interestedIdeas} />
           <ActivityMessages notifications={notifications} unreadCount={totalUnread} />
           <section id="custom-inquiries" className="mt-4 scroll-mt-24 rounded-2xl border border-[#dfe6ef] bg-[#fbfcff] p-4">

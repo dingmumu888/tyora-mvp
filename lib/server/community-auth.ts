@@ -42,6 +42,7 @@ type CommunitySessionPayload = CommunitySession & {
 };
 
 export type ActiveCommunitySession = CommunitySession & {
+  issuedAt: number;
   expiresAt: number;
 };
 
@@ -67,6 +68,7 @@ export function readCommunitySessionToken(token?: string): ActiveCommunitySessio
       userId: session.userId,
       email: session.email,
       name: session.name,
+      issuedAt: session.iat || Math.max(0, session.exp - SESSION_TTL_SECONDS),
       expiresAt: session.exp
     };
   } catch {
