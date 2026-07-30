@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getAdminCredentialVersion } from "@/lib/server/admin-credential-store";
 
 const COOKIE_NAME = "tyora_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -31,12 +32,42 @@ function signaturesMatch(a: string, b: string) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-export function createAdminSessionToken() {
+type AdminSessionPayload = {
+  exp: number;
+  pv: number;
+};
+
+function readAdminSessionToken(token?: string): AdminSessionPayload | null {
+  if (!token || !token.includes(".")) return null;
+
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature) return null;
+
+  const expected = sign(payload, getSessionSecret());
+  if (!signaturesMatch(signature, expected)) return null;
+
+  try {
+    const session = JSON.parse(base64UrlDecode(payload)) as Partial<AdminSessionPayload>;
+    if (
+      typeof session.exp !== "number" ||
+      session.exp <= Math.floor(Date.now() / 1000) ||
+      typeof session.pv !== "number"
+    ) {
+      return null;
+    }
+    return session as AdminSessionPayload;
+  } catch {
+    return null;
+  }
+}
+
+export function createAdminSessionToken(credentialVersion = 0) {
   const now = Math.floor(Date.now() / 1000);
   const payload = base64UrlEncode(
     JSON.stringify({
       iat: now,
-      exp: now + SESSION_TTL_SECONDS
+      exp: now + SESSION_TTL_SECONDS,
+      pv: credentialVersion
     })
   );
   const signature = sign(payload, getSessionSecret());
@@ -44,25 +75,14 @@ export function createAdminSessionToken() {
 }
 
 export function isValidAdminSessionToken(token?: string) {
-  if (!token || !token.includes(".")) return false;
-
-  const [payload, signature] = token.split(".");
-  if (!payload || !signature) return false;
-
-  const expected = sign(payload, getSessionSecret());
-  if (!signaturesMatch(signature, expected)) return false;
-
-  try {
-    const session = JSON.parse(base64UrlDecode(payload)) as { exp?: number };
-    return typeof session.exp === "number" && session.exp > Math.floor(Date.now() / 1000);
-  } catch {
-    return false;
-  }
+  return Boolean(readAdminSessionToken(token));
 }
 
 export async function hasAdminSession() {
   const cookieStore = await cookies();
-  return isValidAdminSessionToken(cookieStore.get(COOKIE_NAME)?.value);
+  const session = readAdminSessionToken(cookieStore.get(COOKIE_NAME)?.value);
+  if (!session) return false;
+  return session.pv === await getAdminCredentialVersion();
 }
 
 export async function requireAdminSession() {
@@ -74,10 +94,10 @@ export async function requireAdminSession() {
   return unauthorized();
 }
 
-export function setAdminSessionCookie(response: NextResponse) {
+export function setAdminSessionCookie(response: NextResponse, credentialVersion = 0) {
   response.cookies.set({
     name: COOKIE_NAME,
-    value: createAdminSessionToken(),
+    value: createAdminSessionToken(credentialVersion),
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

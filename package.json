@@ -27,6 +27,7 @@
     "test:hotfix:private-custom-owner-detail": "node --no-warnings --test scripts/private-custom-owner-detail-test.mjs",
     "test:i18n": "node scripts/public-i18n-test.mjs",
     "test:admin-i18n": "node --no-warnings --test scripts/admin-i18n-test.mjs",
+    "test:admin-password": "node --no-warnings --test scripts/admin-password-change-test.mjs",
     "test:community-foundation": "node --no-warnings --test scripts/community-discussion-foundation-test.mjs",
     "test:root-community-entry": "node --no-warnings --test scripts/root-community-entry-test.mjs",
     "test:community-session": "node --no-warnings --test scripts/community-session-persistence-test.mjs",

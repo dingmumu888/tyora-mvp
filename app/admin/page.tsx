@@ -101,6 +101,21 @@ type AdminCustomer = {
 const zhText: Record<string, string> = {
   "TYORA Admin Login": "TYORA 后台登录",
   Password: "密码",
+  "Admin Password": "后台登录密码",
+  "Change the password used to sign in to TYORA OS. Saving signs out every administrator device.": "修改 TYORA OS 的后台登录密码。保存后，所有管理员设备都会退出登录。",
+  "Current password": "当前密码",
+  "New password": "新密码",
+  "Confirm new password": "确认新密码",
+  "Use at least 12 characters.": "请至少使用 12 个字符。",
+  "Change password": "修改密码",
+  "Changing...": "正在修改...",
+  "Passwords do not match.": "两次输入的新密码不一致。",
+  "New password must be at least 12 characters.": "新密码至少需要 12 个字符。",
+  "New password must be between 12 and 128 characters.": "新密码长度需要在 12 到 128 个字符之间。",
+  "Current password is incorrect.": "当前密码不正确。",
+  "Choose a password different from the current password.": "新密码不能与当前密码相同。",
+  "Password changed. Sign in again.": "密码已修改，请重新登录。",
+  "Unable to change password. Please try again.": "无法修改密码，请重试。",
   Login: "登录",
   "Incorrect password.": "密码不正确。",
   "TYORA CMS": "TYORA 内容管理",
@@ -1979,56 +1994,165 @@ function TeamSettings({
   }
 
   return (
-    <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="font-semibold">{t("Team Settings")}</h2>
-        <Button variant="outline" className="min-h-9 px-3" onClick={() => persistTeamMembers([...teamMembers, {
-          id: id("member"),
-          name: "New Member",
-          avatar: "N",
-          email: "new@tyora.co",
-          role: "Project Manager",
-          active: true
-        }])}>
-          <Plus size={15} /> {t("Add Team Member")}
-        </Button>
-      </div>
-      <div className="grid gap-4">
-        {teamMembers.length === 0 ? <AdminEmptyState title="No team members" description="Add a team member to assign existing projects and operational ownership." /> : null}
-        {teamMembers.map((member) => (
-          <div key={member.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center gap-3">
-              <Avatar member={member} />
-              <div>
-                <p className="font-medium">{member.name}</p>
-                <p className="text-xs text-[#69707d]">{member.role} · {member.active ? t("Active") : t("Inactive")}</p>
+    <div className="space-y-6">
+      <AdminPasswordSettings t={t} />
+      <div>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="font-semibold">{t("Team Settings")}</h2>
+          <Button variant="outline" className="min-h-9 px-3" onClick={() => persistTeamMembers([...teamMembers, {
+            id: id("member"),
+            name: "New Member",
+            avatar: "N",
+            email: "new@tyora.co",
+            role: "Project Manager",
+            active: true
+          }])}>
+            <Plus size={15} /> {t("Add Team Member")}
+          </Button>
+        </div>
+        <div className="grid gap-4">
+          {teamMembers.length === 0 ? <AdminEmptyState title="No team members" description="Add a team member to assign existing projects and operational ownership." /> : null}
+          {teamMembers.map((member) => (
+            <div key={member.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm">
+              <div className="mb-4 flex items-center gap-3">
+                <Avatar member={member} />
+                <div>
+                  <p className="font-medium">{member.name}</p>
+                  <p className="text-xs text-[#69707d]">{member.role} · {member.active ? t("Active") : t("Inactive")}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 lg:grid-cols-[1fr_1fr_160px_130px_110px]">
+                <Field label="Name">
+                  <Input value={member.name} onChange={(event) => updateMember(member.id, { name: event.target.value, avatar: event.target.value.slice(0, 1).toUpperCase() || member.avatar })} />
+                </Field>
+                <Field label="Email">
+                  <Input value={member.email} onChange={(event) => updateMember(member.id, { email: event.target.value })} />
+                </Field>
+                <Field label={t("Role")}>
+                  <select className="min-h-11 w-full rounded-lg border border-[#e1e5ea] bg-white px-3 text-sm" value={member.role} onChange={(event) => updateMember(member.id, { role: event.target.value as TeamMember["role"] })}>
+                    {["Admin", "Project Manager", "Viewer"].map((role) => <option key={role} value={role}>{t(role)}</option>)}
+                  </select>
+                </Field>
+                <Field label="Avatar">
+                  <Input value={member.avatar} onChange={(event) => updateMember(member.id, { avatar: event.target.value })} />
+                </Field>
+                <Field label="Status">
+                  <Button variant="outline" className="w-full" onClick={() => updateMember(member.id, { active: !member.active })}>
+                    {member.active ? t("Disable") : t("Enable")}
+                  </Button>
+                </Field>
               </div>
             </div>
-            <div className="grid gap-3 lg:grid-cols-[1fr_1fr_160px_130px_110px]">
-              <Field label="Name">
-                <Input value={member.name} onChange={(event) => updateMember(member.id, { name: event.target.value, avatar: event.target.value.slice(0, 1).toUpperCase() || member.avatar })} />
-              </Field>
-              <Field label="Email">
-                <Input value={member.email} onChange={(event) => updateMember(member.id, { email: event.target.value })} />
-              </Field>
-              <Field label={t("Role")}>
-                <select className="min-h-11 w-full rounded-lg border border-[#e1e5ea] bg-white px-3 text-sm" value={member.role} onChange={(event) => updateMember(member.id, { role: event.target.value as TeamMember["role"] })}>
-                  {["Admin", "Project Manager", "Viewer"].map((role) => <option key={role} value={role}>{t(role)}</option>)}
-                </select>
-              </Field>
-              <Field label="Avatar">
-                <Input value={member.avatar} onChange={(event) => updateMember(member.id, { avatar: event.target.value })} />
-              </Field>
-              <Field label="Status">
-                <Button variant="outline" className="w-full" onClick={() => updateMember(member.id, { active: !member.active })}>
-                  {member.active ? t("Disable") : t("Enable")}
-                </Button>
-              </Field>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
+  );
+}
+
+function AdminPasswordSettings({ t }: { t: (value: string) => string }) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  async function submitPasswordChange(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    setSuccess(false);
+
+    if (newPassword.length < 12) {
+      setMessage(t("New password must be at least 12 characters."));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage(t("Passwords do not match."));
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const response = await fetch("/api/admin/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const result = await response.json().catch(() => ({})) as { message?: string };
+      if (!response.ok) {
+        setMessage(t(result.message || "Unable to change password. Please try again."));
+        return;
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setSuccess(true);
+      setMessage(t("Password changed. Sign in again."));
+      window.setTimeout(() => window.location.assign("/admin"), 1200);
+    } catch {
+      setMessage(t("Unable to change password. Please try again."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-start gap-3">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#eef4ff] text-[#155eef]">
+          <Lock size={18} />
+        </span>
+        <div>
+          <h2 className="font-semibold">{t("Admin Password")}</h2>
+          <p className="mt-1 max-w-2xl text-sm text-[#69707d]">
+            {t("Change the password used to sign in to TYORA OS. Saving signs out every administrator device.")}
+          </p>
+        </div>
+      </div>
+      <form className="grid gap-4 lg:grid-cols-3" onSubmit={submitPasswordChange}>
+        <Field label={t("Current password")}>
+          <Input
+            type="password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            required
+          />
+        </Field>
+        <Field label={t("New password")}>
+          <Input
+            type="password"
+            autoComplete="new-password"
+            minLength={12}
+            maxLength={128}
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            required
+          />
+        </Field>
+        <Field label={t("Confirm new password")}>
+          <Input
+            type="password"
+            autoComplete="new-password"
+            minLength={12}
+            maxLength={128}
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            required
+          />
+        </Field>
+        <div className="lg:col-span-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className={`text-sm ${message ? (success ? "text-[#067647]" : "text-[#b42318]") : "text-[#69707d]"}`}>
+            {message || t("Use at least 12 characters.")}
+          </p>
+          <Button type="submit" disabled={busy} className="min-h-10 px-5">
+            <Lock size={15} /> {busy ? t("Changing...") : t("Change password")}
+          </Button>
+        </div>
+      </form>
+    </section>
   );
 }
 
