@@ -16,14 +16,15 @@ test("the new discussion flow has complete public-language dictionaries", async 
     "产品名称",
     "一句话介绍创意",
     "展示你的创意",
-    "帮助 TYORA 了解你的创意",
     "你希望 TYORA 回答什么问题？",
     "自定义问题",
-    "请介绍产品的设计理念、主要功能、使用场景和适用人群",
+    "让大家看见你创意里的亮点",
+    "灵感别藏着",
+    "继续，让创意更接近现实",
+    "发布后，创意开始向前走",
+    "说人话：简单、清楚、有重点",
     "谁可以查看这次提交",
-    "提交评估",
-    "发布之后",
-    "填写建议"
+    "提交评估"
   ]) {
     assert.match(source, new RegExp(copy));
   }
@@ -81,4 +82,14 @@ test("customers submit only the TYORA questions they actually choose", async () 
   assert.match(page, /<textarea[\s\S]+otherQuestionPlaceholder/);
   assert.match(page, /question === "Other" && form\.otherQuestion\.trim\(\)/);
   assert.doesNotMatch(page, /defaultQuestions/);
+});
+
+test("the idea-detail step uses TYORA's energetic but credible voice", async () => {
+  const page = await read("app/ask/new/new-idea-client.tsx");
+  const copy = await read("lib/new-idea-i18n.ts");
+
+  assert.match(page, /t\(step === 2 \? "continueCloser" : "next"\)/);
+  assert.match(copy, /continueCloser: "Continue and bring your idea closer to reality"|continueCloser: "Keep going — bring it closer to reality"/);
+  assert.match(copy, /helpUnderstand: "让大家看见你创意里的亮点"/);
+  assert.match(copy, /afterPublish: "发布后，创意开始向前走"/);
 });

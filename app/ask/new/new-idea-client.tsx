@@ -696,7 +696,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
             ) : <span className="hidden sm:block" />}
             {step < 3 ? (
               <button type="button" onClick={continueStep} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold ${primaryButton}`}>
-                {t("next")} <ArrowRight size={16} />
+                {t(step === 2 ? "continueCloser" : "next")} <ArrowRight size={16} />
               </button>
             ) : (
               <button disabled={submitting} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
