@@ -33,6 +33,7 @@
     "test:community-session": "node --no-warnings --test scripts/community-session-persistence-test.mjs",
     "test:community-profile": "node --no-warnings --test scripts/community-profile-editing-test.mjs",
     "test:community-profile-details": "node --no-warnings --test scripts/community-profile-details-test.mjs",
+    "test:community-idea-editing": "node --no-warnings --test scripts/community-idea-editing-test.mjs",
     "test:profile-encouragement": "node --no-warnings --test scripts/profile-encouragement-test.mjs",
     "test:my-tyora-i18n": "node --no-warnings --test scripts/my-tyora-i18n-test.mjs",
     "test:new-idea-i18n": "node --no-warnings --test scripts/new-idea-i18n-test.mjs",

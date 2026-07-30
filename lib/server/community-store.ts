@@ -1208,6 +1208,7 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
   const title = typeof data.title === "string" ? data.title.trim().slice(0, 140) : existing.title;
   const description = typeof data.description === "string" ? data.description.trim().slice(0, 5000) : existing.description;
   const category = typeof data.category === "string" ? data.category.trim().slice(0, 120) : existing.category;
+  const country = typeof data.country === "string" ? data.country.trim().slice(0, 120) : existing.country;
   const postType = Object.prototype.hasOwnProperty.call(data, "postType")
     ? normalizeCommunityPostType(data.postType)
     : normalizeCommunityPostType(existing.postType);
@@ -1217,8 +1218,21 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
   const imageUrls = Array.isArray(data.imageUrls)
     ? await ownerIdeaImageUrls(data.imageUrls, existing.imageUrlsJson, existing.slug)
     : storedIdeaImageUrls(existing.imageUrlsJson);
+  const questions = Object.prototype.hasOwnProperty.call(data, "questions")
+    ? normalizeQuestions(data.questions)
+    : normalizeQuestions(parseJson(existing.questionsJson, []));
+  const otherQuestion = questions.includes("Other")
+    ? (Object.prototype.hasOwnProperty.call(data, "otherQuestion")
+        ? (typeof data.otherQuestion === "string" ? data.otherQuestion.trim().slice(0, 500) : "")
+        : existing.otherQuestion || "")
+    : null;
 
-  if (!title || !description || !category) throw new Error("Product name, category, and description are required.");
+  if (!title || !description || !category || !country) {
+    throw new Error("Product name, category, description, and country are required.");
+  }
+  if (questions.includes("Other") && !otherQuestion) {
+    throw new Error("Please enter the custom question you want TYORA to answer.");
+  }
 
   await prisma.communityIdea.update({
     where: { slug },
@@ -1226,9 +1240,12 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
       title,
       description,
       category,
+      country,
       postType,
       productStage,
       imageUrlsJson: JSON.stringify(imageUrls),
+      questionsJson: JSON.stringify(questions),
+      otherQuestion,
       moderationStatus: "Pending",
       homepageFeatured: false,
       homepageFeaturedOrder: null

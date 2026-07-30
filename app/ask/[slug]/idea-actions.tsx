@@ -1,18 +1,33 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
-import { Loader2, MessageCircle, Pencil, Share2, Star, ThumbsUp, Trash2, X } from "lucide-react";
-import { CommunityIdea } from "@/lib/community";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ImagePlus, Loader2, MessageCircle, Pencil, Share2, Star, ThumbsUp, Trash2, X } from "lucide-react";
+import { CommunityIdea, communityQuestions, CommunityQuestion } from "@/lib/community";
 import EmailLogin from "@/components/email-login";
+import PublicUploadImagePreview from "@/components/public-upload-image-preview";
 import IdeaSharePanel from "./idea-share-panel";
 import { communityActionHeaders } from "@/lib/client/community-action";
+import { preparePublicImage } from "@/lib/public-image-processing";
+import { usePublicLanguage } from "@/components/public-language-provider";
+import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
 type IdeaActionMode = "bar" | "comment";
 type IdeaActionLabels = { likeText: string; commentText: string; interestedText: string; shareText: string };
 const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
+const questionTranslationKeys: Record<CommunityQuestion, NewIdeaKey> = {
+  "Can this be manufactured?": "qManufactured",
+  "Estimated Cost?": "qCost",
+  "Material Suggestion?": "qMaterial",
+  "MOQ Estimate?": "qMoq",
+  "Factory Recommendation?": "qFactory",
+  Other: "qOther"
+};
+type EditImagePreview = { name: string; url: string };
 
 export default function IdeaActions({ idea, mode = "bar", compact = false, labels }: { idea: CommunityIdea; mode?: IdeaActionMode; compact?: boolean; labels: IdeaActionLabels }) {
+  const { language } = usePublicLanguage();
+  const isChinese = language === "zh-CN";
   const [user, setUser] = useState<SessionUser | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [body, setBody] = useState("");
@@ -22,10 +37,14 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
   const [editForm, setEditForm] = useState({
     title: idea.title,
     category: idea.category,
-    postType: idea.postType,
-    productStage: idea.productStage,
-    description: idea.description
+    description: idea.description,
+    country: idea.country,
+    questions: idea.questions,
+    otherQuestion: idea.otherQuestion || ""
   });
+  const [editImages, setEditImages] = useState<EditImagePreview[]>(
+    idea.imageUrls.map((url, index) => ({ name: `Image ${index + 1}`, url }))
+  );
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const commentRef = useRef<HTMLTextAreaElement>(null);
@@ -61,6 +80,57 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
 
   function appendEditEmoji(emoji: string) {
     setEditForm((current) => ({ ...current, description: `${current.description}${current.description ? " " : ""}${emoji}` }));
+  }
+
+  function toggleEditQuestion(question: CommunityQuestion) {
+    setEditForm((current) => ({
+      ...current,
+      questions: current.questions.includes(question)
+        ? current.questions.filter((item) => item !== question)
+        : [...current.questions, question]
+    }));
+  }
+
+  async function addEditImages(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    const remaining = Math.max(0, 5 - editImages.length);
+    if (!remaining) {
+      setMessage(isChinese ? "每个帖子最多上传 5 张图片。" : "You can upload up to 5 images.");
+      return;
+    }
+    setBusy("edit-images");
+    setMessage("");
+    try {
+      const prepared = await Promise.all(
+        files.slice(0, remaining).map(async (file, index) => {
+          const image = await preparePublicImage(file, {
+            maxDimension: 1600,
+            quality: 0.86,
+            maxDataUrlLength: 880000,
+            errors: {
+              read: isChinese ? "无法读取这张图片。" : "Unable to read this image.",
+              unsupported: isChinese ? "浏览器不支持这张图片的格式。" : "This image format is not supported by your browser.",
+              prepare: isChinese ? "无法处理这张图片。" : "Unable to prepare this image.",
+              tooLarge: isChinese ? "图片处理后仍然过大，请选择尺寸更小的图片。" : "This image is still too large after processing. Please choose a smaller image."
+            }
+          });
+          return {
+            name: `${Date.now()}-${index}-${image.file.name}`,
+            url: image.dataUrl
+          };
+        })
+      );
+      setEditImages((current) => [...current, ...prepared].slice(0, 5));
+      if (files.length > remaining) {
+        setMessage(isChinese ? "每个帖子最多保留 5 张图片，多余图片未添加。" : "Only the first 5 images were kept.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : (isChinese ? "无法处理图片。" : "Unable to prepare images."));
+    } finally {
+      setBusy("");
+    }
   }
 
   async function postComment(event: FormEvent<HTMLFormElement>) {
@@ -111,13 +181,20 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
   async function saveEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!isOwner) return;
+    if (editForm.questions.includes("Other") && !editForm.otherQuestion.trim()) {
+      setMessage(isChinese ? "请填写你希望 TYORA 回答的自定义问题。" : "Please enter your custom question for TYORA.");
+      return;
+    }
     setBusy("edit");
     setMessage("");
     try {
       const response = await fetch(`/api/community/ideas/${idea.slug}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({
+          ...editForm,
+          imageUrls: editImages.map((image) => image.url)
+        })
       });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to edit discussion.");
@@ -145,6 +222,123 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
     } finally {
       setBusy("");
     }
+  }
+
+  function editDialog() {
+    if (!editOpen) return null;
+    return (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-[#101216]/45 px-3 py-4 backdrop-blur-sm">
+        <form onSubmit={saveEdit} className="max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-[28px] bg-white p-5 shadow-2xl shadow-[#101216]/25 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b93a1]">
+                {isChinese ? "编辑帖子" : "Edit discussion"}
+              </p>
+              <h2 className="mt-1 text-2xl font-semibold text-[#101216]">
+                {isChinese ? "更新你的创意" : "Update your idea"}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-[#69707d]">
+                {isChinese ? "修改后将重新提交 TYORA 审核。" : "Saving changes sends the discussion back to TYORA review."}
+              </p>
+            </div>
+            <button type="button" onClick={() => setEditOpen(false)} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#69707d]">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-4">
+            <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+              {isChinese ? "产品名称" : "Product name"}
+              <input required value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+              {isChinese ? "分类" : "Category"}
+              <input required value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+              {isChinese ? "详细描述" : "Description"}
+              <textarea required value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={6} className="min-h-32 resize-y rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {quickEmojis.map((emoji) => (
+                <button key={emoji} type="button" onClick={() => appendEditEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
+            <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+              {isChinese ? "国家" : "Country"}
+              <input required value={editForm.country} onChange={(event) => setEditForm({ ...editForm, country: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+            </label>
+
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-[#101216]">{isChinese ? "创意图片" : "Idea images"}</p>
+                <span className="text-xs text-[#8b93a1]">{editImages.length}/5</span>
+              </div>
+              <label className="mt-2 flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-[#93b4f8] bg-[#f8fbff] px-4 text-sm font-semibold text-[#2563eb] transition hover:bg-[#eef6ff]">
+                {busy === "edit-images" ? <Loader2 className="animate-spin" size={18} /> : <ImagePlus size={18} />}
+                {busy === "edit-images"
+                  ? (isChinese ? "正在处理图片…" : "Preparing images…")
+                  : (isChinese ? "添加或更换图片" : "Add or replace images")}
+                <input disabled={busy === "edit-images"} type="file" accept="image/*" multiple className="sr-only" onChange={addEditImages} />
+              </label>
+              {editImages.length ? (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {editImages.map((image, index) => (
+                    <PublicUploadImagePreview
+                      key={`${image.name}-${index}`}
+                      src={image.url}
+                      alt={image.name}
+                      index={index}
+                      onRemove={() => setEditImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                      removeLabel={isChinese ? `删除第 ${index + 1} 张图片` : `Remove image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-[#8b93a1]">{isChinese ? "当前帖子没有图片。" : "This discussion has no images."}</p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-[#101216]">
+                {isChinese ? "你希望 TYORA 回答什么问题？" : "What would you like TYORA to answer?"}
+              </p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {communityQuestions.map((question) => (
+                  <label key={question} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 text-sm transition ${editForm.questions.includes(question) ? "border-[#bfdbfe] bg-[#f2f7ff] text-[#1d4ed8]" : "border-[#e8ebef] bg-white text-[#59616e]"}`}>
+                    <input type="checkbox" checked={editForm.questions.includes(question)} onChange={() => toggleEditQuestion(question)} className="size-4 accent-[#2563eb]" />
+                    {translateNewIdea(language, questionTranslationKeys[question])}
+                  </label>
+                ))}
+              </div>
+              {editForm.questions.includes("Other") ? (
+                <textarea
+                  rows={3}
+                  value={editForm.otherQuestion}
+                  onChange={(event) => setEditForm({ ...editForm, otherQuestion: event.target.value })}
+                  placeholder={translateNewIdea(language, "otherQuestionPlaceholder")}
+                  className="mt-2 w-full resize-y rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10"
+                />
+              ) : null}
+            </div>
+          </div>
+
+          {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => setEditOpen(false)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e]">
+              {isChinese ? "取消" : "Cancel"}
+            </button>
+            <button disabled={busy === "edit" || busy === "edit-images"} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
+              {busy === "edit" ? <Loader2 className="animate-spin" size={15} /> : <Pencil size={15} />}
+              {isChinese ? "保存修改" : "Save changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
   }
 
   if (mode === "comment") {
@@ -229,46 +423,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
           <Share2 size={14} /> {idea.shareCount} {labels.shareText}
         </button>
 
-        {editOpen ? (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-[#101216]/45 px-4 backdrop-blur-sm">
-            <form onSubmit={saveEdit} className="w-full max-w-lg rounded-[28px] bg-white p-5 shadow-2xl shadow-[#101216]/25">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b93a1]">Edit discussion</p>
-                  <h2 className="mt-1 text-2xl font-semibold text-[#101216]">Update your idea</h2>
-                </div>
-                <button type="button" onClick={() => setEditOpen(false)} className="flex size-10 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#69707d]">
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="mt-5 grid gap-3">
-                <label className="grid gap-2 text-sm font-semibold text-[#101216]">Product name
-                  <input value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-                </label>
-                <label className="grid gap-2 text-sm font-semibold text-[#101216]">Category
-                  <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-                </label>
-                <label className="grid gap-2 text-sm font-semibold text-[#101216]">Description
-                  <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {quickEmojis.map((emoji) => (
-                    <button key={emoji} type="button" onClick={() => appendEditEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
-              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <button type="button" onClick={() => setEditOpen(false)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e]">Cancel</button>
-                <button disabled={busy === "edit"} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
-                  {busy === "edit" ? <Loader2 className="animate-spin" size={15} /> : <Pencil size={15} />} Save
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : null}
+        {editDialog()}
         <IdeaSharePanel open={shareOpen} ideaId={idea.id} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
       </div>
     );
@@ -322,46 +477,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         </button>
       </div>
 
-      {editOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[#101216]/45 px-4 backdrop-blur-sm">
-          <form onSubmit={saveEdit} className="w-full max-w-lg rounded-[28px] bg-white p-5 shadow-2xl shadow-[#101216]/25">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b93a1]">Edit discussion</p>
-                <h2 className="mt-1 text-2xl font-semibold">Update your idea</h2>
-              </div>
-              <button type="button" onClick={() => setEditOpen(false)} className="flex size-10 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#69707d]">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="mt-5 grid gap-3">
-              <label className="grid gap-2 text-sm font-semibold">Product name
-                <input value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-              </label>
-              <label className="grid gap-2 text-sm font-semibold">Category
-                <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-              </label>
-              <label className="grid gap-2 text-sm font-semibold">Description
-                <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {quickEmojis.map((emoji) => (
-                  <button key={emoji} type="button" onClick={() => appendEditEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
-            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <button type="button" onClick={() => setEditOpen(false)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e]">Cancel</button>
-              <button disabled={busy === "edit"} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
-                {busy === "edit" ? <Loader2 className="animate-spin" size={15} /> : <Pencil size={15} />} Save
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
+      {editDialog()}
       <IdeaSharePanel open={shareOpen} ideaId={idea.id} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
     </div>
   );
