@@ -42,6 +42,13 @@ function withProfileEncouragementDefaults(value: unknown) {
   };
 }
 
+const legacyDemonstrationCaseIds = new Set([
+  "magnetic-phone-stand",
+  "capybara-night-light",
+  "pet-grooming-tool",
+  "tyora-phone-stand-demonstration"
+]);
+
 function withoutDemonstrationCases(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return { value, removedCount: 0 };
@@ -52,7 +59,11 @@ function withoutDemonstrationCases(value: unknown) {
   }
   const cases = content.cases.filter((entry) => {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) return true;
-    return (entry as Record<string, unknown>).projectType !== "Demonstration Project";
+    const record = entry as Record<string, unknown>;
+    return (
+      record.projectType !== "Demonstration Project" &&
+      !legacyDemonstrationCaseIds.has(String(record.id || ""))
+    );
   });
   return {
     value: cases.length === content.cases.length ? value : { ...content, cases },

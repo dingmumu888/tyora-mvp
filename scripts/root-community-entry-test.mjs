@@ -51,6 +51,10 @@ test("a clean installation starts with no fabricated community case cards", asyn
   assert.doesNotMatch(admin, /defaultContent\.cases\[0\]\.coverImage/);
   assert.match(dataStore, /function withoutDemonstrationCases/);
   assert.match(dataStore, /projectType !== "Demonstration Project"/);
+  assert.match(dataStore, /legacyDemonstrationCaseIds/);
+  assert.match(dataStore, /"magnetic-phone-stand"/);
+  assert.match(dataStore, /"capybara-night-light"/);
+  assert.match(dataStore, /"pet-grooming-tool"/);
   assert.match(dataStore, /sanitized\.removedCount > 0/);
   assert.match(dataStore, /prisma\.siteContent\.update/);
 });
