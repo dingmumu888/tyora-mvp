@@ -41,6 +41,21 @@ test("industry, editable occupation, and searchable country are saved as structu
   assert.match(migration, /ADD COLUMN "countryCode" TEXT/);
 });
 
+test("first-time profile setup cannot be dismissed before required details are saved", async () => {
+  const [modal, gate] = await Promise.all([
+    read("components/community-profile-modal.tsx"),
+    read("components/community-profile-gate.tsx")
+  ]);
+
+  assert.match(modal, /const canDismiss = mode === "edit"/);
+  assert.match(modal, /event\.key === "Escape" && canDismiss/);
+  assert.match(modal, /event\.target === event\.currentTarget && canDismiss/);
+  assert.doesNotMatch(modal, /t\("maybeLater"\)/);
+  assert.doesNotMatch(gate, /profile_setup_skipped|rememberSkipped|wasSkipped/);
+  assert.match(gate, /setOpen\(!nextUser\.profileCompleted\)/);
+  assert.match(gate, /if \(user\?\.profileCompleted\) setOpen\(false\)/);
+});
+
 test("the selected profile country is preferred in admin and prefills new discussions", async () => {
   const [customers, newIdea, countryName] = await Promise.all([
     read("lib/server/customer-store.ts"),

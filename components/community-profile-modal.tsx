@@ -198,6 +198,7 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
   const [message, setMessage] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
   const titleId = useMemo(() => `tyora-profile-${mode}`, [mode]);
+  const canDismiss = mode === "edit";
 
   useEffect(() => {
     setMounted(true);
@@ -220,14 +221,14 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
     const previousOverflow = document.body?.style.overflow || "";
     if (document.body) document.body.style.overflow = "hidden";
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !busy) onClose();
+      if (event.key === "Escape" && canDismiss && !busy) onClose();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => {
       if (document.body) document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [busy, onClose, open]);
+  }, [busy, canDismiss, onClose, open]);
 
   async function onAvatarChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -280,14 +281,16 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
     <div
       className="fixed inset-0 z-[10000] grid min-h-dvh place-items-center overflow-y-auto bg-[#101216]/42 p-4 text-[#101216] backdrop-blur-md"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy) onClose();
+        if (event.target === event.currentTarget && canDismiss && !busy) onClose();
       }}
       role="presentation"
     >
       <section className="relative w-[calc(100vw-32px)] max-w-[620px] rounded-[30px] border border-white/70 bg-white p-6 shadow-[0_24px_90px_rgba(16,18,22,0.24)] ring-1 ring-[#101216]/5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <button type="button" onClick={onClose} disabled={busy} className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#59616e] transition hover:bg-[#f6f7fb]" aria-label={t("closeProfile")}>
-          <X size={17} />
-        </button>
+        {canDismiss ? (
+          <button type="button" onClick={onClose} disabled={busy} className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#59616e] transition hover:bg-[#f6f7fb]" aria-label={t("closeProfile")}>
+            <X size={17} />
+          </button>
+        ) : null}
 
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-2xl bg-[#101216] text-sm font-semibold text-white">TY</div>
@@ -352,10 +355,7 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
 
           {message ? <p className="rounded-2xl bg-[#fff7ed] px-3 py-2 text-sm text-[#9a3412] sm:col-span-2">{message}</p> : null}
 
-          <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-between">
-            {mode === "setup" ? (
-              <button type="button" onClick={onClose} disabled={busy} className="h-11 rounded-full px-4 text-sm font-semibold text-[#69707d] transition hover:bg-[#f6f7fb]">{t("maybeLater")}</button>
-            ) : <span />}
+          <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-end">
             <button disabled={busy} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white shadow-sm shadow-[#101216]/20 transition hover:bg-[#1f2329] disabled:opacity-60">
               {busy ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
               {t("saveProfile")}
