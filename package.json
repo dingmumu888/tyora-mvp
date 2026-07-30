@@ -32,6 +32,7 @@
     "test:community-session": "node --no-warnings --test scripts/community-session-persistence-test.mjs",
     "test:community-profile": "node --no-warnings --test scripts/community-profile-editing-test.mjs",
     "test:profile-encouragement": "node --no-warnings --test scripts/profile-encouragement-test.mjs",
+    "test:my-tyora-i18n": "node --no-warnings --test scripts/my-tyora-i18n-test.mjs",
     "test:source-showcase": "node --no-warnings --test scripts/source-showcase-safety-test.mjs",
     "db:preview:bootstrap": "node scripts/bootstrap-preview-db.mjs",
     "db:preview:phase5b": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase-5b-preview-migration.ps1",

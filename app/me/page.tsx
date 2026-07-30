@@ -2,11 +2,13 @@ import Link from "next/link";
 import { CalendarDays, FileLock2, MapPin, Sparkles, UserRound } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityProfileEditor from "@/components/community-profile-editor";
+import CommunityText from "@/components/community-text";
 import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import EmailLogin from "@/components/email-login";
 import MarkNotificationsRead from "@/components/mark-notifications-read";
 import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
+import MyTyoraText from "@/components/my-tyora-text";
 import ProfileEncouragementCard from "@/components/profile-encouragement-card";
 import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityUserActivity } from "@/lib/server/community-store";
@@ -27,11 +29,11 @@ export const metadata = {
 };
 
 const myTyoraDesktopNav = [
-  { label: "Home", href: "/" },
-  { label: "Source", href: "/source" },
-  { label: "Hot", href: "/" },
-  { label: "Custom", href: "/custom" },
-  { label: "Community", href: "/ask" }
+  { label: "home", href: "/" },
+  { label: "source", href: "/source" },
+  { label: "hot", href: "/" },
+  { label: "custom", href: "/custom" },
+  { label: "community", href: "/ask" }
 ] as const;
 
 export default async function MyTyoraPage() {
@@ -50,7 +52,7 @@ export default async function MyTyoraPage() {
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
             <Link href="/" className="leading-tight">
               <span className="block text-sm font-semibold text-[#101216]">TYORA</span>
-              <span className="block text-xs font-medium text-[#69707d]">Product creator community</span>
+              <span className="block text-xs font-medium text-[#69707d]"><MyTyoraText textKey="community" /></span>
             </Link>
             <nav className="hidden items-center gap-1 md:flex" aria-label="My TYORA desktop navigation">
               {myTyoraDesktopNav.map((item) => (
@@ -59,7 +61,7 @@ export default async function MyTyoraPage() {
                   href={item.href}
                   className="rounded-full px-3 py-2 text-sm font-semibold text-[#59616e] transition hover:bg-[#f2f7ff] hover:text-[#2563eb]"
                 >
-                  {item.label}
+                  <MyTyoraText textKey={item.label} />
                 </Link>
               ))}
             </nav>
@@ -67,10 +69,10 @@ export default async function MyTyoraPage() {
         </header>
         <section className="mx-auto max-w-xl rounded-[28px] border border-[#dfe6ef] bg-white p-7 text-center shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#101216] text-white"><Sparkles size={20} /></div>
-          <h1 className="mt-5 text-3xl font-semibold">Log in to view My TYORA</h1>
-          <p className="mt-3 text-sm leading-6 text-[#59616e]">See your discussions, comments, liked ideas, and community notifications on this device.</p>
+          <h1 className="mt-5 text-3xl font-semibold"><MyTyoraText textKey="loginTitle" /></h1>
+          <p className="mt-3 text-sm leading-6 text-[#59616e]"><MyTyoraText textKey="loginDescription" /></p>
           <EmailLogin refreshOnSuccess className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-sm shadow-[#2563eb]/20">
-            Email Login
+            <MyTyoraText textKey="emailLogin" />
           </EmailLogin>
         </section>
       </main>
@@ -81,16 +83,16 @@ export default async function MyTyoraPage() {
   const totalUnread =
     stats.unreadReceivedComments + stats.unreadReceivedReactions + stats.unreadReviewedIdeas + stats.unreadStatusIdeas;
   const profileMeta = [
-    ["Product Creator", UserRound],
-    [user.country || "Global", MapPin],
-    [`Joined ${new Date(user.joinedAt).getFullYear()}`, CalendarDays]
+    ["productCreator", UserRound],
+    [user.country ? null : "global", MapPin],
+    ["joined", CalendarDays]
   ] as const;
   const compactStats = [
-    { label: "Posts", value: stats.ideasPosted, view: "posts" as const },
-    { label: "Comments", value: stats.commentsMade, view: "comments" as const },
-    { label: "Likes", value: stats.likedIdeas, view: "likes" as const },
-    { label: "I'd Buy", value: stats.interestedIdeas, view: "interested" as const },
-    { label: "Reviews", value: ideas.filter((idea) => idea.review).length, view: "reviews" as const }
+    { label: "posts", value: stats.ideasPosted, view: "posts" as const },
+    { label: "comments", value: stats.commentsMade, view: "comments" as const },
+    { label: "likes", value: stats.likedIdeas, view: "likes" as const },
+    { label: "interested", value: stats.interestedIdeas, view: "interested" as const },
+    { label: "reviews", value: ideas.filter((idea) => idea.review).length, view: "reviews" as const }
   ] as const;
 
   return (
@@ -100,7 +102,7 @@ export default async function MyTyoraPage() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/me" className="leading-tight">
             <span className="block text-sm font-semibold text-[#101216]">My TYORA</span>
-            <span className="block text-xs font-medium text-[#69707d]">Profile & activity</span>
+            <span className="block text-xs font-medium text-[#69707d]"><MyTyoraText textKey="profileActivity" /></span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex" aria-label="My TYORA desktop navigation">
             {myTyoraDesktopNav.map((item) => (
@@ -109,7 +111,7 @@ export default async function MyTyoraPage() {
                 href={item.href}
                 className="rounded-full px-3 py-2 text-sm font-semibold text-[#59616e] transition hover:bg-[#f2f7ff] hover:text-[#2563eb]"
               >
-                {item.label}
+                <MyTyoraText textKey={item.label} />
               </Link>
             ))}
           </nav>
@@ -131,24 +133,26 @@ export default async function MyTyoraPage() {
             <CommunityProfileEditor user={user} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            {profileMeta.map(([label, Icon]) => (
-              <span key={label} className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f7ff] px-3 py-1.5 text-xs font-semibold text-[#315fbd]">
+            {profileMeta.map(([label, Icon], index) => (
+              <span key={label || user.country || index} className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f7ff] px-3 py-1.5 text-xs font-semibold text-[#315fbd]">
                 <Icon size={13} />
-                {label}
+                {index === 1 && user.country ? user.country : label === "joined"
+                  ? <MyTyoraText textKey="joined" values={{ year: new Date(user.joinedAt).getFullYear() }} />
+                  : label ? <MyTyoraText textKey={label} /> : null}
               </span>
             ))}
           </div>
-          {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]">Set up your profile so founders know who they're talking to.</p>}
+          {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]"><MyTyoraText textKey="setupBio" /></p>}
           <ProfileEncouragementCard userId={user.id} />
           <ActivitySummary items={compactStats} ideas={ideas} comments={comments} likedIdeas={likedIdeas} interestedIdeas={interestedIdeas} />
           <ActivityMessages notifications={notifications} unreadCount={totalUnread} />
           <section id="custom-inquiries" className="mt-4 scroll-mt-24 rounded-2xl border border-[#dfe6ef] bg-[#fbfcff] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="inline-flex items-center gap-2 text-sm font-semibold"><FileLock2 size={15} /> Private Custom</p>
-                <p className="mt-1 text-xs text-[#69707d]">Visible only to you and authorized TYORA staff.</p>
+                <p className="inline-flex items-center gap-2 text-sm font-semibold"><FileLock2 size={15} /> <MyTyoraText textKey="privateCustom" /></p>
+                <p className="mt-1 text-xs text-[#69707d]"><MyTyoraText textKey="privateCustomVisible" /></p>
               </div>
-              <Link href="/custom" className="inline-flex min-h-10 items-center rounded-full bg-[#101216] px-3 text-xs font-semibold text-white">New inquiry</Link>
+              <Link href="/custom" className="inline-flex min-h-10 items-center rounded-full bg-[#101216] px-3 text-xs font-semibold text-white"><MyTyoraText textKey="newInquiry" /></Link>
             </div>
             <div className="mt-3 grid gap-2">
               {customInquiries.length ? customInquiries.map((inquiry) => (
@@ -161,21 +165,21 @@ export default async function MyTyoraPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="truncate text-sm font-semibold text-[#101216] underline-offset-4 group-hover:underline">{inquiry.productName}</h3>
-                        <p className="mt-1 text-xs text-[#69707d]">{inquiry.status} · {inquiry.fileCount} private file{inquiry.fileCount === 1 ? "" : "s"}</p>
+                        <p className="mt-1 text-xs text-[#69707d]"><CommunityText text={inquiry.status} /> · <MyTyoraText textKey={inquiry.fileCount === 1 ? "privateFile" : "privateFiles"} values={{ count: inquiry.fileCount }} /></p>
                       </div>
-                      <span className="shrink-0 rounded-full bg-[#eef7f4] px-2.5 py-1 text-[11px] font-semibold text-[#0f766e]">Private</span>
+                      <span className="shrink-0 rounded-full bg-[#eef7f4] px-2.5 py-1 text-[11px] font-semibold text-[#0f766e]"><MyTyoraText textKey="privateLabel" /></span>
                     </div>
                     {inquiry.nextStep ? <p className="mt-2 text-xs leading-5 text-[#59616e]">{inquiry.nextStep}</p> : null}
                   </Link>
                 </article>
               )) : (
-                <p className="rounded-xl bg-white p-3 text-xs leading-5 text-[#69707d]">No private Custom inquiries yet.</p>
+                <p className="rounded-xl bg-white p-3 text-xs leading-5 text-[#69707d]"><MyTyoraText textKey="noPrivateInquiries" /></p>
               )}
             </div>
           </section>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link href="/ask" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold">Community</Link>
-            <Link href="/ask/new" className="inline-flex h-10 items-center justify-center rounded-full bg-[#101216] px-3 text-sm font-semibold text-white">New post</Link>
+            <Link href="/ask" className="inline-flex h-10 items-center justify-center rounded-full border border-[#dfe3e8] text-sm font-semibold"><MyTyoraText textKey="community" /></Link>
+            <Link href="/ask/new" className="inline-flex h-10 items-center justify-center rounded-full bg-[#101216] px-3 text-sm font-semibold text-white"><MyTyoraText textKey="newPost" /></Link>
           </div>
           <div className="mt-2">
             <MyTyoraLogoutButton />
