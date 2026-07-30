@@ -52,6 +52,9 @@ export type CommunityUser = {
   bio?: string;
   profileCompleted: boolean;
   country?: string;
+  countryCode?: string;
+  industry?: string;
+  occupation?: string;
   expertRole?: string;
   expertVerified: boolean;
   joinedAt: string;

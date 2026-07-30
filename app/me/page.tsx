@@ -10,6 +10,9 @@ import MarkNotificationsRead from "@/components/mark-notifications-read";
 import MyTyoraLogoutButton from "@/components/my-tyora-logout-button";
 import MyTyoraText from "@/components/my-tyora-text";
 import ProfileEncouragementCard from "@/components/profile-encouragement-card";
+import ProfileCountryName from "@/components/profile-country-name";
+import { profileIndustries } from "@/lib/profile-options";
+import type { MyTyoraKey } from "@/lib/my-tyora-i18n";
 import { getCommunitySession } from "@/lib/server/community-auth";
 import { getCommunityUserActivity } from "@/lib/server/community-store";
 import { getCustomInquiriesForUser } from "@/lib/server/custom-inquiry-store";
@@ -82,11 +85,7 @@ export default async function MyTyoraPage() {
   const { user, stats, ideas, comments, likedIdeas, interestedIdeas, notifications } = activity;
   const totalUnread =
     stats.unreadReceivedComments + stats.unreadReceivedReactions + stats.unreadReviewedIdeas + stats.unreadStatusIdeas;
-  const profileMeta = [
-    ["productCreator", UserRound],
-    [user.country ? null : "global", MapPin],
-    ["joined", CalendarDays]
-  ] as const;
+  const industryLabel = profileIndustries.find((option) => option.value === user.industry)?.labelKey as MyTyoraKey | undefined;
   const compactStats = [
     { label: "posts", value: stats.ideasPosted, view: "posts" as const },
     { label: "comments", value: stats.commentsMade, view: "comments" as const },
@@ -128,19 +127,25 @@ export default async function MyTyoraPage() {
             <CommunityAvatar name={user.name} src={user.avatar} className="size-14 text-lg" />
             <div className="min-w-0">
               <h1 className="truncate text-xl font-semibold">{user.name}</h1>
-              <p className="truncate text-sm text-[#69707d]">@{user.username}</p>
+              {user.occupation ? <p className="truncate text-sm text-[#69707d]">{user.occupation}</p> : null}
             </div>
             <CommunityProfileEditor user={user} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            {profileMeta.map(([label, Icon], index) => (
-              <span key={label || user.country || index} className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f7ff] px-3 py-1.5 text-xs font-semibold text-[#315fbd]">
-                <Icon size={13} />
-                {index === 1 && user.country ? user.country : label === "joined"
-                  ? <MyTyoraText textKey="joined" values={{ year: new Date(user.joinedAt).getFullYear() }} />
-                  : label ? <MyTyoraText textKey={label} /> : null}
-              </span>
-            ))}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f7ff] px-3 py-1.5 text-xs font-semibold text-[#315fbd]">
+              <UserRound size={13} />
+              {industryLabel ? <MyTyoraText textKey={industryLabel} /> : <MyTyoraText textKey="productCreator" />}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f7ff] px-3 py-1.5 text-xs font-semibold text-[#315fbd]">
+              <MapPin size={13} />
+              {user.country || user.countryCode
+                ? <ProfileCountryName country={user.country} countryCode={user.countryCode} />
+                : <MyTyoraText textKey="global" />}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f2f7ff] px-3 py-1.5 text-xs font-semibold text-[#315fbd]">
+              <CalendarDays size={13} />
+              <MyTyoraText textKey="joined" values={{ year: new Date(user.joinedAt).getFullYear() }} />
+            </span>
           </div>
           {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]"><MyTyoraText textKey="setupBio" /></p>}
           <ProfileEncouragementCard userId={user.id} sessionSeed={session.issuedAt} />

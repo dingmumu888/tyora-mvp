@@ -30,6 +30,10 @@ import {
   validatePrivateUploadBytes
 } from "@/lib/server/private-storage-policy";
 import { uploadPrivateObject } from "@/lib/server/private-storage";
+import {
+  isProfileIndustry,
+  profileCountryFromCode
+} from "@/lib/profile-options";
 
 type UserRow = {
   id: string;
@@ -41,6 +45,9 @@ type UserRow = {
   bio: string | null;
   profileCompleted: boolean;
   country: string | null;
+  countryCode: string | null;
+  industry: string | null;
+  occupation: string | null;
   expertRole: string | null;
   expertVerified: boolean;
   lastNotificationSeenAt?: Date | null;
@@ -284,6 +291,9 @@ function userPublic(user: UserRow) {
     bio: user.bio || undefined,
     profileCompleted: Boolean(user.profileCompleted),
     country: user.country || undefined,
+    countryCode: user.countryCode || undefined,
+    industry: user.industry || undefined,
+    occupation: user.occupation || undefined,
     expertRole: user.expertRole || undefined,
     expertVerified: Boolean(user.expertVerified)
   };
@@ -444,6 +454,9 @@ export async function upsertCommunityUser(input: {
     bio: row.bio || undefined,
     profileCompleted: row.profileCompleted,
     country: row.country || undefined,
+    countryCode: row.countryCode || undefined,
+    industry: row.industry || undefined,
+    occupation: row.occupation || undefined,
     expertRole: row.expertRole || undefined,
     expertVerified: Boolean(row.expertVerified),
     joinedAt: iso(row.joinedAt)
@@ -463,6 +476,9 @@ export async function getCommunityUser(userId: string) {
         bio: row.bio || undefined,
         profileCompleted: row.profileCompleted,
         country: row.country || undefined,
+        countryCode: row.countryCode || undefined,
+        industry: row.industry || undefined,
+        occupation: row.occupation || undefined,
         expertRole: row.expertRole || undefined,
         expertVerified: Boolean(row.expertVerified),
         joinedAt: iso(row.joinedAt)
@@ -483,27 +499,28 @@ function safeAvatarUrl(value: unknown) {
 export async function updateCommunityProfile(userId: string, input: unknown) {
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const name = safeProfileString(data.name, 80);
-  const usernameInput = safeProfileString(data.username, 32)
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, "-")
-    .replace(/(^-|-$)/g, "");
   const bio = safeProfileString(data.bio, 180);
+  const industry = safeProfileString(data.industry, 40);
+  const occupation = safeProfileString(data.occupation, 80);
+  const countryOption = profileCountryFromCode(safeProfileString(data.countryCode, 2));
   const avatar = safeAvatarUrl(data.avatar);
   if (!name) throw new Error("Display name is required.");
-  if (!usernameInput) throw new Error("Username is required.");
+  if (!isProfileIndustry(industry)) throw new Error("Industry is required.");
+  if (!countryOption) throw new Error("Country is required.");
 
   const existing = await prisma.communityUser.findUnique({ where: { id: userId } });
   if (!existing) throw new Error("User not found.");
-  const usernameOwner = await prisma.communityUser.findUnique({ where: { username: usernameInput } });
-  if (usernameOwner && usernameOwner.id !== userId) throw new Error("Username is already taken.");
 
   const row = await prisma.communityUser.update({
     where: { id: userId },
     data: {
       name,
-      username: usernameInput,
       avatar,
       bio: bio || null,
+      industry,
+      occupation: occupation || null,
+      country: countryOption.name,
+      countryCode: countryOption.iso,
       profileCompleted: true
     }
   });
@@ -518,6 +535,9 @@ export async function updateCommunityProfile(userId: string, input: unknown) {
     bio: row.bio || undefined,
     profileCompleted: row.profileCompleted,
     country: row.country || undefined,
+    countryCode: row.countryCode || undefined,
+    industry: row.industry || undefined,
+    occupation: row.occupation || undefined,
     expertRole: row.expertRole || undefined,
     expertVerified: Boolean(row.expertVerified),
     joinedAt: iso(row.joinedAt)
@@ -858,6 +878,9 @@ export async function getCommunityUserActivity(userId: string) {
       bio: user.bio || undefined,
       profileCompleted: user.profileCompleted,
       country: user.country || undefined,
+      countryCode: user.countryCode || undefined,
+      industry: user.industry || undefined,
+      occupation: user.occupation || undefined,
       expertRole: user.expertRole || undefined,
       expertVerified: Boolean(user.expertVerified),
       joinedAt: iso(user.joinedAt)

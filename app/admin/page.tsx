@@ -91,6 +91,8 @@ type AdminCustomer = {
   loginCount: number;
   source: string;
   country: string;
+  industry: string;
+  occupation: string;
   city: string;
   maskedIp: string;
   ideaCount: number;
@@ -1379,7 +1381,7 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
   const { language, t } = useAdminLanguage();
   const [query, setQuery] = useState("");
   const visible = customers.filter((customer) => {
-    const haystack = [customer.email, customer.name, customer.username, customer.source, customer.country, customer.city].join(" ").toLowerCase();
+    const haystack = [customer.email, customer.name, customer.username, customer.source, customer.country, customer.industry, customer.occupation, customer.city].join(" ").toLowerCase();
     return haystack.includes(query.trim().toLowerCase());
   });
 
@@ -1403,7 +1405,7 @@ function CustomersSection({ customers, refresh }: { customers: AdminCustomer[]; 
           <tbody className="divide-y divide-[#eef1f4]">
             {visible.map((customer) => (
               <tr key={customer.id}>
-                <td className="px-4 py-3"><p className="font-semibold">{customer.name || customer.username}</p><p className="text-xs text-[#687284]">{customer.email}</p></td>
+                <td className="px-4 py-3"><p className="font-semibold">{customer.name || customer.username}</p><p className="text-xs text-[#687284]">{customer.email}</p>{customer.occupation || customer.industry ? <p className="mt-1 text-xs text-[#315fbd]">{customer.occupation || customer.industry}</p> : null}</td>
                 <td className="px-4 py-3"><span className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-xs font-semibold text-[#315fbd]">{customer.source}</span></td>
                 <td className="px-4 py-3"><p>{[customer.city, customer.country].filter(Boolean).join(", ")}</p><p className="text-xs text-[#8791a0]">{customer.maskedIp || "IP unavailable"}</p></td>
                 <td className="px-4 py-3">{customer.lastLoginAt ? new Date(customer.lastLoginAt).toLocaleString(language === "zh" ? "zh-CN" : "en") : "-"}</td>

@@ -48,6 +48,8 @@ export type AdminCustomer = {
   loginCount: number;
   source: string;
   country: string;
+  industry: string;
+  occupation: string;
   city: string;
   maskedIp: string;
   ideaCount: number;
@@ -71,7 +73,9 @@ export async function getAdminCustomers(): Promise<AdminCustomer[]> {
     lastLoginAt: row.lastLoginAt?.toISOString() || null,
     loginCount: row.loginCount,
     source: row.firstTrafficSource || "Direct",
-    country: row.lastCountry || row.country || "Unknown",
+    country: row.country || row.lastCountry || "Unknown",
+    industry: row.industry || "",
+    occupation: row.occupation || "",
     city: row.lastCity || "",
     maskedIp: row.lastMaskedIp || "",
     ideaCount: row._count.ideas,

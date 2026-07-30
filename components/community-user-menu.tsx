@@ -109,7 +109,7 @@ export default function CommunityUserMenu({
             <CommunityAvatar name={user.name} src={user.avatar} className="size-11 text-sm" />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{user.name}</p>
-              <p className="truncate text-xs text-[#69707d]">@{user.username}</p>
+              {user.occupation || user.country ? <p className="truncate text-xs text-[#69707d]">{[user.occupation, user.country].filter(Boolean).join(" · ")}</p> : null}
             </div>
           </Link>
           <div className="mt-2 grid gap-1">

@@ -200,6 +200,9 @@ model CommunityUser {
   bio                    String?
   profileCompleted       Boolean             @default(false)
   country                String?
+  countryCode            String?
+  industry               String?
+  occupation             String?
   expertRole             String?
   expertVerified         Boolean             @default(false)
   lastNotificationSeenAt DateTime?

@@ -2,10 +2,12 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Camera, CheckCircle2, Loader2, X } from "lucide-react";
+import { BriefcaseBusiness, Camera, Check, CheckCircle2, ChevronDown, Loader2, MapPin, Search, X } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import { usePublicLanguage } from "@/components/public-language-provider";
+import { countryCallingCodes } from "@/lib/country-calling-codes";
 import { translateMyTyora, type MyTyoraKey } from "@/lib/my-tyora-i18n";
+import { inferProfileCountryCode, profileIndustries } from "@/lib/profile-options";
 
 export type CommunitySessionUser = {
   id: string;
@@ -15,6 +17,10 @@ export type CommunitySessionUser = {
   avatar?: string;
   bio?: string;
   profileCompleted?: boolean;
+  country?: string;
+  countryCode?: string;
+  industry?: string;
+  occupation?: string;
 };
 
 type CommunityProfileModalProps = {
@@ -82,14 +88,112 @@ async function readJsonSafely(response: Response, t: Translator) {
   }
 }
 
+function ProfileCountrySelect({
+  value,
+  language,
+  onChange,
+  t
+}: {
+  value: string;
+  language: string;
+  onChange: (value: string) => void;
+  t: Translator;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const options = useMemo(() => {
+    const displayNames = new Intl.DisplayNames([language], { type: "region" });
+    return countryCallingCodes.map((country) => ({
+      ...country,
+      localizedName: displayNames.of(country.iso) || country.name
+    }));
+  }, [language]);
+  const selected = options.find((country) => country.iso === value);
+  const normalizedSearch = search.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    if (!normalizedSearch) return options;
+    return options.filter((country) =>
+      [country.localizedName, country.name, country.iso, ...(country.aliases || [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearch)
+    );
+  }, [normalizedSearch, options]);
+
+  useEffect(() => {
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative grid gap-2 text-sm font-medium">
+      <span>{t("country")}</span>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => setOpen((current) => !current)}
+        className="flex h-12 items-center justify-between rounded-2xl border border-[#dfe3e8] bg-white px-3 text-left outline-none transition hover:border-[#b8c5d8] focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10"
+      >
+        <span className={selected ? "text-[#101216]" : "text-[#8b93a1]"}>
+          {selected ? `${selected.flag} ${selected.localizedName}` : t("selectCountry")}
+        </span>
+        <ChevronDown size={16} aria-hidden="true" />
+      </button>
+      {open ? (
+        <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-[#dfe6ef] bg-white p-2 shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+          <label className="flex h-10 items-center gap-2 rounded-xl border border-[#dfe6ef] px-3 text-[#69707d] focus-within:border-[#2563eb] focus-within:ring-4 focus-within:ring-[#2563eb]/10">
+            <Search size={15} aria-hidden="true" />
+            <span className="sr-only">{t("searchCountry")}</span>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              autoFocus
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#101216] outline-none"
+              placeholder={t("searchCountry")}
+            />
+          </label>
+          <div role="listbox" aria-label={t("country")} className="mt-2 max-h-52 overflow-y-auto overscroll-contain">
+            {filtered.length ? filtered.map((country) => (
+              <button
+                key={country.iso}
+                type="button"
+                role="option"
+                aria-selected={country.iso === value}
+                onClick={() => {
+                  onChange(country.iso);
+                  setSearch("");
+                  setOpen(false);
+                }}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-[#f2f7ff]"
+              >
+                <span aria-hidden="true">{country.flag}</span>
+                <span className="min-w-0 flex-1 truncate">{country.localizedName}</span>
+                <span className="text-xs font-semibold text-[#8b93a1]">{country.iso}</span>
+                {country.iso === value ? <Check size={15} aria-hidden="true" /> : null}
+              </button>
+            )) : <p className="px-3 py-4 text-center text-sm text-[#69707d]">{t("noCountryFound")}</p>}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function CommunityProfileModal({ open, user, mode = "setup", onClose, onSaved }: CommunityProfileModalProps) {
   const { language } = usePublicLanguage();
   const t: Translator = (key, values) => translateMyTyora(language, key, values);
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [occupation, setOccupation] = useState("");
+  const [countryCode, setCountryCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
@@ -102,9 +206,11 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
   useEffect(() => {
     if (!open || !user) return;
     setName(user.name || "");
-    setUsername(user.username || "");
     setBio(user.bio || "");
     setAvatar(user.avatar || "");
+    setIndustry(user.industry || "");
+    setOccupation(user.occupation || "");
+    setCountryCode(inferProfileCountryCode(user.countryCode, user.country));
     setMessage("");
     window.setTimeout(() => nameRef.current?.focus(), 80);
   }, [open, user]);
@@ -140,13 +246,17 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!industry || !countryCode) {
+      setMessage(t("completeIndustryCountry"));
+      return;
+    }
     setBusy(true);
     setMessage("");
     try {
       const response = await fetch("/api/community/session", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, username, bio, avatar })
+        body: JSON.stringify({ name, bio, avatar, industry, occupation, countryCode })
       });
       const payload = await readJsonSafely(response, t);
       if (!response.ok || !payload.success) throw new Error(payload.message || t("unableSaveProfile"));
@@ -174,7 +284,7 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
       }}
       role="presentation"
     >
-      <section className="relative w-[calc(100vw-32px)] max-w-[520px] rounded-[30px] border border-white/70 bg-white p-6 shadow-[0_24px_90px_rgba(16,18,22,0.24)] ring-1 ring-[#101216]/5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <section className="relative w-[calc(100vw-32px)] max-w-[620px] rounded-[30px] border border-white/70 bg-white p-6 shadow-[0_24px_90px_rgba(16,18,22,0.24)] ring-1 ring-[#101216]/5 sm:p-7" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <button type="button" onClick={onClose} disabled={busy} className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#59616e] transition hover:bg-[#f6f7fb]" aria-label={t("closeProfile")}>
           <X size={17} />
         </button>
@@ -192,8 +302,8 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
           <p className="mt-3 text-sm leading-6 text-[#59616e]">{t("profileHelp")}</p>
         </div>
 
-        <form onSubmit={saveProfile} className="mt-6 grid gap-4">
-          <div className="flex items-center gap-4">
+        <form onSubmit={saveProfile} className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="flex items-center gap-4 sm:col-span-2">
             <CommunityAvatar name={name || user.email} src={avatar} className="size-16 text-lg" />
             <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#59616e] transition hover:bg-[#f6f7fb]">
               <Camera size={16} /> {t("uploadAvatar")}
@@ -201,21 +311,38 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
             </label>
           </div>
 
-          <label className="grid gap-2 text-sm font-medium">
-            {t("displayName")}
+          <label className="grid gap-2 text-sm font-medium sm:col-span-2">
+            {t("websiteName")}
             <input ref={nameRef} required value={name} onChange={(event) => setName(event.target.value)} className="h-12 rounded-2xl border border-[#dfe3e8] bg-white px-3 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder="Adam Chen" />
           </label>
 
           <label className="grid gap-2 text-sm font-medium">
-            {t("username")}
-            <input required value={username} onChange={(event) => setUsername(event.target.value)} className="h-12 rounded-2xl border border-[#dfe3e8] bg-white px-3 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder="adam-founder" />
+            <span className="inline-flex items-center gap-2"><BriefcaseBusiness size={15} /> {t("industry")}</span>
+            <select required value={industry} onChange={(event) => setIndustry(event.target.value)} className="h-12 rounded-2xl border border-[#dfe3e8] bg-white px-3 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10">
+              <option value="">{t("selectIndustry")}</option>
+              {profileIndustries.map((option) => (
+                <option key={option.value} value={option.value}>{t(option.labelKey)}</option>
+              ))}
+            </select>
           </label>
 
           <label className="grid gap-2 text-sm font-medium">
+            {t("occupation")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span>
+            <input value={occupation} maxLength={80} onChange={(event) => setOccupation(event.target.value)} className="h-12 rounded-2xl border border-[#dfe3e8] bg-white px-3 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder={t("occupationPlaceholder")} />
+          </label>
+
+          <div className="flex items-start gap-2 sm:col-span-2">
+            <MapPin className="mt-9 shrink-0 text-[#315fbd]" size={16} aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <ProfileCountrySelect value={countryCode} language={language} onChange={setCountryCode} t={t} />
+            </div>
+          </div>
+
+          <label className="grid gap-2 text-sm font-medium sm:col-span-2">
             {t("shortBio")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span>
             <textarea value={bio} onChange={(event) => setBio(event.target.value)} rows={3} maxLength={180} className="resize-none rounded-2xl border border-[#dfe3e8] bg-white px-3 py-3 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder={t("bioPlaceholder")} />
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
             {quickEmojis.map((emoji) => (
               <button key={emoji} type="button" onClick={() => appendBioEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
                 {emoji}
@@ -223,9 +350,9 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
             ))}
           </div>
 
-          {message ? <p className="rounded-2xl bg-[#fff7ed] px-3 py-2 text-sm text-[#9a3412]">{message}</p> : null}
+          {message ? <p className="rounded-2xl bg-[#fff7ed] px-3 py-2 text-sm text-[#9a3412] sm:col-span-2">{message}</p> : null}
 
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+          <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-between">
             {mode === "setup" ? (
               <button type="button" onClick={onClose} disabled={busy} className="h-11 rounded-full px-4 text-sm font-semibold text-[#69707d] transition hover:bg-[#f6f7fb]">{t("maybeLater")}</button>
             ) : <span />}

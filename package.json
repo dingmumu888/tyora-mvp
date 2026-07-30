@@ -32,6 +32,7 @@
     "test:root-community-entry": "node --no-warnings --test scripts/root-community-entry-test.mjs",
     "test:community-session": "node --no-warnings --test scripts/community-session-persistence-test.mjs",
     "test:community-profile": "node --no-warnings --test scripts/community-profile-editing-test.mjs",
+    "test:community-profile-details": "node --no-warnings --test scripts/community-profile-details-test.mjs",
     "test:profile-encouragement": "node --no-warnings --test scripts/profile-encouragement-test.mjs",
     "test:my-tyora-i18n": "node --no-warnings --test scripts/my-tyora-i18n-test.mjs",
     "test:source-showcase": "node --no-warnings --test scripts/source-showcase-safety-test.mjs",

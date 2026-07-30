@@ -26,7 +26,7 @@ import CommunityUserMenu from "@/components/community-user-menu";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { cn } from "@/lib/utils";
 
-type SessionUser = { id: string; name: string; email: string; username: string; avatar?: string; bio?: string; profileCompleted?: boolean };
+type SessionUser = { id: string; name: string; email: string; username: string; avatar?: string; bio?: string; profileCompleted?: boolean; country?: string };
 type Step = 0 | 1 | 2 | 3;
 type ImagePreview = { name: string; url: string };
 
@@ -107,17 +107,34 @@ export default function NewIdeaClient() {
   });
 
   useEffect(() => {
+    function applyUser(nextUser: SessionUser | null) {
+      setUser(nextUser);
+      if (nextUser?.country) {
+        setForm((current) => ({
+          ...current,
+          country: current.country.trim() ? current.country : nextUser.country || ""
+        }));
+      }
+    }
+
     function refreshSession() {
       fetch("/api/community/session")
         .then((response) => response.json())
-        .then((data) => setUser(data.user || null))
-        .catch(() => setUser(null))
+        .then((data) => applyUser(data.user || null))
+        .catch(() => applyUser(null))
         .finally(() => setCheckingSession(false));
     }
 
     refreshSession();
     window.addEventListener("tyora:community-login", refreshSession);
-    return () => window.removeEventListener("tyora:community-login", refreshSession);
+    function onProfileUpdated(event: Event) {
+      applyUser((event as CustomEvent<{ user?: SessionUser }>).detail?.user || null);
+    }
+    window.addEventListener("tyora:community-profile-updated", onProfileUpdated);
+    return () => {
+      window.removeEventListener("tyora:community-login", refreshSession);
+      window.removeEventListener("tyora:community-profile-updated", onProfileUpdated);
+    };
   }, []);
 
   const usedText = useMemo(() => "Every submitted idea gets an initial TYORA manufacturing review.", []);
