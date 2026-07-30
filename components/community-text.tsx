@@ -107,6 +107,9 @@ const zhCN: Record<string, string> = {
   "Sourcing completed": "寻源已完成",
   "Sourcing example": "寻源示例",
   "Customer approved": "客户已授权",
+  "No customer-approved sourcing activity yet": "暂时还没有客户授权公开的寻源动态",
+  "New sourcing activity will appear here only after the customer gives permission and TYORA reviews it.": "只有在客户同意并经 TYORA 审核后，新的寻源动态才会显示在这里。",
+  "Submit the first product request": "提交第一条找货需求",
   "supplier options checked": "个供应商选项已核实",
   "quotes compared": "份报价已比较",
   "Find a similar existing product": "寻找类似现货",
@@ -149,7 +152,10 @@ const es: Record<string, string> = {
   "Magnetic Phone Stand": "Soporte magnético para teléfono",
   "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Un concepto de soporte magnético plegable para teléfono, diseñado para planificar el prototipo y evaluar su fabricabilidad.",
   "Capybara Night Light": "Luz nocturna de capibara", "A playful night light prepared for small-batch production.": "Una divertida luz nocturna preparada para producción en lotes pequeños.",
-  "Pet Grooming Tool": "Herramienta de aseo para mascotas", "A pet care product refined through prototype review.": "Un producto para el cuidado de mascotas perfeccionado mediante la revisión del prototipo."
+  "Pet Grooming Tool": "Herramienta de aseo para mascotas", "A pet care product refined through prototype review.": "Un producto para el cuidado de mascotas perfeccionado mediante la revisión del prototipo.",
+  "No customer-approved sourcing activity yet": "Aún no hay actividad de abastecimiento autorizada por clientes",
+  "New sourcing activity will appear here only after the customer gives permission and TYORA reviews it.": "La nueva actividad aparecerá aquí solo después de que el cliente dé permiso y TYORA la revise.",
+  "Submit the first product request": "Enviar la primera solicitud de producto"
 };
 
 const fr: Record<string, string> = {
@@ -176,7 +182,10 @@ const fr: Record<string, string> = {
   "Magnetic Phone Stand": "Support de téléphone magnétique",
   "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Un concept de support de téléphone magnétique pliable, conçu pour la planification du prototype et l’évaluation de sa fabricabilité.",
   "Capybara Night Light": "Veilleuse capybara", "A playful night light prepared for small-batch production.": "Une veilleuse ludique préparée pour une production en petite série.",
-  "Pet Grooming Tool": "Outil de toilettage pour animaux", "A pet care product refined through prototype review.": "Un produit de soin pour animaux affiné grâce à l’évaluation du prototype."
+  "Pet Grooming Tool": "Outil de toilettage pour animaux", "A pet care product refined through prototype review.": "Un produit de soin pour animaux affiné grâce à l’évaluation du prototype.",
+  "No customer-approved sourcing activity yet": "Aucune activité de sourcing approuvée par un client pour le moment",
+  "New sourcing activity will appear here only after the customer gives permission and TYORA reviews it.": "Une nouvelle activité apparaîtra ici uniquement après l’autorisation du client et la validation de TYORA.",
+  "Submit the first product request": "Envoyer la première demande de produit"
 };
 
 const de: Record<string, string> = {
@@ -203,7 +212,10 @@ const de: Record<string, string> = {
   "Magnetic Phone Stand": "Magnetischer Handyhalter",
   "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Ein klappbares Konzept für einen magnetischen Handyhalter zur Prototypenplanung und Prüfung der Herstellbarkeit.",
   "Capybara Night Light": "Capybara-Nachtlicht", "A playful night light prepared for small-batch production.": "Ein verspieltes Nachtlicht, vorbereitet für die Kleinserienproduktion.",
-  "Pet Grooming Tool": "Tierpflegewerkzeug", "A pet care product refined through prototype review.": "Ein durch Prototypenprüfung optimiertes Produkt für die Tierpflege."
+  "Pet Grooming Tool": "Tierpflegewerkzeug", "A pet care product refined through prototype review.": "Ein durch Prototypenprüfung optimiertes Produkt für die Tierpflege.",
+  "No customer-approved sourcing activity yet": "Noch keine vom Kunden freigegebene Beschaffungsaktivität",
+  "New sourcing activity will appear here only after the customer gives permission and TYORA reviews it.": "Neue Aktivitäten erscheinen hier erst nach Zustimmung des Kunden und Prüfung durch TYORA.",
+  "Submit the first product request": "Erste Produktanfrage senden"
 };
 
 const pt: Record<string, string> = {
@@ -230,7 +242,10 @@ const pt: Record<string, string> = {
   "Magnetic Phone Stand": "Suporte magnético para celular",
   "A foldable magnetic phone stand concept designed for prototype planning and manufacturability review.": "Um conceito de suporte magnético dobrável para celular, criado para planejamento de protótipo e avaliação de fabricação.",
   "Capybara Night Light": "Luminária noturna de capivara", "A playful night light prepared for small-batch production.": "Uma luminária noturna divertida preparada para produção em pequenos lotes.",
-  "Pet Grooming Tool": "Ferramenta de cuidados para animais", "A pet care product refined through prototype review.": "Um produto para cuidados com animais aperfeiçoado por meio da análise do protótipo."
+  "Pet Grooming Tool": "Ferramenta de cuidados para animais", "A pet care product refined through prototype review.": "Um produto para cuidados com animais aperfeiçoado por meio da análise do protótipo.",
+  "No customer-approved sourcing activity yet": "Ainda não há atividades de sourcing aprovadas por clientes",
+  "New sourcing activity will appear here only after the customer gives permission and TYORA reviews it.": "Novas atividades aparecerão aqui somente após a autorização do cliente e a revisão da TYORA.",
+  "Submit the first product request": "Enviar a primeira solicitação de produto"
 };
 
 const translations: Partial<Record<PublicLanguage, Record<string, string>>> = {

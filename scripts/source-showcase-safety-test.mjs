@@ -59,11 +59,13 @@ test("submission consent is optional and publishing remains an admin-reviewed ac
   assert.match(store, /Add a public activity title before publishing/);
 });
 
-test("early social proof is clearly labeled and replaced by approved real activity", async () => {
+test("source activity never fabricates social proof and has an honest empty state", async () => {
   const sourcePage = await read("app/source/source-client.tsx");
 
-  assert.match(sourcePage, /isDemo: true/);
-  assert.match(sourcePage, /Sourcing example/);
-  assert.match(sourcePage, /publicActivities\.length >= 3/);
+  assert.doesNotMatch(sourcePage, /demonstrationActivities/);
+  assert.doesNotMatch(sourcePage, /isDemo: true/);
+  assert.doesNotMatch(sourcePage, /Sourcing example/);
+  assert.match(sourcePage, /publicActivities\.slice\(0, 6\)/);
+  assert.match(sourcePage, /No customer-approved sourcing activity yet/);
   assert.match(sourcePage, /Customer approved/);
 });

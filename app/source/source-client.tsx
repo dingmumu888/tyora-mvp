@@ -84,51 +84,6 @@ const pricingOptions = [
   }
 ];
 
-const demonstrationActivities: PublicSourceActivity[] = [
-  {
-    id: "demo-phone-accessory",
-    title: "Magnetic phone accessory",
-    summary: "Comparing existing-product suppliers, MOQ, packaging, and factory-price options.",
-    countryLabel: "North America buyer",
-    quantityLabel: "500–1,000 pcs",
-    needTypes: ["Find supplier", "Get better price"],
-    status: "Checking Supplier",
-    imageUrl: "/images/category-phone-3c-accessories-v1.png",
-    supplierCount: 4,
-    quoteCount: 2,
-    updatedAt: "",
-    isDemo: true
-  },
-  {
-    id: "demo-office-product",
-    title: "Desktop organization product",
-    summary: "Reviewing ready-made options and checking whether samples can be supplied.",
-    countryLabel: "European buyer",
-    quantityLabel: "300–500 pcs",
-    needTypes: ["Find supplier", "Request sample"],
-    status: "Quoted",
-    imageUrl: "/images/category-desktop-office-v1.png",
-    supplierCount: 5,
-    quoteCount: 3,
-    updatedAt: "",
-    isDemo: true
-  },
-  {
-    id: "demo-gift-accessory",
-    title: "Ready-made gift accessory",
-    summary: "Checking stock-style product options, logo packaging, and managed sourcing support.",
-    countryLabel: "Asia-Pacific buyer",
-    quantityLabel: "1,000–2,000 pcs",
-    needTypes: ["Managed sourcing"],
-    status: "Sample Requested",
-    imageUrl: "/images/category-custom-gifts-v1.png",
-    supplierCount: 3,
-    quoteCount: 2,
-    updatedAt: "",
-    isDemo: true
-  }
-];
-
 const publicStatusLabels: Record<SourceStatus, string> = {
   New: "Request received",
   "Checking Supplier": "Checking China suppliers",
@@ -629,11 +584,9 @@ export default function SourceClient() {
             </p>
           </div>
 
-          <div className="-mx-5 mt-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0">
-            {(publicActivities.length >= 3
-              ? publicActivities.slice(0, 6)
-              : [...publicActivities, ...demonstrationActivities.slice(0, 3 - publicActivities.length)]
-            ).map((activity) => (
+          {publicActivities.length > 0 ? (
+            <div className="-mx-5 mt-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0">
+              {publicActivities.slice(0, 6).map((activity) => (
               <article key={activity.id} className="min-w-[82vw] snap-start overflow-hidden rounded-3xl border border-[#e1e7ef] bg-[#fbfcfe] sm:min-w-[360px] lg:min-w-0">
                 <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#f8fafc]">
                   {activity.imageUrl ? (
@@ -654,7 +607,7 @@ export default function SourceClient() {
                   )}
                   <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
                     <span className="rounded-full bg-[#101216]/90 px-2.5 py-1 text-[11px] font-semibold text-white"><CommunityText text={publicStatusLabels[activity.status]} /></span>
-                    {activity.isDemo ? <span className="rounded-full bg-[#fff7d6] px-2.5 py-1 text-[11px] font-semibold text-[#8a5a00]"><CommunityText text="Sourcing example" /></span> : <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2.5 py-1 text-[11px] font-semibold text-[#06756f]"><BadgeCheck size={12} /> <CommunityText text="Customer approved" /></span>}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2.5 py-1 text-[11px] font-semibold text-[#06756f]"><BadgeCheck size={12} /> <CommunityText text="Customer approved" /></span>
                   </div>
                 </div>
                 <div className="p-4">
@@ -676,8 +629,20 @@ export default function SourceClient() {
                   </a>
                 </div>
               </article>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-dashed border-[#cfd9e7] bg-[#f8fafc] px-5 py-10 text-center">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-[#eef4ff] text-[#2563eb]"><PackageSearch size={26} /></span>
+              <h3 className="mt-4 text-lg font-semibold text-[#101216]"><CommunityText text="No customer-approved sourcing activity yet" /></h3>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[#59616e]">
+                <CommunityText text="New sourcing activity will appear here only after the customer gives permission and TYORA reviews it." />
+              </p>
+              <a href="#source-form" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#2563eb]">
+                <CommunityText text="Submit the first product request" /> <ArrowRight size={14} />
+              </a>
+            </div>
+          )}
         </div>
       </section>
 

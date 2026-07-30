@@ -64,9 +64,9 @@ const checks = [
       storage.includes("Sample costs and shipping are charged at cost when a sample is required.")
   },
   {
-    name: "mobile top navigation uses shorter Product Match CTA while main CTA stays CMS-managed",
+    name: "mobile and desktop top navigation CTAs stay localized and CMS-managed",
     pass:
-      source.includes("<span className=\"sm:hidden\">Product Match</span>") &&
+      source.includes("<span className=\"sm:hidden\">{copy.home.source.ctaText}</span>") &&
       source.includes("<span className=\"hidden sm:inline\">{sourceCopy.ctaText}</span>")
   },
   {
