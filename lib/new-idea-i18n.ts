@@ -48,13 +48,14 @@ const en = {
   dragImages: "Drag images here",
   pasteScreenshots: "or paste screenshots",
   helpUnderstand: "Help TYORA understand your idea",
-  addDetails: "Add details if you have them. TYORA can still review a rough idea.",
+  addDetails: "Describe the product idea, its key functions, where people would use it, and who it is designed for. A rough description is enough.",
   optional: "optional",
-  descriptionPlaceholder: "What inspired it? Who is it for? What should founders and TYORA pay attention to?",
+  descriptionPlaceholder: "What does the product do? Which features matter? Where would people use it, and who would it help?",
   country: "Country",
   countryPlaceholder: "United States",
-  questionType: "Question type",
-  otherQuestionPlaceholder: "What else should TYORA review?",
+  questionType: "What would you like TYORA to answer?",
+  otherQuestionPlaceholder: "Write the question you want TYORA to answer...",
+  addCustomQuestion: "Please write your custom question.",
   publicDiscussion: "Public community discussion",
   publicDiscussionHelp: "Your idea becomes visible to everyone only after TYORA approves it for the public community.",
   readySubmit: "Ready to submit?",
@@ -98,7 +99,7 @@ const en = {
   qMaterial: "Material Suggestion?",
   qMoq: "MOQ Estimate?",
   qFactory: "Factory Recommendation?",
-  qOther: "Other"
+  qOther: "Ask your own question"
 } as const;
 
 export type NewIdeaKey = keyof typeof en;
@@ -123,9 +124,10 @@ const zhCN: Dictionary = {
   next: "下一步", back: "上一步", showIdea: "展示你的创意",
   showIdeaHelp: "如果有图片，请上传。草图、截图、参考产品或 AI 图片都可以。",
   dragImages: "将图片拖到这里", pasteScreenshots: "或粘贴截图", helpUnderstand: "帮助 TYORA 了解你的创意",
-  addDetails: "如果已有更多信息，可以继续补充；即使创意还很初步，TYORA 也可以评估。",
-  optional: "选填", descriptionPlaceholder: "灵感来自哪里？适合谁？你希望其他创作者和 TYORA 重点关注什么？",
-  country: "国家", countryPlaceholder: "中国", questionType: "希望评估的问题", otherQuestionPlaceholder: "还希望 TYORA 评估什么？",
+  addDetails: "请介绍产品的设计理念、主要功能、使用场景和适用人群；内容还不完整也没关系。",
+  optional: "选填", descriptionPlaceholder: "例如：这个产品有什么功能？适合哪些使用场景？主要方便哪些人群？",
+  country: "国家", countryPlaceholder: "中国", questionType: "你希望 TYORA 回答什么问题？", otherQuestionPlaceholder: "请写下你想了解的问题，例如：这种结构是否容易开模？",
+  addCustomQuestion: "请填写你希望 TYORA 回答的自定义问题。",
   publicDiscussion: "公开社区讨论", publicDiscussionHelp: "只有经过 TYORA 审核后，你的创意才会在公开社区中展示。",
   readySubmit: "准备提交了吗？", readySubmitHelp: "TYORA 会先审核，审核通过后才会在公开社区中展示。",
   initialAssessmentBadge: "初步评估", summaryPlaceholder: "你的创意摘要会显示在这里。",
@@ -147,7 +149,7 @@ const zhCN: Dictionary = {
   loginToPublish: "请使用邮箱登录后发布讨论，你填写的草稿会保留在这里。",
   loggedInDraft: "登录成功，你的草稿仍然保留。", unableSubmit: "暂时无法提交创意。", ideaLive: "创意已发布。",
   notSpecified: "未填写", qManufactured: "这个产品可以制造吗？", qCost: "预计成本是多少？",
-  qMaterial: "建议使用什么材料？", qMoq: "预计起订量是多少？", qFactory: "适合什么类型的工厂？", qOther: "其他"
+  qMaterial: "建议使用什么材料？", qMoq: "预计起订量是多少？", qFactory: "适合什么类型的工厂？", qOther: "自定义问题"
 };
 
 const es: Dictionary = {
@@ -168,9 +170,10 @@ const es: Dictionary = {
   estimatedTime: "Tiempo estimado", oneSentenceIdea: "Idea en una frase", oneSentencePlaceholder: "Soporte magnético para escritorio y viajes",
   next: "Siguiente", back: "Atrás", showIdea: "Muéstranos tu idea", showIdeaHelp: "Añade imágenes si las tienes. Se aceptan bocetos, capturas, productos de referencia o imágenes de IA.",
   dragImages: "Arrastra imágenes aquí", pasteScreenshots: "o pega capturas", helpUnderstand: "Ayuda a TYORA a entender tu idea",
-  addDetails: "Añade los detalles que tengas. TYORA también puede evaluar una idea inicial.", optional: "opcional",
-  descriptionPlaceholder: "¿Qué la inspiró? ¿Para quién es? ¿En qué deberían fijarse los creadores y TYORA?",
-  country: "País", countryPlaceholder: "España", questionType: "Tipo de pregunta", otherQuestionPlaceholder: "¿Qué más debería evaluar TYORA?",
+  addDetails: "Describe la idea, sus funciones principales, dónde se usaría y para quién está pensada. Una descripción inicial es suficiente.", optional: "opcional",
+  descriptionPlaceholder: "¿Qué hace el producto? ¿Qué funciones importan? ¿Dónde se usaría y a quién ayudaría?",
+  country: "País", countryPlaceholder: "España", questionType: "¿Qué quieres que responda TYORA?", otherQuestionPlaceholder: "Escribe la pregunta que quieres hacerle a TYORA...",
+  addCustomQuestion: "Escribe tu pregunta personalizada.",
   publicDiscussion: "Conversación pública", publicDiscussionHelp: "Tu idea solo será visible para todos después de que TYORA la apruebe.",
   readySubmit: "¿Lista para enviar?", readySubmitHelp: "TYORA la revisará antes de que aparezca en la comunidad pública.",
   initialAssessmentBadge: "Evaluación inicial", summaryPlaceholder: "El resumen de tu idea aparecerá aquí.",
@@ -190,7 +193,7 @@ const es: Dictionary = {
   confirmPermissions: "Confirma los tres permisos públicos o elige Privado.", loginToPublish: "Inicia sesión por correo para publicar. Tu borrador seguirá aquí.",
   loggedInDraft: "Sesión iniciada. Tu borrador sigue aquí.", unableSubmit: "No se pudo enviar la idea.", ideaLive: "Tu idea está publicada.",
   notSpecified: "No especificado", qManufactured: "¿Se puede fabricar?", qCost: "¿Coste estimado?", qMaterial: "¿Material recomendado?",
-  qMoq: "¿MOQ estimado?", qFactory: "¿Fábrica recomendada?", qOther: "Otro"
+  qMoq: "¿MOQ estimado?", qFactory: "¿Fábrica recomendada?", qOther: "Escribir otra pregunta"
 };
 
 const fr: Dictionary = {
@@ -211,9 +214,10 @@ const fr: Dictionary = {
   estimatedTime: "Temps estimé", oneSentenceIdea: "L’idée en une phrase", oneSentencePlaceholder: "Support magnétique pour le bureau et les voyages",
   next: "Suivant", back: "Retour", showIdea: "Montrez-nous votre idée", showIdeaHelp: "Ajoutez des images si vous en avez. Croquis, captures, produits de référence et images IA sont acceptés.",
   dragImages: "Glissez les images ici", pasteScreenshots: "ou collez des captures", helpUnderstand: "Aidez TYORA à comprendre votre idée",
-  addDetails: "Ajoutez les informations disponibles. TYORA peut aussi évaluer une idée encore sommaire.", optional: "facultatif",
-  descriptionPlaceholder: "Qu’est-ce qui vous a inspiré ? À qui s’adresse le produit ? Quels points doivent être examinés ?",
-  country: "Pays", countryPlaceholder: "France", questionType: "Type de question", otherQuestionPlaceholder: "Que souhaitez-vous faire évaluer d’autre ?",
+  addDetails: "Décrivez l’idée, ses fonctions principales, ses usages et les personnes auxquelles elle s’adresse. Une première description suffit.", optional: "facultatif",
+  descriptionPlaceholder: "Que fait le produit ? Quelles fonctions comptent ? Où serait-il utilisé et à qui serait-il utile ?",
+  country: "Pays", countryPlaceholder: "France", questionType: "À quelles questions TYORA doit-elle répondre ?", otherQuestionPlaceholder: "Écrivez la question que vous souhaitez poser à TYORA...",
+  addCustomQuestion: "Écrivez votre question personnalisée.",
   publicDiscussion: "Discussion publique", publicDiscussionHelp: "Votre idée ne devient visible qu’après son approbation par TYORA.",
   readySubmit: "Prêt à envoyer ?", readySubmitHelp: "TYORA l’examinera avant sa publication dans la communauté.",
   initialAssessmentBadge: "Première évaluation", summaryPlaceholder: "Le résumé de votre idée apparaîtra ici.",
@@ -233,7 +237,7 @@ const fr: Dictionary = {
   confirmPermissions: "Confirmez les trois autorisations publiques ou choisissez Privé.", loginToPublish: "Connectez-vous par e-mail pour publier. Votre brouillon restera ici.",
   loggedInDraft: "Connexion réussie. Votre brouillon est toujours là.", unableSubmit: "Impossible d’envoyer l’idée.", ideaLive: "Votre idée est publiée.",
   notSpecified: "Non précisé", qManufactured: "Ce produit peut-il être fabriqué ?", qCost: "Coût estimé ?", qMaterial: "Matériau conseillé ?",
-  qMoq: "MOQ estimé ?", qFactory: "Usine recommandée ?", qOther: "Autre"
+  qMoq: "MOQ estimé ?", qFactory: "Usine recommandée ?", qOther: "Écrire une autre question"
 };
 
 const de: Dictionary = {
@@ -254,9 +258,10 @@ const de: Dictionary = {
   estimatedTime: "Geschätzte Zeit", oneSentenceIdea: "Idee in einem Satz", oneSentencePlaceholder: "Magnetischer Handyhalter für Schreibtisch und Reise",
   next: "Weiter", back: "Zurück", showIdea: "Zeig uns deine Idee", showIdeaHelp: "Füge Bilder hinzu, wenn du welche hast. Skizzen, Screenshots, Referenzprodukte oder KI-Bilder sind geeignet.",
   dragImages: "Bilder hierher ziehen", pasteScreenshots: "oder Screenshots einfügen", helpUnderstand: "Hilf TYORA, deine Idee zu verstehen",
-  addDetails: "Ergänze vorhandene Details. TYORA kann auch eine grobe Idee bewerten.", optional: "optional",
-  descriptionPlaceholder: "Was hat dich inspiriert? Für wen ist es? Worauf sollen Entwickler und TYORA achten?",
-  country: "Land", countryPlaceholder: "Deutschland", questionType: "Fragetyp", otherQuestionPlaceholder: "Was soll TYORA außerdem prüfen?",
+  addDetails: "Beschreibe die Produktidee, die wichtigsten Funktionen, Nutzungssituationen und Zielgruppen. Eine erste Beschreibung reicht aus.", optional: "optional",
+  descriptionPlaceholder: "Was kann das Produkt? Welche Funktionen sind wichtig? Wo wird es verwendet und wem hilft es?",
+  country: "Land", countryPlaceholder: "Deutschland", questionType: "Welche Fragen soll TYORA beantworten?", otherQuestionPlaceholder: "Schreibe deine eigene Frage an TYORA...",
+  addCustomQuestion: "Bitte schreibe deine eigene Frage.",
   publicDiscussion: "Öffentliche Community-Diskussion", publicDiscussionHelp: "Deine Idee wird erst nach der Freigabe durch TYORA öffentlich sichtbar.",
   readySubmit: "Bereit zum Senden?", readySubmitHelp: "TYORA prüft den Beitrag, bevor er in der öffentlichen Community erscheint.",
   initialAssessmentBadge: "Erste Bewertung", summaryPlaceholder: "Die Zusammenfassung deiner Idee erscheint hier.",
@@ -276,7 +281,7 @@ const de: Dictionary = {
   confirmPermissions: "Bestätige alle drei Freigaben oder wähle Privat.", loginToPublish: "Melde dich per E-Mail an. Dein Entwurf bleibt erhalten.",
   loggedInDraft: "Anmeldung erfolgreich. Dein Entwurf ist noch da.", unableSubmit: "Idee konnte nicht gesendet werden.", ideaLive: "Deine Idee ist veröffentlicht.",
   notSpecified: "Nicht angegeben", qManufactured: "Kann das hergestellt werden?", qCost: "Geschätzte Kosten?", qMaterial: "Materialempfehlung?",
-  qMoq: "Geschätzte MOQ?", qFactory: "Fabrikempfehlung?", qOther: "Sonstiges"
+  qMoq: "Geschätzte MOQ?", qFactory: "Fabrikempfehlung?", qOther: "Eigene Frage schreiben"
 };
 
 const pt: Dictionary = {
@@ -297,9 +302,10 @@ const pt: Dictionary = {
   estimatedTime: "Tempo estimado", oneSentenceIdea: "Ideia em uma frase", oneSentencePlaceholder: "Suporte magnético para mesa e viagem",
   next: "Próximo", back: "Voltar", showIdea: "Mostre sua ideia", showIdeaHelp: "Adicione imagens se tiver. Esboços, capturas, produtos de referência e imagens de IA são aceitos.",
   dragImages: "Arraste imagens aqui", pasteScreenshots: "ou cole capturas", helpUnderstand: "Ajude a TYORA a entender sua ideia",
-  addDetails: "Adicione os detalhes disponíveis. A TYORA também pode avaliar uma ideia inicial.", optional: "opcional",
-  descriptionPlaceholder: "O que inspirou a ideia? Para quem é? Em que os criadores e a TYORA devem prestar atenção?",
-  country: "País", countryPlaceholder: "Brasil", questionType: "Tipo de pergunta", otherQuestionPlaceholder: "O que mais a TYORA deve avaliar?",
+  addDetails: "Descreva a ideia, as principais funções, onde seria usada e para quem foi pensada. Uma descrição inicial é suficiente.", optional: "opcional",
+  descriptionPlaceholder: "O que o produto faz? Quais funções importam? Onde seria usado e quem ele ajudaria?",
+  country: "País", countryPlaceholder: "Brasil", questionType: "O que você quer que a TYORA responda?", otherQuestionPlaceholder: "Escreva a pergunta que deseja fazer à TYORA...",
+  addCustomQuestion: "Escreva sua pergunta personalizada.",
   publicDiscussion: "Discussão pública", publicDiscussionHelp: "Sua ideia só fica visível para todos depois da aprovação da TYORA.",
   readySubmit: "Pronto para enviar?", readySubmitHelp: "A TYORA analisará antes que a ideia apareça na comunidade pública.",
   initialAssessmentBadge: "Avaliação inicial", summaryPlaceholder: "O resumo da sua ideia aparecerá aqui.",
@@ -319,7 +325,7 @@ const pt: Dictionary = {
   confirmPermissions: "Confirme as três permissões públicas ou escolha Privado.", loginToPublish: "Entre por e-mail para publicar. Seu rascunho ficará aqui.",
   loggedInDraft: "Login realizado. Seu rascunho continua aqui.", unableSubmit: "Não foi possível enviar a ideia.", ideaLive: "Sua ideia foi publicada.",
   notSpecified: "Não informado", qManufactured: "Isso pode ser fabricado?", qCost: "Custo estimado?", qMaterial: "Material recomendado?",
-  qMoq: "MOQ estimado?", qFactory: "Fábrica recomendada?", qOther: "Outro"
+  qMoq: "MOQ estimado?", qFactory: "Fábrica recomendada?", qOther: "Escrever outra pergunta"
 };
 
 const dictionaries: Record<PublicLanguage, Dictionary> = {

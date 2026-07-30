@@ -17,6 +17,9 @@ test("the new discussion flow has complete public-language dictionaries", async 
     "一句话介绍创意",
     "展示你的创意",
     "帮助 TYORA 了解你的创意",
+    "你希望 TYORA 回答什么问题？",
+    "自定义问题",
+    "请介绍产品的设计理念、主要功能、使用场景和适用人群",
     "谁可以查看这次提交",
     "提交评估",
     "发布之后",
@@ -68,4 +71,14 @@ test("uploaded idea images are previewed without cropping", async () => {
   assert.match(page, /aspect-square w-full bg-\[#f8fafc\] object-contain/);
   assert.match(page, /size-24 shrink-0 rounded-2xl bg-\[#f8fafc\] object-contain/);
   assert.doesNotMatch(page, /image\.url[^>]+object-cover/);
+});
+
+test("customers submit only the TYORA questions they actually choose", async () => {
+  const page = await read("app/ask/new/new-idea-client.tsx");
+
+  assert.match(page, /questions: form\.questions/);
+  assert.match(page, /form\.questions\.includes\("Other"\) && !form\.otherQuestion\.trim\(\)/);
+  assert.match(page, /<textarea[\s\S]+otherQuestionPlaceholder/);
+  assert.match(page, /question === "Other" && form\.otherQuestion\.trim\(\)/);
+  assert.doesNotMatch(page, /defaultQuestions/);
 });

@@ -36,7 +36,6 @@ type Translator = (key: NewIdeaKey, values?: Record<string, string | number>) =>
 
 const stepKeys: NewIdeaKey[] = ["stepYourIdea", "stepShowIt", "stepUnderstand", "stepSubmit"];
 const mobileStepKeys: NewIdeaKey[] = ["mobileIdea", "mobileShow", "mobileUnderstand", "mobileLive"];
-const defaultQuestions: CommunityQuestion[] = ["Can this be manufactured?", "Estimated Cost?", "Material Suggestion?"];
 const questionTranslationKeys: Record<CommunityQuestion, NewIdeaKey> = {
   "Can this be manufactured?": "qManufactured",
   "Estimated Cost?": "qCost",
@@ -229,6 +228,9 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
       if (!oneSentence.trim()) return setMessage(t("describeOneSentence")), false;
     }
     if (target === 2) {
+      if (form.questions.includes("Other") && !form.otherQuestion.trim()) {
+        return setMessage(t("addCustomQuestion")), false;
+      }
       return true;
     }
     return true;
@@ -268,7 +270,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
           description: ideaSummary,
           category: form.category.trim() || "Concept",
           country: form.country.trim() || "Not specified",
-          questions: form.questions.length ? form.questions : defaultQuestions
+          questions: form.questions
         })
       });
       const payload = await response.json();
@@ -626,7 +628,13 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   </div>
                 </div>
                 {form.questions.includes("Other") ? (
-                  <input value={form.otherQuestion} onChange={(event) => setForm({ ...form, otherQuestion: event.target.value })} placeholder={t("otherQuestionPlaceholder")} className={inputClass} />
+                  <textarea
+                    rows={3}
+                    value={form.otherQuestion}
+                    onChange={(event) => setForm({ ...form, otherQuestion: event.target.value })}
+                    placeholder={t("otherQuestionPlaceholder")}
+                    className="min-h-24 resize-y rounded-[16px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10"
+                  />
                 ) : null}
                 <div className="rounded-[20px] border border-[#dbeafe] bg-[#eff6ff] p-4 text-sm leading-6 text-[#315fbd]">
                   <p className="font-semibold text-[#1d4ed8]">{t("publicDiscussion")}</p>
@@ -658,11 +666,17 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                     ))}
                   </div>
                 ) : null}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {(form.questions.length ? form.questions : defaultQuestions).map((question) => (
-                    <span key={question} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#59616e] ring-1 ring-[#e8ebef]">{t(questionTranslationKeys[question])}</span>
-                  ))}
-                </div>
+                {form.questions.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {form.questions.map((question) => (
+                      <span key={question} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#59616e] ring-1 ring-[#e8ebef]">
+                        {question === "Other" && form.otherQuestion.trim()
+                          ? form.otherQuestion.trim()
+                          : t(questionTranslationKeys[question])}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className="mt-4">{submissionPrivacyControls()}</div>
             </section>
