@@ -31,6 +31,7 @@ test("industry, editable occupation, and searchable country are saved as structu
   assert.match(modal, /searchCountry/);
   assert.match(modal, /Intl\.DisplayNames/);
   assert.match(modal, /countryCallingCodes/);
+  assert.doesNotMatch(modal, /MapPin/);
   assert.match(store, /isProfileIndustry\(industry\)/);
   assert.match(store, /profileCountryFromCode/);
   assert.match(store, /countryCode: countryOption\.iso/);

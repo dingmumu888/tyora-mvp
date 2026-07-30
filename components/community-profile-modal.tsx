@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { BriefcaseBusiness, Camera, Check, CheckCircle2, ChevronDown, Loader2, MapPin, Search, X } from "lucide-react";
+import { BriefcaseBusiness, Camera, Check, CheckCircle2, ChevronDown, Loader2, Search, X } from "lucide-react";
 import CommunityAvatar from "@/components/community-avatar";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { countryCallingCodes } from "@/lib/country-calling-codes";
@@ -334,11 +334,8 @@ export default function CommunityProfileModal({ open, user, mode = "setup", onCl
             <input value={occupation} maxLength={80} onChange={(event) => setOccupation(event.target.value)} className="h-12 rounded-2xl border border-[#dfe3e8] bg-white px-3 outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" placeholder={t("occupationPlaceholder")} />
           </label>
 
-          <div className="flex items-start gap-2 sm:col-span-2">
-            <MapPin className="mt-9 shrink-0 text-[#315fbd]" size={16} aria-hidden="true" />
-            <div className="min-w-0 flex-1">
-              <ProfileCountrySelect value={countryCode} language={language} onChange={setCountryCode} t={t} />
-            </div>
+          <div className="min-w-0 sm:col-span-2">
+            <ProfileCountrySelect value={countryCode} language={language} onChange={setCountryCode} t={t} />
           </div>
 
           <label className="grid gap-2 text-sm font-medium sm:col-span-2">
