@@ -7,6 +7,7 @@ import { getCurrentIdeaAccessContext } from "@/lib/server/idea-access-context";
 import { getContent } from "@/lib/server/data-store";
 import CommunityAvatar from "@/components/community-avatar";
 import CommunityUserMenu from "@/components/community-user-menu";
+import ProfileCountryName from "@/components/profile-country-name";
 import IdeaActions from "./idea-actions";
 import IdeaComments from "./idea-comments";
 import IdeaImageGallery from "./idea-image-gallery";
@@ -101,6 +102,11 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
                   </span>
                 ) : null}
                 {compactMeta[0] ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${compactMeta[0].tone}`}>{compactMeta[0].value}</span> : null}
+                {compactMeta[1] ? (
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${compactMeta[1].tone}`}>
+                    <ProfileCountryName country={compactMeta[1].value} />
+                  </span>
+                ) : null}
               </p>
               <p className="text-xs text-[#8b93a1]">{timeLabel(idea.createdAt)} · {idea.visibility}</p>
             </div>
@@ -113,14 +119,6 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
           <div className="mt-4">
             <IdeaImageGallery imageUrls={idea.imageUrls} title={idea.title} />
           </div>
-
-          {compactMeta.length > 1 ? (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {compactMeta.slice(1).map((item) => (
-                <span key={item.value} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${item.tone}`}>{item.value}</span>
-              ))}
-            </div>
-          ) : null}
 
           <IdeaActions idea={idea} mode="bar" compact labels={content.communityPage} />
         </section>

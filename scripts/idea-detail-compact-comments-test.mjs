@@ -13,10 +13,12 @@ const files = {
 
 const checks = [
   {
-    label: "idea metadata is compact and omits Not specified",
+    label: "idea metadata stays beside the author and omits Not specified",
     pass:
       files.page.includes("compactMeta") &&
       files.page.includes('filter((item) => item.value && item.value !== "Not specified")') &&
+      files.page.includes("<ProfileCountryName country={compactMeta[1].value} />") &&
+      !files.page.includes("compactMeta.slice(1).map") &&
       !files.page.includes("idea.questions.slice")
   },
   {
@@ -32,9 +34,9 @@ const checks = [
     pass:
       files.actions.includes('mode?: IdeaActionMode; compact?: boolean') &&
       files.actions.includes("compact-action-bar") &&
-      files.actions.includes("{idea.likeCount}") &&
+      files.actions.includes("{idea.helpfulCount}") &&
       files.actions.includes("{idea.interestedCount}") &&
-      files.page.includes('<IdeaActions idea={idea} mode="bar" compact />')
+      files.page.includes('<IdeaActions idea={idea} mode="bar" compact labels={content.communityPage} />')
   },
   {
     label: "comment replies post with parentId and show reply context",
