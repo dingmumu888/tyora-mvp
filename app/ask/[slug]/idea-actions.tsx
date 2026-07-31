@@ -10,6 +10,7 @@ import { communityActionHeaders } from "@/lib/client/community-action";
 import { preparePublicImage } from "@/lib/public-image-processing";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
+import { useIdeaDetailText } from "./idea-detail-text";
 
 type SessionUser = { id: string; name: string; email: string; username: string };
 type IdeaActionMode = "bar" | "comment";
@@ -27,6 +28,7 @@ type EditImagePreview = { name: string; url: string };
 
 export default function IdeaActions({ idea, mode = "bar", compact = false, labels }: { idea: CommunityIdea; mode?: IdeaActionMode; compact?: boolean; labels: IdeaActionLabels }) {
   const { language } = usePublicLanguage();
+  const t = useIdeaDetailText();
   const isChinese = language === "zh-CN";
   const [user, setUser] = useState<SessionUser | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -95,9 +97,9 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
     const files = Array.from(event.target.files || []);
     event.target.value = "";
     if (!files.length) return;
-    const remaining = Math.max(0, 5 - editImages.length);
+    const remaining = Math.max(0, 9 - editImages.length);
     if (!remaining) {
-      setMessage(isChinese ? "每个帖子最多上传 5 张图片。" : "You can upload up to 5 images.");
+      setMessage(isChinese ? "每个帖子最多上传 9 张图片。" : "You can upload up to 9 images.");
       return;
     }
     setBusy("edit-images");
@@ -122,9 +124,9 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
           };
         })
       );
-      setEditImages((current) => [...current, ...prepared].slice(0, 5));
+      setEditImages((current) => [...current, ...prepared].slice(0, 9));
       if (files.length > remaining) {
-        setMessage(isChinese ? "每个帖子最多保留 5 张图片，多余图片未添加。" : "Only the first 5 images were kept.");
+        setMessage(isChinese ? "每个帖子最多保留 9 张图片，多余图片未添加。" : "Only the first 9 images were kept.");
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : (isChinese ? "无法处理图片。" : "Unable to prepare images."));
@@ -275,7 +277,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
             <div>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-[#101216]">{isChinese ? "创意图片" : "Idea images"}</p>
-                <span className="text-xs text-[#8b93a1]">{editImages.length}/5</span>
+                <span className="text-xs text-[#8b93a1]">{editImages.length}/9</span>
               </div>
               <label className="mt-2 flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-[#93b4f8] bg-[#f8fbff] px-4 text-sm font-semibold text-[#2563eb] transition hover:bg-[#eef6ff]">
                 {busy === "edit-images" ? <Loader2 className="animate-spin" size={18} /> : <ImagePlus size={18} />}
@@ -386,10 +388,10 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         {isOwner ? (
           <>
             <button type="button" onClick={() => setEditOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dfe3e8] bg-white px-3 text-xs transition hover:bg-[#f7f8fa]">
-              <Pencil size={14} /> Edit
+              <Pencil size={14} /> {t("edit")}
             </button>
             <button type="button" disabled={busy === "withdraw"} onClick={() => void withdrawIdea()} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#fee2e2] bg-[#fff8f9] px-3 text-xs text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60">
-              {busy === "withdraw" ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />} Withdraw
+              {busy === "withdraw" ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />} {t("withdraw")}
             </button>
           </>
         ) : null}
@@ -399,11 +401,11 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
           </button>
         ) : user ? (
           <button onClick={() => void react("Helpful")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.helpful || reactionState.liked ? "bg-[#e8f0ff] text-[#155eef]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
-            {busy === "Helpful" ? <Loader2 className="animate-spin" size={14} /> : <ThumbsUp size={14} />} {idea.helpfulCount} Helpful
+            {busy === "Helpful" ? <Loader2 className="animate-spin" size={14} /> : <ThumbsUp size={14} />} {idea.helpfulCount} {t("helpful")}
           </button>
         ) : (
           <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
-            <ThumbsUp size={14} /> {idea.helpfulCount} Helpful
+            <ThumbsUp size={14} /> {idea.helpfulCount} {t("helpful")}
           </EmailLogin>
         )}
         {!sessionChecked ? (
@@ -411,16 +413,23 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
             <Loader2 className="animate-spin" size={14} /> Checking
           </button>
         ) : user ? (
-          <button onClick={() => void react("Interested")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.interested ? "bg-[#eff6ff] text-[#1d4ed8]" : "bg-[#f6f7fb] hover:bg-[#eef2f7]"}`}>
-            {busy === "Interested" ? <Loader2 className="animate-spin" size={14} /> : <Star size={14} />} {idea.interestedCount} {labels.interestedText}
+          <button onClick={() => void react("Interested")} className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs transition ${reactionState.interested ? "bg-[#fff4d6] text-[#9a6700]" : "bg-[#fff8e8] text-[#8a5a00] hover:bg-[#fff1c7]"}`}>
+            {busy === "Interested" ? <Loader2 className="animate-spin" size={14} /> : <Star size={14} />} {idea.interestedCount} {t("wantOne")}
           </button>
         ) : (
-          <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
-            <Star size={14} /> {idea.interestedCount} {labels.interestedText}
+          <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#fff8e8] px-3 text-xs text-[#8a5a00] transition hover:bg-[#fff1c7]">
+            <Star size={14} /> {idea.interestedCount} {t("wantOne")}
           </EmailLogin>
         )}
+        <button
+          type="button"
+          onClick={() => document.getElementById("discussion-composer")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]"
+        >
+          <MessageCircle size={14} /> {idea.comments.length} {t("comments")}
+        </button>
         <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
-          <Share2 size={14} /> {idea.shareCount} {labels.shareText}
+          <Share2 size={14} /> {idea.shareCount} {t("share")}
         </button>
 
         {editDialog()}

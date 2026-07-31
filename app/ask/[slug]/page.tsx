@@ -1,16 +1,18 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, BadgeCheck, Sparkles } from "lucide-react";
-import { CommunityStatus } from "@/lib/community";
+import { BadgeCheck, CircleHelp } from "lucide-react";
+import { CommunityQuestion, CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
 import { getCurrentIdeaAccessContext } from "@/lib/server/idea-access-context";
 import { getContent } from "@/lib/server/data-store";
 import CommunityAvatar from "@/components/community-avatar";
-import CommunityUserMenu from "@/components/community-user-menu";
+import CommunityText from "@/components/community-text";
+import CommunityDetailHeader from "@/components/community-detail-header";
 import ProfileCountryName from "@/components/profile-country-name";
 import IdeaActions from "./idea-actions";
 import IdeaComments from "./idea-comments";
 import IdeaImageGallery from "./idea-image-gallery";
+import IdeaDetailText, { IdeaRelativeTime } from "./idea-detail-text";
+import type { IdeaDetailKey } from "@/lib/idea-detail-i18n";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -24,14 +26,14 @@ const statusStyles: Record<CommunityStatus, string> = {
   Completed: "bg-[#e8f8ef] text-[#15803d] ring-[#c9efd8]"
 };
 
-function timeLabel(value: string) {
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function expertReplyText(idea: Awaited<ReturnType<typeof getCommunityIdeaBySlug>>) {
-  if (!idea?.review) return "";
-  return idea.review.additionalNotes || "";
-}
+const questionKeys: Record<CommunityQuestion, IdeaDetailKey> = {
+  "Can this be manufactured?": "canManufacture",
+  "Estimated Cost?": "estimatedCost",
+  "Material Suggestion?": "materialSuggestion",
+  "MOQ Estimate?": "moqEstimate",
+  "Factory Recommendation?": "factoryRecommendation",
+  Other: "customQuestion"
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -55,112 +57,107 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
     getContent()
   ]);
   if (!idea) notFound();
-  const expertReply = expertReplyText(idea);
+
   const labels = content.communityPage.assessmentLabels;
   const isOwner = context.userId === idea.author.id;
-  const assessmentRows = idea.review ? [
+  const reviewDetails = idea.review ? [
     [labels.feasibility, idea.review.manufacturingFeasible],
     [labels.estimatedCostRange, idea.review.estimatedCostRange],
     [labels.estimatedMoq, idea.review.estimatedMoq],
-    [labels.assumptions, idea.review.assumptions],
-    [labels.confidence, idea.review.confidence],
     [labels.suggestedMaterial, idea.review.suggestedMaterial],
     [labels.suggestedProcess, idea.review.suggestedManufacturing],
     [labels.moldRequirement, idea.review.moldRequirement],
     [labels.mainRisks, idea.review.mainRisks],
-    [labels.recommendedNextStep, idea.review.recommendedNextStep]
-  ].filter((entry): entry is [string, string] => Boolean(entry[1])) : [];
-  const compactMeta = [
-    { value: idea.category, tone: "bg-[#eef6f4] text-[#06756f]" },
-    { value: idea.country, tone: "bg-[#f4f6f8] text-[#667085]" }
-  ].filter((item) => item.value && item.value !== "Not specified");
+    [labels.recommendedNextStep, idea.review.recommendedNextStep],
+    [labels.assumptions, idea.review.assumptions],
+    [labels.confidence, idea.review.confidence]
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]))
+    .map(([label, value]) => ({ label, value })) : [];
+  const authorProfile = idea.author.occupation || idea.author.industry;
+  const questionItems = idea.questions.map((question) => ({
+    question,
+    custom: question === "Other" ? idea.otherQuestion : undefined
+  }));
+  const reviewAction = idea.review?.customEligible ? {
+    href: isOwner ? `/custom?idea=${encodeURIComponent(idea.slug)}` : content.communityPage.continueWithTyoraHref,
+    label: isOwner ? content.communityPage.startCustomProjectText : content.communityPage.continueWithTyoraText
+  } : undefined;
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#eef6ff_0,#f6f7fb_38%,#f7f5f0_100%)] pb-28 text-[#101216]">
-      <header className="sticky top-0 z-40 border-b border-[#e8ebef]/90 bg-white/88 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
-          <Link href="/ask" className="inline-flex items-center gap-2 text-sm font-semibold"><ArrowLeft size={16} /> Ask TYORA</Link>
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</span>
-            <div className="hidden md:block">
-              <CommunityUserMenu loginClassName="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#101216] shadow-sm transition hover:bg-[#f6f7fb]" />
+    <main className="min-h-screen overflow-x-hidden bg-[#f4f6f8] pb-28 text-[#0b1426] md:pb-16">
+      <CommunityDetailHeader
+        brandName={content.brandName}
+        logoImage={content.logoImage}
+        showBrandNameWithLogo={content.showBrandNameWithLogo}
+      />
+
+      <div className="mx-auto w-full max-w-[1040px] space-y-3 px-3 py-4 sm:px-5 sm:py-6">
+        <article className="overflow-hidden rounded-[22px] border border-[#d8dee8] bg-white shadow-sm shadow-[#0b1426]/5">
+          <div className="p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-11 shrink-0 border-0 text-sm" />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="truncate text-sm font-bold text-[#0b1426]">{idea.author.name}</span>
+                  {idea.author.expertVerified ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2 py-0.5 text-[10px] font-bold text-[#06756f]">
+                      <BadgeCheck size={11} /> {idea.author.expertRole || "Verified expert"}
+                    </span>
+                  ) : null}
+                  {authorProfile ? <span className="text-xs text-[#667085]">· {authorProfile}</span> : null}
+                  {idea.author.country || idea.author.countryCode ? (
+                    <span className="text-xs text-[#667085]">
+                      · <ProfileCountryName country={idea.author.country} countryCode={idea.author.countryCode} />
+                    </span>
+                  ) : null}
+                  <span className="text-xs text-[#8b93a1]">· <IdeaRelativeTime value={idea.createdAt} /></span>
+                </div>
+                <p className="mt-0.5 text-xs text-[#8b93a1]">
+                  <IdeaDetailText textKey={idea.visibility === "Public" ? "public" : "private"} />
+                </p>
+              </div>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${statusStyles[idea.status]}`}>
+                <CommunityText text={idea.status} />
+              </span>
             </div>
+
+            <h1 className="mt-4 text-[26px] font-bold leading-tight tracking-[-0.025em] sm:text-[34px]">{idea.title}</h1>
+
+            {idea.imageUrls.length > 0 ? (
+              <div className="mt-4">
+                <IdeaImageGallery imageUrls={idea.imageUrls} title={idea.title} />
+              </div>
+            ) : null}
+
+            <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-[#344054] sm:text-base">{idea.description}</p>
+
+            {questionItems.length > 0 ? (
+              <div className="mt-4 flex items-start gap-2 rounded-[14px] border border-[#d8dee8] bg-[#f8fafc] px-3 py-2.5 text-sm text-[#475467]">
+                <CircleHelp size={17} className="mt-0.5 shrink-0 text-[#155eef]" />
+                <p className="flex flex-wrap gap-x-1.5 gap-y-1">
+                  <strong className="text-[#0b1426]"><IdeaDetailText textKey="questionLead" /></strong>
+                  {questionItems.map((item, index) => (
+                    <span key={`${item.question}-${index}`}>
+                      {item.custom || <IdeaDetailText textKey={questionKeys[item.question]} />}
+                      {index < questionItems.length - 1 ? " ·" : ""}
+                    </span>
+                  ))}
+                </p>
+              </div>
+            ) : null}
+
+            <IdeaActions idea={idea} mode="bar" compact labels={content.communityPage} />
           </div>
-        </div>
-      </header>
+        </article>
 
-      <article className="mx-auto max-w-3xl space-y-3 px-3 py-3 sm:px-5">
-        <section className="rounded-[24px] border border-[#e4e8ef] bg-white p-3 shadow-sm shadow-[#101216]/4 sm:p-4">
-          <div className="flex items-center gap-3">
-            <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-11 border-0 text-sm" />
-            <div className="min-w-0">
-              <p className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm font-semibold">
-                <span className="truncate">{idea.author.name}</span>
-                {idea.author.expertVerified ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2 py-0.5 text-[11px] font-bold text-[#06756f]">
-                    <BadgeCheck size={12} /> {idea.author.expertRole || "Verified expert"}
-                  </span>
-                ) : null}
-                {compactMeta[0] ? <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${compactMeta[0].tone}`}>{compactMeta[0].value}</span> : null}
-                {compactMeta[1] ? (
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${compactMeta[1].tone}`}>
-                    <ProfileCountryName country={compactMeta[1].value} />
-                  </span>
-                ) : null}
-              </p>
-              <p className="text-xs text-[#8b93a1]">{timeLabel(idea.createdAt)} · {idea.visibility}</p>
-            </div>
-            <span className={`ml-auto rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${statusStyles[idea.status]}`}>{idea.status}</span>
-          </div>
-
-          <h1 className="mt-4 text-2xl font-semibold leading-tight sm:text-3xl">{idea.title}</h1>
-          <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-[#343b47]">{idea.description}</p>
-
-          <div className="mt-4">
-            <IdeaImageGallery imageUrls={idea.imageUrls} title={idea.title} />
-          </div>
-
-          <IdeaActions idea={idea} mode="bar" compact labels={content.communityPage} />
-        </section>
-
-        <section id="tyora-expert-review" className="rounded-[18px] border border-[#99f6e4] bg-white p-3 shadow-sm shadow-[#14b8a6]/10">
-          <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-[#14b8a6]" />
-            <h2 className="text-base font-semibold text-[#0f766e]">TYORA Expert Review</h2>
-          </div>
-          {idea.review ? (
-            <div className="mt-3 space-y-3">
-              {expertReply ? (
-                <p className="whitespace-pre-wrap rounded-2xl bg-[#f0fdfa] p-3 text-sm font-semibold leading-6 text-[#101216]">{expertReply}</p>
-              ) : null}
-              <dl className="grid gap-2 sm:grid-cols-2">
-                {assessmentRows.map(([label, value]) => (
-                  <div key={label} className="rounded-2xl border border-[#d5f5ec] bg-white p-3">
-                    <dt className="text-xs font-semibold uppercase text-[#0f766e]">{label}</dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#101216]">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="rounded-2xl border border-[#fde7b1] bg-[#fffaf0] p-3 text-xs leading-5 text-[#7c5a16]">
-                {idea.review.disclaimer}
-              </p>
-              {idea.review.customEligible ? (
-                <Link
-                  href={isOwner ? `/custom?idea=${encodeURIComponent(idea.slug)}` : content.communityPage.continueWithTyoraHref}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101216] px-5 text-sm font-semibold text-white"
-                >
-                  {isOwner ? content.communityPage.startCustomProjectText : content.communityPage.continueWithTyoraText}
-                </Link>
-              ) : null}
-            </div>
-          ) : (
-            <p className="mt-2 rounded-2xl bg-[#f0fdfa] p-3 text-sm leading-6 text-[#0f766e]">TYORA review will appear here after review.</p>
-          )}
-        </section>
-
-        <IdeaComments slug={idea.slug} comments={idea.comments} />
-        <IdeaActions idea={idea} mode="comment" labels={content.communityPage} />
-      </article>
+        <IdeaComments
+          slug={idea.slug}
+          comments={idea.comments}
+          review={idea.review}
+          reviewDetails={reviewDetails}
+          reviewAction={reviewAction}
+        />
+      </div>
     </main>
   );
 }

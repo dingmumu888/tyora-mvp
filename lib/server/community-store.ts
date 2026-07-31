@@ -94,7 +94,7 @@ function storedIdeaImageUrls(value: unknown) {
           return safePublicImageUrl(stored);
         })
         .filter((item): item is string => Boolean(item))
-        .slice(0, 5)
+        .slice(0, 9)
     : [];
 }
 
@@ -123,7 +123,7 @@ function ideaImageUrls(value: unknown, slug: string, privateAccess: boolean) {
       return safePublicImageUrl(url);
     })
     .filter((item): item is string => Boolean(item))
-    .slice(0, 5);
+    .slice(0, 9);
 }
 
 function parseStoredDataImage(value: unknown) {
@@ -192,7 +192,7 @@ function storedImageIndexFromProxy(value: string, slug: string) {
     return null;
   }
   const match = parsed.pathname.match(
-    /^\/api\/community\/(?:ideas|private-ideas)\/([^/]+)\/images\/([0-4])$/
+    /^\/api\/community\/(?:ideas|private-ideas)\/([^/]+)\/images\/([0-8])$/
   );
   if (!match) return null;
   try {
@@ -205,7 +205,7 @@ function storedImageIndexFromProxy(value: string, slug: string) {
 async function ownerIdeaImageUrls(input: unknown[], existingValue: unknown, slug: string) {
   const existing = storedIdeaImageUrls(existingValue);
   const next: string[] = [];
-  for (const item of input.slice(0, 5)) {
+  for (const item of input.slice(0, 9)) {
     if (typeof item !== "string") throw new Error("Invalid idea image.");
     const value = item.trim();
     const existingIndex = storedImageIndexFromProxy(value, slug);
@@ -707,7 +707,7 @@ export async function getCommunityIdeaImage(
   index: number,
   context: IdeaAccessContext = {}
 ): Promise<CommunityIdeaImageResult | null> {
-  if (!Number.isInteger(index) || index < 0 || index > 4) return null;
+  if (!Number.isInteger(index) || index < 0 || index > 8) return null;
   const row = await prisma.communityIdea.findUnique({
     where: { slug },
     select: {
@@ -988,7 +988,7 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
     throw new Error("Public ideas require consent for the post, uploaded images, and TYORA assessment to be displayed publicly.");
   }
   const submittedImageUrls = Array.isArray(data.imageUrls)
-    ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 5)
+    ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 9)
     : [];
   const imageUrls = submittedImageUrls.length
     ? await storePrivateIdeaImages(submittedImageUrls)

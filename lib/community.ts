@@ -65,7 +65,7 @@ export type CommunityComment = {
   body: string;
   hidden: boolean;
   parentId?: string;
-  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country" | "expertRole" | "expertVerified">;
+  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country" | "countryCode" | "industry" | "occupation" | "expertRole" | "expertVerified">;
   likeCount: number;
   viewerLiked?: boolean;
   helpfulCount: number;
@@ -118,7 +118,7 @@ export type CommunityIdea = {
   publicConsentAt?: string;
   moderatedAt?: string;
   moderationNote?: string;
-  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country" | "expertRole" | "expertVerified">;
+  author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country" | "countryCode" | "industry" | "occupation" | "expertRole" | "expertVerified">;
   comments: CommunityComment[];
   review?: TyoraReview;
   likeCount: number;

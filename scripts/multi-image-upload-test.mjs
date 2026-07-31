@@ -17,8 +17,8 @@ const checks = [
     pass: source.includes('event.currentTarget.value = ""')
   },
   {
-    name: "upload copy tells mobile users they can select up to five at once",
-    pass: copy.includes("Select up to 5 images at once")
+    name: "upload copy tells mobile users they can select up to nine at once",
+    pass: copy.includes("Select up to 9 images at once") && source.includes("9 - imagePreviews.length")
   }
 ];
 

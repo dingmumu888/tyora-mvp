@@ -150,15 +150,15 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
   async function setImages(files: FileList | File[]) {
     const incoming = Array.from(files);
     const imageFiles = incoming.filter((file) => !file.type || file.type.startsWith("image/"));
-    const selected = imageFiles.slice(0, 5 - imagePreviews.length);
+    const selected = imageFiles.slice(0, 9 - imagePreviews.length);
     if (selected.length === 0) return;
     try {
       const nextPreviews = await Promise.all(selected.map(async (file) => ({ name: file.name, url: await normalizeProductImage(file, t) })));
-      setImagePreviews((current) => [...current, ...nextPreviews].slice(0, 5));
-      setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...nextPreviews.map((image) => image.url)].slice(0, 5) }));
+      setImagePreviews((current) => [...current, ...nextPreviews].slice(0, 9));
+      setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...nextPreviews.map((image) => image.url)].slice(0, 9) }));
       if (incoming.length !== imageFiles.length) {
         setMessage(t("filesSkipped"));
-      } else if (imageFiles.length + imagePreviews.length > 5) {
+      } else if (imageFiles.length + imagePreviews.length > 9) {
         setMessage(t("maximumImages"));
       }
     } catch (error) {
