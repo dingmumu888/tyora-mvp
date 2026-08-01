@@ -70,13 +70,13 @@ test("the new discussion header uses the admin-configurable site brand", async (
 
 test("uploaded idea images are previewed without cropping", async () => {
   const page = await read("app/ask/new/new-idea-client.tsx");
-  const preview = await read("components/public-upload-image-preview.tsx");
+  const preview = await read("components/editable-idea-images.tsx");
 
-  assert.match(page, /PublicUploadImagePreview/);
+  assert.match(page, /EditableIdeaImages/);
   assert.match(preview, /aspect-\[4\/3\]/);
   assert.match(preview, /relative size-full object-contain/);
-  assert.match(preview, /setOpen\(true\)/);
-  assert.match(preview, /max-h-full max-w-full object-contain/);
+  assert.match(preview, /setPreviewIndex\(index\)/);
+  assert.match(preview, /max-h-\[88vh\] max-w-\[90vw\] object-contain/);
 });
 
 test("customers submit only the TYORA questions they actually choose", async () => {

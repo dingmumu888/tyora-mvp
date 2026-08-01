@@ -314,6 +314,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
                   addLabel={isChinese ? "添加图片" : "Add image"}
                   preparingLabel={isChinese ? "正在压缩图片…" : "Preparing images…"}
                   limitMessage={isChinese ? "拖动图片可以调整顺序，最多 9 张。" : "Drag to reorder. Up to 9 images."}
+                  reorderHint={translateNewIdea(language, "reorderImages")}
                   errorMessage={isChinese ? "无法处理这张图片。" : "Unable to prepare this image."}
                 />
               </div>

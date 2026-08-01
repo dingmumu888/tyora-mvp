@@ -10,6 +10,7 @@ import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateCommunityText } from "@/components/community-text";
 import { CommunityIdea } from "@/lib/community";
 import { translateMyTyora, type MyTyoraKey } from "@/lib/my-tyora-i18n";
+import { translateNewIdea } from "@/lib/new-idea-i18n";
 import type { PublicLanguage } from "@/lib/public-i18n";
 
 type ActivityView = "posts" | "comments" | "likes" | "interested" | "reviews";
@@ -323,7 +324,7 @@ export default function ActivitySummary({
               </label>
               <div>
                 <p className="mb-2 text-sm font-semibold text-[#101216]">{t("ideaImages")}</p>
-                <EditableIdeaImages images={editForm.imageUrls} onChange={(imageUrls) => setEditForm({ ...editForm, imageUrls })} />
+                <EditableIdeaImages images={editForm.imageUrls} onChange={(imageUrls) => setEditForm({ ...editForm, imageUrls })} reorderHint={translateNewIdea(language, "reorderImages")} />
               </div>
             </div>
             {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}

@@ -26,6 +26,11 @@ test("public product-image uploads share resizing and full-image previews", () =
   assert.match(editor, /preparePublicImage/);
   assert.match(editor, /object-contain/);
   assert.match(editor, /data-image-index/);
+  assert.match(editor, /motion\.div/);
+  assert.match(editor, /onDragEnter/);
+  assert.match(editor, /touchDraggingIndex/);
+  assert.match(editor, /reorderHint/);
+  assert.match(editor, /setTouchPreview/);
 });
 
 test("avatars remain intentionally square and PDFs remain unchanged", () => {

@@ -427,6 +427,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                 addLabel={t("uploadImages")}
                 preparingLabel={t("unablePrepareImage")}
                 limitMessage={t("imageLimit")}
+                reorderHint={t("reorderImages")}
                 errorMessage={t("unablePrepareImage")}
               />
               {submissionPrivacyControls()}
@@ -499,6 +500,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   addLabel={t("uploadImages")}
                   preparingLabel={t("unablePrepareImage")}
                   limitMessage={t("imageLimit")}
+                  reorderHint={t("reorderImages")}
                   errorMessage={t("unablePrepareImage")}
                 />
               </div>
