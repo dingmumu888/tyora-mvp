@@ -11,13 +11,14 @@ import pg from "pg";
 import { backfillSubmissionWorkflows } from "./lib/phase-5b-backfill.mjs";
 import {
   assertPhase5bMigrationChecksum,
+  assertPhase5bReviewedMigrationChecksums,
   assertPhase5bTypedConfirmation,
   assertPhase5bConnectedPreviewIdentity,
   createPhase5bConnectionConfig,
   createPhase5bPrismaUrl,
   inspectPhase5bMigrationHistory,
   phase5bMigrationName,
-  phase5bMigrationSha256,
+  phase5bReviewedMigrations,
   Phase5bPreviewMigrationError,
   readAndValidatePhase5bCertificate,
   validatePhase5bPreviewTarget
@@ -26,13 +27,13 @@ import {
 const { Client } = pg;
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const prismaExecutable = resolve(repositoryRoot, "node_modules", "prisma", "build", "index.js");
-const migrationPath = resolve(
-  repositoryRoot,
-  "prisma",
-  "migrations",
-  phase5bMigrationName,
-  "migration.sql"
-);
+
+async function readReviewedMigrationSql() {
+  return new Map(await Promise.all(phase5bReviewedMigrations.map(async ({ name }) => [
+    name,
+    await readFile(resolve(repositoryRoot, "prisma", "migrations", name, "migration.sql"), "utf8")
+  ])));
+}
 
 function childEnvironment(databaseUrl) {
   const environment = {
@@ -139,7 +140,7 @@ async function readOnlyPreviewEvidence(connectionConfig) {
   }
 }
 
-async function verifyAppliedMigration(connectionConfig) {
+async function verifyAppliedMigrations(connectionConfig) {
   const client = new Client({
     ...connectionConfig,
     connectionTimeoutMillis: 10_000,
@@ -150,23 +151,27 @@ async function verifyAppliedMigration(connectionConfig) {
     await client.connect();
     await client.query("BEGIN READ ONLY");
     const result = await client.query(`
-      SELECT "checksum", "finished_at", "rolled_back_at", "logs"
+      SELECT "migration_name", "checksum", "finished_at", "rolled_back_at", "logs"
       FROM "_prisma_migrations"
-      WHERE "migration_name" = $1
-    `, [phase5bMigrationName]);
+      WHERE "migration_name" = ANY($1::text[])
+    `, [phase5bReviewedMigrations.map(({ name }) => name)]);
     await client.query("ROLLBACK");
-    if (
-      result.rowCount !== 1 ||
-      result.rows[0].checksum !== phase5bMigrationSha256 ||
-      !result.rows[0].finished_at ||
-      result.rows[0].rolled_back_at ||
-      result.rows[0].logs
-    ) {
-      throw new Phase5bPreviewMigrationError("Phase 5A migration verification failed.");
+    const byName = new Map(result.rows.map((row) => [row.migration_name, row]));
+    for (const migration of phase5bReviewedMigrations) {
+      const row = byName.get(migration.name);
+      if (
+        !row ||
+        row.checksum !== migration.checksum ||
+        !row.finished_at ||
+        row.rolled_back_at ||
+        row.logs
+      ) {
+        throw new Phase5bPreviewMigrationError("Reviewed Preview migration verification failed.");
+      }
     }
   } catch (error) {
     if (error instanceof Phase5bPreviewMigrationError) throw error;
-    throw new Phase5bPreviewMigrationError("Phase 5A migration verification failed.");
+    throw new Phase5bPreviewMigrationError("Reviewed Preview migration verification failed.");
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -231,8 +236,9 @@ async function main() {
       "PREVIEW_SSL_CA_PATH"
     ]) delete process.env[name];
 
-    const sql = await readFile(migrationPath, "utf8");
-    assertPhase5bMigrationChecksum(sql);
+    const reviewedMigrationSql = await readReviewedMigrationSql();
+    assertPhase5bMigrationChecksum(reviewedMigrationSql.get(phase5bMigrationName));
+    assertPhase5bReviewedMigrationChecksums(reviewedMigrationSql);
     certificateData = await readAndValidatePhase5bCertificate(certificatePath);
     connectionConfig = createPhase5bConnectionConfig(directUrl, certificateData.certificateBase64);
 
@@ -246,7 +252,9 @@ async function main() {
     if (immediateIdentity.previewRef !== identity.previewRef) {
       throw new Phase5bPreviewMigrationError("Preview target identity changed during confirmation.");
     }
-    assertPhase5bMigrationChecksum(await readFile(migrationPath, "utf8"));
+    const immediateReviewedMigrationSql = await readReviewedMigrationSql();
+    assertPhase5bMigrationChecksum(immediateReviewedMigrationSql.get(phase5bMigrationName));
+    assertPhase5bReviewedMigrationChecksums(immediateReviewedMigrationSql);
     const immediateCertificate = await readAndValidatePhase5bCertificate(certificatePath);
     try {
       if (immediateCertificate.certificateBase64 !== certificateData.certificateBase64) {
@@ -258,16 +266,19 @@ async function main() {
     connectionConfig = createPhase5bConnectionConfig(directUrl, certificateData.certificateBase64);
     prismaUrl = createPhase5bPrismaUrl(directUrl, certificatePath);
     const immediateState = await readOnlyPreviewEvidence(connectionConfig);
-    if (initialState.phase5bAlreadyApplied !== immediateState.phase5bAlreadyApplied) {
+    if (
+      initialState.phase5bAlreadyApplied !== immediateState.phase5bAlreadyApplied ||
+      initialState.pendingReviewedMigrations.join("\n") !== immediateState.pendingReviewedMigrations.join("\n")
+    ) {
       throw new Phase5bPreviewMigrationError("Preview migration state changed during confirmation.");
     }
-    if (!immediateState.phase5bAlreadyApplied) {
+    if (immediateState.pendingReviewedMigrations.length > 0) {
       await runPrismaMigrateDeploy(prismaUrl);
       console.log("phase5b_prisma_migrate_deploy_complete");
     } else {
       console.log("phase5b_prisma_migrate_deploy_already_applied");
     }
-    await verifyAppliedMigration(connectionConfig);
+    await verifyAppliedMigrations(connectionConfig);
     const backfill = await runBackfill(connectionConfig);
     console.log("phase5b_backfill_complete");
     console.log(`phase5b_workflow_total=${backfill.total}`);

@@ -7,6 +7,7 @@ import test from "node:test";
 
 import {
   assertPhase5bMigrationChecksum,
+  assertPhase5bReviewedMigrationChecksums,
   assertPhase5bTypedConfirmation,
   assertPhase5bConnectedPreviewIdentity,
   createPhase5bConnectionConfig,
@@ -15,6 +16,7 @@ import {
   phase5bMigrationName,
   phase5bMigrationSha256,
   phase5bPriorMigrations,
+  phase5bReviewedMigrations,
   readAndValidatePhase5bCertificate,
   validatePhase5bPreviewTarget
 } from "./lib/phase-5b-preview-migration-safety.mjs";
@@ -68,19 +70,42 @@ test("the reviewed migration checksum is pinned", async () => {
   const migration = await file("prisma/migrations/20260720010000_phase_5a_submission_workflow/migration.sql");
   assert.equal(assertPhase5bMigrationChecksum(migration), phase5bMigrationSha256);
   assert.throws(() => assertPhase5bMigrationChecksum(`${migration}\n-- changed`), /checksum/);
+  const reviewedSql = new Map(await Promise.all(phase5bReviewedMigrations.map(async ({ name }) => [
+    name,
+    await file(`prisma/migrations/${name}/migration.sql`)
+  ])));
+  assert.deepEqual(assertPhase5bReviewedMigrationChecksums(reviewedSql), phase5bReviewedMigrations.map(({ name }) => name));
+  reviewedSql.set(phase5bReviewedMigrations.at(-1).name, `${reviewedSql.get(phase5bReviewedMigrations.at(-1).name)}\n-- changed`);
+  assert.throws(() => assertPhase5bReviewedMigrationChecksums(reviewedSql), /checksum/);
 });
 
 test("history guard accepts only exact prerequisites and the pinned migration", () => {
   const prior = phase5bPriorMigrations.map((name) => completedMigration(name));
-  assert.deepEqual(inspectPhase5bMigrationHistory(prior), { phase5bAlreadyApplied: false });
+  assert.deepEqual(inspectPhase5bMigrationHistory(prior), {
+    phase5bAlreadyApplied: false,
+    pendingReviewedMigrations: phase5bReviewedMigrations.map(({ name }) => name)
+  });
+  const phase5bOnly = completedMigration(phase5bMigrationName, phase5bMigrationSha256);
   assert.deepEqual(
-    inspectPhase5bMigrationHistory([...prior, completedMigration(phase5bMigrationName, phase5bMigrationSha256)]),
-    { phase5bAlreadyApplied: true }
+    inspectPhase5bMigrationHistory([...prior, phase5bOnly]),
+    {
+      phase5bAlreadyApplied: true,
+      pendingReviewedMigrations: phase5bReviewedMigrations.slice(1).map(({ name }) => name)
+    }
   );
+  const allReviewed = phase5bReviewedMigrations.map(({ name, checksum }) => completedMigration(name, checksum));
+  assert.deepEqual(inspectPhase5bMigrationHistory([...prior, ...allReviewed]), {
+    phase5bAlreadyApplied: true,
+    pendingReviewedMigrations: []
+  });
   assert.throws(() => inspectPhase5bMigrationHistory(prior.slice(1)), /prerequisite/);
   assert.throws(() => inspectPhase5bMigrationHistory([...prior, completedMigration("unexpected")]), /unexpected/);
   assert.throws(
     () => inspectPhase5bMigrationHistory([...prior, completedMigration(phase5bMigrationName, "wrong")]),
+    /checksum/
+  );
+  assert.throws(
+    () => inspectPhase5bMigrationHistory([...prior, phase5bOnly, completedMigration(phase5bReviewedMigrations[1].name, "wrong")]),
     /checksum/
   );
   assert.throws(
@@ -170,7 +195,9 @@ test("runner uses migrate deploy only and keeps output redacted", async () => {
   assert.match(runner, /const immediateCertificate = await readAndValidatePhase5bCertificate\(certificatePath\)/);
   assert.match(runner, /assertPhase5bConnectedPreviewIdentity/);
   assert.doesNotMatch(runner, /pg_stat_ssl/);
-  assert.match(runner, /assertPhase5bMigrationChecksum\(await readFile\(migrationPath, "utf8"\)\)/);
+  assert.match(runner, /const reviewedMigrationSql = await readReviewedMigrationSql\(\)/);
+  assert.match(runner, /const immediateReviewedMigrationSql = await readReviewedMigrationSql\(\)/);
+  assert.match(runner, /assertPhase5bReviewedMigrationChecksums\(immediateReviewedMigrationSql\)/);
   assert.doesNotMatch(runner, /console\.(log|error)\([^\n]*(directUrl|prismaUrl|password|certificatePath)/);
   assert.doesNotMatch(runner, /db\s+push|migrate\s+dev|migrate\s+reset|seed|cleanup/i);
   assert.match(backfill, /BEGIN ISOLATION LEVEL SERIALIZABLE/);
