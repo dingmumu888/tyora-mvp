@@ -24,6 +24,7 @@ import EditableIdeaImages from "@/components/editable-idea-images";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
+import { PUBLIC_DISCLOSURE_NOTICE_VERSION } from "@/lib/public-disclosure";
 import { preparePublicImage } from "@/lib/public-image-processing";
 import { cn } from "@/lib/utils";
 
@@ -96,9 +97,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
     questions: [] as CommunityQuestion[],
     otherQuestion: "",
     visibility: "Public" as "Public" | "Private",
-    publicContentConsent: false,
-    publicImageConsent: false,
-    publicAssessmentConsent: false
+    publicDisclosureConsent: false
   });
 
   useEffect(() => {
@@ -208,10 +207,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
     const ideaSummary = form.description.trim() || oneSentence.trim();
     if (!form.title.trim()) return setMessage(t("addProductName"));
     if (!ideaSummary) return setMessage(t("describeIdea"));
-    if (
-      form.visibility === "Public" &&
-      (!form.publicContentConsent || !form.publicImageConsent || !form.publicAssessmentConsent)
-    ) {
+    if (form.visibility === "Public" && !form.publicDisclosureConsent) {
       return setMessage(t("confirmPermissions"));
     }
     if (!user) {
@@ -231,7 +227,13 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
           description: ideaSummary,
           category: form.category.trim() || "Concept",
           country: form.country.trim() || "Not specified",
-          questions: form.questions
+          questions: form.questions,
+          // Keep the server contract backward compatible while the UI presents one clear acknowledgement.
+          publicContentConsent: form.publicDisclosureConsent,
+          publicImageConsent: form.publicDisclosureConsent,
+          publicAssessmentConsent: form.publicDisclosureConsent,
+          publicConsentVersion: form.visibility === "Public" ? PUBLIC_DISCLOSURE_NOTICE_VERSION : undefined,
+          publicConsentLocale: form.visibility === "Public" ? language : undefined
         })
       });
       const payload = await response.json();
@@ -270,22 +272,21 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
         </div>
         {isPublic ? (
           <div className="mt-4 grid gap-3 text-sm leading-5 text-[#59616e]">
-            <p className="text-xs leading-5 text-[#69707d]">{t("publicPending")}</p>
-            {([
-              ["publicContentConsent", t("consentContent")],
-              ["publicImageConsent", t("consentImages")],
-              ["publicAssessmentConsent", t("consentAssessment")]
-            ] as const).map(([key, label]) => (
-              <label key={key} className="flex cursor-pointer items-start gap-3 rounded-[14px] bg-white p-3 ring-1 ring-[#e4e8ef]">
-                <input
-                  type="checkbox"
-                  checked={form[key]}
-                  onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.checked }))}
-                  className="mt-0.5 size-4 shrink-0 accent-[#2563eb]"
-                />
-                <span>{label}</span>
-              </label>
-            ))}
+            <div className="rounded-[14px] border border-[#f5c58b] bg-[#fff8ed] p-3 text-xs leading-5 text-[#854d0e]">
+              <p>{t("publicPending")}</p>
+              <Link href="/terms" target="_blank" className="mt-2 inline-flex font-semibold text-[#155eef] underline-offset-4 hover:underline">
+                {t("consentImages")}
+              </Link>
+            </div>
+            <label className="flex cursor-pointer items-start gap-3 rounded-[14px] bg-white p-3.5 ring-1 ring-[#d5dce6] transition hover:ring-[#9dbcf7]">
+              <input
+                type="checkbox"
+                checked={form.publicDisclosureConsent}
+                onChange={(event) => setForm((current) => ({ ...current, publicDisclosureConsent: event.target.checked }))}
+                className="mt-0.5 size-4 shrink-0 accent-[#2563eb]"
+              />
+              <span className="text-[#253247]">{t("consentContent")}</span>
+            </label>
           </div>
         ) : (
           <p className="mt-3 text-xs leading-5 text-[#59616e]">{t("privateHelp")}</p>
@@ -441,7 +442,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
 
             <button disabled={submitting} className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
               {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-              {submitting ? t("submitting") : t("submitReview")}
+              {submitting ? t("submitting") : t(form.visibility === "Public" ? "publishIdea" : "submitReview")}
             </button>
           </section>
 
@@ -612,7 +613,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
             ) : (
               <button disabled={submitting} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
                 {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
-                {submitting ? t("submitting") : t("submitReview")}
+                {submitting ? t("submitting") : t(form.visibility === "Public" ? "publishIdea" : "submitReview")}
               </button>
             )}
           </div>

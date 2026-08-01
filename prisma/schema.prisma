@@ -464,6 +464,8 @@ model CommunityIdea {
   homepageFeatured      Boolean             @default(false)
   homepageFeaturedOrder Int?
   publicConsentAt       DateTime?
+  publicConsentVersion  String?
+  publicConsentLocale   String?
   moderatedAt           DateTime?
   moderationNote        String?
   authorId              String

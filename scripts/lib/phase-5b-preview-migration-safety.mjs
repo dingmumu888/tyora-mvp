@@ -18,7 +18,8 @@ export const phase5bReviewedMigrations = [
   { name: "20260729010000_community_discussion_foundation", checksum: "f3d11aa4ee6c2849be776eb62f705b388b6d5a994c22b0592212a3f992785d0b" },
   { name: "20260729030000_source_public_activity", checksum: "6c67d8cd4b498884faf428bd133fea728c56e3a9c64d2f77561d0b25b0de06b2" },
   { name: "20260730010000_add_community_profile_details", checksum: "71954fb9feb97ba91b1f0de16f17b9380e5f670bb3d6611ceb52ff66c0db858c" },
-  { name: "20260730020000_add_source_weekly_showcase", checksum: "891fd8c554bb67d8b064e438abf97764765ec9ca220d62081fff5c777fab66f0" }
+  { name: "20260730020000_add_source_weekly_showcase", checksum: "891fd8c554bb67d8b064e438abf97764765ec9ca220d62081fff5c777fab66f0" },
+  { name: "20260801010000_add_public_disclosure_evidence", checksum: "eb228b946c71621001cbee1d370518936791965a4d7b797ed56e6c62c86e021d" }
 ];
 export const phase5bPriorMigrations = [
   "20260712010000_add_work_order_contact_event",

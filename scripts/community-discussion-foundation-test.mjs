@@ -17,6 +17,20 @@ test("community migration is additive and gives legacy rows safe defaults", asyn
   assert.doesNotMatch(sql, /\bTRUNCATE\b/i);
 });
 
+test("public publishing stores auditable disclosure evidence", async () => {
+  const schema = await read("prisma/schema.prisma");
+  const migration = await read("prisma/migrations/20260801010000_add_public_disclosure_evidence/migration.sql");
+  const store = await read("lib/server/community-store.ts");
+
+  assert.match(schema, /publicConsentVersion\s+String\?/);
+  assert.match(schema, /publicConsentLocale\s+String\?/);
+  assert.match(migration, /ADD COLUMN "publicConsentVersion" TEXT/);
+  assert.match(migration, /ADD COLUMN "publicConsentLocale" TEXT/);
+  assert.match(store, /PUBLIC_DISCLOSURE_NOTICE_VERSION/);
+  assert.match(store, /publicConsentVersion: visibility === "Public"/);
+  assert.match(store, /publicConsentLocale: visibility === "Public"/);
+});
+
 test("new submissions keep internal classification defaults without customer-facing selectors", async () => {
   const [form, store] = await Promise.all([
     read("app/ask/new/new-idea-client.tsx"),

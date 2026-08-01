@@ -34,6 +34,10 @@ import {
   isProfileIndustry,
   profileCountryFromCode
 } from "@/lib/profile-options";
+import {
+  isPublicDisclosureLocale,
+  PUBLIC_DISCLOSURE_NOTICE_VERSION
+} from "@/lib/public-disclosure";
 
 type UserRow = {
   id: string;
@@ -336,6 +340,8 @@ function ideaToCommunityIdea(
     homepageFeatured: Boolean(row.homepageFeatured),
     homepageFeaturedOrder: typeof row.homepageFeaturedOrder === "number" ? row.homepageFeaturedOrder : undefined,
     publicConsentAt: options.includeAdminFields && row.publicConsentAt ? iso(row.publicConsentAt) : undefined,
+    publicConsentVersion: options.includeAdminFields ? row.publicConsentVersion || undefined : undefined,
+    publicConsentLocale: options.includeAdminFields ? row.publicConsentLocale || undefined : undefined,
     moderatedAt: options.includeAdminFields && row.moderatedAt ? iso(row.moderatedAt) : undefined,
     moderationNote: options.includeAdminFields ? row.moderationNote || undefined : undefined,
     author: userPublic(row.author),
@@ -1092,6 +1098,14 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
   if (visibility === "Public" && !publicConsent) {
     throw new Error("Public ideas require consent for the post, uploaded images, and TYORA assessment to be displayed publicly.");
   }
+  const publicConsentVersion = typeof data.publicConsentVersion === "string" ? data.publicConsentVersion.trim() : "";
+  const publicConsentLocale = isPublicDisclosureLocale(data.publicConsentLocale) ? data.publicConsentLocale : "";
+  if (
+    visibility === "Public" &&
+    (publicConsentVersion !== PUBLIC_DISCLOSURE_NOTICE_VERSION || !publicConsentLocale)
+  ) {
+    throw new Error("Refresh this page and confirm the current public-disclosure notice before publishing.");
+  }
   const submittedImageUrls = Array.isArray(data.imageUrls)
     ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 9)
     : [];
@@ -1117,6 +1131,8 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
       moderationStatus: "Approved",
       status: "Discussing",
       publicConsentAt: visibility === "Public" ? new Date() : null,
+      publicConsentVersion: visibility === "Public" ? publicConsentVersion : null,
+      publicConsentLocale: visibility === "Public" ? publicConsentLocale : null,
       authorId
     },
     include: ideaInclude

@@ -123,7 +123,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
   const reviewSnippet = idea?.review?.recommendedNextStep || idea?.review?.additionalNotes || idea?.review?.mainRisks;
 
   return (
-    <article className={`group overflow-hidden rounded-xl border bg-white transition duration-150 hover:border-[#b8c5d8] hover:shadow-[0_12px_32px_rgba(11,20,38,0.08)] ${isUnanswered ? "border-[#f6c894]" : "border-[#dfe5ed]"}`}>
+    <article className={`group overflow-hidden rounded-xl border bg-white shadow-[0_3px_12px_rgba(11,18,32,0.06)] transition duration-150 hover:-translate-y-px hover:border-[#aeb9c8] hover:shadow-[0_14px_34px_rgba(11,18,32,0.11)] ${isUnanswered ? "border-[#efb872]" : "border-[#d5dce6]"}`}>
       <div className="grid min-h-[126px] grid-cols-[minmax(0,1fr)_104px] sm:grid-cols-[58px_minmax(0,1fr)_124px]">
         <div className="hidden border-r border-[#edf0f4] bg-[#fafbfc] px-2 py-3 text-center sm:block">
           <ThumbsUp size={15} className="mx-auto text-[#667085]" />
@@ -197,7 +197,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
 
 function StarterCommunityState() {
   return (
-    <div className="rounded-[18px] border border-[#e4e8ef] bg-white/95 p-4 shadow-sm shadow-[#101216]/4 sm:p-5">
+    <div className="rounded-[18px] border border-[#d5dce6] bg-white p-4 shadow-[0_6px_20px_rgba(11,18,32,0.07)] sm:p-5">
       <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
         <div>
           <p className="inline-flex rounded-full bg-[#f2f7ff] px-3 py-1 text-xs font-semibold text-[#315fbd]"><CommunityText text="Starter community" /></p>
@@ -356,7 +356,7 @@ export default async function AskCommunityPage({
             <input type="hidden" name="sort" value={sort} />
           </form>
 
-          <nav id="ideas" className="no-scrollbar flex overflow-x-auto rounded-xl border border-[#d8dee8] bg-white px-1.5 pt-1.5 shadow-sm">
+          <nav id="ideas" className="no-scrollbar flex overflow-x-auto rounded-xl border border-[#d5dce6] bg-white px-1.5 pt-1.5 shadow-[0_4px_14px_rgba(11,18,32,0.06)]">
             {tabs.map(([id, label]) => (
               <Link key={id} href={`/ask?sort=${id}`} className={`relative whitespace-nowrap rounded-t-lg px-3 py-2.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${sort === id ? "bg-[#f7f9fc] text-[#155eef] after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:bg-[#155eef]" : "text-[#5f6b7a] hover:bg-[#f7f9fc] hover:text-[#0b1426]"}`}>
                 <CommunityText text={label} />
@@ -409,7 +409,7 @@ export default async function AskCommunityPage({
 
         <aside className="hidden xl:block">
           <div className="sticky top-[76px] space-y-3">
-            <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+            <section className="rounded-xl border border-[#d5dce6] bg-white p-4 shadow-[0_6px_20px_rgba(11,18,32,0.07)]">
               <div className="flex items-center gap-2">
                 <CircleHelp size={17} className="text-[#f59e0b]" />
                 <h2 className="font-bold"><CommunityText text="Needs your advice" /></h2>
@@ -426,7 +426,7 @@ export default async function AskCommunityPage({
             </section>
 
             {categoryCounts.length > 0 ? (
-              <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+              <section className="rounded-xl border border-[#d5dce6] bg-white p-4 shadow-[0_6px_20px_rgba(11,18,32,0.07)]">
                 <div className="flex items-center gap-2"><TrendingUp size={17} className="text-[#155eef]" /><h2 className="font-bold"><CommunityText text="Trending topics" /></h2></div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {categoryCounts.slice(0, 6).map(({ category, count }) => (
@@ -436,7 +436,7 @@ export default async function AskCommunityPage({
               </section>
             ) : null}
 
-            <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+            <section className="rounded-xl border border-[#d5dce6] bg-white p-4 shadow-[0_6px_20px_rgba(11,18,32,0.07)]">
               <div className="flex items-center gap-2"><BadgeCheck size={17} className="text-[#078a83]" /><h2 className="font-bold"><CommunityText text="People helping" /></h2></div>
               <div className="mt-3 flex items-center gap-2.5 rounded-lg bg-[#f1fbf9] p-2.5">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#0b1426] text-xs font-bold text-white">T</span>
@@ -461,7 +461,7 @@ export default async function AskCommunityPage({
               </div> : null}
             </section>
 
-            <section className="rounded-xl border border-[#d8dee8] bg-white p-4 shadow-sm">
+            <section className="rounded-xl border border-[#d5dce6] bg-white p-4 shadow-[0_6px_20px_rgba(11,18,32,0.07)]">
               <div className="flex items-center gap-2"><Rocket size={17} className="text-[#155eef]" /><h2 className="font-bold"><CommunityText text="Community progress" /></h2></div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-[#eef4ff] p-3"><p className="text-xl font-bold text-[#155eef]">{progressedIdeas}</p><p className="mt-1 text-[11px] leading-4 text-[#475467]"><CommunityText text="ideas moved beyond discussion" /></p></div>

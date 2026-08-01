@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" translate="no" className="notranslate">
+    <html lang="en" translate="no" className="notranslate tyora-dark">
       <head>
         <meta name="google" content="notranslate" />
       </head>

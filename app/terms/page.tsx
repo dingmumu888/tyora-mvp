@@ -13,7 +13,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Service"
       description="These general terms apply when you use TYORA's website, community, sourcing, or product-development services. A written project proposal may add or replace terms for a specific paid engagement."
-      updatedAt="July 15, 2026"
+      updatedAt="August 1, 2026"
     >
       <LegalSection title="Service relationship">
         <p>
@@ -53,10 +53,13 @@ export default function TermsPage() {
 
       <LegalSection title="Community and submitted content">
         <p>
-          You retain ownership of content you submit. For public posts, you grant TYORA a non-exclusive license to host, display, format, and share that content as needed to operate and promote the community. You must have the right to submit the content and must not post confidential, unlawful, infringing, or abusive material.
+          You retain ownership of content you submit. For public posts, you grant TYORA a non-exclusive license to host, display, format, translate, moderate, and share that content only as reasonably needed to operate, protect, and promote the service. You must have the right to submit the text, images, and designs and must not post confidential, unlawful, infringing, or abusive material.
         </p>
         <p>
-          Private submissions are handled as private business inquiries and may be shared only as reasonably needed to assess or perform the requested service.
+          A public post is visible to everyone and is not a confidential disclosure to TYORA. It may be searched, shared, reposted, discussed, or imitated by third parties, and public disclosure may affect patent or trade-secret protection. TYORA does not guarantee that public content will remain exclusive or cannot be copied. If an idea is not protected or contains confidential drawings, structures, specifications, suppliers, or costs, use a private submission or do not publish it yet.
+        </p>
+        <p>
+          Private submissions are handled as private business inquiries and may be shared only as reasonably needed to assess or perform the requested service. Suspected infringement or misuse may be reported through the post-reporting tools or TYORA contact channels. TYORA may moderate reported content and provide an appeal or correction path where appropriate.
         </p>
       </LegalSection>
 

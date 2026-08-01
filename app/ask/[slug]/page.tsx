@@ -93,7 +93,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
       />
 
       <div className="mx-auto w-full max-w-[1040px] space-y-3 px-3 py-4 sm:px-5 sm:py-6">
-        <article className="overflow-hidden rounded-[22px] border border-[#d8dee8] bg-white shadow-sm shadow-[#0b1426]/5">
+        <article className="overflow-hidden rounded-[22px] border border-[#d5dce6] bg-white shadow-[0_8px_28px_rgba(11,18,32,0.09)]">
           <div className="p-4 sm:p-5">
             <div className="flex items-start gap-3">
               <Link href={`/creator/${encodeURIComponent(idea.author.id)}`} className="shrink-0 rounded-full outline-none transition hover:scale-105 focus-visible:ring-4 focus-visible:ring-[#155eef]/20" aria-label={`View ${idea.author.name}'s profile`}>

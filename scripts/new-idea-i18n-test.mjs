@@ -24,7 +24,7 @@ test("the new discussion flow has complete public-language dictionaries", async 
     "发布后，创意开始向前走",
     "说人话：简单、清楚、有重点",
     "谁可以查看这次提交",
-    "提交评估"
+    "确认发布"
   ]) {
     assert.match(source, new RegExp(copy));
   }
@@ -42,6 +42,11 @@ test("every visible stage of the new discussion page uses its localized copy", a
   assert.match(page, /t\("whoCanSee"\)/);
   assert.match(page, /t\("readySubmit"\)/);
   assert.match(page, /t\("afterPublish"\)/);
+  assert.match(page, /publicDisclosureConsent/);
+  assert.match(page, /PUBLIC_DISCLOSURE_NOTICE_VERSION/);
+  assert.match(page, /publicConsentLocale: form\.visibility === "Public" \? language/);
+  assert.doesNotMatch(page, /form\.publicImageConsent/);
+  assert.doesNotMatch(page, /form\.publicAssessmentConsent/);
 
   for (const rawEnglish of [
     ">Start a Discussion<",

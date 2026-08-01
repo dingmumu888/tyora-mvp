@@ -20,7 +20,7 @@ import EmailLogin from "@/components/email-login";
 import { communityActionHeaders } from "@/lib/client/community-action";
 import { IdeaRelativeTime, useIdeaDetailText } from "./idea-detail-text";
 
-type SessionUser = { id: string; name: string; email: string; username: string };
+type SessionUser = { id: string; name: string; email: string; username: string; avatar?: string };
 type SortMode = "helpful" | "latest" | "tyora";
 
 export default function IdeaComments({
@@ -245,14 +245,14 @@ export default function IdeaComments({
   }
 
   return (
-    <section id="discussion" className="overflow-hidden rounded-[22px] border border-[#d8dee8] bg-white shadow-sm shadow-[#0b1426]/5">
+    <section id="discussion" className="overflow-hidden rounded-[22px] border border-[#d5dce6] bg-white shadow-[0_8px_28px_rgba(11,18,32,0.08)]">
       <form id="discussion-composer" onSubmit={postComment} className="border-b border-[#d8dee8] p-4 sm:p-5">
         <div className="flex items-center gap-2">
           <MessageCircle size={18} className="text-[#155eef]" />
           <h2 className="text-lg font-bold text-[#0b1426]">{t("joinDiscussion")}</h2>
         </div>
-        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-[#d8dee8] bg-[#fbfcfe] p-3 focus-within:border-[#93b4f8] focus-within:ring-4 focus-within:ring-[#2563eb]/8">
-          {user ? <CommunityAvatar name={user.name} className="size-9 shrink-0 border-0 text-[11px]" /> : <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#e8f0ff] text-[#155eef]"><MessageCircle size={16} /></span>}
+        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-[#cfd7e3] bg-[#f8fafc] p-3 focus-within:border-[#7ca5f5] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#2563eb]/8">
+          {user ? <CommunityAvatar name={user.name} src={user.avatar} className="size-9 shrink-0 border-0 text-[11px]" /> : <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#e8f0ff] text-[#155eef]"><MessageCircle size={16} /></span>}
           <textarea
             ref={composerRef}
             value={body}

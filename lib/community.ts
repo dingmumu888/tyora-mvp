@@ -116,6 +116,8 @@ export type CommunityIdea = {
   homepageFeatured: boolean;
   homepageFeaturedOrder?: number;
   publicConsentAt?: string;
+  publicConsentVersion?: string;
+  publicConsentLocale?: string;
   moderatedAt?: string;
   moderationNote?: string;
   author: Pick<CommunityUser, "id" | "username" | "name" | "avatar" | "country" | "countryCode" | "industry" | "occupation" | "expertRole" | "expertVerified">;
