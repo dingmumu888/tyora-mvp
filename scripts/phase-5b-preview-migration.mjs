@@ -92,9 +92,14 @@ function runPrismaMigrateDeploy(databaseUrl) {
       if (settled) return;
       settled = true;
       clearTimeout(timeout);
+      const safeErrorCode = code === 0
+        ? null
+        : Buffer.concat(captured).toString("utf8").match(/\bP\d{4}\b/)?.[0] ?? "UNKNOWN";
       clearCaptured();
       if (code !== 0) {
-        rejectCommand(new Phase5bPreviewMigrationError("Prisma migrate deploy failed safely."));
+        rejectCommand(new Phase5bPreviewMigrationError(
+          `Prisma migrate deploy failed safely (error code: ${safeErrorCode}).`
+        ));
         return;
       }
       resolveCommand();

@@ -191,6 +191,8 @@ test("runner uses migrate deploy only and keeps output redacted", async () => {
   assert.match(runner, /stdio:\s*\["ignore", "pipe", "pipe"\]/);
   assert.match(runner, /captured\.length = 0/);
   assert.match(runner, /chunk\.fill\(0\)/);
+  assert.match(runner, /match\(\/\\bP\\d\{4\}\\b\/\)/);
+  assert.match(runner, /safeErrorCode/);
   assert.match(runner, /const immediateIdentity = validatePhase5bPreviewTarget\(targetEnvironment\)/);
   assert.match(runner, /const immediateCertificate = await readAndValidatePhase5bCertificate\(certificatePath\)/);
   assert.match(runner, /assertPhase5bConnectedPreviewIdentity/);
