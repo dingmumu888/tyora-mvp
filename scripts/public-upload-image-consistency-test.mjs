@@ -8,13 +8,14 @@ test("public product-image uploads share resizing and full-image previews", () =
   const idea = read("app/ask/new/new-idea-client.tsx");
   const source = read("app/source/source-client.tsx");
   const custom = read("app/custom/custom-inquiry-client.tsx");
+  const editor = read("components/editable-idea-images.tsx");
   const preview = read("components/public-upload-image-preview.tsx");
   const processing = read("lib/public-image-processing.ts");
 
   assert.match(idea, /preparePublicImage/);
   assert.match(source, /preparePublicImage/);
   assert.match(custom, /preparePublicImage/);
-  assert.match(idea, /PublicUploadImagePreview/);
+  assert.match(idea, /EditableIdeaImages/);
   assert.match(source, /PublicUploadImagePreview/);
   assert.match(custom, /PublicUploadImagePreview/);
   assert.match(processing, /Math\.min\(1, maxDimension \/ image\.naturalWidth, maxDimension \/ image\.naturalHeight\)/);
@@ -22,6 +23,9 @@ test("public product-image uploads share resizing and full-image previews", () =
   assert.match(preview, /aspect-\[4\/3\]/);
   assert.match(preview, /object-contain/);
   assert.match(preview, /setOpen\(true\)/);
+  assert.match(editor, /preparePublicImage/);
+  assert.match(editor, /object-contain/);
+  assert.match(editor, /data-image-index/);
 });
 
 test("avatars remain intentionally square and PDFs remain unchanged", () => {

@@ -1,6 +1,6 @@
 import { requireAdminSession } from "@/lib/server/admin-auth";
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
-import { deleteCommunityIdeaAdmin, updateCommunityIdeaAdmin } from "@/lib/server/community-store";
+import { updateCommunityIdeaAdmin } from "@/lib/server/community-store";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const unauthorized = await requireAdminSession();
@@ -13,13 +13,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function DELETE() {
   const unauthorized = await requireAdminSession();
   if (unauthorized) return unauthorized;
-  const { slug } = await params;
-  try {
-    return ok(await deleteCommunityIdeaAdmin(slug));
-  } catch (error) {
-    return fail(messageFromError(error, "Unable to delete community idea."), 400);
-  }
+  return fail("Permanent deletion is disabled. Use the Remove action and provide a reason.", 405);
 }

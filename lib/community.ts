@@ -35,7 +35,7 @@ export const communityProductStages = [
 export const customInquiryStatuses = ["Submitted", "In Review", "Need Information", "Qualified", "Closed"] as const;
 
 export type CommunityStatus = (typeof communityStatuses)[number];
-export type CommunityModerationStatus = "Pending" | "Approved" | "Rejected" | "Draft";
+export type CommunityModerationStatus = "Pending" | "Approved" | "Returned" | "Removed" | "Rejected" | "Draft";
 export type CommunityVisibility = "Public" | "Private";
 export type CommunityQuestion = (typeof communityQuestions)[number];
 export type CommunityPostType = (typeof communityPostTypes)[number];
@@ -125,6 +125,8 @@ export type CommunityIdea = {
   helpfulCount: number;
   interestedCount: number;
   shareCount: number;
+  reportCount?: number;
+  reportReasons?: string[];
   hotScore: number;
   isHot: boolean;
   hotUntil?: string;

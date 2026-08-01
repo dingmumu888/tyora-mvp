@@ -14,6 +14,7 @@ import {
 } from "@/lib/server/community-action-policy";
 
 const RECEIPT_TTL_MS = 24 * 60 * 60 * 1000;
+const REPORT_RECEIPT_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 function actionSecret() {
   const value = process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET;
@@ -32,6 +33,7 @@ async function configuredLimits(): Promise<CommunityActionLimits> {
     reaction: content.communityPage.reactionRateLimit,
     "comment-reaction": content.communityPage.reactionRateLimit,
     share: content.communityPage.shareRateLimit,
+    report: 5,
     windowMinutes: content.communityPage.rateWindowMinutes
   };
 }
@@ -49,7 +51,12 @@ export async function executeGuardedCommunityAction<T>(input: {
 }) {
   const idempotencyKey = normalizeIdempotencyKey(input.request.headers.get("idempotency-key"));
   const ipAddress = requestIpAddress(input.request.headers) || "unknown";
-  const receiptId = privateDigest("receipt", `${input.userId}:${input.action}:${input.resourceId}:${idempotencyKey}`);
+  const receiptId = privateDigest(
+    "receipt",
+    input.action === "report"
+      ? `${input.userId}:${input.action}:${input.resourceId}`
+      : `${input.userId}:${input.action}:${input.resourceId}:${idempotencyKey}`
+  );
   const limits = await configuredLimits();
   const limit = actionLimit(input.action, limits);
   const throttleKeys = [
@@ -93,11 +100,11 @@ export async function executeGuardedCommunityAction<T>(input: {
             action: input.action,
             resourceId: input.resourceId,
             resultJson: JSON.stringify(data),
-            expiresAt: new Date(now.getTime() + RECEIPT_TTL_MS)
+            expiresAt: new Date(now.getTime() + (input.action === "report" ? REPORT_RECEIPT_TTL_MS : RECEIPT_TTL_MS))
           },
           update: {
             resultJson: JSON.stringify(data),
-            expiresAt: new Date(now.getTime() + RECEIPT_TTL_MS)
+            expiresAt: new Date(now.getTime() + (input.action === "report" ? REPORT_RECEIPT_TTL_MS : RECEIPT_TTL_MS))
           }
         });
         return { data, replayed: false };

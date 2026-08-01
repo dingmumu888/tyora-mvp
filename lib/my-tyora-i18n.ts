@@ -88,7 +88,7 @@ const en = {
   editPost: "Edit post",
   updateIdea: "Update your idea",
   productName: "Product name",
-  category: "Category",
+  category: "Product type",
   description: "Description",
   cancel: "Cancel",
   save: "Save",
@@ -116,7 +116,10 @@ const en = {
   commentedOnIdea: "{name} commented on your idea",
   interestedInIdea: "{name} is interested in your idea",
   foundHelpful: "{name} found your idea helpful",
+  ideaImages: "Idea images",
   reviewedYourIdea: "TYORA reviewed your idea",
+  returnedYourIdea: "TYORA returned your idea for changes",
+  removedYourIdea: "TYORA removed your idea",
   ideaStatus: "Your idea status is {status}"
 } as const;
 
@@ -147,7 +150,7 @@ const zhCN: Dictionary = {
   minutesAgo: "{count} 分钟前", hoursAgo: "{count} 小时前", daysAgo: "{count} 天前", love: "喜欢",
   edit: "编辑", delete: "删除", cancelLike: "取消点赞", reviewed: "评估于 {time}", tyoraReviewAvailable: "TYORA 评估已发布。",
   startDiscussion: "发起讨论", openFullDiscussion: "点击任意内容即可打开完整讨论。", editPost: "编辑帖子",
-  updateIdea: "更新你的创意", productName: "产品名称", category: "分类", description: "描述", cancel: "取消", save: "保存",
+  updateIdea: "更新你的创意", productName: "产品名称", category: "产品类型", description: "描述", cancel: "取消", save: "保存",
   closeActivity: "关闭动态面板", closeEditPost: "关闭帖子编辑", deleteConfirm: "确定删除“{title}”吗？\n\n删除后将不再出现在公开讨论中。",
   unableEditPost: "无法编辑帖子。", unableDeletePost: "无法删除帖子。", unableCancelLike: "无法取消点赞。",
   all: "全部", interestedFilter: "购买意向", tyora: "TYORA", commentCount: "{count} 条评论", likeCount: "{count} 个点赞",
@@ -155,7 +158,7 @@ const zhCN: Dictionary = {
   replyToReview: "正在回复 TYORA 评估", replyToPerson: "正在回复 {name}", openIdeaToReply: "请打开创意页面后回复这条消息。",
   unableReply: "无法发送回复。", closeMessages: "关闭消息", commentedOnIdea: "{name} 评论了你的创意",
   interestedInIdea: "{name} 对你的创意感兴趣", foundHelpful: "{name} 认为你的创意很有帮助",
-  reviewedYourIdea: "TYORA 已评估你的创意", ideaStatus: "你的创意状态为：{status}"
+  ideaImages: "创意图片", reviewedYourIdea: "TYORA 已评估你的创意", returnedYourIdea: "TYORA 已退回你的创意，请修改后重新发布", removedYourIdea: "TYORA 已移除你的创意", ideaStatus: "你的创意状态为：{status}"
 };
 
 const es: Dictionary = {
@@ -182,7 +185,7 @@ const es: Dictionary = {
   minutesAgo: "hace {count} min", hoursAgo: "hace {count} h", daysAgo: "hace {count} d", love: "Me gusta",
   edit: "Editar", delete: "Eliminar", cancelLike: "Quitar me gusta", reviewed: "Evaluado {time}", tyoraReviewAvailable: "La evaluación de TYORA está disponible.",
   startDiscussion: "Iniciar una conversación", openFullDiscussion: "Toca cualquier elemento para abrir la conversación completa.", editPost: "Editar publicación",
-  updateIdea: "Actualiza tu idea", productName: "Nombre del producto", category: "Categoría", description: "Descripción", cancel: "Cancelar", save: "Guardar",
+  updateIdea: "Actualiza tu idea", productName: "Nombre del producto", category: "Tipo de producto", description: "Descripción", cancel: "Cancelar", save: "Guardar",
   closeActivity: "Cerrar panel de actividad", closeEditPost: "Cerrar edición", deleteConfirm: "¿Eliminar “{title}”?\n\nDejará de aparecer en tus conversaciones públicas.",
   unableEditPost: "No se pudo editar la publicación.", unableDeletePost: "No se pudo eliminar la publicación.", unableCancelLike: "No se pudo quitar el me gusta.",
   all: "Todo", interestedFilter: "Interés", tyora: "TYORA", commentCount: "{count} comentarios", likeCount: "{count} me gusta", buyCount: "{count} compras",
@@ -190,7 +193,7 @@ const es: Dictionary = {
   replyToReview: "Respondiendo a la evaluación de TYORA", replyToPerson: "Respondiendo a {name}", openIdeaToReply: "Abre la idea para responder a este mensaje.",
   unableReply: "No se pudo responder.", closeMessages: "Cerrar mensajes", commentedOnIdea: "{name} comentó tu idea",
   interestedInIdea: "{name} está interesado en tu idea", foundHelpful: "{name} consideró útil tu idea",
-  reviewedYourIdea: "TYORA evaluó tu idea", ideaStatus: "El estado de tu idea es {status}"
+  ideaImages: "Imágenes de la idea", reviewedYourIdea: "TYORA evaluó tu idea", returnedYourIdea: "TYORA devolvió tu idea para que la revises", removedYourIdea: "TYORA eliminó tu idea", ideaStatus: "El estado de tu idea es {status}"
 };
 
 const fr: Dictionary = {
@@ -217,7 +220,7 @@ const fr: Dictionary = {
   minutesAgo: "il y a {count} min", hoursAgo: "il y a {count} h", daysAgo: "il y a {count} j", love: "J’aime",
   edit: "Modifier", delete: "Supprimer", cancelLike: "Retirer le J’aime", reviewed: "Évalué {time}", tyoraReviewAvailable: "L’évaluation TYORA est disponible.",
   startDiscussion: "Lancer une discussion", openFullDiscussion: "Touchez un élément pour ouvrir la discussion complète.", editPost: "Modifier la publication",
-  updateIdea: "Mettez votre idée à jour", productName: "Nom du produit", category: "Catégorie", description: "Description", cancel: "Annuler", save: "Enregistrer",
+  updateIdea: "Mettez votre idée à jour", productName: "Nom du produit", category: "Type de produit", description: "Description", cancel: "Annuler", save: "Enregistrer",
   closeActivity: "Fermer le panneau d’activité", closeEditPost: "Fermer la modification", deleteConfirm: "Supprimer « {title} » ?\n\nCette publication disparaîtra de vos discussions publiques.",
   unableEditPost: "Impossible de modifier la publication.", unableDeletePost: "Impossible de supprimer la publication.", unableCancelLike: "Impossible de retirer le J’aime.",
   all: "Tout", interestedFilter: "Intérêt", tyora: "TYORA", commentCount: "{count} commentaires", likeCount: "{count} J’aime", buyCount: "{count} achats",
@@ -225,7 +228,7 @@ const fr: Dictionary = {
   replyToReview: "Réponse à l’évaluation TYORA", replyToPerson: "Réponse à {name}", openIdeaToReply: "Ouvrez l’idée pour répondre à ce message.",
   unableReply: "Impossible de répondre.", closeMessages: "Fermer les messages", commentedOnIdea: "{name} a commenté votre idée",
   interestedInIdea: "{name} s’intéresse à votre idée", foundHelpful: "{name} a trouvé votre idée utile",
-  reviewedYourIdea: "TYORA a évalué votre idée", ideaStatus: "Le statut de votre idée est {status}"
+  ideaImages: "Images de l’idée", reviewedYourIdea: "TYORA a évalué votre idée", returnedYourIdea: "TYORA a renvoyé votre idée pour modification", removedYourIdea: "TYORA a retiré votre idée", ideaStatus: "Le statut de votre idée est {status}"
 };
 
 const de: Dictionary = {
@@ -252,7 +255,7 @@ const de: Dictionary = {
   minutesAgo: "vor {count} Min.", hoursAgo: "vor {count} Std.", daysAgo: "vor {count} T.", love: "Gefällt mir",
   edit: "Bearbeiten", delete: "Löschen", cancelLike: "Like entfernen", reviewed: "Bewertet {time}", tyoraReviewAvailable: "Die TYORA-Bewertung ist verfügbar.",
   startDiscussion: "Diskussion starten", openFullDiscussion: "Tippe auf einen Eintrag, um die vollständige Diskussion zu öffnen.", editPost: "Beitrag bearbeiten",
-  updateIdea: "Aktualisiere deine Idee", productName: "Produktname", category: "Kategorie", description: "Beschreibung", cancel: "Abbrechen", save: "Speichern",
+  updateIdea: "Aktualisiere deine Idee", productName: "Produktname", category: "Produkttyp", description: "Beschreibung", cancel: "Abbrechen", save: "Speichern",
   closeActivity: "Aktivitätsfenster schließen", closeEditPost: "Bearbeitung schließen", deleteConfirm: "„{title}“ löschen?\n\nDer Beitrag wird aus deinen öffentlichen Diskussionen entfernt.",
   unableEditPost: "Beitrag konnte nicht bearbeitet werden.", unableDeletePost: "Beitrag konnte nicht gelöscht werden.", unableCancelLike: "Like konnte nicht entfernt werden.",
   all: "Alle", interestedFilter: "Interesse", tyora: "TYORA", commentCount: "{count} Kommentare", likeCount: "{count} Likes", buyCount: "{count} Kaufinteressen",
@@ -260,7 +263,7 @@ const de: Dictionary = {
   replyToReview: "Antwort auf die TYORA-Bewertung", replyToPerson: "Antwort an {name}", openIdeaToReply: "Öffne die Idee, um auf diese Nachricht zu antworten.",
   unableReply: "Antwort konnte nicht gesendet werden.", closeMessages: "Nachrichten schließen", commentedOnIdea: "{name} hat deine Idee kommentiert",
   interestedInIdea: "{name} interessiert sich für deine Idee", foundHelpful: "{name} fand deine Idee hilfreich",
-  reviewedYourIdea: "TYORA hat deine Idee bewertet", ideaStatus: "Der Status deiner Idee ist {status}"
+  ideaImages: "Ideenbilder", reviewedYourIdea: "TYORA hat deine Idee bewertet", returnedYourIdea: "TYORA hat deine Idee zur Überarbeitung zurückgesendet", removedYourIdea: "TYORA hat deine Idee entfernt", ideaStatus: "Der Status deiner Idee ist {status}"
 };
 
 const pt: Dictionary = {
@@ -287,7 +290,7 @@ const pt: Dictionary = {
   minutesAgo: "há {count} min", hoursAgo: "há {count} h", daysAgo: "há {count} d", love: "Curtir",
   edit: "Editar", delete: "Excluir", cancelLike: "Remover curtida", reviewed: "Avaliado {time}", tyoraReviewAvailable: "A avaliação da TYORA está disponível.",
   startDiscussion: "Iniciar discussão", openFullDiscussion: "Toque em qualquer item para abrir a discussão completa.", editPost: "Editar publicação",
-  updateIdea: "Atualize sua ideia", productName: "Nome do produto", category: "Categoria", description: "Descrição", cancel: "Cancelar", save: "Salvar",
+  updateIdea: "Atualize sua ideia", productName: "Nome do produto", category: "Tipo de produto", description: "Descrição", cancel: "Cancelar", save: "Salvar",
   closeActivity: "Fechar painel de atividade", closeEditPost: "Fechar edição", deleteConfirm: "Excluir “{title}”?\n\nA publicação será removida das discussões públicas.",
   unableEditPost: "Não foi possível editar a publicação.", unableDeletePost: "Não foi possível excluir a publicação.", unableCancelLike: "Não foi possível remover a curtida.",
   all: "Tudo", interestedFilter: "Interesse", tyora: "TYORA", commentCount: "{count} comentários", likeCount: "{count} curtidas", buyCount: "{count} compras",
@@ -295,7 +298,7 @@ const pt: Dictionary = {
   replyToReview: "Respondendo à avaliação da TYORA", replyToPerson: "Respondendo a {name}", openIdeaToReply: "Abra a ideia para responder a esta mensagem.",
   unableReply: "Não foi possível responder.", closeMessages: "Fechar mensagens", commentedOnIdea: "{name} comentou sua ideia",
   interestedInIdea: "{name} está interessado na sua ideia", foundHelpful: "{name} considerou sua ideia útil",
-  reviewedYourIdea: "A TYORA avaliou sua ideia", ideaStatus: "O status da sua ideia é {status}"
+  ideaImages: "Imagens da ideia", reviewedYourIdea: "A TYORA avaliou sua ideia", returnedYourIdea: "A TYORA devolveu sua ideia para revisão", removedYourIdea: "A TYORA removeu sua ideia", ideaStatus: "O status da sua ideia é {status}"
 };
 
 export const myTyoraDictionaries: Record<PublicLanguage, Dictionary> = {

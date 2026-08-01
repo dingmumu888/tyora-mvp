@@ -1,13 +1,12 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import { ImagePlus, Loader2, MessageCircle, Pencil, Share2, Star, ThumbsUp, Trash2, X } from "lucide-react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { Flag, Loader2, MessageCircle, Pencil, Share2, Star, ThumbsUp, Trash2, X } from "lucide-react";
 import { CommunityIdea, communityQuestions, CommunityQuestion } from "@/lib/community";
 import EmailLogin from "@/components/email-login";
-import PublicUploadImagePreview from "@/components/public-upload-image-preview";
+import EditableIdeaImages from "@/components/editable-idea-images";
 import IdeaSharePanel from "./idea-share-panel";
 import { communityActionHeaders } from "@/lib/client/community-action";
-import { preparePublicImage } from "@/lib/public-image-processing";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
 import { useIdeaDetailText } from "./idea-detail-text";
@@ -24,7 +23,6 @@ const questionTranslationKeys: Record<CommunityQuestion, NewIdeaKey> = {
   "Factory Recommendation?": "qFactory",
   Other: "qOther"
 };
-type EditImagePreview = { name: string; url: string };
 
 export default function IdeaActions({ idea, mode = "bar", compact = false, labels }: { idea: CommunityIdea; mode?: IdeaActionMode; compact?: boolean; labels: IdeaActionLabels }) {
   const { language } = usePublicLanguage();
@@ -36,6 +34,9 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
   const [reactionState, setReactionState] = useState({ helpful: false, liked: false, interested: false });
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportComplete, setReportComplete] = useState(false);
   const [editForm, setEditForm] = useState({
     title: idea.title,
     category: idea.category,
@@ -44,9 +45,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
     questions: idea.questions,
     otherQuestion: idea.otherQuestion || ""
   });
-  const [editImages, setEditImages] = useState<EditImagePreview[]>(
-    idea.imageUrls.map((url, index) => ({ name: `Image ${index + 1}`, url }))
-  );
+  const [editImages, setEditImages] = useState<string[]>(idea.imageUrls);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const commentRef = useRef<HTMLTextAreaElement>(null);
@@ -91,48 +90,6 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         ? current.questions.filter((item) => item !== question)
         : [...current.questions, question]
     }));
-  }
-
-  async function addEditImages(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files || []);
-    event.target.value = "";
-    if (!files.length) return;
-    const remaining = Math.max(0, 9 - editImages.length);
-    if (!remaining) {
-      setMessage(isChinese ? "每个帖子最多上传 9 张图片。" : "You can upload up to 9 images.");
-      return;
-    }
-    setBusy("edit-images");
-    setMessage("");
-    try {
-      const prepared = await Promise.all(
-        files.slice(0, remaining).map(async (file, index) => {
-          const image = await preparePublicImage(file, {
-            maxDimension: 1600,
-            quality: 0.86,
-            maxDataUrlLength: 880000,
-            errors: {
-              read: isChinese ? "无法读取这张图片。" : "Unable to read this image.",
-              unsupported: isChinese ? "浏览器不支持这张图片的格式。" : "This image format is not supported by your browser.",
-              prepare: isChinese ? "无法处理这张图片。" : "Unable to prepare this image.",
-              tooLarge: isChinese ? "图片处理后仍然过大，请选择尺寸更小的图片。" : "This image is still too large after processing. Please choose a smaller image."
-            }
-          });
-          return {
-            name: `${Date.now()}-${index}-${image.file.name}`,
-            url: image.dataUrl
-          };
-        })
-      );
-      setEditImages((current) => [...current, ...prepared].slice(0, 9));
-      if (files.length > remaining) {
-        setMessage(isChinese ? "每个帖子最多保留 9 张图片，多余图片未添加。" : "Only the first 9 images were kept.");
-      }
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : (isChinese ? "无法处理图片。" : "Unable to prepare images."));
-    } finally {
-      setBusy("");
-    }
   }
 
   async function postComment(event: FormEvent<HTMLFormElement>) {
@@ -195,7 +152,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...editForm,
-          imageUrls: editImages.map((image) => image.url)
+          imageUrls: editImages
         })
       });
       const payload = await response.json();
@@ -226,6 +183,76 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
     }
   }
 
+  async function submitReport(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!user || isOwner) return;
+    setBusy("report");
+    setMessage("");
+    try {
+      const response = await fetch(`/api/community/ideas/${idea.slug}/report`, {
+        method: "POST",
+        headers: communityActionHeaders(`report:${idea.id}`),
+        body: JSON.stringify({ reason: reportReason })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to report discussion.");
+      setReportComplete(true);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to report discussion.");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  function openReport() {
+    setReportReason("");
+    setReportComplete(false);
+    setMessage("");
+    setReportOpen(true);
+  }
+
+  function reportDialog() {
+    if (!reportOpen || isOwner) return null;
+    return (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-[#101216]/45 px-3 py-4 backdrop-blur-sm">
+        <form onSubmit={submitReport} className="w-full max-w-lg rounded-[28px] bg-white p-5 shadow-2xl shadow-[#101216]/25 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-[#101216]">{t("reportTitle")}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#69707d]">{t("reportPrompt")}</p>
+            </div>
+            <button type="button" onClick={() => setReportOpen(false)} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e4e8ef] text-[#69707d]">
+              <X size={18} />
+            </button>
+          </div>
+          {reportComplete ? (
+            <p className="mt-5 rounded-2xl bg-[#ecfdf5] px-4 py-4 text-sm font-semibold text-[#047857]">{t("reportSent")}</p>
+          ) : (
+            <textarea
+              required
+              minLength={10}
+              maxLength={500}
+              rows={5}
+              value={reportReason}
+              onChange={(event) => setReportReason(event.target.value)}
+              placeholder={t("reportPlaceholder")}
+              className="mt-5 w-full resize-y rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10"
+            />
+          )}
+          {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
+          <div className="mt-5 flex justify-end gap-2">
+            <button type="button" onClick={() => setReportOpen(false)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e]">{t("cancel")}</button>
+            {!reportComplete ? (
+              <button disabled={busy === "report" || reportReason.trim().length < 10} className="inline-flex h-11 items-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-50">
+                {busy === "report" ? <Loader2 className="animate-spin" size={15} /> : <Flag size={15} />} {t("submitReport")}
+              </button>
+            ) : null}
+          </div>
+        </form>
+      </div>
+    );
+  }
+
   function editDialog() {
     if (!editOpen) return null;
     return (
@@ -240,7 +267,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
                 {isChinese ? "更新你的创意" : "Update your idea"}
               </h2>
               <p className="mt-1 text-xs leading-5 text-[#69707d]">
-                {isChinese ? "修改后将重新提交 TYORA 审核。" : "Saving changes sends the discussion back to TYORA review."}
+                {isChinese ? "保存后会立即更新公开帖子。" : "Saved changes update the public discussion immediately."}
               </p>
             </div>
             <button type="button" onClick={() => setEditOpen(false)} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e4e8ef] bg-white text-[#69707d]">
@@ -253,10 +280,16 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
               {isChinese ? "产品名称" : "Product name"}
               <input required value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-[#101216]">
-              {isChinese ? "分类" : "Category"}
-              <input required value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+                {isChinese ? "产品类型" : "Product type"}
+                <input required value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+                {isChinese ? "国家" : "Country"}
+                <input required value={editForm.country} onChange={(event) => setEditForm({ ...editForm, country: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+              </label>
+            </div>
             <label className="grid gap-2 text-sm font-semibold text-[#101216]">
               {isChinese ? "详细描述" : "Description"}
               <textarea required value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={6} className="min-h-32 resize-y rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
@@ -269,39 +302,21 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
               ))}
             </div>
 
-            <label className="grid gap-2 text-sm font-semibold text-[#101216]">
-              {isChinese ? "国家" : "Country"}
-              <input required value={editForm.country} onChange={(event) => setEditForm({ ...editForm, country: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-            </label>
-
             <div>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-[#101216]">{isChinese ? "创意图片" : "Idea images"}</p>
                 <span className="text-xs text-[#8b93a1]">{editImages.length}/9</span>
               </div>
-              <label className="mt-2 flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-[#93b4f8] bg-[#f8fbff] px-4 text-sm font-semibold text-[#2563eb] transition hover:bg-[#eef6ff]">
-                {busy === "edit-images" ? <Loader2 className="animate-spin" size={18} /> : <ImagePlus size={18} />}
-                {busy === "edit-images"
-                  ? (isChinese ? "正在处理图片…" : "Preparing images…")
-                  : (isChinese ? "添加或更换图片" : "Add or replace images")}
-                <input disabled={busy === "edit-images"} type="file" accept="image/*" multiple className="sr-only" onChange={addEditImages} />
-              </label>
-              {editImages.length ? (
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {editImages.map((image, index) => (
-                    <PublicUploadImagePreview
-                      key={`${image.name}-${index}`}
-                      src={image.url}
-                      alt={image.name}
-                      index={index}
-                      onRemove={() => setEditImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                      removeLabel={isChinese ? `删除第 ${index + 1} 张图片` : `Remove image ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-2 text-xs text-[#8b93a1]">{isChinese ? "当前帖子没有图片。" : "This discussion has no images."}</p>
-              )}
+              <div className="mt-2">
+                <EditableIdeaImages
+                  images={editImages}
+                  onChange={setEditImages}
+                  addLabel={isChinese ? "添加图片" : "Add image"}
+                  preparingLabel={isChinese ? "正在压缩图片…" : "Preparing images…"}
+                  limitMessage={isChinese ? "拖动图片可以调整顺序，最多 9 张。" : "Drag to reorder. Up to 9 images."}
+                  errorMessage={isChinese ? "无法处理这张图片。" : "Unable to prepare this image."}
+                />
+              </div>
             </div>
 
             <div>
@@ -431,8 +446,20 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
           <Share2 size={14} /> {idea.shareCount} {t("share")}
         </button>
+        {!isOwner ? (
+          !sessionChecked ? null : user ? (
+            <button type="button" onClick={openReport} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
+              <Flag size={14} /> {t("report")}
+            </button>
+          ) : (
+            <EmailLogin className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f6f7fb] px-3 text-xs transition hover:bg-[#eef2f7]">
+              <Flag size={14} /> {t("report")}
+            </EmailLogin>
+          )
+        ) : null}
 
         {editDialog()}
+        {reportDialog()}
         <IdeaSharePanel open={shareOpen} ideaId={idea.id} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
       </div>
     );
@@ -454,7 +481,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         </section>
       ) : null}
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className={`grid gap-2 ${isOwner ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
         {!sessionChecked ? (
           <button disabled className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold opacity-60">
             <Loader2 className="animate-spin" size={16} /> Checking
@@ -484,9 +511,21 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         <button type="button" onClick={() => setShareOpen(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
           <Share2 size={16} /> {idea.shareCount} {labels.shareText}
         </button>
+        {!isOwner ? (
+          !sessionChecked ? null : user ? (
+            <button type="button" onClick={openReport} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
+              <Flag size={16} /> {t("report")}
+            </button>
+          ) : (
+            <EmailLogin className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold transition hover:bg-[#f7f8fa]">
+              <Flag size={16} /> {t("report")}
+            </EmailLogin>
+          )
+        ) : null}
       </div>
 
       {editDialog()}
+      {reportDialog()}
       <IdeaSharePanel open={shareOpen} ideaId={idea.id} ideaSlug={idea.slug} ideaTitle={idea.title} onClose={() => setShareOpen(false)} />
     </div>
   );

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { BadgeCheck, CircleHelp } from "lucide-react";
 import { CommunityQuestion, CommunityStatus } from "@/lib/community";
 import { getCommunityIdeaBySlug } from "@/lib/server/community-store";
@@ -95,10 +96,12 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
         <article className="overflow-hidden rounded-[22px] border border-[#d8dee8] bg-white shadow-sm shadow-[#0b1426]/5">
           <div className="p-4 sm:p-5">
             <div className="flex items-start gap-3">
-              <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-11 shrink-0 border-0 text-sm" />
+              <Link href={`/creator/${encodeURIComponent(idea.author.id)}`} className="shrink-0 rounded-full outline-none transition hover:scale-105 focus-visible:ring-4 focus-visible:ring-[#155eef]/20" aria-label={`View ${idea.author.name}'s profile`}>
+                <CommunityAvatar name={idea.author.name} src={idea.author.avatar} className="size-11 border-0 text-sm" />
+              </Link>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="truncate text-sm font-bold text-[#0b1426]">{idea.author.name}</span>
+                  <Link href={`/creator/${encodeURIComponent(idea.author.id)}`} className="truncate text-sm font-bold text-[#0b1426] underline-offset-4 hover:text-[#155eef] hover:underline">{idea.author.name}</Link>
                   {idea.author.expertVerified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2 py-0.5 text-[10px] font-bold text-[#06756f]">
                       <BadgeCheck size={11} /> {idea.author.expertRole || "Verified expert"}

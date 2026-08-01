@@ -45,13 +45,47 @@ test("helpful votes preserve legacy likes while new votes use Helpful", async ()
   assert.match(actions, /react\("Helpful"\)/);
 });
 
-test("admin exposes unanswered queue and expert verification controls", async () => {
+test("admin exposes the P0 reply and moderation workflow", async () => {
   const admin = await read("app/admin/community/community-admin-client.tsx");
 
-  assert.match(admin, /"unanswered", "Awaiting First Answer"/);
-  assert.match(admin, /idea\.comments\.length === 0/);
-  assert.match(admin, /name="authorExpertRole"/);
-  assert.match(admin, /name="authorExpertVerified"/);
+  assert.match(admin, /"needs-reply", "Awaiting reply"/);
+  assert.match(admin, /"replied", "Replied"/);
+  assert.match(admin, /"returned", "Returned for changes"/);
+  assert.match(admin, /"removed", "Removed"/);
+  assert.match(admin, /action: "reply"/);
+  assert.match(admin, /action: moderating\.action/);
+  assert.match(admin, /moderationReason/);
+});
+
+test("signed-in users can report public posts and admins see report context", async () => {
+  const [route, store, actions, admin] = await Promise.all([
+    read("app/api/community/ideas/[slug]/report/route.ts"),
+    read("lib/server/community-store.ts"),
+    read("app/ask/[slug]/idea-actions.tsx"),
+    read("app/admin/community/community-admin-client.tsx")
+  ]);
+
+  assert.match(route, /reportCommunityIdea/);
+  assert.match(store, /action: "report"/);
+  assert.match(store, /You cannot report your own discussion/);
+  assert.match(actions, /reportTitle/);
+  assert.match(actions, /submitReport/);
+  assert.match(admin, /reportReasons/);
+  assert.match(admin, /Reported concerns/);
+});
+
+test("removed posts are retained for 30 days before scheduled permanent cleanup", async () => {
+  const [store, cron, contract] = await Promise.all([
+    read("lib/server/community-store.ts"),
+    read("app/api/cron/source-weekly-cleanup/route.ts"),
+    read("lib/server/storage-provider-contract.ts")
+  ]);
+
+  assert.match(store, /retentionDays = Math\.max\(30/);
+  assert.match(store, /moderationStatus: "Removed"/);
+  assert.match(store, /deletePrivateObject/);
+  assert.match(cron, /cleanupRemovedCommunityIdeas/);
+  assert.match(contract, /deletePrivateObject/);
 });
 
 test("community cards use an independent mobile image rail without changing desktop media", async () => {

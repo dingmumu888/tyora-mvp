@@ -1,11 +1,11 @@
 "use client";
 
-import { ChangeEvent, ClipboardEvent, DragEvent, FormEvent, useEffect, useState } from "react";
+import { ClipboardEvent, FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   CheckCircle2,
-  ImagePlus,
   Loader2,
   MessageCircle,
   PackageCheck,
@@ -20,7 +20,7 @@ import {
   CommunityQuestion
 } from "@/lib/community";
 import CommunityUserMenu from "@/components/community-user-menu";
-import PublicUploadImagePreview from "@/components/public-upload-image-preview";
+import EditableIdeaImages from "@/components/editable-idea-images";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
@@ -52,8 +52,10 @@ const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
 
 async function normalizeProductImage(file: File, t: Translator) {
   const prepared = await preparePublicImage(file, {
-    maxDimension: 1600,
-    quality: 0.86,
+    maxDimension: 1280,
+    quality: 0.8,
+    maxDataUrlLength: 650000,
+    minimumDimension: 480,
     errors: {
       read: t("unableReadImage"),
       unsupported: t("unsupportedImage"),
@@ -166,22 +168,9 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
     }
   }
 
-  function onImageInputChange(event: ChangeEvent<HTMLInputElement>) {
-    setImages(event.currentTarget.files || []);
-    event.currentTarget.value = "";
-  }
-
-  function removeImage(name: string) {
-    setImagePreviews((current) => {
-      const nextImages = current.filter((item) => item.name !== name);
-      setForm((formState) => ({ ...formState, imageUrls: nextImages.map((image) => image.url) }));
-      return nextImages;
-    });
-  }
-
-  function onDrop(event: DragEvent<HTMLLabelElement>) {
-    event.preventDefault();
-    setImages(event.dataTransfer.files);
+  function updateIdeaImages(imageUrls: string[]) {
+    setForm((current) => ({ ...current, imageUrls }));
+    setImagePreviews(imageUrls.map((url, index) => ({ name: `idea-image-${index + 1}`, url })));
   }
 
   function onPaste(event: ClipboardEvent<HTMLFormElement>) {
@@ -405,9 +394,14 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
               <label className="grid gap-2 text-sm font-semibold">{t("productName")}
                 <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder={t("productPlaceholder")} className={inputClass} />
               </label>
-              <label className="grid gap-2 text-sm font-semibold">{t("category")}
-                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder={t("categoryPlaceholder")} className={inputClass} />
-              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="grid gap-2 text-sm font-semibold">{t("category")}
+                  <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder={t("categoryPlaceholder")} className={inputClass} />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold">{t("country")}
+                  <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder={t("countryPlaceholder")} className={inputClass} />
+                </label>
+              </div>
               <label className="grid gap-2 text-sm font-semibold">{t("description")}
                 <textarea
                   rows={8}
@@ -427,30 +421,14 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   </button>
                 ))}
               </div>
-              <label
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={onDrop}
-                className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-[22px] border border-dashed border-[#93b4f8] bg-[linear-gradient(135deg,#f8fbff,#fff,#f3f8ff)] px-4 text-center shadow-inner shadow-[#2563eb]/5 transition duration-[180ms] active:scale-[0.99]"
-              >
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-white text-[#2563eb] shadow-sm"><ImagePlus size={21} /></span>
-                <span className="text-sm font-semibold">{t("uploadImages")}</span>
-                <span className="text-xs text-[#8b93a1]">{t("imageLimit")}</span>
-                <input type="file" accept="image/*" multiple className="sr-only" onChange={onImageInputChange} />
-              </label>
-              {imagePreviews.length > 0 ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {imagePreviews.map((image, index) => (
-                    <PublicUploadImagePreview
-                      key={image.name}
-                      src={image.url}
-                      alt={image.name}
-                      index={index}
-                      onRemove={() => removeImage(image.name)}
-                      removeLabel={t("removeImage", { name: image.name })}
-                    />
-                  ))}
-                </div>
-              ) : null}
+              <EditableIdeaImages
+                images={form.imageUrls}
+                onChange={updateIdeaImages}
+                addLabel={t("uploadImages")}
+                preparingLabel={t("unablePrepareImage")}
+                limitMessage={t("imageLimit")}
+                errorMessage={t("unablePrepareImage")}
+              />
               {submissionPrivacyControls()}
             </div>
 
@@ -514,32 +492,16 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
             <section className="mt-5">
               <h2 className="text-3xl font-semibold leading-tight sm:text-4xl">{t("showIdea")}</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#59616e]">{t("showIdeaHelp")}</p>
-              <label
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={onDrop}
-                className="mt-6 flex min-h-52 cursor-pointer flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-[#93b4f8] bg-[linear-gradient(135deg,#f8fbff,#fff,#f3f8ff)] px-4 text-center shadow-inner shadow-[#2563eb]/5 transition duration-[180ms] hover:-translate-y-0.5 hover:border-[#2563eb] hover:bg-[#eef6ff] hover:shadow-[0_18px_50px_rgba(37,99,235,0.12)]"
-              >
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-white text-[#2563eb] shadow-sm"><ImagePlus size={22} /></span>
-                <span className="text-base font-semibold">{t("dragImages")}</span>
-                <span className="text-sm text-[#69707d]">{t("pasteScreenshots")}</span>
-                <span className="text-xs text-[#8b93a1]">{t("imageLimit")}</span>
-                <input type="file" accept="image/*" multiple className="sr-only" onChange={onImageInputChange} />
-              </label>
-              {imagePreviews.length > 0 ? (
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {imagePreviews.map((image, index) => (
-                    <PublicUploadImagePreview
-                      key={image.name}
-                      src={image.url}
-                      alt={image.name}
-                      index={index}
-                      caption={image.name}
-                      onRemove={() => removeImage(image.name)}
-                      removeLabel={t("removeImage", { name: image.name })}
-                    />
-                  ))}
-                </div>
-              ) : null}
+              <div className="mt-6">
+                <EditableIdeaImages
+                  images={form.imageUrls}
+                  onChange={updateIdeaImages}
+                  addLabel={t("uploadImages")}
+                  preparingLabel={t("unablePrepareImage")}
+                  limitMessage={t("imageLimit")}
+                  errorMessage={t("unablePrepareImage")}
+                />
+              </div>
             </section>
           ) : null}
 
@@ -609,7 +571,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                 {imagePreviews.length > 0 ? (
                   <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
                     {imagePreviews.map((image) => (
-                      <PublicUploadImagePreview key={image.name} src={image.url} alt={image.name} className="w-28 shrink-0" />
+                      <Image key={image.name} src={image.url} alt={image.name} width={112} height={84} unoptimized className="aspect-[4/3] w-28 shrink-0 rounded-xl bg-[#f4f6f8] object-contain" />
                     ))}
                   </div>
                 ) : null}

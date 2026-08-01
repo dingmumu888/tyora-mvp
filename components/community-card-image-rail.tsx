@@ -17,7 +17,7 @@ export default function CommunityCardImageRail({
   tone,
   cover = false
 }: Props) {
-  const images = imageUrls.slice(0, 5);
+  const images = imageUrls.slice(0, 9);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const visibleRows = Math.min(Math.max(images.length, 1), 3);
   const itemHeight = `calc((100% - ${(visibleRows - 1) * 4}px) / ${visibleRows})`;

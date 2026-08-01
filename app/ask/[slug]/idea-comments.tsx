@@ -178,10 +178,12 @@ export default function IdeaComments({
     return (
       <article className={`relative py-4 ${isReply ? "ml-8 border-l-2 border-[#dbeafe] pl-4 sm:ml-12" : "border-b border-[#e8edf4]"}`}>
         <div className="flex gap-3">
-          <CommunityAvatar name={comment.author.name} src={comment.author.avatar} className="size-9 shrink-0 border-0 text-[11px]" />
+          <Link href={`/creator/${encodeURIComponent(comment.author.id)}`} className="shrink-0 rounded-full outline-none transition hover:scale-105 focus-visible:ring-4 focus-visible:ring-[#155eef]/20" aria-label={`View ${comment.author.name}'s profile`}>
+            <CommunityAvatar name={comment.author.name} src={comment.author.avatar} className="size-9 border-0 text-[11px]" />
+          </Link>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="truncate text-sm font-bold text-[#0b1426]">{comment.author.name}</span>
+              <Link href={`/creator/${encodeURIComponent(comment.author.id)}`} className="truncate text-sm font-bold text-[#0b1426] underline-offset-4 hover:text-[#155eef] hover:underline">{comment.author.name}</Link>
               {comment.author.expertVerified ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7f4] px-2 py-0.5 text-[10px] font-bold text-[#06756f]">
                   <BadgeCheck size={11} /> {comment.author.expertRole || t("verified")}

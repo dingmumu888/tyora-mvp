@@ -147,6 +147,23 @@ export function createSupabaseStorageProvider(
       }
     },
 
+    async deletePrivateObject(objectPath: string) {
+      const config = getPrivateStorageConfig(environment);
+      await assertPrivateBucketIsPrivate(config);
+      const endpoint = `${config.supabaseUrl}/storage/v1/object/${encodeURIComponent(config.bucket)}`;
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers: {
+          ...headers(config.serviceRoleKey),
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prefixes: [objectPath] })
+      });
+      if (!response.ok) {
+        throw new SupabaseStorageProviderError("delete");
+      }
+    },
+
     async createPrivateSignedUrl(objectPath: string, expiresInSeconds: number) {
       const config = getPrivateStorageConfig(environment);
       await assertPrivateBucketIsPrivate(config);

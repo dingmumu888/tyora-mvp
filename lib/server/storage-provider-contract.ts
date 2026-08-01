@@ -15,5 +15,6 @@ export interface StorageProvider {
   uploadPublicObject(input: StorageUploadInput): Promise<PublicStorageUpload>;
   deletePublicObject(objectPath: string): Promise<void>;
   uploadPrivateObject(input: StorageUploadInput): Promise<void>;
+  deletePrivateObject(objectPath: string): Promise<void>;
   createPrivateSignedUrl(objectPath: string, expiresInSeconds: number): Promise<string>;
 }

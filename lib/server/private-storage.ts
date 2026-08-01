@@ -2,9 +2,21 @@ import { isAllowedPrivateObjectPath } from "./private-storage-policy";
 import { getStorageProvider } from "./storage-provider";
 
 export class PrivateStorageProviderError extends Error {
-  constructor(operation: "verify" | "upload" | "sign") {
+  constructor(operation: "verify" | "upload" | "delete" | "sign") {
     super(`Private storage ${operation} failed.`);
     this.name = "PrivateStorageProviderError";
+  }
+}
+
+export async function deletePrivateObject(objectPath: string) {
+  if (!isAllowedPrivateObjectPath(objectPath)) {
+    throw new PrivateStorageProviderError("delete");
+  }
+
+  try {
+    await getStorageProvider().deletePrivateObject(objectPath);
+  } catch {
+    throw new PrivateStorageProviderError("delete");
   }
 }
 

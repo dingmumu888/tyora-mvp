@@ -78,9 +78,9 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
     comment: notifications.filter((item) => item.type === "comment").length,
     like: notifications.filter((item) => item.type === "like").length,
     interested: notifications.filter((item) => item.type === "interested").length,
-    review: notifications.filter((item) => item.type === "review").length
+    review: notifications.filter((item) => item.type === "review" || item.type === "status").length
   }), [notifications]);
-  const visibleMessages = notifications.filter((item) => activeFilter === "all" || item.type === activeFilter);
+  const visibleMessages = notifications.filter((item) => activeFilter === "all" || item.type === activeFilter || (activeFilter === "review" && item.type === "status"));
 
   function notificationTitle(item: ActivityMessage) {
     if (item.type === "comment") {
@@ -93,6 +93,8 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
       return t("foundHelpful", { name: item.title.replace(/ found your idea helpful$/, "") });
     }
     if (item.type === "review") return t("reviewedYourIdea");
+    if (item.title === "TYORA returned your idea for changes") return t("returnedYourIdea");
+    if (item.title === "TYORA removed your idea") return t("removedYourIdea");
     const status = item.title.replace(/^Your idea status is /, "");
     return t("ideaStatus", { status: translateCommunityText(language, status) });
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 import CommunityImage from "@/components/community-image";
 import { useIdeaDetailText } from "./idea-detail-text";
 
@@ -16,13 +16,14 @@ function galleryClass(count: number) {
 function tileClass(count: number) {
   if (count === 1) return "aspect-[16/10] max-h-[660px]";
   if (count === 2) return "aspect-[4/3]";
-  return "aspect-[16/10]";
+  return "aspect-[16/9]";
 }
 
 export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: string[]; title: string }) {
   const t = useIdeaDetailText();
   const images = imageUrls.slice(0, 9);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [scale, setScale] = useState(1);
   const touchStartX = useRef<number | null>(null);
 
   const move = useCallback((direction: -1 | 1) => {
@@ -48,6 +49,8 @@ export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: stri
     };
   }, [activeIndex, images.length, move]);
 
+  useEffect(() => setScale(1), [activeIndex]);
+
   if (images.length === 0) return null;
 
   return (
@@ -64,7 +67,7 @@ export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: stri
             <CommunityImage
               src={src}
               alt={`${title} image ${index + 1}`}
-              className={`${images.length === 1 ? "object-contain" : "object-cover"} size-full transition duration-300 group-hover:scale-[1.015]`}
+              className="size-full object-contain transition duration-300 group-hover:scale-[1.015]"
               fallbackClassName="absolute inset-0 p-5"
               initialsClassName="size-16 rounded-2xl text-xl"
             />
@@ -101,10 +104,12 @@ export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: stri
             >
               <X size={20} />
             </button>
-            <span className="rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold">
-              {t("imageCounter", { current: activeIndex + 1, total: images.length })}
-            </span>
-            <span className="size-10" />
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setScale((value) => Math.max(1, Number((value - 0.25).toFixed(2))))} disabled={scale <= 1} className="grid size-9 place-items-center rounded-full bg-white/10 disabled:opacity-35" aria-label="Zoom out"><Minus size={17} /></button>
+              <span className="min-w-16 rounded-full bg-white/10 px-3 py-1.5 text-center text-sm font-semibold">{Math.round(scale * 100)}%</span>
+              <button type="button" onClick={() => setScale((value) => Math.min(3, Number((value + 0.25).toFixed(2))))} disabled={scale >= 3} className="grid size-9 place-items-center rounded-full bg-white/10 disabled:opacity-35" aria-label="Zoom in"><Plus size={17} /></button>
+            </div>
+            <span className="rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold">{t("imageCounter", { current: activeIndex + 1, total: images.length })}</span>
           </div>
           <div className="relative flex min-h-0 flex-1 items-center justify-center px-3 pb-8 sm:px-20">
             {images.length > 1 ? (
@@ -117,13 +122,15 @@ export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: stri
                 <ChevronLeft size={26} />
               </button>
             ) : null}
-            <CommunityImage
-              src={images[activeIndex]}
-              alt={`${title} image ${activeIndex + 1}`}
-              className="max-h-full max-w-full select-none object-contain"
-              fallbackClassName="max-h-full max-w-full p-8"
-              initialsClassName="size-24 rounded-[28px] text-3xl"
-            />
+            <div className="flex max-h-full max-w-full items-center justify-center transition-transform duration-200" style={{ transform: `scale(${scale})` }}>
+              <CommunityImage
+                src={images[activeIndex]}
+                alt={`${title} image ${activeIndex + 1}`}
+                className="max-h-[calc(100vh-150px)] max-w-[calc(100vw-32px)] select-none object-contain sm:max-w-[calc(100vw-180px)]"
+                fallbackClassName="max-h-full max-w-full p-8"
+                initialsClassName="size-24 rounded-[28px] text-3xl"
+              />
+            </div>
             {images.length > 1 ? (
               <button
                 type="button"

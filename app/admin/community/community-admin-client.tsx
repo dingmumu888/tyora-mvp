@@ -2,28 +2,21 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Loader2, MessageSquare, Save, Settings2, Trash2, X } from "lucide-react";
-import {
-  communityPostTypes,
-  communityProductStages,
-  CommunityIdea,
-  CommunityModerationStatus
-} from "@/lib/community";
+import { Loader2, MessageSquare, RotateCcw, Save, Settings2, Trash2, X } from "lucide-react";
+import { CommunityIdea, CommunityModerationStatus, communityPostTypes, communityProductStages } from "@/lib/community";
 import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
 import { AdminActionBar, AdminEmptyState, AdminMetricCard } from "@/components/admin/admin-ui";
 import { useAdminLanguage } from "@/components/admin/admin-language-provider";
 import { CommunityPageContent, CustomPageContent, defaultContent, SiteContent } from "@/lib/storage";
 
-type QueueFilter = "pending" | "unanswered" | "needs-reply" | "replied" | "featured" | "pinned" | "hidden" | "all";
+type QueueFilter = "needs-reply" | "replied" | "returned" | "removed" | "all";
+type ModerationAction = "return" | "remove";
 
 const buckets: Array<[QueueFilter, string]> = [
-  ["pending", "Pending Approval"],
-  ["unanswered", "Awaiting First Answer"],
-  ["needs-reply", "Needs Reply"],
+  ["needs-reply", "Awaiting reply"],
   ["replied", "Replied"],
-  ["featured", "Homepage Featured"],
-  ["pinned", "Pinned"],
-  ["hidden", "Hidden"],
+  ["returned", "Returned for changes"],
+  ["removed", "Removed"],
   ["all", "All"]
 ];
 
@@ -71,7 +64,7 @@ function normalizeCommunityIdea(value: unknown): CommunityIdea {
     country: idea.country || "Not specified",
     imageUrls: Array.isArray(idea.imageUrls) ? idea.imageUrls : [],
     questions: Array.isArray(idea.questions) ? idea.questions : [],
-    moderationStatus: idea.moderationStatus || "Pending",
+    moderationStatus: idea.moderationStatus || "Approved",
     hidden: Boolean(idea.hidden),
     locked: Boolean(idea.locked),
     pinned: Boolean(idea.pinned),
@@ -80,6 +73,8 @@ function normalizeCommunityIdea(value: unknown): CommunityIdea {
     likeCount: Number(idea?.likeCount || 0),
     helpfulCount: Number(idea?.helpfulCount ?? idea?.likeCount ?? 0),
     interestedCount: Number(idea?.interestedCount || 0),
+    reportCount: Number(idea?.reportCount || 0),
+    reportReasons: Array.isArray(idea?.reportReasons) ? idea.reportReasons : [],
     hotScore: Number(idea.hotScore || 0),
     isHot: Boolean(idea.isHot),
     createdAt: idea.createdAt || new Date().toISOString(),
@@ -103,10 +98,12 @@ export default function CommunityAdminClient() {
   const { t } = useAdminLanguage();
   const [ideas, setIdeas] = useState<CommunityIdea[]>([]);
   const [active, setActive] = useState<QueueFilter>("needs-reply");
-  const [replyingTo, setReplyingTo] = useState<CommunityIdea | null>(null);
+  const [replyingToState, setReplyingTo] = useState<CommunityIdea | null>(null);
+  const replyingTo = replyingToState || normalizeCommunityIdea(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
-  const [deleting, setDeleting] = useState("");
+  const [moderating, setModerating] = useState<{ idea: CommunityIdea; action: ModerationAction } | null>(null);
+  const [moderationReason, setModerationReason] = useState("");
   const [siteContent, setSiteContent] = useState<SiteContent | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
@@ -125,13 +122,10 @@ export default function CommunityAdminClient() {
 
   const counts = useMemo(() => {
     return {
-      pending: ideas.filter((idea) => idea.moderationStatus === "Pending").length,
-      unanswered: ideas.filter((idea) => idea.moderationStatus === "Approved" && !idea.hidden && idea.comments.length === 0 && idea.review?.assessmentStatus !== "Published").length,
-      "needs-reply": ideas.filter((idea) => !idea.review && !idea.hidden).length,
-      replied: ideas.filter((idea) => idea.review && !idea.hidden).length,
-      featured: ideas.filter((idea) => idea.homepageFeatured && !idea.hidden).length,
-      pinned: ideas.filter((idea) => idea.pinned && !idea.hidden).length,
-      hidden: ideas.filter((idea) => idea.hidden).length,
+      "needs-reply": ideas.filter((idea) => idea.moderationStatus === "Approved" && idea.visibility === "Public" && !idea.hidden && idea.review?.assessmentStatus !== "Published").length,
+      replied: ideas.filter((idea) => idea.moderationStatus === "Approved" && !idea.hidden && idea.review?.assessmentStatus === "Published").length,
+      returned: ideas.filter((idea) => idea.moderationStatus === "Returned").length,
+      removed: ideas.filter((idea) => idea.moderationStatus === "Removed").length,
       all: ideas.length
     };
   }, [ideas]);
@@ -140,37 +134,7 @@ export default function CommunityAdminClient() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setSaving(idea.slug);
-    const body = {
-      status: form.get("status"),
-      postType: form.get("postType"),
-      productStage: form.get("productStage"),
-      moderationStatus: form.get("moderationStatus"),
-      authorExpertRole: form.get("authorExpertRole"),
-      authorExpertVerified: form.get("authorExpertVerified") === "on",
-      hidden: form.get("hidden") === "on",
-      locked: form.get("locked") === "on",
-      pinned: form.get("pinned") === "on",
-      homepageFeatured: form.get("homepageFeatured") === "on",
-      homepageFeaturedOrder: Number(form.get("homepageFeaturedOrder") || 0) || null,
-      moderationNote: form.get("moderationNote"),
-      review: {
-        manufacturingFeasible: form.get("manufacturingFeasible"),
-        estimatedCostRange: form.get("estimatedCostRange"),
-        estimatedMoq: form.get("estimatedMoq"),
-        assumptions: form.get("assumptions"),
-        confidence: form.get("confidence"),
-        disclaimer: form.get("disclaimer"),
-        suggestedMaterial: form.get("suggestedMaterial"),
-        suggestedManufacturing: form.get("suggestedManufacturing"),
-        moldRequirement: form.get("moldRequirement"),
-        mainRisks: form.get("mainRisks"),
-        recommendedNextStep: form.get("recommendedNextStep"),
-        factoriesMatched: form.get("factoriesMatched"),
-        additionalNotes: form.get("additionalNotes"),
-        assessmentStatus: form.get("assessmentStatus"),
-        customEligible: form.get("customEligible") === "on"
-      }
-    };
+    const body = { action: "reply", reply: form.get("reply") };
     try {
       const response = await fetch(`/api/admin/community/${idea.slug}`, {
         method: "PATCH",
@@ -270,34 +234,34 @@ export default function CommunityAdminClient() {
     }
   }
 
-  async function deleteIdea(idea: CommunityIdea) {
-    const confirmed = window.confirm(t(`Permanently delete "${idea.title}"?\n\nThis cannot be undone.`));
-    if (!confirmed) return;
-    const secondConfirmation = window.prompt(`Type DELETE to permanently delete "${idea.title}".`);
-    if (secondConfirmation !== "DELETE") return;
-
-    setDeleting(idea.slug);
+  async function applyModeration(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!moderating || !moderationReason.trim()) return;
+    setSaving(moderating.idea.slug);
     try {
-      const response = await fetch(`/api/admin/community/${idea.slug}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin/community/${moderating.idea.slug}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: moderating.action, reason: moderationReason })
+      });
       const payload = await response.json();
-      if (!payload.success) throw new Error(payload.message || "Unable to delete post.");
-      setIdeas((current) => current.filter((item) => item.id !== idea.id));
-      if (replyingTo?.id === idea.id) setReplyingTo(null);
+      if (!payload.success) throw new Error(payload.message || "Unable to moderate post.");
+      const updated = normalizeCommunityIdea(payload.data);
+      setIdeas((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setModerating(null);
+      setModerationReason("");
     } catch (error) {
-      window.alert(t(error instanceof Error ? error.message : "Unable to delete post."));
+      window.alert(t(error instanceof Error ? error.message : "Unable to moderate post."));
     } finally {
-      setDeleting("");
+      setSaving("");
     }
   }
 
   const filtered = ideas.filter((idea) => {
-    if (active === "pending") return idea.moderationStatus === "Pending";
-    if (active === "unanswered") return idea.moderationStatus === "Approved" && !idea.hidden && idea.comments.length === 0 && idea.review?.assessmentStatus !== "Published";
-    if (active === "needs-reply") return !idea.review && !idea.hidden;
-    if (active === "replied") return Boolean(idea.review) && !idea.hidden;
-    if (active === "featured") return idea.homepageFeatured && !idea.hidden;
-    if (active === "pinned") return idea.pinned && !idea.hidden;
-    if (active === "hidden") return idea.hidden;
+    if (active === "needs-reply") return idea.moderationStatus === "Approved" && idea.visibility === "Public" && !idea.hidden && idea.review?.assessmentStatus !== "Published";
+    if (active === "replied") return idea.moderationStatus === "Approved" && !idea.hidden && idea.review?.assessmentStatus === "Published";
+    if (active === "returned") return idea.moderationStatus === "Returned";
+    if (active === "removed") return idea.moderationStatus === "Removed";
     return true;
   });
   const communitySettings = siteContent?.communityPage || defaultContent.communityPage;
@@ -320,9 +284,9 @@ export default function CommunityAdminClient() {
   return (
     <AdminShell
       activeSection="community"
-      pageTitle="Ideas Moderation"
-      pageDescription="Moderate public Ideas and publish structured TYORA assessments."
-      notificationCount={counts.unanswered + counts.pending}
+      pageTitle="Community replies"
+      pageDescription="Reply to creators and handle exceptions without delaying normal publishing."
+      notificationCount={counts["needs-reply"]}
       searchItems={ideas.slice(0, 60).map((idea) => ({
         id: `idea-${idea.id}`,
         label: t(idea.title),
@@ -338,8 +302,8 @@ export default function CommunityAdminClient() {
     >
       <div className="space-y-4">
         <AdminActionBar
-          title={t("Moderation controls")}
-          description={t("Review founder submissions, manage publication status, and keep public assessments clear and consistent.")}
+          title={t("Community reply queue")}
+          description={t("Public posts appear immediately. Reply clearly, or return/remove only when action is required.")}
           actions={(
             <>
               <Link href="/admin/custom-inquiries" className="inline-flex min-h-11 items-center rounded-md border border-[#d0d5dd] bg-white px-4 text-sm font-semibold text-[#344054] hover:bg-[#f9fafb]">{t("Private Custom Queue")}</Link>
@@ -350,7 +314,7 @@ export default function CommunityAdminClient() {
           )}
         />
 
-        <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {buckets.map(([status, label]) => (
             <AdminMetricCard key={status} label={t(label)} value={counts[status] || 0} detail={t("posts")} active={active === status} onClick={() => setActive(status)} />
           ))}
@@ -380,7 +344,14 @@ export default function CommunityAdminClient() {
                       <span>{t(`${idea.comments.length} comments`)}</span>
                       <span>{t(`${idea.helpfulCount} helpful`)}</span>
                       <span>{t(`${idea.interestedCount} interested`)}</span>
+                      {idea.reportCount ? <span className="font-semibold text-[#b42318]">{t(`${idea.reportCount} reports`)}</span> : null}
                     </div>
+                    {idea.reportReasons?.length ? (
+                      <div className="mt-3 rounded-md border border-[#fecdca] bg-[#fffafa] px-3 py-2 text-xs leading-5 text-[#912018]">
+                        <p className="font-semibold">{t("Reported concerns")}</p>
+                        {idea.reportReasons.map((reason, index) => <p key={`${idea.id}-report-${index}`} className="mt-1">• {reason}</p>)}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex flex-col items-start justify-between rounded-md border border-[#eef1f4] bg-[#f9fafb] p-4">
                     <div>
@@ -397,12 +368,19 @@ export default function CommunityAdminClient() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => void deleteIdea(idea)}
-                        disabled={deleting === idea.slug}
+                        onClick={() => { setModerationReason(""); setModerating({ idea, action: "return" }); }}
+                        disabled={saving === idea.slug}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#fedf89] bg-[#fffcf5] px-4 text-sm font-semibold text-[#b54708] transition hover:bg-[#fffaeb] disabled:opacity-60"
+                      >
+                        <RotateCcw size={15} /> {t("Return for changes")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setModerationReason(""); setModerating({ idea, action: "remove" }); }}
+                        disabled={saving === idea.slug}
                         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#fecdca] bg-[#fffafa] px-4 text-sm font-semibold text-[#b42318] transition hover:bg-[#fef3f2] disabled:opacity-60"
                       >
-                        {deleting === idea.slug ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />}
-                        {t("Delete spam / violation")}
+                        <Trash2 size={15} /> {t("Remove")}
                       </button>
                     </div>
                   </div>
@@ -412,7 +390,82 @@ export default function CommunityAdminClient() {
           </div>
         )}
       </div>
-      {replyingTo ? (
+      {replyingToState ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/35 px-3 py-3 backdrop-blur-sm sm:px-4" role="dialog" aria-modal="true">
+          <form onSubmit={(event) => void save(event, replyingTo)} className="w-full max-w-2xl rounded-md border border-[#e8ebef] bg-white p-5 shadow-2xl shadow-[#101216]/20 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[#69707d]">{replyingTo.id}</p>
+                <h2 className="mt-1 text-2xl font-semibold">{t("Reply to")} {t(replyingTo.title)}</h2>
+                <p className="mt-2 text-sm leading-6 text-[#69707d]">{t("Write one clear public TYORA reply. The post will move to Replied after publishing.")}</p>
+              </div>
+              <button type="button" onClick={() => setReplyingTo(null)} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e8ebef] text-[#69707d] transition hover:bg-[#f5f6f8]" aria-label={t("Close reply dialog")}>
+                <X size={18} />
+              </button>
+            </div>
+            <label className="mt-5 grid gap-2 text-sm font-semibold">
+              {t("TYORA reply")}
+              <textarea
+                name="reply"
+                defaultValue={existingReply(replyingTo)}
+                rows={10}
+                required
+                autoFocus
+                className="resize-y rounded-md border border-[#dfe3e8] bg-white p-4 text-sm leading-7 outline-none transition focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10"
+                placeholder={t("Answer the creator's questions in plain language. Include only the relevant feasibility, material, process, indicative cost, MOQ, risks, and next step.")}
+              />
+            </label>
+            <p className="mt-2 text-xs leading-5 text-[#69707d]">{t("This reply is public and the creator will receive a notification.")}</p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button type="button" onClick={() => setReplyingTo(null)} className="inline-flex h-11 items-center justify-center rounded-md border border-[#d0d5dd] px-5 text-sm font-semibold">{t("Cancel")}</button>
+              <button disabled={saving === replyingTo.slug} className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-5 text-sm font-semibold text-white hover:bg-[#004eeb] disabled:opacity-60">
+                {saving === replyingTo.slug ? <Loader2 className="animate-spin" size={15} /> : <MessageSquare size={15} />} {t("Publish reply")}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+      {moderating ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/35 px-3 py-3 backdrop-blur-sm sm:px-4" role="dialog" aria-modal="true">
+          <form onSubmit={(event) => void applyModeration(event)} className="w-full max-w-lg rounded-md border border-[#e8ebef] bg-white p-5 shadow-2xl shadow-[#101216]/20 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[#69707d]">{moderating.idea.id}</p>
+                <h2 className="mt-1 text-2xl font-semibold">{moderating.action === "return" ? t("Return for changes") : t("Remove post")}</h2>
+                <p className="mt-2 text-sm leading-6 text-[#69707d]">
+                  {moderating.action === "return"
+                    ? t("The post will be hidden until the creator edits and republishes it.")
+                    : t("The post will be removed from public view. Its private moderation record is preserved.")}
+                </p>
+              </div>
+              <button type="button" onClick={() => setModerating(null)} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e8ebef] text-[#69707d] transition hover:bg-[#f5f6f8]" aria-label={t("Close moderation dialog")}>
+                <X size={18} />
+              </button>
+            </div>
+            <label className="mt-5 grid gap-2 text-sm font-semibold">
+              {t("Reason shown to the creator")}
+              <textarea
+                value={moderationReason}
+                onChange={(event) => setModerationReason(event.target.value)}
+                rows={6}
+                required
+                autoFocus
+                className="resize-y rounded-md border border-[#dfe3e8] bg-white p-4 text-sm leading-7 outline-none transition focus:border-[#155eef] focus:ring-4 focus:ring-[#155eef]/10"
+                placeholder={moderating.action === "return" ? t("Explain exactly what should be changed before republishing.") : t("Explain clearly why this post was removed.")}
+              />
+            </label>
+            <p className="mt-2 text-xs leading-5 text-[#69707d]">{t("The creator will receive this reason in My TYORA.")}</p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button type="button" onClick={() => setModerating(null)} className="inline-flex h-11 items-center justify-center rounded-md border border-[#d0d5dd] px-5 text-sm font-semibold">{t("Cancel")}</button>
+              <button disabled={saving === moderating.idea.slug || !moderationReason.trim()} className={moderating.action === "return" ? "inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#b54708] px-5 text-sm font-semibold text-white disabled:opacity-60" : "inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#b42318] px-5 text-sm font-semibold text-white disabled:opacity-60"}>
+                {saving === moderating.idea.slug ? <Loader2 className="animate-spin" size={15} /> : moderating.action === "return" ? <RotateCcw size={15} /> : <Trash2 size={15} />}
+                {moderating.action === "return" ? t("Return post") : t("Remove post")}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+      {replyingToState && false ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#101216]/35 px-3 py-3 backdrop-blur-sm sm:px-4" role="dialog" aria-modal="true">
           <form onSubmit={(event) => void save(event, replyingTo)} className="max-h-[calc(100vh-24px)] w-full max-w-5xl overflow-y-auto rounded-md border border-[#e8ebef] bg-white p-4 shadow-2xl shadow-[#101216]/20 sm:p-6">
             <input type="hidden" name="status" value={replyingTo.status} />

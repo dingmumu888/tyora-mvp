@@ -1,10 +1,11 @@
 "use client";
 
 import { FormEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Loader2, MessageCircle, Pencil, Trash2, X } from "lucide-react";
 import CommunityImage from "@/components/community-image";
+import EditableIdeaImages from "@/components/editable-idea-images";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateCommunityText } from "@/components/community-text";
 import { CommunityIdea } from "@/lib/community";
@@ -35,7 +36,9 @@ type SummaryItem = {
 type EditForm = {
   title: string;
   category: string;
+  country: string;
   description: string;
+  imageUrls: string[];
 };
 
 const emptyText: Record<ActivityView, MyTyoraKey> = {
@@ -133,7 +136,7 @@ export default function ActivitySummary({
   const [localIdeas, setLocalIdeas] = useState(ideas);
   const [localLikedIdeas, setLocalLikedIdeas] = useState(likedIdeas);
   const [editingIdea, setEditingIdea] = useState<CommunityIdea | null>(null);
-  const [editForm, setEditForm] = useState<EditForm>({ title: "", category: "", description: "" });
+  const [editForm, setEditForm] = useState<EditForm>({ title: "", category: "", country: "", description: "", imageUrls: [] });
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const reviewedIdeas = useMemo(() => localIdeas.filter((idea) => idea.review), [localIdeas]);
@@ -144,12 +147,23 @@ export default function ActivitySummary({
         activeView === "reviews" ? reviewedIdeas.length :
           activeItem?.value || 0;
 
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("revise");
+    const idea = slug ? ideas.find((item) => item.slug === slug && item.moderationStatus === "Returned") : null;
+    if (!idea) return;
+    setActiveView("posts");
+    setEditingIdea(idea);
+    setEditForm({ title: idea.title, category: idea.category, country: idea.country, description: idea.description, imageUrls: idea.imageUrls });
+  }, [ideas]);
+
   function openEdit(idea: CommunityIdea) {
     setEditingIdea(idea);
     setEditForm({
       title: idea.title,
       category: idea.category,
-      description: idea.description
+      country: idea.country,
+      description: idea.description,
+      imageUrls: idea.imageUrls
     });
     setMessage("");
   }
@@ -293,14 +307,24 @@ export default function ActivitySummary({
                 {t("productName")}
                 <input value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-[#101216]">
-                {t("category")}
-                <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+                  {t("category")}
+                  <input value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-[#101216]">
+                  {t("country")}
+                  <input value={editForm.country} onChange={(event) => setEditForm({ ...editForm, country: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+                </label>
+              </div>
               <label className="grid gap-2 text-sm font-semibold text-[#101216]">
                 {t("description")}
                 <textarea value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={7} className="min-h-36 resize-none rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
               </label>
+              <div>
+                <p className="mb-2 text-sm font-semibold text-[#101216]">{t("ideaImages")}</p>
+                <EditableIdeaImages images={editForm.imageUrls} onChange={(imageUrls) => setEditForm({ ...editForm, imageUrls })} />
+              </div>
             </div>
             {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

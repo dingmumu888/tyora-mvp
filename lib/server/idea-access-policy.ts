@@ -1,4 +1,4 @@
-export const ideaModerationStatuses = ["Pending", "Approved", "Rejected", "Draft"] as const;
+export const ideaModerationStatuses = ["Pending", "Approved", "Returned", "Removed", "Rejected", "Draft"] as const;
 
 export type IdeaModerationStatus = (typeof ideaModerationStatuses)[number];
 

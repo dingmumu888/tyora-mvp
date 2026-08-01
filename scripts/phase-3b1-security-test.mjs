@@ -250,12 +250,12 @@ test("migration adds moderation and persistent verification throttle only", asyn
   assert.doesNotMatch(migration, /DROP|TRUNCATE|DELETE FROM|UPDATE /i);
 });
 
-test("author edits return an approved Idea to moderation", async () => {
+test("author edits republish an approved Idea immediately", async () => {
   const store = await readFile(new URL("../lib/server/community-store.ts", import.meta.url), "utf8");
   const start = store.indexOf("export async function updateCommunityIdeaOwner");
   const end = store.indexOf("export async function withdrawCommunityIdeaOwner", start);
   const ownerUpdate = store.slice(start, end);
-  assert.match(ownerUpdate, /moderationStatus:\s*"Pending"/);
+  assert.match(ownerUpdate, /moderationStatus:\s*"Approved"/);
   assert.match(ownerUpdate, /homepageFeatured:\s*false/);
   assert.match(ownerUpdate, /ownerIdeaImageUrls/);
 });

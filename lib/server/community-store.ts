@@ -29,7 +29,7 @@ import {
   buildPrivateIdeaObjectPath,
   validatePrivateUploadBytes
 } from "@/lib/server/private-storage-policy";
-import { uploadPrivateObject } from "@/lib/server/private-storage";
+import { deletePrivateObject, uploadPrivateObject } from "@/lib/server/private-storage";
 import {
   isProfileIndustry,
   profileCountryFromCode
@@ -304,6 +304,8 @@ function ideaToCommunityIdea(
   options: {
     includeAdminFields?: boolean;
     ranking?: CommunityRankingConfig;
+    reportCount?: number;
+    reportReasons?: string[];
   } = {}
 ): CommunityIdea {
   const reactions = Array.isArray(row.reactions) ? row.reactions : [];
@@ -378,6 +380,8 @@ function ideaToCommunityIdea(
     helpfulCount: reactions.filter((reaction: any) => ["Helpful", "Like"].includes(reaction.type)).length,
     interestedCount: reactions.filter((reaction: any) => reaction.type === "Interested").length,
     shareCount: shares.length,
+    reportCount: options.includeAdminFields ? options.reportCount || 0 : undefined,
+    reportReasons: options.includeAdminFields ? options.reportReasons || [] : undefined,
     hotScore: hot.hotScore,
     isHot: hot.isHot,
     hotUntil: hot.hotUntil,
@@ -581,10 +585,33 @@ export async function getCommunityIdeas(
     })
   ]);
   const ranking = content.communityPage;
-  const ideas = rows.map((row) => ideaToCommunityIdea(row, {
-    includeAdminFields: Boolean(context.isAdmin),
-    ranking
-  }));
+  const reportReceipts = context.isAdmin && rows.length
+    ? await prisma.communityActionReceipt.findMany({
+        where: {
+          action: "report",
+          resourceId: { in: rows.map((row) => row.id) },
+          expiresAt: { gt: new Date() }
+        },
+        select: { resourceId: true, resultJson: true }
+      })
+    : [];
+  const reportSummaries = new Map<string, { count: number; reasons: string[] }>();
+  for (const receipt of reportReceipts) {
+    const current = reportSummaries.get(receipt.resourceId) || { count: 0, reasons: [] };
+    const result = parseJson<{ reason?: string }>(receipt.resultJson, {});
+    current.count += 1;
+    if (result.reason) current.reasons.push(result.reason);
+    reportSummaries.set(receipt.resourceId, current);
+  }
+  const ideas = rows.map((row) => {
+    const reports = reportSummaries.get(row.id);
+    return ideaToCommunityIdea(row, {
+      includeAdminFields: Boolean(context.isAdmin),
+      ranking,
+      reportCount: reports?.count,
+      reportReasons: reports?.reasons
+    });
+  });
   if (sort !== "trending") return ideas;
 
   return ideas.sort((left, right) => {
@@ -598,6 +625,35 @@ export async function getCommunityIdeas(
     if (hotScore) return hotScore;
     return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
   }).slice(0, safeLimit);
+}
+
+export async function getPublicCreatorProfile(publicId: string) {
+  const userId = String(publicId || "").trim();
+  if (!userId) return null;
+  const [user, rows] = await Promise.all([
+    prisma.communityUser.findUnique({ where: { id: userId } }),
+    prisma.communityIdea.findMany({
+      where: { ...approvedPublicIdeaWhere, authorId: userId },
+      orderBy: { createdAt: "desc" },
+      include: ideaInclude
+    })
+  ]);
+  if (!user || !user.profileCompleted) return null;
+  const ideas = rows.map((row) => ideaToCommunityIdea(row));
+  return {
+    user: {
+      ...userPublic(user),
+      joinedAt: iso(user.joinedAt)
+    },
+    ideas,
+    stats: {
+      posts: ideas.length,
+      comments: ideas.reduce((total, idea) => total + idea.comments.length, 0),
+      helpful: ideas.reduce((total, idea) => total + idea.helpfulCount, 0),
+      interested: ideas.reduce((total, idea) => total + idea.interestedCount, 0),
+      reviews: ideas.filter((idea) => idea.review?.assessmentStatus === "Published").length
+    }
+  };
 }
 
 export async function getCommunityStats() {
@@ -751,7 +807,7 @@ export async function getCommunityUserActivity(userId: string) {
   if (!user) return null;
   const lastSeenAt = user.lastNotificationSeenAt;
 
-  const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas] = await Promise.all([
+  const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas, moderatedIdeas] = await Promise.all([
     prisma.communityIdea.findMany({
       where: { authorId: userId },
       orderBy: { updatedAt: "desc" },
@@ -813,6 +869,15 @@ export async function getCommunityUserActivity(userId: string) {
         comments: { include: { author: true, reactions: true } },
         reactions: true
       }
+    }),
+    prisma.communityIdea.findMany({
+      where: {
+        authorId: userId,
+        moderationStatus: { in: ["Returned", "Removed"] },
+        moderatedAt: { not: null }
+      },
+      orderBy: { moderatedAt: "desc" },
+      take: 25
     })
   ]);
 
@@ -825,7 +890,8 @@ export async function getCommunityUserActivity(userId: string) {
   const unreadReceivedComments = receivedComments.filter((comment) => isUnread(comment.createdAt)).length;
   const unreadReceivedReactions = receivedReactions.filter((reaction) => isUnread(reaction.createdAt)).length;
   const unreadReviewedIdeas = reviewedIdeas.filter((idea) => isUnread(idea.review?.updatedAt || idea.updatedAt)).length;
-  const unreadStatusIdeas = ideas.filter((idea) => idea.status !== "Discussing" && isUnread(idea.updatedAt)).length;
+  const unreadModeratedIdeas = moderatedIdeas.filter((idea) => isUnread(idea.moderatedAt)).length;
+  const unreadStatusIdeas = ideas.filter((idea) => idea.status !== "Discussing" && isUnread(idea.updatedAt)).length + unreadModeratedIdeas;
   const notifications = [
     ...receivedComments.map((comment) => ({
       id: `comment-${comment.id}`,
@@ -854,6 +920,17 @@ export async function getCommunityUserActivity(userId: string) {
       href: `/ask/${idea.slug}`,
       ideaSlug: idea.slug,
       createdAt: iso(idea.review?.updatedAt || idea.updatedAt)
+    })),
+    ...moderatedIdeas.map((idea) => ({
+      id: `moderation-${idea.id}-${idea.moderationStatus}`,
+      type: "status" as const,
+      title: idea.moderationStatus === "Returned"
+        ? "TYORA returned your idea for changes"
+        : "TYORA removed your idea",
+      body: idea.moderationNote || idea.title,
+      href: idea.moderationStatus === "Returned" ? `/me?revise=${encodeURIComponent(idea.slug)}` : `/ask/${idea.slug}`,
+      ideaSlug: idea.slug,
+      createdAt: iso(idea.moderatedAt)
     })),
     ...ideas
       .filter((idea) => idea.status !== "Discussing")
@@ -923,7 +1000,7 @@ export async function getCommunityNotificationCount(userId: string) {
   });
   if (!user) return 0;
   const after = user.lastNotificationSeenAt ? { gt: user.lastNotificationSeenAt } : undefined;
-  const [receivedComments, receivedReactions, reviewedIdeas, statusIdeas] = await Promise.all([
+  const [receivedComments, receivedReactions, reviewedIdeas, statusIdeas, moderatedIdeas] = await Promise.all([
     prisma.communityComment.count({
       where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId, hidden: false }, ...(after ? { createdAt: after } : {}) }
     }),
@@ -944,10 +1021,17 @@ export async function getCommunityNotificationCount(userId: string) {
     }),
     prisma.communityIdea.count({
       where: { authorId: userId, hidden: false, status: { not: "Discussing" }, ...(after ? { updatedAt: after } : {}) }
+    }),
+    prisma.communityIdea.count({
+      where: {
+        authorId: userId,
+        moderationStatus: { in: ["Returned", "Removed"] },
+        moderatedAt: after || { not: null }
+      }
     })
   ]);
 
-  return receivedComments + receivedReactions + reviewedIdeas + statusIdeas;
+  return receivedComments + receivedReactions + reviewedIdeas + statusIdeas + moderatedIdeas;
 }
 
 export async function markCommunityNotificationsRead(userId: string) {
@@ -980,6 +1064,27 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
     throw new Error("Title, description, category, and country are required.");
   }
 
+  const author = await prisma.communityUser.findUnique({
+    where: { id: authorId },
+    select: { profileCompleted: true }
+  });
+  if (!author?.profileCompleted) {
+    throw new Error("Complete your TYORA profile before publishing.");
+  }
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [recentPostCount, duplicate] = await Promise.all([
+    prisma.communityIdea.count({ where: { authorId, createdAt: { gte: oneHourAgo } } }),
+    prisma.communityIdea.findFirst({
+      where: { authorId, title, description, createdAt: { gte: oneDayAgo } },
+      select: { id: true }
+    })
+  ]);
+  if (recentPostCount >= 6) throw new Error("You can publish up to 6 ideas per hour. Please try again later.");
+  if (duplicate) throw new Error("This idea was already published recently.");
+  const externalLinks = description.match(/https?:\/\/[^\s]+/gi) || [];
+  if (externalLinks.length > 3) throw new Error("Please limit your post to 3 external links.");
+
   const visibility = normalizeVisibility(data.visibility);
   const publicConsent = data.publicContentConsent === true &&
     data.publicImageConsent === true &&
@@ -1009,7 +1114,7 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
       questionsJson: JSON.stringify(normalizeQuestions(data.questions)),
       otherQuestion: typeof data.otherQuestion === "string" ? data.otherQuestion.trim().slice(0, 500) || null : null,
       visibility,
-      moderationStatus: "Pending",
+      moderationStatus: "Approved",
       status: "Discussing",
       publicConsentAt: visibility === "Public" ? new Date() : null,
       authorId
@@ -1181,6 +1286,31 @@ export async function recordCommunityShare(
   return { shareCount };
 }
 
+export async function reportCommunityIdea(
+  slug: string,
+  reasonInput: unknown,
+  userId: string,
+  request: Request,
+  context: IdeaAccessContext = { userId }
+) {
+  const idea = await prisma.communityIdea.findUnique({ where: { slug } });
+  assertCanInteractWithIdea(idea, context);
+  if (idea.authorId === userId) throw new Error("You cannot report your own discussion.");
+  const reason = typeof reasonInput === "string" ? reasonInput.trim().replace(/\s+/g, " ") : "";
+  if (reason.length < 10 || reason.length > 500) {
+    throw new Error("Please explain the concern in 10–500 characters.");
+  }
+
+  const result = await executeGuardedCommunityAction({
+    request,
+    userId,
+    action: "report",
+    resourceId: idea.id,
+    execute: async () => ({ recorded: true, reason })
+  });
+  return { recorded: true, replayed: result.replayed };
+}
+
 export async function getCommunityReactionState(
   slug: string,
   userId: string,
@@ -1203,6 +1333,9 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
   const existing = await prisma.communityIdea.findUnique({ where: { slug } });
   assertCanReadIdea(existing, { userId });
   if (existing.authorId !== userId) throw new IdeaNotFoundError();
+  if (existing.moderationStatus === "Removed") {
+    throw new Error("Removed posts cannot be edited. Contact TYORA if you believe this was a mistake.");
+  }
 
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const title = typeof data.title === "string" ? data.title.trim().slice(0, 140) : existing.title;
@@ -1246,7 +1379,11 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
       imageUrlsJson: JSON.stringify(imageUrls),
       questionsJson: JSON.stringify(questions),
       otherQuestion,
-      moderationStatus: "Pending",
+      moderationStatus: "Approved",
+      hidden: false,
+      locked: false,
+      moderatedAt: null,
+      moderationNote: null,
       homepageFeatured: false,
       homepageFeaturedOrder: null
     }
@@ -1300,6 +1437,61 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   });
   if (!existing) throw new Error("Idea not found.");
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
+  const action = typeof data.action === "string" ? data.action.trim().toLowerCase() : "";
+  if (["reply", "return", "remove"].includes(action)) {
+    const reason = stringOrNull(data.reason);
+    if ((action === "return" || action === "remove") && !reason) {
+      throw new Error("A clear customer-facing reason is required.");
+    }
+    if (action === "reply") {
+      const reply = stringOrNull(data.reply);
+      if (!reply) throw new Error("Write a TYORA reply before publishing.");
+      await prisma.$transaction([
+        prisma.communityIdea.update({
+          where: { slug },
+          data: {
+            moderationStatus: "Approved",
+            hidden: false,
+            moderationNote: null,
+            moderatedAt: new Date()
+          }
+        }),
+        prisma.tyoraReview.upsert({
+          where: { ideaId: existing.id },
+          create: {
+            id: makeCommunityId("REVIEW"),
+            ideaId: existing.id,
+            additionalNotes: reply,
+            assessmentStatus: "Published",
+            disclaimer: content.communityPage.assessmentDisclaimer,
+            publishedAt: new Date()
+          },
+          update: {
+            additionalNotes: reply,
+            assessmentStatus: "Published",
+            disclaimer: existing.review?.disclaimer || content.communityPage.assessmentDisclaimer,
+            publishedAt: existing.review?.publishedAt || new Date()
+          }
+        })
+      ]);
+      return getCommunityIdeaBySlug(slug, { isAdmin: true });
+    }
+
+    await prisma.communityIdea.update({
+      where: { slug },
+      data: {
+        moderationStatus: action === "return" ? "Returned" : "Removed",
+        moderationNote: reason,
+        moderatedAt: new Date(),
+        hidden: true,
+        locked: action === "remove",
+        pinned: false,
+        homepageFeatured: false,
+        homepageFeaturedOrder: null
+      }
+    });
+    return getCommunityIdeaBySlug(slug, { isAdmin: true });
+  }
   const review = data.review && typeof data.review === "object" && !Array.isArray(data.review)
     ? (data.review as Record<string, unknown>)
     : {};
@@ -1484,13 +1676,11 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   return getCommunityIdeaBySlug(slug, { isAdmin: true });
 }
 
-export async function deleteCommunityIdeaAdmin(slug: string) {
-  const existing = await prisma.communityIdea.findUnique({
-    where: { slug },
-    select: { id: true }
-  });
-  if (!existing) throw new Error("Idea not found.");
-
+async function permanentlyDeleteCommunityIdea(existing: { id: string; slug: string; imageUrlsJson: string }) {
+  const privatePaths = storedIdeaImageUrls(existing.imageUrlsJson)
+    .filter((value) => value.startsWith("private:idea-submissions/"))
+    .map((value) => value.slice("private:".length));
+  for (const objectPath of privatePaths) await deletePrivateObject(objectPath);
   await prisma.$transaction(async (tx) => {
     const comments = await tx.communityComment.findMany({
       where: { ideaId: existing.id },
@@ -1509,10 +1699,37 @@ export async function deleteCommunityIdeaAdmin(slug: string) {
     await tx.communityShare.deleteMany({ where: { ideaId: existing.id } });
     await tx.communityComment.deleteMany({ where: { ideaId: existing.id } });
     await tx.tyoraReview.deleteMany({ where: { ideaId: existing.id } });
+    await tx.customInquiry.updateMany({ where: { ideaId: existing.id }, data: { ideaId: null } });
+    await tx.communityActionReceipt.deleteMany({ where: { resourceId: existing.id } });
     await tx.communityIdea.delete({ where: { id: existing.id } });
   });
 
-  return { slug };
+  return { slug: existing.slug, privateObjectsDeleted: privatePaths.length };
+}
+
+export async function deleteCommunityIdeaAdmin(slug: string) {
+  const existing = await prisma.communityIdea.findUnique({
+    where: { slug },
+    select: { id: true, slug: true, imageUrlsJson: true }
+  });
+  if (!existing) throw new Error("Idea not found.");
+  return permanentlyDeleteCommunityIdea(existing);
+}
+
+export async function cleanupRemovedCommunityIdeas(options: { now?: Date; retentionDays?: number; limit?: number } = {}) {
+  const now = options.now || new Date();
+  const retentionDays = Math.max(30, Math.floor(options.retentionDays || 30));
+  const limit = Math.min(100, Math.max(1, Math.floor(options.limit || 50)));
+  const cutoff = new Date(now.getTime() - retentionDays * 24 * 60 * 60 * 1000);
+  const expired = await prisma.communityIdea.findMany({
+    where: { moderationStatus: "Removed", hidden: true, moderatedAt: { lte: cutoff } },
+    orderBy: { moderatedAt: "asc" },
+    take: limit,
+    select: { id: true, slug: true, imageUrlsJson: true }
+  });
+  const deleted = [];
+  for (const idea of expired) deleted.push(await permanentlyDeleteCommunityIdea(idea));
+  return { cutoff: cutoff.toISOString(), deletedCount: deleted.length, deleted };
 }
 
 function stringOrNull(value: unknown) {

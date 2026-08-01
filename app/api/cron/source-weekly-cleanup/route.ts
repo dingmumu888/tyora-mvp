@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { cleanupWeeklySourceProducts } from "@/lib/server/source-weekly-store";
+import { cleanupRemovedCommunityIdeas } from "@/lib/server/community-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,8 +24,12 @@ export async function GET(request: Request) {
   if (!authorized(request)) return fail("Unauthorized.", 401);
 
   try {
-    return ok(await cleanupWeeklySourceProducts());
+    const [sourceWeekly, removedCommunityIdeas] = await Promise.all([
+      cleanupWeeklySourceProducts(),
+      cleanupRemovedCommunityIdeas()
+    ]);
+    return ok({ sourceWeekly, removedCommunityIdeas });
   } catch (error) {
-    return fail(messageFromError(error, "Weekly Source cleanup failed."));
+    return fail(messageFromError(error, "Scheduled cleanup failed."));
   }
 }
