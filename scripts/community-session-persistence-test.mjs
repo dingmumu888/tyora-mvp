@@ -4,11 +4,13 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("community login persists securely for 30 days and refreshes before expiry", async () => {
+test("community login uses a secure 30-day sliding inactivity window", async () => {
   const auth = await read("lib/server/community-auth.ts");
 
   assert.match(auth, /const SESSION_TTL_SECONDS = 60 \* 60 \* 24 \* 30/);
-  assert.match(auth, /const SESSION_REFRESH_THRESHOLD_SECONDS = 60 \* 60 \* 24 \* 14/);
+  assert.doesNotMatch(auth, /SESSION_REFRESH_THRESHOLD_SECONDS/);
+  assert.match(auth, /return session\.expiresAt > now/);
+  assert.match(auth, /if \(shouldRefreshCommunitySession\(session\)\) \{\s*return setCommunitySessionCookie\(response, session\)/);
   assert.match(auth, /httpOnly:\s*true/);
   assert.match(auth, /sameSite:\s*"lax"/);
   assert.match(auth, /secure:\s*process\.env\.NODE_ENV === "production"/);
@@ -24,16 +26,16 @@ test("the production apex domain redirects to the canonical www host", async () 
   assert.match(config, /permanent:\s*true/);
 });
 
-test("the login dialog explains persistent login using localized copy", async () => {
+test("the login dialog does not expose the internal session duration", async () => {
   const [login, i18n] = await Promise.all([
     read("components/email-login.tsx"),
     read("lib/public-i18n.ts")
   ]);
 
-  assert.match(login, /copy\.common\.rememberLogin/);
-  assert.match(login, /ShieldCheck/);
-  assert.match(i18n, /rememberLogin:\s*string/);
-  assert.equal((i18n.match(/rememberLogin:/g) || []).length, 7);
+  assert.doesNotMatch(login, /copy\.common\.rememberLogin/);
+  assert.doesNotMatch(login, /ShieldCheck/);
+  assert.doesNotMatch(i18n, /rememberLogin:\s*string/);
+  assert.equal((i18n.match(/rememberLogin:/g) || []).length, 0);
 });
 
 test("pending email verification survives an accidental close until the real code expiry", async () => {

@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 
 const COOKIE_NAME = "tyora_community_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
-const SESSION_REFRESH_THRESHOLD_SECONDS = 60 * 60 * 24 * 14;
 
 function secret() {
   const value = process.env.COMMUNITY_SESSION_SECRET || process.env.ADMIN_SESSION_SECRET;
@@ -102,7 +101,7 @@ export function setCommunitySessionCookie(response: NextResponse, session: Commu
 
 export function shouldRefreshCommunitySession(session: ActiveCommunitySession) {
   const now = Math.floor(Date.now() / 1000);
-  return session.expiresAt - now <= SESSION_REFRESH_THRESHOLD_SECONDS;
+  return session.expiresAt > now;
 }
 
 export function refreshCommunitySessionCookieIfNeeded(response: NextResponse, session: ActiveCommunitySession) {
