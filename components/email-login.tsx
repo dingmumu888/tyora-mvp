@@ -220,6 +220,8 @@ export default function EmailLogin({
   }
 
   const codeExpired = step === "code" && expiresAt !== null && remainingSeconds <= 0;
+  const [countdownBefore, ...countdownAfterParts] = copy.login.codeSent.split("{time}");
+  const countdownAfter = countdownAfterParts.join("{time}");
 
   const modal = open ? createPortal(
     <div
@@ -329,16 +331,21 @@ export default function EmailLogin({
                       className="h-12 rounded-xl border border-[#dfe3e8] bg-white px-3 text-center text-xl tracking-[0.28em] outline-none transition duration-150 focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10"
                     />
                   </label>
-                  <div className={`rounded-2xl px-3 py-2.5 text-sm leading-5 ${
+                  <div className={`min-h-[68px] rounded-2xl px-3 py-2.5 text-sm leading-5 ${
                     codeExpired ? "bg-[#fff7ed] text-[#9a3412]" : "bg-[#f2f7ff] text-[#35537a]"
                   }`}>
                     <p className="font-semibold">
                       {codeExpired
                         ? copy.login.codeExpired
-                        : formatLoginText(copy.login.codeSent, {
-                            email,
-                            time: formatCountdown(remainingSeconds)
-                          })}
+                        : (
+                          <>
+                            {formatLoginText(countdownBefore, { email })}
+                            <span className="inline-block min-w-[3.25rem] text-center tabular-nums">
+                              {formatCountdown(remainingSeconds)}
+                            </span>
+                            {formatLoginText(countdownAfter, { email })}
+                          </>
+                        )}
                     </p>
                     {!codeExpired ? <p className="mt-1">{copy.login.resumeHint}</p> : null}
                   </div>

@@ -50,6 +50,9 @@ test("pending email verification survives an accidental close until the real cod
   assert.match(login, /window\.localStorage\.setItem/);
   assert.match(login, /readPendingEmailLogin/);
   assert.match(login, /formatCountdown/);
+  assert.match(login, /tabular-nums/);
+  assert.match(login, /min-w-\[3\.25rem\]/);
+  assert.match(login, /min-h-\[68px\]/);
   assert.match(login, /codeExpired/);
   assert.match(login, /copy\.login\.sendAgain/);
   assert.match(requestRoute, /expiresInSeconds:\s*EMAIL_LOGIN_CODE_TTL_SECONDS/);
