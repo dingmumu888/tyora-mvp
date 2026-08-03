@@ -44,7 +44,7 @@ requireCheck(
 );
 requireCheck(
   layout.includes('translate="no"')
-    && layout.includes('className="notranslate"')
+    && /className=["'][^"']*\bnotranslate\b[^"']*["']/.test(layout)
     && layout.includes('<meta name="google" content="notranslate" />'),
   "Browser auto-translation is not disabled and can override TYORA's language selector."
 );

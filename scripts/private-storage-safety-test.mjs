@@ -164,7 +164,11 @@ test("private Custom access route is admin-only and signs short-lived URLs", asy
   assert.match(route, /cache:\s*["']no-store["']/);
   assert.doesNotMatch(route, /NextResponse\.redirect/);
   assert.doesNotMatch(route, /storage\/v1\/object\/public/);
-  assert.equal(supabaseStorage.match(/await assertPrivateBucketIsPrivate\(config\)/g)?.length, 2);
+  assert.equal(
+    supabaseStorage.match(/await assertPrivateBucketIsPrivate\(config\)/g)?.length,
+    3,
+    "Every private Storage operation must verify that the configured bucket is not public."
+  );
   assert.match(storage, /Math\.min\(120,/);
   assert.match(signedUrlPolicy, /signedUrl\.pathname !== signedPath/);
   assert.match(supabaseStorage, /Cache-Control["']?:\s*["']private, no-store, max-age=0/);

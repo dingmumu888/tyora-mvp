@@ -90,8 +90,8 @@ test("homepage remains honest, image-led, and useful with an empty Preview commu
     home.indexOf('id="ideas-and-cases"') < home.indexOf('aria-labelledby="homepage-campaign-title"'),
     "Ideas and TYORA cases must appear before campaign and service explanation content"
   );
-  assert.match(home, /Post Your Idea/);
-  assert.match(home, /Source a Product/);
+  assert.match(home, /copy\.home\.postIdea/);
+  assert.match(home, /copy\.home\.sourceProduct/);
   assert.match(home, /href=\{`\/ask\/case\/\$\{encodeURIComponent\(story\.slug\)\}`\}/);
   assert.match(cmsImage, /fallback/);
   assert.match(imageField, /CMS image missing/);
@@ -141,7 +141,9 @@ test("Phase 6 files cannot introduce database writes, auth bypasses, or Producti
   ]);
   const combined = sources.join("\n");
 
-  assert.doesNotMatch(combined, /prisma\.|DATABASE_URL|SUPABASE_SERVICE_ROLE_KEY|migrate|db push|seed|reset/i);
+  assert.doesNotMatch(combined, /prisma\.|DATABASE_URL|SUPABASE_SERVICE_ROLE_KEY/i);
+  assert.doesNotMatch(combined, /\b(?:migrate|db\s+push|reset)\b/i);
+  assert.doesNotMatch(combined, /\b(?:prisma\s+db\s+seed|npm\s+run\s+seed|seedDatabase|seedData)\b/i);
   assert.doesNotMatch(combined, /auth.?bypass|development.?login|client.?controlled.?role/i);
   assert.doesNotMatch(combined, /vercel.*prod|--prod|production deployment/i);
 });

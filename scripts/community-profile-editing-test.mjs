@@ -34,3 +34,14 @@ test("updated inline avatars receive a content version in their public URL", asy
   assert.match(store, /\/avatar\?v=\$\{version\}/);
   assert.match(avatarRoute, /Cache-Control": "public, max-age=31536000, immutable"/);
 });
+
+test("profile and session responses use the same safe public avatar URL", async () => {
+  const store = await read("lib/server/community-store.ts");
+  const matches = store.match(/avatar: publicCommunityAvatar\(row\.avatar, row\.id\) \|\| undefined/g) || [];
+
+  assert.equal(
+    matches.length,
+    3,
+    "Sign-in, profile loading, and profile updates must all return the public avatar proxy URL."
+  );
+});
