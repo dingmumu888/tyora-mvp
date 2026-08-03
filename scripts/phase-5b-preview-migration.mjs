@@ -27,6 +27,10 @@ import {
 const { Client } = pg;
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const prismaExecutable = resolve(repositoryRoot, "node_modules", "prisma", "build", "index.js");
+const requiredCommunityIdeaColumns = Object.freeze([
+  "publicConsentVersion",
+  "publicConsentLocale"
+]);
 
 async function readReviewedMigrationSql() {
   return new Map(await Promise.all(phase5bReviewedMigrations.map(async ({ name }) => [
@@ -182,6 +186,38 @@ async function verifyAppliedMigrations(connectionConfig) {
   }
 }
 
+async function verifyRequiredSchema(connectionConfig) {
+  const client = new Client({
+    ...connectionConfig,
+    connectionTimeoutMillis: 10_000,
+    query_timeout: 10_000,
+    statement_timeout: 10_000
+  });
+
+  try {
+    await client.connect();
+    await client.query("BEGIN READ ONLY");
+    const result = await client.query(`
+      SELECT "column_name"
+      FROM "information_schema"."columns"
+      WHERE "table_schema" = 'public'
+        AND "table_name" = 'CommunityIdea'
+        AND "column_name" = ANY($1::text[])
+    `, [requiredCommunityIdeaColumns]);
+    await client.query("ROLLBACK");
+
+    const presentColumns = new Set(result.rows.map((row) => row.column_name));
+    if (requiredCommunityIdeaColumns.some((column) => !presentColumns.has(column))) {
+      throw new Phase5bPreviewMigrationError("Required Preview schema verification failed.");
+    }
+  } catch (error) {
+    if (error instanceof Phase5bPreviewMigrationError) throw error;
+    throw new Phase5bPreviewMigrationError("Required Preview schema verification failed.");
+  } finally {
+    await client.end().catch(() => undefined);
+  }
+}
+
 async function runBackfill(connectionConfig) {
   const client = new Client({
     ...connectionConfig,
@@ -284,6 +320,8 @@ async function main() {
       console.log("phase5b_prisma_migrate_deploy_already_applied");
     }
     await verifyAppliedMigrations(connectionConfig);
+    await verifyRequiredSchema(connectionConfig);
+    console.log("phase5b_required_schema_check_pass");
     const backfill = await runBackfill(connectionConfig);
     console.log("phase5b_backfill_complete");
     console.log(`phase5b_workflow_total=${backfill.total}`);
