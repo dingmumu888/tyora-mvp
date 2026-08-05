@@ -1,11 +1,13 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Heart, Loader2, PackageCheck, Reply, Send, Star, X } from "lucide-react";
 import { translateCommunityText } from "@/components/community-text";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateMyTyora, type MyTyoraKey } from "@/lib/my-tyora-i18n";
 import type { PublicLanguage } from "@/lib/public-i18n";
+import { communityActionHeaders } from "@/lib/client/community-action";
 
 type ActivityFilter = "all" | "comment" | "like" | "interested" | "review";
 
@@ -26,6 +28,16 @@ type ReplyTarget = {
   body: string;
   slug: string;
   parentId?: string;
+  private: boolean;
+};
+
+type PrivateFollowUp = {
+  id: string;
+  ideaId: string;
+  ideaSlug: string;
+  ideaTitle: string;
+  body: string;
+  createdAt: string;
 };
 
 const filters: { value: ActivityFilter; label: MyTyoraKey }[] = [
@@ -63,7 +75,16 @@ function unreadText(value: number) {
   return value > 99 ? "99+" : String(value);
 }
 
-export default function ActivityMessages({ notifications, unreadCount }: { notifications: ActivityMessage[]; unreadCount: number }) {
+export default function ActivityMessages({
+  notifications,
+  unreadCount,
+  privateFollowUps
+}: {
+  notifications: ActivityMessage[];
+  unreadCount: number;
+  privateFollowUps: PrivateFollowUp[];
+}) {
+  const router = useRouter();
   const { language } = usePublicLanguage();
   const t = (key: MyTyoraKey, values?: Record<string, string | number>) => translateMyTyora(language, key, values);
   const [open, setOpen] = useState(false);
@@ -73,6 +94,9 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
   const [replyBody, setReplyBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [localPrivateFollowUps, setLocalPrivateFollowUps] = useState(privateFollowUps);
+  const idempotencyRef = useRef<{ signature: string; key: string } | null>(null);
+  const submittingRef = useRef(false);
   const unread = unreadText(localUnreadCount);
   const counts = useMemo(() => ({
     comment: notifications.filter((item) => item.type === "comment").length,
@@ -81,6 +105,12 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
     review: notifications.filter((item) => item.type === "review" || item.type === "status").length
   }), [notifications]);
   const visibleMessages = notifications.filter((item) => activeFilter === "all" || item.type === activeFilter || (activeFilter === "review" && item.type === "status"));
+  const activePrivateFollowUps = activeReply?.private
+    ? localPrivateFollowUps.filter((item) => item.ideaSlug === activeReply.slug)
+    : [];
+
+  useEffect(() => setLocalUnreadCount(unreadCount), [unreadCount]);
+  useEffect(() => setLocalPrivateFollowUps(privateFollowUps), [privateFollowUps]);
 
   function notificationTitle(item: ActivityMessage) {
     if (item.type === "comment") {
@@ -130,7 +160,8 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
       label: item.type === "review" ? t("replyToReview") : t("replyToPerson", { name: notificationActor(item) }),
       body: item.body,
       slug,
-      parentId: item.parentId
+      parentId: item.parentId,
+      private: item.type === "review"
     });
     setReplyBody("");
     setMessage("");
@@ -138,22 +169,45 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
 
   async function postReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!activeReply || !replyBody.trim()) return;
+    if (!activeReply || !replyBody.trim() || submittingRef.current) return;
     const slug = activeReply.slug;
+    const body = replyBody.trim();
+    const signature = `${activeReply.private ? "private" : "comment"}:${slug}:${activeReply.parentId || "root"}:${body}`;
+    if (idempotencyRef.current?.signature !== signature) {
+      idempotencyRef.current = { signature, key: `${activeReply.private ? "private-followup" : "comment"}:${crypto.randomUUID()}` };
+    }
+    submittingRef.current = true;
     setBusy(true);
     setMessage("");
     try {
-      const response = await fetch(`/api/community/ideas/${slug}/comments`, {
+      const response = await fetch(activeReply.private
+        ? `/api/community/ideas/${slug}/private-followups`
+        : `/api/community/ideas/${slug}/comments`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ body: replyBody, parentId: activeReply.parentId })
+        headers: communityActionHeaders(activeReply.private ? `private-followup:${slug}` : `comment:${slug}`, idempotencyRef.current.key),
+        body: JSON.stringify(activeReply.private ? { body } : { body, parentId: activeReply.parentId })
       });
       const payload = await response.json();
-      if (!response.ok || !payload.success) throw new Error(payload.message || t("unableReply"));
-      window.location.reload();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : t("unableReply"));
+      if (!response.ok || !payload.success) throw new Error("reply-failed");
+      if (activeReply.private && Array.isArray(payload.data?.messages)) {
+        setLocalPrivateFollowUps((current) => [
+          ...current.filter((item) => item.ideaSlug !== slug),
+          ...payload.data.messages.map((item: { id: string; body: string; createdAt: string }) => ({
+            ...item,
+            ideaId: "",
+            ideaSlug: slug,
+            ideaTitle: ""
+          }))
+        ]);
+      }
+      setReplyBody("");
+      idempotencyRef.current = null;
+      setMessage(activeReply.private ? t("privateFollowUpSent") : "");
+      router.refresh();
+    } catch {
+      setMessage(activeReply.private ? t("unableSendPrivateFollowUp") : t("unableReply"));
     } finally {
+      submittingRef.current = false;
       setBusy(false);
     }
   }
@@ -187,6 +241,41 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
                 ))}
               </div>
             </header>
+
+            {activeReply ? (
+              <form onSubmit={postReply} className="border-b border-[#edf0f4] bg-[#f8fbff] p-4">
+                <div className="rounded-2xl bg-white px-3 py-2 text-xs leading-5 text-[#69707d]">
+                  <span className="font-semibold text-[#315fbd]">{activeReply.label}</span>
+                  <span className="mt-1 line-clamp-2 block">{activeReply.body}</span>
+                </div>
+                {activeReply.private ? (
+                  <p className="mt-2 rounded-2xl border border-[#bfdbfe] bg-[#eff6ff] px-3 py-2 text-xs leading-5 text-[#1d4ed8]">
+                    {t("privateFollowUpNotice")}
+                  </p>
+                ) : null}
+                {activePrivateFollowUps.length ? (
+                  <div className="mt-3 max-h-28 overflow-y-auto rounded-2xl border border-[#e4e8ef] bg-white p-3">
+                    <p className="text-xs font-semibold text-[#101216]">{t("privateFollowUpHistory")}</p>
+                    <div className="mt-2 space-y-2">
+                      {activePrivateFollowUps.map((followUp) => (
+                        <div key={followUp.id} className="rounded-xl bg-[#f7f8fa] px-3 py-2 text-xs leading-5 text-[#59616e]">
+                          <p className="whitespace-pre-wrap">{followUp.body}</p>
+                          <p className="mt-1 text-[11px] text-[#8b93a1]">{timeAgo(followUp.createdAt, language)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <textarea value={replyBody} onChange={(event) => { setReplyBody(event.target.value); setMessage(""); }} rows={3} placeholder={t("writeReply")} className="mt-3 w-full resize-none rounded-2xl border border-[#dfe3e8] bg-white p-3 text-sm outline-none focus:border-[#2563eb]" />
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <button type="button" onClick={() => { setActiveReply(null); setReplyBody(""); setMessage(""); idempotencyRef.current = null; }} className="h-9 rounded-full border border-[#dfe3e8] bg-white px-4 text-xs font-semibold text-[#59616e]">{t("cancel")}</button>
+                  <button disabled={busy || !replyBody.trim()} className="inline-flex h-9 items-center gap-2 rounded-full bg-[#101216] px-4 text-xs font-semibold text-white disabled:opacity-60">
+                    {busy ? <Loader2 className="animate-spin" size={13} /> : <Reply size={13} />} {t("reply")}
+                  </button>
+                </div>
+                {message ? <p className={`mt-3 rounded-2xl px-4 py-3 text-sm ${message === t("privateFollowUpSent") ? "bg-[#ecfdf3] text-[#027a48]" : "bg-[#fff7ed] text-[#9a3412]"}`}>{message}</p> : null}
+              </form>
+            ) : null}
 
             <div className="min-h-0 flex-1 overflow-y-auto p-4">
               <div className="grid grid-cols-4 gap-2 text-center text-xs font-semibold text-[#69707d]">
@@ -229,22 +318,6 @@ export default function ActivityMessages({ notifications, unreadCount }: { notif
               </div>
             </div>
 
-            {activeReply ? (
-              <form onSubmit={postReply} className="border-t border-[#edf0f4] bg-[#f8fbff] p-4">
-                <div className="rounded-2xl bg-white px-3 py-2 text-xs leading-5 text-[#69707d]">
-                  <span className="font-semibold text-[#315fbd]">{activeReply.label}</span>
-                  <span className="mt-1 line-clamp-2 block">{activeReply.body}</span>
-                </div>
-                <textarea value={replyBody} onChange={(event) => setReplyBody(event.target.value)} rows={3} placeholder={t("writeReply")} className="mt-3 w-full resize-none rounded-2xl border border-[#dfe3e8] bg-white p-3 text-sm outline-none focus:border-[#2563eb]" />
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <button type="button" onClick={() => setActiveReply(null)} className="h-9 rounded-full border border-[#dfe3e8] bg-white px-4 text-xs font-semibold text-[#59616e]">{t("cancel")}</button>
-                  <button disabled={busy || !replyBody.trim()} className="inline-flex h-9 items-center gap-2 rounded-full bg-[#101216] px-4 text-xs font-semibold text-white disabled:opacity-60">
-                    {busy ? <Loader2 className="animate-spin" size={13} /> : <Reply size={13} />} {t("reply")}
-                  </button>
-                </div>
-                {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
-              </form>
-            ) : null}
           </section>
         </div>
       ) : null}

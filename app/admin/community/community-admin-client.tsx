@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Loader2, MessageSquare, RotateCcw, Save, Settings2, Trash2, X } from "lucide-react";
+import { CheckCircle2, Loader2, LockKeyhole, MessageSquare, RotateCcw, Save, Settings2, Trash2, X } from "lucide-react";
 import { CommunityIdea, CommunityModerationStatus, communityPostTypes, communityProductStages } from "@/lib/community";
 import AdminShell, { AdminSectionId } from "@/components/admin/admin-shell";
 import { AdminActionBar, AdminEmptyState, AdminMetricCard } from "@/components/admin/admin-ui";
 import { useAdminLanguage } from "@/components/admin/admin-language-provider";
 import { CommunityPageContent, CustomPageContent, defaultContent, SiteContent } from "@/lib/storage";
 
-type QueueFilter = "needs-reply" | "replied" | "returned" | "removed" | "all";
+type QueueFilter = "needs-reply" | "replied" | "returned" | "pending" | "removed" | "all";
 type ModerationAction = "return" | "remove";
 type CommunityRemovalNotice = {
   id: string;
@@ -19,14 +19,30 @@ type CommunityRemovalNotice = {
   createdAt: string;
   user: { id: string; name: string };
 };
+type CommunityPrivateFollowUp = {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: { id: string; name: string; email: string };
+  idea: { id: string; slug: string; title: string };
+};
 
 const buckets: Array<[QueueFilter, string]> = [
   ["needs-reply", "Awaiting reply"],
   ["replied", "Replied"],
   ["returned", "Returned for changes"],
+  ["pending", "Pending / hidden"],
   ["removed", "Removed"],
   ["all", "All"]
 ];
+
+function queueForIdea(idea: CommunityIdea): Exclude<QueueFilter, "removed" | "all"> {
+  if (idea.moderationStatus === "Returned") return "returned";
+  if (idea.moderationStatus === "Approved" && idea.visibility === "Public" && !idea.hidden) {
+    return idea.review?.assessmentStatus === "Published" ? "replied" : "needs-reply";
+  }
+  return "pending";
+}
 
 const reviewFields = [
   ["manufacturingFeasible", "Manufacturing feasible"],
@@ -106,6 +122,7 @@ export default function CommunityAdminClient() {
   const { t } = useAdminLanguage();
   const [ideas, setIdeas] = useState<CommunityIdea[]>([]);
   const [removalNotices, setRemovalNotices] = useState<CommunityRemovalNotice[]>([]);
+  const [privateFollowUps, setPrivateFollowUps] = useState<CommunityPrivateFollowUp[]>([]);
   const [active, setActive] = useState<QueueFilter>("needs-reply");
   const [replyingToState, setReplyingTo] = useState<CommunityIdea | null>(null);
   const replyingTo = replyingToState || normalizeCommunityIdea(null);
@@ -125,18 +142,28 @@ export default function CommunityAdminClient() {
       .then(([ideasPayload, contentPayload]) => {
         setIdeas((ideasPayload.data?.ideas || []).map(normalizeCommunityIdea));
         setRemovalNotices(ideasPayload.data?.removalNotices || []);
+        setPrivateFollowUps(ideasPayload.data?.privateFollowUps || []);
         setSiteContent(contentPayload.data || null);
       })
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (loading) return;
+    const focus = new URLSearchParams(window.location.search).get("focus");
+    if (!focus) return;
+    setActive("all");
+    window.setTimeout(() => document.getElementById(`idea-${focus}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+  }, [loading]);
+
   const counts = useMemo(() => {
     return {
-      "needs-reply": ideas.filter((idea) => idea.moderationStatus === "Approved" && idea.visibility === "Public" && !idea.hidden && idea.review?.assessmentStatus !== "Published").length,
-      replied: ideas.filter((idea) => idea.moderationStatus === "Approved" && !idea.hidden && idea.review?.assessmentStatus === "Published").length,
-      returned: ideas.filter((idea) => idea.moderationStatus === "Returned").length,
+      "needs-reply": ideas.filter((idea) => queueForIdea(idea) === "needs-reply").length,
+      replied: ideas.filter((idea) => queueForIdea(idea) === "replied").length,
+      returned: ideas.filter((idea) => queueForIdea(idea) === "returned").length,
+      pending: ideas.filter((idea) => queueForIdea(idea) === "pending").length,
       removed: removalNotices.length,
-      all: ideas.length
+      all: ideas.length + removalNotices.length
     };
   }, [ideas, removalNotices.length]);
 
@@ -280,10 +307,27 @@ export default function CommunityAdminClient() {
     }
   }
 
+  async function approveIdea(idea: CommunityIdea) {
+    setSaving(idea.slug);
+    try {
+      const response = await fetch(`/api/admin/community/${idea.slug}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "approve" })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to approve post.");
+      const updated = normalizeCommunityIdea(payload.data);
+      setIdeas((current) => current.map((item) => item.id === updated.id ? updated : item));
+    } catch (error) {
+      window.alert(t(error instanceof Error ? error.message : "Unable to approve post."));
+    } finally {
+      setSaving("");
+    }
+  }
+
   const filtered = ideas.filter((idea) => {
-    if (active === "needs-reply") return idea.moderationStatus === "Approved" && idea.visibility === "Public" && !idea.hidden && idea.review?.assessmentStatus !== "Published";
-    if (active === "replied") return idea.moderationStatus === "Approved" && !idea.hidden && idea.review?.assessmentStatus === "Published";
-    if (active === "returned") return idea.moderationStatus === "Returned";
+    if (active === "needs-reply" || active === "replied" || active === "returned" || active === "pending") return queueForIdea(idea) === active;
     if (active === "removed") return false;
     return true;
   });
@@ -309,13 +353,13 @@ export default function CommunityAdminClient() {
       activeSection="community"
       pageTitle="Community replies"
       pageDescription="Reply to creators and handle exceptions without delaying normal publishing."
-      notificationCount={counts["needs-reply"]}
+      notificationCount={counts["needs-reply"] + privateFollowUps.length}
       searchItems={ideas.slice(0, 60).map((idea) => ({
         id: `idea-${idea.id}`,
         label: t(idea.title),
         description: `${t(idea.moderationStatus)} · ${idea.author.name}`,
-        href: "/admin/community",
-        keywords: [idea.category, idea.visibility, idea.hidden ? "hidden" : ""].join(" ")
+        href: `/admin/community?focus=${encodeURIComponent(idea.slug)}`,
+        keywords: [idea.category, idea.visibility, queueForIdea(idea), idea.hidden ? "hidden" : ""].join(" ")
       }))}
       canSave={false}
       onNavigate={navigateAdmin}
@@ -337,7 +381,33 @@ export default function CommunityAdminClient() {
           )}
         />
 
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        {privateFollowUps.length ? (
+          <section className="rounded-md border border-[#a8ddd7] bg-[#f1fbf9] p-4 shadow-sm sm:p-5" aria-label={t("Private creator follow-ups")}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[#066a65]"><LockKeyhole size={18} /> {t("Private creator follow-ups")}</h2>
+                <p className="mt-1 text-xs text-[#39736f]">{t("Visible only to authorized TYORA staff and the creator.")}</p>
+              </div>
+              <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[#06756f]">{privateFollowUps.length}</span>
+            </div>
+            <div className="mt-4 grid gap-3">
+              {privateFollowUps.map((message) => (
+                <article key={message.id} className="rounded-md border border-[#c8e8e3] bg-white p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#101216]">{message.author.name} · {message.idea.title}</p>
+                      <p className="mt-1 text-xs text-[#69707d]">{message.author.email} · {new Date(message.createdAt).toLocaleString()}</p>
+                    </div>
+                    <Link href={`/ask/${encodeURIComponent(message.idea.slug)}`} className="rounded-md border border-[#a8ddd7] px-3 py-2 text-xs font-semibold text-[#06756f]">{t("Open idea")}</Link>
+                  </div>
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#344054]">{message.body}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
           {buckets.map(([status, label]) => (
             <AdminMetricCard key={status} label={t(label)} value={counts[status] || 0} detail={t("posts")} active={active === status} onClick={() => setActive(status)} />
           ))}
@@ -345,8 +415,8 @@ export default function CommunityAdminClient() {
 
         {loading ? <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin" /></div> : (
           <div className="space-y-4">
-            {filtered.length === 0 && !(active === "removed" && removalNotices.length) ? <AdminEmptyState title={t("No posts in this section")} description={t("Posts will appear here when they match the selected moderation state.")} /> : null}
-            {active === "removed" && removalNotices.length ? (
+            {filtered.length === 0 && !((active === "removed" || active === "all") && removalNotices.length) ? <AdminEmptyState title={t("No posts in this section")} description={t("Posts will appear here when they match the selected moderation state.")} /> : null}
+            {(active === "removed" || active === "all") && removalNotices.length ? (
               <div className="space-y-3">
                 {removalNotices.map((notice) => (
                   <article key={notice.id} className="rounded-md border border-[#fecdca] bg-white p-4 shadow-sm sm:p-5">
@@ -367,10 +437,10 @@ export default function CommunityAdminClient() {
               </div>
             ) : null}
             {filtered.map((idea) => (
-              <article key={idea.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm sm:p-5">
+              <article id={`idea-${idea.slug}`} key={idea.id} className="scroll-mt-24 rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm sm:p-5">
                 <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
                   <div>
-                    <p className="text-xs text-[#69707d]">{idea.id} · {t(idea.visibility)} · {idea.author.name}</p>
+                    <p className="text-xs text-[#69707d]">{idea.id} · {t(idea.visibility)} · {idea.author.name} · {t("Created")} {new Date(idea.createdAt).toLocaleString()}</p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                       <span className="rounded-full bg-[#fff7d6] px-2.5 py-1 text-[#8a5a00]">{t(idea.moderationStatus)}</span>
                       <span className="rounded-full bg-[#edf4ff] px-2.5 py-1 text-[#2563eb]">{t(idea.postType)}</span>
@@ -395,6 +465,12 @@ export default function CommunityAdminClient() {
                         {idea.reportReasons.map((reason, index) => <p key={`${idea.id}-report-${index}`} className="mt-1">• {reason}</p>)}
                       </div>
                     ) : null}
+                    {queueForIdea(idea) === "pending" ? (
+                      <div className="mt-3 rounded-md border border-[#fedf89] bg-[#fffcf5] px-3 py-2 text-xs leading-5 text-[#93370d]">
+                        <p className="font-semibold">{t("Pending / hidden action required")}</p>
+                        <p>{idea.moderationNote ? t(idea.moderationNote) : t("No moderation reason recorded. Review and approve, return, or remove this post.")}</p>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex flex-col items-start justify-between rounded-md border border-[#eef1f4] bg-[#f9fafb] p-4">
                     <div>
@@ -406,6 +482,11 @@ export default function CommunityAdminClient() {
                       )}
                     </div>
                     <div className="mt-5 flex flex-wrap gap-2">
+                      {queueForIdea(idea) === "pending" ? (
+                        <button type="button" onClick={() => void approveIdea(idea)} disabled={saving === idea.slug} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#06756f] px-4 text-sm font-semibold text-white transition hover:bg-[#05645f] disabled:opacity-60">
+                          <CheckCircle2 size={15} /> {t("Approve")}
+                        </button>
+                      ) : null}
                       <button type="button" onClick={() => setReplyingTo(idea)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#155eef] px-4 text-sm font-semibold text-white transition hover:bg-[#004eeb]">
                         <MessageSquare size={15} /> {t("Reply")}
                       </button>

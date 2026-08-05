@@ -21,6 +21,7 @@ import {
   phase5bReviewedMigrations,
   Phase5bPreviewMigrationError,
   readAndValidatePhase5bCertificate,
+  shouldRunPhase5bBackfill,
   validatePhase5bPreviewTarget
 } from "./lib/phase-5b-preview-migration-safety.mjs";
 
@@ -322,11 +323,15 @@ async function main() {
     await verifyAppliedMigrations(connectionConfig);
     await verifyRequiredSchema(connectionConfig);
     console.log("phase5b_required_schema_check_pass");
-    const backfill = await runBackfill(connectionConfig);
-    console.log("phase5b_backfill_complete");
-    console.log(`phase5b_workflow_total=${backfill.total}`);
-    console.log(`phase5b_manual_review_total=${backfill.manualReview}`);
-    console.log(`phase5b_kpi_eligible_total=${backfill.kpiEligible}`);
+    if (shouldRunPhase5bBackfill(immediateState)) {
+      const backfill = await runBackfill(connectionConfig);
+      console.log("phase5b_backfill_complete");
+      console.log(`phase5b_workflow_total=${backfill.total}`);
+      console.log(`phase5b_manual_review_total=${backfill.manualReview}`);
+      console.log(`phase5b_kpi_eligible_total=${backfill.kpiEligible}`);
+    } else {
+      console.log("phase5b_backfill_skipped_existing_foundation");
+    }
     console.log("phase5b_migration_complete");
   } finally {
     for (const name of [

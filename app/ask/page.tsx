@@ -162,7 +162,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
               </span>
             )}
             {country ? <span>{flagFor(country)}</span> : null}
-            {idea ? <span>{timeAgo(idea.updatedAt || idea.createdAt)}</span> : <span><CommunityText text="TYORA case" /></span>}
+            {idea ? <span>{timeAgo(idea.createdAt)}</span> : <span><CommunityText text="TYORA case" /></span>}
             <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {commentCount} <CommunityText text={labels.commentText} /></span>
             {idea ? <span className="inline-flex items-center gap-1"><ThumbsUp size={13} /> {helpfulCount} <CommunityText text="helpful" /></span> : null}
             {idea?.interestedCount ? <span>{idea.interestedCount} {labels.interestedText}</span> : null}

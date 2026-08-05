@@ -1,5 +1,5 @@
 import { getCommunitySession, refreshCommunitySessionCookieIfNeeded } from "@/lib/server/community-auth";
-import { updateCommunityIdeaOwner, withdrawCommunityIdeaOwner } from "@/lib/server/community-store";
+import { permanentlyDeleteCommunityIdeaOwner, updateCommunityIdeaOwner } from "@/lib/server/community-store";
 import { fail, messageFromError, ok } from "@/lib/server/api-response";
 import { isIdeaNotFoundError } from "@/lib/server/idea-access-policy";
 
@@ -15,14 +15,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const session = await getCommunitySession();
   if (!session) return fail("Email login is required.", 401);
   const { slug } = await params;
   try {
-    return refreshCommunitySessionCookieIfNeeded(ok(await withdrawCommunityIdeaOwner(slug, session.userId)), session);
+    return refreshCommunitySessionCookieIfNeeded(ok(await permanentlyDeleteCommunityIdeaOwner(slug, session.userId, request)), session);
   } catch (error) {
     if (isIdeaNotFoundError(error)) return fail("Not found.", 404);
-    return fail(messageFromError(error, "Unable to withdraw discussion."), 400);
+    return fail(messageFromError(error, "Unable to permanently delete discussion."), 400);
   }
 }

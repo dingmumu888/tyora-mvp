@@ -1,4 +1,4 @@
-export const communityActionTypes = ["comment", "reaction", "comment-reaction", "share", "report"] as const;
+export const communityActionTypes = ["comment", "reaction", "comment-reaction", "share", "report", "private-followup", "delete"] as const;
 
 export type CommunityActionType = (typeof communityActionTypes)[number];
 
@@ -8,6 +8,8 @@ export type CommunityActionLimits = {
   "comment-reaction": number;
   share: number;
   report: number;
+  "private-followup": number;
+  delete: number;
   windowMinutes: number;
 };
 
@@ -40,6 +42,8 @@ export function normalizeIdempotencyKey(value: unknown) {
 
 export function actionLimit(action: CommunityActionType, limits: CommunityActionLimits) {
   if (action === "comment") return limits.comment;
+  if (action === "private-followup") return limits["private-followup"];
+  if (action === "delete") return limits.delete;
   if (action === "share") return limits.share;
   if (action === "report") return limits.report;
   return limits.reaction;

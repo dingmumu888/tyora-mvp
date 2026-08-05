@@ -52,11 +52,18 @@ export default function CommunityUserMenu({
       const detail = (event as CustomEvent<{ user?: CommunitySessionUser }>).detail;
       if (detail?.user) setUser(detail.user);
     }
+    function onCommunityRevalidate() {
+      void refreshSession();
+    }
     window.addEventListener("tyora:community-login", onLogin);
     window.addEventListener("tyora:community-profile-updated", onProfileUpdated);
+    window.addEventListener("tyora:community-revalidate", onCommunityRevalidate);
+    window.addEventListener("tyora:community-notifications-read", onCommunityRevalidate);
     return () => {
       window.removeEventListener("tyora:community-login", onLogin);
       window.removeEventListener("tyora:community-profile-updated", onProfileUpdated);
+      window.removeEventListener("tyora:community-revalidate", onCommunityRevalidate);
+      window.removeEventListener("tyora:community-notifications-read", onCommunityRevalidate);
     };
   }, []);
 

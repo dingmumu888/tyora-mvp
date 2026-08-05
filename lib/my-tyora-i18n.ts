@@ -120,7 +120,20 @@ const en = {
   reviewedYourIdea: "TYORA reviewed your idea",
   returnedYourIdea: "TYORA returned your idea for changes",
   removedYourIdea: "TYORA removed your idea",
-  ideaStatus: "Your idea status is {status}"
+  ideaStatus: "Your idea status is {status}",
+  permanentDeleteTitle: "Permanently delete this post?",
+  permanentDeleteWarning: "“{title}” and its images, comments, reactions, TYORA assessment, and private follow-ups will be permanently deleted. This cannot be undone.",
+  permanentlyDelete: "Permanently delete",
+  lifecycleState: "Current state: {status}",
+  moderationReason: "TYORA reason: {reason}",
+  moderatedOn: "Moderated {time}",
+  nextActionEdit: "Next: edit the post and resubmit it for review.",
+  privateFollowUpNotice: "Private: only you and authorized TYORA staff can see this follow-up. It will not be posted as a public comment.",
+  privateFollowUpHistory: "Your private follow-ups",
+  privateFollowUpSent: "Private follow-up sent.",
+  unableSendPrivateFollowUp: "We couldn't send your private follow-up. Your draft is still here—please try again.",
+  autoRefreshFailed: "New TYORA updates could not be checked automatically.",
+  retryRefresh: "Try again"
 } as const;
 
 export type MyTyoraKey = keyof typeof en;
@@ -158,7 +171,11 @@ const zhCN: Dictionary = {
   replyToReview: "正在回复 TYORA 评估", replyToPerson: "正在回复 {name}", openIdeaToReply: "请打开创意页面后回复这条消息。",
   unableReply: "无法发送回复。", closeMessages: "关闭消息", commentedOnIdea: "{name} 评论了你的创意",
   interestedInIdea: "{name} 对你的创意感兴趣", foundHelpful: "{name} 认为你的创意很有帮助",
-  ideaImages: "创意图片", reviewedYourIdea: "TYORA 已评估你的创意", returnedYourIdea: "TYORA 已退回你的创意，请修改后重新发布", removedYourIdea: "TYORA 已移除你的创意", ideaStatus: "你的创意状态为：{status}"
+  ideaImages: "创意图片", reviewedYourIdea: "TYORA 已评估你的创意", returnedYourIdea: "TYORA 已退回你的创意，请修改后重新发布", removedYourIdea: "TYORA 已移除你的创意", ideaStatus: "你的创意状态为：{status}",
+  permanentDeleteTitle: "永久删除这个帖子？", permanentDeleteWarning: "“{title}”及其图片、评论、互动、TYORA 评估和私密追问都将被永久删除，且无法恢复。",
+  permanentlyDelete: "永久删除", lifecycleState: "当前状态：{status}", moderationReason: "TYORA 原因：{reason}", moderatedOn: "处理于 {time}", nextActionEdit: "下一步：编辑帖子并重新提交审核。",
+  privateFollowUpNotice: "私密：只有你和获得授权的 TYORA 工作人员能看到这条追问，不会作为公开评论发布。", privateFollowUpHistory: "你的私密追问", privateFollowUpSent: "私密追问已发送。",
+  unableSendPrivateFollowUp: "私密追问未能发送。草稿仍然保留，请重试。", autoRefreshFailed: "暂时无法自动检查 TYORA 的最新动态。", retryRefresh: "重试"
 };
 
 const es: Dictionary = {
@@ -193,7 +210,11 @@ const es: Dictionary = {
   replyToReview: "Respondiendo a la evaluación de TYORA", replyToPerson: "Respondiendo a {name}", openIdeaToReply: "Abre la idea para responder a este mensaje.",
   unableReply: "No se pudo responder.", closeMessages: "Cerrar mensajes", commentedOnIdea: "{name} comentó tu idea",
   interestedInIdea: "{name} está interesado en tu idea", foundHelpful: "{name} consideró útil tu idea",
-  ideaImages: "Imágenes de la idea", reviewedYourIdea: "TYORA evaluó tu idea", returnedYourIdea: "TYORA devolvió tu idea para que la revises", removedYourIdea: "TYORA eliminó tu idea", ideaStatus: "El estado de tu idea es {status}"
+  ideaImages: "Imágenes de la idea", reviewedYourIdea: "TYORA evaluó tu idea", returnedYourIdea: "TYORA devolvió tu idea para que la revises", removedYourIdea: "TYORA eliminó tu idea", ideaStatus: "El estado de tu idea es {status}",
+  permanentDeleteTitle: "¿Eliminar esta publicación para siempre?", permanentDeleteWarning: "“{title}” y sus imágenes, comentarios, reacciones, evaluación de TYORA y seguimientos privados se eliminarán para siempre. No se puede deshacer.",
+  permanentlyDelete: "Eliminar para siempre", lifecycleState: "Estado actual: {status}", moderationReason: "Motivo de TYORA: {reason}", moderatedOn: "Moderado {time}", nextActionEdit: "Siguiente: edita la publicación y vuelve a enviarla para revisión.",
+  privateFollowUpNotice: "Privado: solo tú y el personal autorizado de TYORA pueden ver este seguimiento. No se publicará como comentario.", privateFollowUpHistory: "Tus seguimientos privados", privateFollowUpSent: "Seguimiento privado enviado.",
+  unableSendPrivateFollowUp: "No pudimos enviar tu seguimiento privado. El borrador sigue aquí; inténtalo de nuevo.", autoRefreshFailed: "No se pudieron comprobar automáticamente las novedades de TYORA.", retryRefresh: "Reintentar"
 };
 
 const fr: Dictionary = {
@@ -228,7 +249,11 @@ const fr: Dictionary = {
   replyToReview: "Réponse à l’évaluation TYORA", replyToPerson: "Réponse à {name}", openIdeaToReply: "Ouvrez l’idée pour répondre à ce message.",
   unableReply: "Impossible de répondre.", closeMessages: "Fermer les messages", commentedOnIdea: "{name} a commenté votre idée",
   interestedInIdea: "{name} s’intéresse à votre idée", foundHelpful: "{name} a trouvé votre idée utile",
-  ideaImages: "Images de l’idée", reviewedYourIdea: "TYORA a évalué votre idée", returnedYourIdea: "TYORA a renvoyé votre idée pour modification", removedYourIdea: "TYORA a retiré votre idée", ideaStatus: "Le statut de votre idée est {status}"
+  ideaImages: "Images de l’idée", reviewedYourIdea: "TYORA a évalué votre idée", returnedYourIdea: "TYORA a renvoyé votre idée pour modification", removedYourIdea: "TYORA a retiré votre idée", ideaStatus: "Le statut de votre idée est {status}",
+  permanentDeleteTitle: "Supprimer définitivement cette publication ?", permanentDeleteWarning: "« {title} » ainsi que ses images, commentaires, réactions, évaluation TYORA et suivis privés seront supprimés définitivement. Cette action est irréversible.",
+  permanentlyDelete: "Supprimer définitivement", lifecycleState: "État actuel : {status}", moderationReason: "Motif TYORA : {reason}", moderatedOn: "Modéré {time}", nextActionEdit: "Étape suivante : modifiez la publication et renvoyez-la pour examen.",
+  privateFollowUpNotice: "Privé : seuls vous et le personnel TYORA autorisé pouvez voir ce suivi. Il ne sera pas publié comme commentaire public.", privateFollowUpHistory: "Vos suivis privés", privateFollowUpSent: "Suivi privé envoyé.",
+  unableSendPrivateFollowUp: "Impossible d’envoyer votre suivi privé. Votre brouillon est conservé ; réessayez.", autoRefreshFailed: "Impossible de vérifier automatiquement les nouveautés TYORA.", retryRefresh: "Réessayer"
 };
 
 const de: Dictionary = {
@@ -263,7 +288,11 @@ const de: Dictionary = {
   replyToReview: "Antwort auf die TYORA-Bewertung", replyToPerson: "Antwort an {name}", openIdeaToReply: "Öffne die Idee, um auf diese Nachricht zu antworten.",
   unableReply: "Antwort konnte nicht gesendet werden.", closeMessages: "Nachrichten schließen", commentedOnIdea: "{name} hat deine Idee kommentiert",
   interestedInIdea: "{name} interessiert sich für deine Idee", foundHelpful: "{name} fand deine Idee hilfreich",
-  ideaImages: "Ideenbilder", reviewedYourIdea: "TYORA hat deine Idee bewertet", returnedYourIdea: "TYORA hat deine Idee zur Überarbeitung zurückgesendet", removedYourIdea: "TYORA hat deine Idee entfernt", ideaStatus: "Der Status deiner Idee ist {status}"
+  ideaImages: "Ideenbilder", reviewedYourIdea: "TYORA hat deine Idee bewertet", returnedYourIdea: "TYORA hat deine Idee zur Überarbeitung zurückgesendet", removedYourIdea: "TYORA hat deine Idee entfernt", ideaStatus: "Der Status deiner Idee ist {status}",
+  permanentDeleteTitle: "Diesen Beitrag dauerhaft löschen?", permanentDeleteWarning: "„{title}“ sowie Bilder, Kommentare, Reaktionen, TYORA-Bewertung und private Rückfragen werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
+  permanentlyDelete: "Dauerhaft löschen", lifecycleState: "Aktueller Status: {status}", moderationReason: "TYORA-Grund: {reason}", moderatedOn: "Moderiert {time}", nextActionEdit: "Nächster Schritt: Beitrag bearbeiten und erneut zur Prüfung senden.",
+  privateFollowUpNotice: "Privat: Nur du und autorisierte TYORA-Mitarbeiter können diese Rückfrage sehen. Sie wird nicht als öffentlicher Kommentar veröffentlicht.", privateFollowUpHistory: "Deine privaten Rückfragen", privateFollowUpSent: "Private Rückfrage gesendet.",
+  unableSendPrivateFollowUp: "Deine private Rückfrage konnte nicht gesendet werden. Der Entwurf bleibt erhalten – bitte erneut versuchen.", autoRefreshFailed: "Neue TYORA-Aktualisierungen konnten nicht automatisch geprüft werden.", retryRefresh: "Erneut versuchen"
 };
 
 const pt: Dictionary = {
@@ -298,7 +327,11 @@ const pt: Dictionary = {
   replyToReview: "Respondendo à avaliação da TYORA", replyToPerson: "Respondendo a {name}", openIdeaToReply: "Abra a ideia para responder a esta mensagem.",
   unableReply: "Não foi possível responder.", closeMessages: "Fechar mensagens", commentedOnIdea: "{name} comentou sua ideia",
   interestedInIdea: "{name} está interessado na sua ideia", foundHelpful: "{name} considerou sua ideia útil",
-  ideaImages: "Imagens da ideia", reviewedYourIdea: "A TYORA avaliou sua ideia", returnedYourIdea: "A TYORA devolveu sua ideia para revisão", removedYourIdea: "A TYORA removeu sua ideia", ideaStatus: "O status da sua ideia é {status}"
+  ideaImages: "Imagens da ideia", reviewedYourIdea: "A TYORA avaliou sua ideia", returnedYourIdea: "A TYORA devolveu sua ideia para revisão", removedYourIdea: "A TYORA removeu sua ideia", ideaStatus: "O status da sua ideia é {status}",
+  permanentDeleteTitle: "Excluir esta publicação permanentemente?", permanentDeleteWarning: "“{title}” e suas imagens, comentários, reações, avaliação da TYORA e acompanhamentos privados serão excluídos permanentemente. Esta ação não pode ser desfeita.",
+  permanentlyDelete: "Excluir permanentemente", lifecycleState: "Status atual: {status}", moderationReason: "Motivo da TYORA: {reason}", moderatedOn: "Moderado {time}", nextActionEdit: "Próximo passo: edite a publicação e envie novamente para análise.",
+  privateFollowUpNotice: "Privado: somente você e a equipe autorizada da TYORA podem ver este acompanhamento. Ele não será publicado como comentário público.", privateFollowUpHistory: "Seus acompanhamentos privados", privateFollowUpSent: "Acompanhamento privado enviado.",
+  unableSendPrivateFollowUp: "Não foi possível enviar seu acompanhamento privado. O rascunho continua aqui; tente novamente.", autoRefreshFailed: "Não foi possível verificar automaticamente as novidades da TYORA.", retryRefresh: "Tentar novamente"
 };
 
 export const myTyoraDictionaries: Record<PublicLanguage, Dictionary> = {

@@ -221,6 +221,7 @@ model CommunityUser {
   customInquiries        CustomInquiry[]
   shares                 CommunityShare[]
   moderationNotices      CommunityModerationNotice[]
+  privateFollowUps       CommunityPrivateFollowUp[]
 
   @@index([joinedAt])
   @@index([country])
@@ -476,6 +477,7 @@ model CommunityIdea {
   reactions             CommunityReaction[]
   shares                CommunityShare[]
   customInquiries       CustomInquiry[]
+  privateFollowUps      CommunityPrivateFollowUp[]
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 
@@ -619,6 +621,20 @@ model CommunityModerationNotice {
 
   @@index([userId, createdAt])
   @@index([ideaId])
+  @@index([createdAt])
+}
+
+model CommunityPrivateFollowUp {
+  id        String        @id
+  ideaId    String
+  idea      CommunityIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    CommunityUser @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime      @default(now())
+
+  @@index([ideaId, createdAt])
+  @@index([authorId, createdAt])
   @@index([createdAt])
 }
 

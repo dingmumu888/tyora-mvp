@@ -18,6 +18,7 @@ import {
   phase5bPriorMigrations,
   phase5bReviewedMigrations,
   readAndValidatePhase5bCertificate,
+  shouldRunPhase5bBackfill,
   validatePhase5bPreviewTarget
 } from "./lib/phase-5b-preview-migration-safety.mjs";
 
@@ -114,6 +115,12 @@ test("history guard accepts only exact prerequisites and the pinned migration", 
   );
 });
 
+test("the one-time legacy backfill is skipped after the workflow foundation exists", () => {
+  assert.equal(shouldRunPhase5bBackfill({ phase5bAlreadyApplied: false }), true);
+  assert.equal(shouldRunPhase5bBackfill({ phase5bAlreadyApplied: true }), false);
+  assert.equal(shouldRunPhase5bBackfill(undefined), false);
+});
+
 test("selected CA is parsed locally and used with verified TLS/SNI", async () => {
   const directory = await mkdtemp(join(tmpdir(), "tyora-phase5b-test-"));
   const certificatePath = join(directory, "prod-ca-2021 (1).crt");
@@ -200,6 +207,8 @@ test("runner uses migrate deploy only and keeps output redacted", async () => {
   assert.match(runner, /const reviewedMigrationSql = await readReviewedMigrationSql\(\)/);
   assert.match(runner, /const immediateReviewedMigrationSql = await readReviewedMigrationSql\(\)/);
   assert.match(runner, /assertPhase5bReviewedMigrationChecksums\(immediateReviewedMigrationSql\)/);
+  assert.match(runner, /shouldRunPhase5bBackfill\(immediateState\)/);
+  assert.match(runner, /phase5b_backfill_skipped_existing_foundation/);
   assert.doesNotMatch(runner, /console\.(log|error)\([^\n]*(directUrl|prismaUrl|password|certificatePath)/);
   assert.doesNotMatch(runner, /db\s+push|migrate\s+dev|migrate\s+reset|seed|cleanup/i);
   assert.match(backfill, /BEGIN ISOLATION LEVEL SERIALIZABLE/);

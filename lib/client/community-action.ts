@@ -1,6 +1,6 @@
-export function communityActionHeaders(action: string) {
+export function communityActionHeaders(action: string, idempotencyKey?: string) {
   return {
     "content-type": "application/json",
-    "idempotency-key": `${action}:${crypto.randomUUID()}`
+    "idempotency-key": idempotencyKey || `${action}:${crypto.randomUUID()}`
   };
 }

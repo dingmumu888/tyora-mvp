@@ -12,6 +12,7 @@ import { CommunityIdea } from "@/lib/community";
 import { translateMyTyora, type MyTyoraKey } from "@/lib/my-tyora-i18n";
 import { translateNewIdea } from "@/lib/new-idea-i18n";
 import type { PublicLanguage } from "@/lib/public-i18n";
+import { communityActionHeaders } from "@/lib/client/community-action";
 
 type ActivityView = "posts" | "comments" | "likes" | "interested" | "reviews";
 
@@ -42,6 +43,11 @@ type EditForm = {
   imageUrls: string[];
 };
 
+type DeleteIntent = {
+  idea: CommunityIdea;
+  idempotencyKey: string;
+};
+
 const emptyText: Record<ActivityView, MyTyoraKey> = {
   posts: "noPosts",
   comments: "noComments",
@@ -70,6 +76,8 @@ function IdeaCard({
 }) {
   const { language } = usePublicLanguage();
   const t = (key: MyTyoraKey, values?: Record<string, string | number>) => translateMyTyora(language, key, values);
+  const restricted = idea.hidden || idea.moderationStatus !== "Approved";
+  const lifecycleStatus = restricted ? idea.hidden && idea.moderationStatus === "Approved" ? "Hidden" : idea.moderationStatus : idea.status;
   return (
     <article className="rounded-[18px] border border-[#e3e9f1] bg-white p-3 shadow-sm shadow-[#101216]/4 transition hover:border-[#93c5fd]">
       <Link href={`/ask/${idea.slug}`} className="block">
@@ -79,8 +87,8 @@ function IdeaCard({
         <div className="mt-3 min-w-0">
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#69707d]">
             <span className="rounded-full bg-[#f4f6f8] px-2 py-1">{translateCommunityText(language, idea.category)}</span>
-            <span>{translateCommunityText(language, idea.status)}</span>
-            <span>{meta || timeAgo(idea.updatedAt || idea.createdAt, language)}</span>
+            <span>{translateCommunityText(language, lifecycleStatus)}</span>
+            <span>{meta || timeAgo(idea.createdAt, language)}</span>
           </div>
           <h3 className="mt-2 line-clamp-1 text-base font-semibold text-[#101216]">{idea.title}</h3>
           <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#59616e]">{idea.description}</p>
@@ -91,6 +99,14 @@ function IdeaCard({
           </div>
         </div>
       </Link>
+      {restricted ? (
+        <div className="mt-3 rounded-2xl border border-[#fedf89] bg-[#fffcf5] px-3 py-2 text-xs leading-5 text-[#93370d]">
+          <p className="font-semibold">{t("lifecycleState", { status: translateCommunityText(language, lifecycleStatus) })}</p>
+          {idea.moderationNote ? <p className="mt-1">{t("moderationReason", { reason: idea.moderationNote })}</p> : null}
+          {idea.moderatedAt ? <p>{t("moderatedOn", { time: new Date(idea.moderatedAt).toLocaleString() })}</p> : null}
+          {idea.moderationStatus === "Returned" ? <p className="mt-1 font-semibold">{t("nextActionEdit")}</p> : null}
+        </div>
+      ) : null}
       {children ? <div className="mt-3 flex flex-wrap gap-2 border-t border-[#edf0f4] pt-3">{children}</div> : null}
     </article>
   );
@@ -135,19 +151,31 @@ export default function ActivitySummary({
   const t = (key: MyTyoraKey, values?: Record<string, string | number>) => translateMyTyora(language, key, values);
   const [activeView, setActiveView] = useState<ActivityView | null>(null);
   const [localIdeas, setLocalIdeas] = useState(ideas);
+  const [localComments, setLocalComments] = useState(comments);
   const [localLikedIdeas, setLocalLikedIdeas] = useState(likedIdeas);
+  const [localInterestedIdeas, setLocalInterestedIdeas] = useState(interestedIdeas);
   const [editingIdea, setEditingIdea] = useState<CommunityIdea | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({ title: "", category: "", country: "", description: "", imageUrls: [] });
   const [busy, setBusy] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
   const [message, setMessage] = useState("");
+  const [deleteIntent, setDeleteIntent] = useState<DeleteIntent | null>(null);
   const reviewedIdeas = useMemo(() => localIdeas.filter((idea) => idea.review), [localIdeas]);
   const activeItem = items.find((item) => item.view === activeView);
+  const valueForView = (view: ActivityView) =>
+    view === "posts" ? localIdeas.length :
+      view === "comments" ? localComments.length :
+        view === "likes" ? localLikedIdeas.length :
+          view === "interested" ? localInterestedIdeas.length :
+            view === "reviews" ? reviewedIdeas.length : 0;
   const activeItemValue =
     activeView === "posts" ? localIdeas.length :
-      activeView === "likes" ? localLikedIdeas.length :
-        activeView === "reviews" ? reviewedIdeas.length :
-          activeItem?.value || 0;
+      activeView ? valueForView(activeView) : activeItem?.value || 0;
+
+  useEffect(() => setLocalIdeas(ideas), [ideas]);
+  useEffect(() => setLocalComments(comments), [comments]);
+  useEffect(() => setLocalLikedIdeas(likedIdeas), [likedIdeas]);
+  useEffect(() => setLocalInterestedIdeas(interestedIdeas), [interestedIdeas]);
 
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get("revise");
@@ -195,19 +223,29 @@ export default function ActivitySummary({
     }
   }
 
-  async function deleteIdea(idea: CommunityIdea) {
-    const confirmed = window.confirm(t("deleteConfirm", { title: idea.title }));
-    if (!confirmed) return;
+  function requestDelete(idea: CommunityIdea) {
+    setDeleteIntent({ idea, idempotencyKey: `delete:${crypto.randomUUID()}` });
+    setMessage("");
+  }
+
+  async function deleteIdea(intent: DeleteIntent) {
+    const idea = intent.idea;
     setBusy(`delete-${idea.slug}`);
     setMessage("");
     try {
-      const response = await fetch(`/api/community/ideas/${idea.slug}`, { method: "DELETE" });
+      const response = await fetch(`/api/community/ideas/${idea.slug}`, {
+        method: "DELETE",
+        headers: communityActionHeaders(`delete:${idea.id}`, intent.idempotencyKey)
+      });
       const payload = await response.json();
       if (!response.ok || !payload.success) throw new Error(payload.message || t("unableDeletePost"));
       setLocalIdeas((currentIdeas) => currentIdeas.filter((item) => item.slug !== idea.slug));
+      setLocalComments((currentComments) => currentComments.filter((item) => item.idea.slug !== idea.slug));
       setLocalLikedIdeas((currentIdeas) => currentIdeas.filter((item) => item.idea.slug !== idea.slug));
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : t("unableDeletePost"));
+      setLocalInterestedIdeas((currentIdeas) => currentIdeas.filter((item) => item.idea.slug !== idea.slug));
+      setDeleteIntent(null);
+    } catch {
+      setMessage(t("unableDeletePost"));
     } finally {
       setBusy("");
     }
@@ -235,9 +273,9 @@ export default function ActivitySummary({
   return (
     <>
       <div className="mt-4 grid grid-cols-5 gap-1 rounded-[18px] bg-[#f7f8fa] p-2">
-        {items.map(({ label, value, view }) => (
+        {items.map(({ label, view }) => (
           <button key={view} type="button" onClick={() => setActiveView(view)} className="rounded-2xl bg-white px-2 py-2 text-center shadow-sm shadow-[#101216]/3 transition hover:-translate-y-0.5 hover:text-[#315fbd] hover:shadow-md">
-            <span className="block text-base font-semibold">{value}</span>
+            <span className="block text-base font-semibold">{valueForView(view)}</span>
             <span className="mt-0.5 block text-[10px] font-medium text-[#69707d]">{t(label)}</span>
           </button>
         ))}
@@ -262,12 +300,12 @@ export default function ActivitySummary({
                     <button type="button" onClick={() => openEdit(idea)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dfe3e8] bg-white px-3 text-xs font-semibold text-[#101216] transition hover:bg-[#f7f8fa]">
                       <Pencil size={13} /> {t("edit")}
                     </button>
-                    <button type="button" disabled={busy === `delete-${idea.slug}`} onClick={() => void deleteIdea(idea)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#fee2e2] bg-[#fff1f2] px-3 text-xs font-semibold text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60">
+                    <button type="button" disabled={busy === `delete-${idea.slug}`} onClick={() => requestDelete(idea)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#fee2e2] bg-[#fff1f2] px-3 text-xs font-semibold text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60">
                       {busy === `delete-${idea.slug}` ? <Loader2 className="animate-spin" size={13} /> : <Trash2 size={13} />} {t("delete")}
                     </button>
                   </IdeaCard>
                 ))}
-                {activeView === "comments" && comments.map((comment) => <CommentCard key={comment.id} comment={comment} />)}
+                {activeView === "comments" && localComments.map((comment) => <CommentCard key={comment.id} comment={comment} />)}
                 {activeView === "likes" && localLikedIdeas.map((item) => (
                   <IdeaCard key={item.id} idea={item.idea} meta={`${t("likes")} · ${timeAgo(item.createdAt, language)}`}>
                     <button type="button" disabled={busy === `like-${item.idea.slug}`} onClick={() => void cancelLike(item.idea)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#fecdd3] bg-[#fff1f2] px-3 text-xs font-semibold text-[#be123c] transition hover:bg-[#ffe4e6] disabled:opacity-60">
@@ -275,7 +313,7 @@ export default function ActivitySummary({
                     </button>
                   </IdeaCard>
                 ))}
-                {activeView === "interested" && interestedIdeas.map((item) => <IdeaCard key={item.id} idea={item.idea} meta={`${t("interested")} · ${timeAgo(item.createdAt, language)}`} />)}
+                {activeView === "interested" && localInterestedIdeas.map((item) => <IdeaCard key={item.id} idea={item.idea} meta={`${t("interested")} · ${timeAgo(item.createdAt, language)}`} />)}
                 {activeView === "reviews" && reviewedIdeas.map((idea) => <ReviewCard key={idea.id} idea={idea} />)}
               </div>
               {activeItemValue === 0 ? (
@@ -289,6 +327,28 @@ export default function ActivitySummary({
             <footer className="border-t border-[#edf0f4] p-4 text-xs text-[#69707d]">
               <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {t("openFullDiscussion")}</span>
             </footer>
+          </section>
+        </div>
+      ) : null}
+
+      {deleteIntent ? (
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-[#101216]/45 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="permanent-delete-title">
+          <section className="w-full max-w-md rounded-[24px] border border-[#fee2e2] bg-white p-5 shadow-2xl shadow-[#101216]/25">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#be123c]">My TYORA</p>
+                <h2 id="permanent-delete-title" className="mt-1 text-2xl font-semibold text-[#101216]">{t("permanentDeleteTitle")}</h2>
+              </div>
+              <button type="button" disabled={Boolean(busy)} onClick={() => { setDeleteIntent(null); setMessage(""); }} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e4e8ef] text-[#69707d] disabled:opacity-50" aria-label={t("cancel")}><X size={18} /></button>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-[#59616e]">{t("permanentDeleteWarning", { title: deleteIntent.idea.title })}</p>
+            {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button type="button" disabled={Boolean(busy)} onClick={() => { setDeleteIntent(null); setMessage(""); }} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e] disabled:opacity-50">{t("cancel")}</button>
+              <button type="button" disabled={Boolean(busy)} onClick={() => void deleteIdea(deleteIntent)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#be123c] px-5 text-sm font-semibold text-white disabled:opacity-60">
+                {busy ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />} {t("permanentlyDelete")}
+              </button>
+            </div>
           </section>
         </div>
       ) : null}

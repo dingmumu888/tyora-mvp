@@ -14,6 +14,8 @@ import IdeaComments from "./idea-comments";
 import IdeaImageGallery from "./idea-image-gallery";
 import IdeaDetailText, { IdeaRelativeTime } from "./idea-detail-text";
 import type { IdeaDetailKey } from "@/lib/idea-detail-i18n";
+import MyTyoraAutoRefresh from "@/components/my-tyora-auto-refresh";
+import IdeaOwnerLifecycleNotice from "@/components/idea-owner-lifecycle-notice";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -61,6 +63,10 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
 
   const labels = content.communityPage.assessmentLabels;
   const isOwner = context.userId === idea.author.id;
+  const restricted = idea.hidden || idea.moderationStatus !== "Approved";
+  const lifecycleStatus = restricted
+    ? idea.hidden && idea.moderationStatus === "Approved" ? "Hidden" : idea.moderationStatus
+    : idea.status;
   const reviewDetails = idea.review ? [
     [labels.feasibility, idea.review.manufacturingFeasible],
     [labels.estimatedCostRange, idea.review.estimatedCostRange],
@@ -86,6 +92,7 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f4f6f8] pb-28 text-[#0b1426] md:pb-16">
+      <MyTyoraAutoRefresh enabled={Boolean(context.userId)} />
       <CommunityDetailHeader
         brandName={content.brandName}
         logoImage={content.logoImage}
@@ -116,13 +123,22 @@ export default async function CommunityIdeaPage({ params }: { params: Promise<{ 
                   <span className="text-xs text-[#8b93a1]">· <IdeaRelativeTime value={idea.createdAt} /></span>
                 </div>
                 <p className="mt-0.5 text-xs text-[#8b93a1]">
-                  <IdeaDetailText textKey={idea.visibility === "Public" ? "public" : "private"} />
+                  {restricted ? <CommunityText text={lifecycleStatus} /> : <IdeaDetailText textKey={idea.visibility === "Public" ? "public" : "private"} />}
                 </p>
               </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${statusStyles[idea.status]}`}>
-                <CommunityText text={idea.status} />
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${restricted ? "bg-[#fffaeb] text-[#b54708] ring-[#fedf89]" : statusStyles[idea.status]}`}>
+                <CommunityText text={lifecycleStatus} />
               </span>
             </div>
+
+            {isOwner && restricted ? (
+              <IdeaOwnerLifecycleNotice
+                status={lifecycleStatus}
+                reason={idea.moderationNote}
+                moderatedAt={idea.moderatedAt}
+                canRevise={idea.moderationStatus === "Returned"}
+              />
+            ) : null}
 
             <h1 className="mt-4 text-[26px] font-bold leading-tight tracking-[-0.025em] sm:text-[34px]">{idea.title}</h1>
 

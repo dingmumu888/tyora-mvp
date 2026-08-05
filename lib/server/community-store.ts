@@ -882,10 +882,10 @@ export async function getCommunityUserActivity(userId: string) {
   if (!user) return null;
   const lastSeenAt = user.lastNotificationSeenAt;
 
-  const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas, moderatedIdeas, removalNotices] = await Promise.all([
+  const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas, moderatedIdeas, removalNotices, privateFollowUps] = await Promise.all([
     prisma.communityIdea.findMany({
       where: { authorId: userId },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { createdAt: "desc" },
       include: ideaInclude
     }),
     prisma.communityComment.findMany({
@@ -958,6 +958,12 @@ export async function getCommunityUserActivity(userId: string) {
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 25
+    }),
+    prisma.communityPrivateFollowUp.findMany({
+      where: { authorId: userId },
+      orderBy: { createdAt: "asc" },
+      take: 100,
+      include: { idea: { select: { id: true, slug: true, title: true } } }
     })
   ]);
 
@@ -1076,7 +1082,15 @@ export async function getCommunityUserActivity(userId: string) {
     interestedIdeas: reactions
       .filter((reaction) => reaction.type === "Interested" && reaction.idea)
       .map((reaction) => ({ id: reaction.id, createdAt: iso(reaction.createdAt), idea: ideaToCommunityIdea(reaction.idea) })),
-    notifications
+    notifications,
+    privateFollowUps: privateFollowUps.map((message) => ({
+      id: message.id,
+      ideaId: message.ideaId,
+      ideaSlug: message.idea.slug,
+      ideaTitle: message.idea.title,
+      body: message.body,
+      createdAt: iso(message.createdAt)
+    }))
   };
 }
 
@@ -1274,6 +1288,75 @@ export async function addCommunityComment(
     }
   });
   return getCommunityIdeaBySlug(slug, context);
+}
+
+export async function addCommunityPrivateFollowUp(
+  slug: string,
+  input: unknown,
+  authorId: string,
+  request: Request
+) {
+  const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
+  const body = typeof data.body === "string" ? data.body.trim().slice(0, 3000) : "";
+  if (!body) throw new Error("A private follow-up message is required.");
+
+  const idea = await prisma.communityIdea.findUnique({
+    where: { slug },
+    select: { id: true, authorId: true, review: { select: { assessmentStatus: true } } }
+  });
+  if (!idea || idea.authorId !== authorId) throw new IdeaNotFoundError();
+  if (idea.review?.assessmentStatus !== "Published") {
+    throw new Error("A private follow-up is available after TYORA publishes an assessment.");
+  }
+
+  const guarded = await executeGuardedCommunityAction({
+    request,
+    userId: authorId,
+    action: "private-followup",
+    resourceId: idea.id,
+    execute: async (tx) => {
+      const id = makeCommunityId("FOLLOWUP");
+      await tx.communityPrivateFollowUp.create({
+        data: { id, ideaId: idea.id, authorId, body }
+      });
+      return { id };
+    }
+  });
+
+  return {
+    ...guarded.data,
+    replayed: guarded.replayed,
+    messages: await getCommunityPrivateFollowUpsForOwner(slug, authorId)
+  };
+}
+
+export async function getCommunityPrivateFollowUpsForOwner(slug: string, userId: string) {
+  const idea = await prisma.communityIdea.findUnique({ where: { slug }, select: { id: true, authorId: true } });
+  if (!idea || idea.authorId !== userId) throw new IdeaNotFoundError();
+  const rows = await prisma.communityPrivateFollowUp.findMany({
+    where: { ideaId: idea.id, authorId: userId },
+    orderBy: { createdAt: "asc" }
+  });
+  return rows.map((row) => ({ id: row.id, body: row.body, createdAt: iso(row.createdAt) }));
+}
+
+export async function getCommunityPrivateFollowUpsAdmin(limit = 100) {
+  const safeLimit = Math.min(200, Math.max(1, Math.round(limit)));
+  const rows = await prisma.communityPrivateFollowUp.findMany({
+    orderBy: { createdAt: "desc" },
+    take: safeLimit,
+    include: {
+      author: { select: { id: true, name: true, email: true } },
+      idea: { select: { id: true, slug: true, title: true } }
+    }
+  });
+  return rows.map((row) => ({
+    id: row.id,
+    body: row.body,
+    createdAt: iso(row.createdAt),
+    author: row.author,
+    idea: row.idea
+  }));
 }
 
 export async function toggleCommunityReaction(
@@ -1563,7 +1646,7 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   if (!existing) throw new Error("Idea not found.");
   const data = input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const action = typeof data.action === "string" ? data.action.trim().toLowerCase() : "";
-  if (["reply", "return", "remove"].includes(action)) {
+  if (["approve", "reply", "return", "remove"].includes(action)) {
     const reason = stringOrNull(data.reason);
     if ((action === "return" || action === "remove") && !reason) {
       throw new Error("A clear customer-facing reason is required.");
@@ -1599,6 +1682,19 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
           }
         })
       ]);
+      return getCommunityIdeaBySlug(slug, { isAdmin: true });
+    }
+
+    if (action === "approve") {
+      await prisma.communityIdea.update({
+        where: { slug },
+        data: {
+          moderationStatus: "Approved",
+          hidden: false,
+          moderationNote: null,
+          moderatedAt: new Date()
+        }
+      });
       return getCommunityIdeaBySlug(slug, { isAdmin: true });
     }
 
@@ -1813,7 +1909,13 @@ type PermanentlyDeletedCommunityIdea = {
   imageUrlsJson: string;
 };
 
-async function permanentlyDeleteCommunityIdea(
+type CommunityPrivateObjectCleanupJob = {
+  id: string;
+  resourceId: string;
+};
+
+async function permanentlyDeleteCommunityIdeaRows(
+  tx: Prisma.TransactionClient,
   existing: PermanentlyDeletedCommunityIdea,
   notice?: { reason: string }
 ) {
@@ -1821,70 +1923,110 @@ async function permanentlyDeleteCommunityIdea(
     .filter((value) => value.startsWith("private:idea-submissions/"))
     .map((value) => value.slice("private:".length));
   const now = new Date();
-  const cleanupJobs = privatePaths.map((objectPath) => ({
+  const cleanupJobs: CommunityPrivateObjectCleanupJob[] = privatePaths.map((resourceId) => ({
     id: makeCommunityId("DELETE"),
-    userId: existing.authorId,
-    action: "delete-private-idea-object",
-    resourceId: objectPath,
-    resultJson: JSON.stringify({ ideaId: existing.id }),
-    expiresAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+    resourceId
   }));
 
-  await prisma.$transaction(async (tx) => {
-    if (notice) {
-      await tx.communityModerationNotice.create({
-        data: {
-          id: makeCommunityId("NOTICE"),
-          userId: existing.authorId,
-          ideaId: existing.id,
-          title: existing.title,
-          reason: notice.reason
-        }
-      });
-    }
-    if (cleanupJobs.length) {
-      await tx.communityActionReceipt.createMany({ data: cleanupJobs });
-    }
-    const comments = await tx.communityComment.findMany({
-      where: { ideaId: existing.id },
-      select: { id: true }
-    });
-    const commentIds = comments.map((comment) => comment.id);
-
-    await tx.communityReaction.deleteMany({
-      where: {
-        OR: [
-          { ideaId: existing.id },
-          ...(commentIds.length ? [{ commentId: { in: commentIds } }] : [])
-        ]
+  await tx.communityModerationNotice.deleteMany({ where: { ideaId: existing.id } });
+  if (notice) {
+    await tx.communityModerationNotice.create({
+      data: {
+        id: makeCommunityId("NOTICE"),
+        userId: existing.authorId,
+        ideaId: existing.id,
+        title: existing.title,
+        reason: notice.reason
       }
     });
-    await tx.communityShare.deleteMany({ where: { ideaId: existing.id } });
-    await tx.communityComment.deleteMany({ where: { ideaId: existing.id } });
-    await tx.tyoraReview.deleteMany({ where: { ideaId: existing.id } });
-    await tx.customInquiry.updateMany({ where: { ideaId: existing.id }, data: { ideaId: null } });
-    await tx.communityActionReceipt.deleteMany({ where: { resourceId: existing.id } });
-    await tx.communityIdea.delete({ where: { id: existing.id } });
+  }
+  if (cleanupJobs.length) {
+    await tx.communityActionReceipt.createMany({
+      data: cleanupJobs.map((job) => ({
+        id: job.id,
+        userId: existing.authorId,
+        action: "delete-private-idea-object",
+        resourceId: job.resourceId,
+        resultJson: JSON.stringify({ ideaId: existing.id }),
+        expiresAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      }))
+    });
+  }
+  const comments = await tx.communityComment.findMany({
+    where: { ideaId: existing.id },
+    select: { id: true }
   });
+  const commentIds = comments.map((comment) => comment.id);
 
+  await tx.communityReaction.deleteMany({
+    where: {
+      OR: [
+        { ideaId: existing.id },
+        ...(commentIds.length ? [{ commentId: { in: commentIds } }] : [])
+      ]
+    }
+  });
+  await tx.communityShare.deleteMany({ where: { ideaId: existing.id } });
+  await tx.communityComment.deleteMany({ where: { ideaId: existing.id } });
+  await tx.communityPrivateFollowUp.deleteMany({ where: { ideaId: existing.id } });
+  await tx.tyoraReview.deleteMany({ where: { ideaId: existing.id } });
+  await tx.customInquiry.updateMany({ where: { ideaId: existing.id }, data: { ideaId: null } });
+  await tx.communityActionReceipt.deleteMany({ where: { resourceId: existing.id } });
+  await tx.communityIdea.delete({ where: { id: existing.id } });
+
+  return { deleted: true as const, cleanupJobs };
+}
+
+async function finishCommunityPrivateObjectDeletion(cleanupJobs: CommunityPrivateObjectCleanupJob[]) {
   let privateObjectsDeleted = 0;
   for (const cleanupJob of cleanupJobs) {
     try {
       await deletePrivateObject(cleanupJob.resourceId);
-      await prisma.communityActionReceipt.delete({ where: { id: cleanupJob.id } });
+      await prisma.communityActionReceipt.deleteMany({ where: { id: cleanupJob.id } });
       privateObjectsDeleted += 1;
     } catch {
       // The database record is already gone. Keep the private deletion job for the scheduled retry.
     }
   }
+  return {
+    privateObjectsDeleted,
+    privateObjectsPendingDeletion: cleanupJobs.length - privateObjectsDeleted
+  };
+}
+
+async function permanentlyDeleteCommunityIdea(
+  existing: PermanentlyDeletedCommunityIdea,
+  notice?: { reason: string }
+) {
+  const deletion = await prisma.$transaction((tx) => permanentlyDeleteCommunityIdeaRows(tx, existing, notice));
+  const storage = await finishCommunityPrivateObjectDeletion(deletion.cleanupJobs);
 
   return {
     id: existing.id,
     slug: existing.slug,
     deleted: true,
-    privateObjectsDeleted,
-    privateObjectsPendingDeletion: cleanupJobs.length - privateObjectsDeleted
+    ...storage
   };
+}
+
+export async function permanentlyDeleteCommunityIdeaOwner(slug: string, userId: string, request: Request) {
+  const resourceId = `idea-delete:${createHash("sha256").update(slug).digest("hex")}`;
+  const guarded = await executeGuardedCommunityAction({
+    request,
+    userId,
+    action: "delete",
+    resourceId,
+    execute: async (tx) => {
+      const existing = await tx.communityIdea.findUnique({
+        where: { slug },
+        select: { id: true, slug: true, title: true, authorId: true, imageUrlsJson: true }
+      });
+      if (!existing || existing.authorId !== userId) throw new IdeaNotFoundError();
+      return permanentlyDeleteCommunityIdeaRows(tx, existing);
+    }
+  });
+  const storage = await finishCommunityPrivateObjectDeletion(guarded.data.cleanupJobs);
+  return { deleted: true, replayed: guarded.replayed, ...storage };
 }
 
 export async function deleteCommunityIdeaAdmin(slug: string) {

@@ -34,6 +34,8 @@ async function configuredLimits(): Promise<CommunityActionLimits> {
     "comment-reaction": content.communityPage.reactionRateLimit,
     share: content.communityPage.shareRateLimit,
     report: 5,
+    "private-followup": content.communityPage.commentRateLimit,
+    delete: 5,
     windowMinutes: content.communityPage.rateWindowMinutes
   };
 }

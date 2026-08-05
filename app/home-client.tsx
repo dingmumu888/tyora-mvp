@@ -192,7 +192,7 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
       title={idea.title}
       description={idea.description}
       review={reviewSummary(idea)}
-      meta={`${idea.category} | ${idea.author.name} | ${timeAgo(idea.updatedAt || idea.createdAt, language, copy.home.recent)}`}
+      meta={`${idea.category} | ${idea.author.name} | ${timeAgo(idea.createdAt, language, copy.home.recent)}`}
       href={`/ask/${idea.slug}`}
       stats={{ likes: idea.likeCount, comments: idea.comments.length }}
       media={(

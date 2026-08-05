@@ -18,6 +18,7 @@ import { getCommunityUserActivity } from "@/lib/server/community-store";
 import { getCustomInquiriesForUser } from "@/lib/server/custom-inquiry-store";
 import ActivityMessages from "./activity-messages";
 import ActivitySummary from "./activity-summary";
+import MyTyoraAutoRefresh from "@/components/my-tyora-auto-refresh";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -82,7 +83,7 @@ export default async function MyTyoraPage() {
     );
   }
 
-  const { user, stats, ideas, comments, likedIdeas, interestedIdeas, notifications } = activity;
+  const { user, stats, ideas, comments, likedIdeas, interestedIdeas, notifications, privateFollowUps } = activity;
   const totalUnread =
     stats.unreadReceivedComments + stats.unreadReceivedReactions + stats.unreadReviewedIdeas + stats.unreadStatusIdeas;
   const industryLabel = profileIndustries.find((option) => option.value === user.industry)?.labelKey as MyTyoraKey | undefined;
@@ -97,6 +98,7 @@ export default async function MyTyoraPage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_42%,#f7f5f0_100%)] pb-28 text-[#101216] md:pb-12">
       <MarkNotificationsRead />
+      <MyTyoraAutoRefresh />
       <header className="sticky top-0 z-30 border-b border-[#e4e8ef]/90 bg-white/88 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/me" className="leading-tight">
@@ -150,7 +152,7 @@ export default async function MyTyoraPage() {
           {user.bio ? <p className="mt-4 text-sm leading-6 text-[#59616e]">{user.bio}</p> : <p className="mt-4 text-sm leading-6 text-[#8b93a1]"><MyTyoraText textKey="setupBio" /></p>}
           <ProfileEncouragementCard userId={user.id} sessionSeed={session.issuedAt} />
           <ActivitySummary items={compactStats} ideas={ideas} comments={comments} likedIdeas={likedIdeas} interestedIdeas={interestedIdeas} />
-          <ActivityMessages notifications={notifications} unreadCount={totalUnread} />
+          <ActivityMessages notifications={notifications} unreadCount={totalUnread} privateFollowUps={privateFollowUps} />
           <section id="custom-inquiries" className="mt-4 scroll-mt-24 rounded-2xl border border-[#dfe6ef] bg-[#fbfcff] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
