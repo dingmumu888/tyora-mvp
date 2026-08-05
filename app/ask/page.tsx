@@ -131,8 +131,9 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
           <p className="mt-1 text-[10px] font-medium text-[#667085]"><CommunityText text="Helpful" /></p>
         </div>
 
-        <Link href={href} className="min-w-0 px-3 py-3 sm:px-4">
-          <div className="flex flex-wrap items-center gap-1.5">
+        <div className="min-w-0 px-3 py-3 sm:px-4">
+          <Link href={href} className="block rounded-md outline-none focus-visible:ring-4 focus-visible:ring-[#155eef]/20">
+            <div className="flex flex-wrap items-center gap-1.5">
             {idea?.isHot ? <span className="inline-flex items-center gap-1 rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><Flame size={11} fill="currentColor" /> Hot</span> : null}
             {category ? <span className="rounded bg-[#eef4ff] px-2 py-1 text-[10px] font-bold uppercase text-[#155eef]"><CommunityText text={category} /></span> : null}
             {idea && status !== "Discussing" ? <span className={`rounded px-2 py-1 text-[10px] font-bold uppercase ring-1 ${statusStyles[status]}`}><CommunityText text={status} /></span> : null}
@@ -140,18 +141,26 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
             {isUnanswered ? <span className="rounded bg-[#fff1e8] px-2 py-1 text-[10px] font-bold uppercase text-[#c2410c]"><CommunityText text="Unanswered" /></span> : null}
             {story ? <span className="rounded bg-[#0b1426] px-2 py-1 text-[10px] font-bold uppercase text-white"><CommunityText text={story.badgeLabel || "TYORA Case"} /></span> : null}
             {story?.projectType === "Demonstration Project" ? <span className="rounded bg-[#fff7d6] px-2 py-1 text-[10px] font-bold uppercase text-[#8a5a00]"><CommunityText text="Demonstration Project" /></span> : null}
-          </div>
+            </div>
 
-          <div className="mt-2 block">
-            <h2 className="line-clamp-2 text-[15px] font-bold leading-5 text-[#0b1426] transition group-hover:text-[#155eef] sm:text-base"><CommunityText text={title} /></h2>
-            <p className="mt-1 line-clamp-2 text-[12px] leading-[1.45] text-[#5f6b7a] sm:text-[13px]"><CommunityText text={description} /></p>
-          </div>
+            <div className="mt-2 block">
+              <h2 className="line-clamp-2 text-[15px] font-bold leading-5 text-[#0b1426] transition group-hover:text-[#155eef] sm:text-base"><CommunityText text={title} /></h2>
+              <p className="mt-1 line-clamp-2 text-[12px] leading-[1.45] text-[#5f6b7a] sm:text-[13px]"><CommunityText text={description} /></p>
+            </div>
+          </Link>
 
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-[#667085]">
-            <span className="inline-flex items-center gap-1.5">
-              <CommunityAvatar name={authorName} src={idea?.author.avatar} className="size-5 border text-[8px]" />
-              {authorName}
-            </span>
+            {idea ? (
+              <Link href={`/creator/${encodeURIComponent(idea.author.id)}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-full pr-2 font-semibold text-[#344054] transition hover:text-[#155eef] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#155eef]/20">
+                <CommunityAvatar name={authorName} src={idea.author.avatar} className="size-7 border text-[8px]" />
+                {authorName}
+              </Link>
+            ) : (
+              <span className="inline-flex min-h-11 items-center gap-1.5">
+                <CommunityAvatar name={authorName} className="size-7 border text-[8px]" />
+                {authorName}
+              </span>
+            )}
             {country ? <span>{flagFor(country)}</span> : null}
             {idea ? <span>{timeAgo(idea.updatedAt || idea.createdAt)}</span> : <span><CommunityText text="TYORA case" /></span>}
             <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {commentCount} <CommunityText text={labels.commentText} /></span>
@@ -165,7 +174,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
               <p className="line-clamp-2"><strong className="text-[#066a65]"><CommunityText text="TYORA Expert:" /></strong> {reviewSnippet}</p>
             </div>
           ) : null}
-        </Link>
+        </div>
 
         <div className="relative min-h-[126px] sm:hidden">
           <CommunityCardImageRail
@@ -447,7 +456,7 @@ export default async function AskCommunityPage({
               </div>
               {contributors.length > 0 ? <div className="mt-2 space-y-1">
                 {contributors.map((person) => (
-                  <div key={person.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
+                  <Link href={`/creator/${encodeURIComponent(person.id)}`} key={person.id} className="flex min-h-11 items-center gap-2 rounded-lg px-2 py-1.5 transition hover:bg-[#eef4ff] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#155eef]/20">
                     <CommunityAvatar name={person.name} src={person.avatar} className="size-7 text-[9px]" />
                     <div className="min-w-0">
                       <p className="inline-flex max-w-full items-center gap-1 truncate text-xs font-semibold">
@@ -456,7 +465,7 @@ export default async function AskCommunityPage({
                       </p>
                       <p className="text-[10px] text-[#667085]">{person.expertVerified ? person.expertRole || "Verified expert" : <CommunityText text="Community contributor" />}</p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div> : null}
             </section>

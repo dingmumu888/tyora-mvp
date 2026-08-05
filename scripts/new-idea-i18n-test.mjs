@@ -103,3 +103,15 @@ test("the idea-detail step uses TYORA's energetic but credible voice", async () 
   assert.match(copy, /helpUnderstand: "让大家看见你创意里的亮点"/);
   assert.match(copy, /afterPublish: "发布后，创意开始向前走"/);
 });
+
+test("the public experience self-hosts matching Latin and Simplified Chinese variable fonts", async () => {
+  const layout = await read("app/layout.tsx");
+  const styles = await read("app/globals.css");
+  const packageJson = await read("package.json");
+
+  assert.match(layout, /@fontsource-variable\/reddit-sans\/wght\.css/);
+  assert.match(layout, /@fontsource-variable\/noto-sans-sc\/wght\.css/);
+  assert.match(styles, /"Reddit Sans Variable", "Noto Sans SC Variable"/);
+  assert.match(packageJson, /"@fontsource-variable\/reddit-sans"/);
+  assert.match(packageJson, /"@fontsource-variable\/noto-sans-sc"/);
+});

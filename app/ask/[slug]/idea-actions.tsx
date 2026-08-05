@@ -47,6 +47,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
   });
   const [editImages, setEditImages] = useState<string[]>(idea.imageUrls);
   const [busy, setBusy] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
   const [message, setMessage] = useState("");
   const commentRef = useRef<HTMLTextAreaElement>(null);
   const isOwner = Boolean(user && user.id === idea.author.id);
@@ -140,6 +141,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
   async function saveEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!isOwner) return;
+    if (imageUploading) return setMessage(translateNewIdea(language, "uploadingImage"));
     if (editForm.questions.includes("Other") && !editForm.otherQuestion.trim()) {
       setMessage(isChinese ? "请填写你希望 TYORA 回答的自定义问题。" : "Please enter your custom question for TYORA.");
       return;
@@ -312,7 +314,10 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
                   images={editImages}
                   onChange={setEditImages}
                   addLabel={isChinese ? "添加图片" : "Add image"}
-                  preparingLabel={isChinese ? "正在压缩图片…" : "Preparing images…"}
+                  preparingLabel={translateNewIdea(language, "preparingImage")}
+                  uploadingLabel={translateNewIdea(language, "uploadingImage")}
+                  retryLabel={translateNewIdea(language, "retryUpload")}
+                  onBusyChange={setImageUploading}
                   limitMessage={isChinese ? "拖动图片可以调整顺序，最多 9 张。" : "Drag to reorder. Up to 9 images."}
                   reorderHint={translateNewIdea(language, "reorderImages")}
                   errorMessage={isChinese ? "无法处理这张图片。" : "Unable to prepare this image."}
@@ -349,7 +354,7 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
             <button type="button" onClick={() => setEditOpen(false)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e]">
               {isChinese ? "取消" : "Cancel"}
             </button>
-            <button disabled={busy === "edit" || busy === "edit-images"} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
+            <button disabled={busy === "edit" || imageUploading} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
               {busy === "edit" ? <Loader2 className="animate-spin" size={15} /> : <Pencil size={15} />}
               {isChinese ? "保存修改" : "Save changes"}
             </button>

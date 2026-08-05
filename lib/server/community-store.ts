@@ -38,6 +38,10 @@ import {
   isPublicDisclosureLocale,
   PUBLIC_DISCLOSURE_NOTICE_VERSION
 } from "@/lib/public-disclosure";
+import {
+  communityImageUploadTokenFromReference,
+  verifyCommunityImageUploadToken
+} from "@/lib/server/community-image-upload-token";
 
 type UserRow = {
   id: string;
@@ -180,6 +184,47 @@ async function storePrivateIdeaImages(values: string[]) {
   return stored;
 }
 
+async function pendingIdeaImageReference(value: string, userId: string) {
+  const token = communityImageUploadTokenFromReference(value);
+  if (!token) return null;
+  const payload = verifyCommunityImageUploadToken(token, userId);
+  const receipt = await prisma.communityActionReceipt.findFirst({
+    where: {
+      id: payload.receiptId,
+      userId,
+      action: "idea-image-upload",
+      resourceId: payload.objectPath,
+      expiresAt: { gt: new Date() }
+    },
+    select: { id: true }
+  });
+  if (!receipt) throw new Error("An uploaded image expired. Please upload it again.");
+  return { storedValue: `private:${payload.objectPath}`, receiptId: receipt.id };
+}
+
+async function submittedIdeaImageUrls(input: unknown, userId: string) {
+  const values = Array.isArray(input) ? input.slice(0, 9) : [];
+  const imageUrls: string[] = [];
+  const receiptIds: string[] = [];
+  for (const item of values) {
+    if (typeof item !== "string") throw new Error("Invalid idea image.");
+    const value = item.trim();
+    const pending = await pendingIdeaImageReference(value, userId);
+    if (pending) {
+      imageUrls.push(pending.storedValue);
+      receiptIds.push(pending.receiptId);
+      continue;
+    }
+    const dataImage = safePublicImageUrl(value);
+    if (dataImage?.startsWith("data:image/")) {
+      imageUrls.push(...await storePrivateIdeaImages([dataImage]));
+      continue;
+    }
+    throw new Error("Invalid idea image.");
+  }
+  return { imageUrls, receiptIds };
+}
+
 function storedImageIndexFromProxy(value: string, slug: string) {
   if (!value.startsWith("/api/community/")) return null;
   let parsed: URL;
@@ -206,9 +251,10 @@ function storedImageIndexFromProxy(value: string, slug: string) {
   }
 }
 
-async function ownerIdeaImageUrls(input: unknown[], existingValue: unknown, slug: string) {
+async function ownerIdeaImageUrls(input: unknown[], existingValue: unknown, slug: string, userId: string) {
   const existing = storedIdeaImageUrls(existingValue);
   const next: string[] = [];
+  const receiptIds: string[] = [];
   for (const item of input.slice(0, 9)) {
     if (typeof item !== "string") throw new Error("Invalid idea image.");
     const value = item.trim();
@@ -221,6 +267,12 @@ async function ownerIdeaImageUrls(input: unknown[], existingValue: unknown, slug
       next.push(value);
       continue;
     }
+    const pending = await pendingIdeaImageReference(value, userId);
+    if (pending) {
+      next.push(pending.storedValue);
+      receiptIds.push(pending.receiptId);
+      continue;
+    }
     const dataImage = safePublicImageUrl(value);
     if (dataImage?.startsWith("data:image/")) {
       next.push(...await storePrivateIdeaImages([dataImage]));
@@ -228,7 +280,7 @@ async function ownerIdeaImageUrls(input: unknown[], existingValue: unknown, slug
     }
     throw new Error("Invalid idea image.");
   }
-  return next;
+  return { imageUrls: next, receiptIds };
 }
 
 function publicCommunityAvatar(value: unknown, userId: string) {
@@ -633,6 +685,23 @@ export async function getCommunityIdeas(
   }).slice(0, safeLimit);
 }
 
+export async function getCommunityRemovalNotices(limit = 100) {
+  const safeLimit = Math.min(200, Math.max(1, Math.round(limit)));
+  const notices = await prisma.communityModerationNotice.findMany({
+    orderBy: { createdAt: "desc" },
+    take: safeLimit,
+    include: { user: { select: { id: true, name: true } } }
+  });
+  return notices.map((notice) => ({
+    id: notice.id,
+    ideaId: notice.ideaId,
+    title: notice.title,
+    reason: notice.reason,
+    createdAt: iso(notice.createdAt),
+    user: notice.user
+  }));
+}
+
 export async function getPublicCreatorProfile(publicId: string) {
   const userId = String(publicId || "").trim();
   if (!userId) return null;
@@ -813,7 +882,7 @@ export async function getCommunityUserActivity(userId: string) {
   if (!user) return null;
   const lastSeenAt = user.lastNotificationSeenAt;
 
-  const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas, moderatedIdeas] = await Promise.all([
+  const [ideas, comments, reactions, receivedComments, receivedReactions, reviewedIdeas, moderatedIdeas, removalNotices] = await Promise.all([
     prisma.communityIdea.findMany({
       where: { authorId: userId },
       orderBy: { updatedAt: "desc" },
@@ -879,10 +948,15 @@ export async function getCommunityUserActivity(userId: string) {
     prisma.communityIdea.findMany({
       where: {
         authorId: userId,
-        moderationStatus: { in: ["Returned", "Removed"] },
+        moderationStatus: "Returned",
         moderatedAt: { not: null }
       },
       orderBy: { moderatedAt: "desc" },
+      take: 25
+    }),
+    prisma.communityModerationNotice.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
       take: 25
     })
   ]);
@@ -897,7 +971,8 @@ export async function getCommunityUserActivity(userId: string) {
   const unreadReceivedReactions = receivedReactions.filter((reaction) => isUnread(reaction.createdAt)).length;
   const unreadReviewedIdeas = reviewedIdeas.filter((idea) => isUnread(idea.review?.updatedAt || idea.updatedAt)).length;
   const unreadModeratedIdeas = moderatedIdeas.filter((idea) => isUnread(idea.moderatedAt)).length;
-  const unreadStatusIdeas = ideas.filter((idea) => idea.status !== "Discussing" && isUnread(idea.updatedAt)).length + unreadModeratedIdeas;
+  const unreadRemovalNotices = removalNotices.filter((notice) => isUnread(notice.createdAt)).length;
+  const unreadStatusIdeas = ideas.filter((idea) => idea.status !== "Discussing" && isUnread(idea.updatedAt)).length + unreadModeratedIdeas + unreadRemovalNotices;
   const notifications = [
     ...receivedComments.map((comment) => ({
       id: `comment-${comment.id}`,
@@ -930,13 +1005,19 @@ export async function getCommunityUserActivity(userId: string) {
     ...moderatedIdeas.map((idea) => ({
       id: `moderation-${idea.id}-${idea.moderationStatus}`,
       type: "status" as const,
-      title: idea.moderationStatus === "Returned"
-        ? "TYORA returned your idea for changes"
-        : "TYORA removed your idea",
+      title: "TYORA returned your idea for changes",
       body: idea.moderationNote || idea.title,
-      href: idea.moderationStatus === "Returned" ? `/me?revise=${encodeURIComponent(idea.slug)}` : `/ask/${idea.slug}`,
+      href: `/me?revise=${encodeURIComponent(idea.slug)}`,
       ideaSlug: idea.slug,
       createdAt: iso(idea.moderatedAt)
+    })),
+    ...removalNotices.map((notice) => ({
+      id: `removal-${notice.id}`,
+      type: "status" as const,
+      title: "TYORA removed your idea",
+      body: `${notice.title}\n${notice.reason}`,
+      href: "/me",
+      createdAt: iso(notice.createdAt)
     })),
     ...ideas
       .filter((idea) => idea.status !== "Discussing")
@@ -1006,7 +1087,7 @@ export async function getCommunityNotificationCount(userId: string) {
   });
   if (!user) return 0;
   const after = user.lastNotificationSeenAt ? { gt: user.lastNotificationSeenAt } : undefined;
-  const [receivedComments, receivedReactions, reviewedIdeas, statusIdeas, moderatedIdeas] = await Promise.all([
+  const [receivedComments, receivedReactions, reviewedIdeas, statusIdeas, moderatedIdeas, removalNotices] = await Promise.all([
     prisma.communityComment.count({
       where: { hidden: false, authorId: { not: userId }, idea: { authorId: userId, hidden: false }, ...(after ? { createdAt: after } : {}) }
     }),
@@ -1031,13 +1112,16 @@ export async function getCommunityNotificationCount(userId: string) {
     prisma.communityIdea.count({
       where: {
         authorId: userId,
-        moderationStatus: { in: ["Returned", "Removed"] },
+        moderationStatus: "Returned",
         moderatedAt: after || { not: null }
       }
+    }),
+    prisma.communityModerationNotice.count({
+      where: { userId, ...(after ? { createdAt: after } : {}) }
     })
   ]);
 
-  return receivedComments + receivedReactions + reviewedIdeas + statusIdeas + moderatedIdeas;
+  return receivedComments + receivedReactions + reviewedIdeas + statusIdeas + moderatedIdeas + removalNotices;
 }
 
 export async function markCommunityNotificationsRead(userId: string) {
@@ -1106,36 +1190,46 @@ export async function createCommunityIdea(input: unknown, authorId: string) {
   ) {
     throw new Error("Refresh this page and confirm the current public-disclosure notice before publishing.");
   }
-  const submittedImageUrls = Array.isArray(data.imageUrls)
-    ? data.imageUrls.map((item) => safePublicImageUrl(item)).filter((item): item is string => Boolean(item)).slice(0, 9)
-    : [];
-  const imageUrls = submittedImageUrls.length
-    ? await storePrivateIdeaImages(submittedImageUrls)
-    : [];
+  const preparedImages = await submittedIdeaImageUrls(data.imageUrls, authorId);
 
   const id = makeCommunityId("IDEA");
-  const row = await prisma.communityIdea.create({
-    data: {
-      id,
-      slug: slugifyCommunityIdea(title, id),
-      title,
-      description,
-      category,
-      postType,
-      productStage,
-      country,
-      imageUrlsJson: JSON.stringify(imageUrls),
-      questionsJson: JSON.stringify(normalizeQuestions(data.questions)),
-      otherQuestion: typeof data.otherQuestion === "string" ? data.otherQuestion.trim().slice(0, 500) || null : null,
-      visibility,
-      moderationStatus: "Approved",
-      status: "Discussing",
-      publicConsentAt: visibility === "Public" ? new Date() : null,
-      publicConsentVersion: visibility === "Public" ? publicConsentVersion : null,
-      publicConsentLocale: visibility === "Public" ? publicConsentLocale : null,
-      authorId
-    },
-    include: ideaInclude
+  const row = await prisma.$transaction(async (tx) => {
+    if (preparedImages.receiptIds.length) {
+      const consumed = await tx.communityActionReceipt.deleteMany({
+        where: {
+          id: { in: preparedImages.receiptIds },
+          userId: authorId,
+          action: "idea-image-upload",
+          expiresAt: { gt: new Date() }
+        }
+      });
+      if (consumed.count !== preparedImages.receiptIds.length) {
+        throw new Error("An uploaded image expired. Please upload it again.");
+      }
+    }
+    return tx.communityIdea.create({
+      data: {
+        id,
+        slug: slugifyCommunityIdea(title, id),
+        title,
+        description,
+        category,
+        postType,
+        productStage,
+        country,
+        imageUrlsJson: JSON.stringify(preparedImages.imageUrls),
+        questionsJson: JSON.stringify(normalizeQuestions(data.questions)),
+        otherQuestion: typeof data.otherQuestion === "string" ? data.otherQuestion.trim().slice(0, 500) || null : null,
+        visibility,
+        moderationStatus: "Approved",
+        status: "Discussing",
+        publicConsentAt: visibility === "Public" ? new Date() : null,
+        publicConsentVersion: visibility === "Public" ? publicConsentVersion : null,
+        publicConsentLocale: visibility === "Public" ? publicConsentLocale : null,
+        authorId
+      },
+      include: ideaInclude
+    });
   });
   return ideaToCommunityIdea(row);
 }
@@ -1364,9 +1458,9 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
   const productStage = Object.prototype.hasOwnProperty.call(data, "productStage")
     ? normalizeCommunityProductStage(data.productStage)
     : normalizeCommunityProductStage(existing.productStage);
-  const imageUrls = Array.isArray(data.imageUrls)
-    ? await ownerIdeaImageUrls(data.imageUrls, existing.imageUrlsJson, existing.slug)
-    : storedIdeaImageUrls(existing.imageUrlsJson);
+  const preparedImages = Array.isArray(data.imageUrls)
+    ? await ownerIdeaImageUrls(data.imageUrls, existing.imageUrlsJson, existing.slug, userId)
+    : { imageUrls: storedIdeaImageUrls(existing.imageUrlsJson), receiptIds: [] };
   const questions = Object.prototype.hasOwnProperty.call(data, "questions")
     ? normalizeQuestions(data.questions)
     : normalizeQuestions(parseJson(existing.questionsJson, []));
@@ -1383,26 +1477,41 @@ export async function updateCommunityIdeaOwner(slug: string, input: unknown, use
     throw new Error("Please enter the custom question you want TYORA to answer.");
   }
 
-  await prisma.communityIdea.update({
-    where: { slug },
-    data: {
-      title,
-      description,
-      category,
-      country,
-      postType,
-      productStage,
-      imageUrlsJson: JSON.stringify(imageUrls),
-      questionsJson: JSON.stringify(questions),
-      otherQuestion,
-      moderationStatus: "Approved",
-      hidden: false,
-      locked: false,
-      moderatedAt: null,
-      moderationNote: null,
-      homepageFeatured: false,
-      homepageFeaturedOrder: null
+  await prisma.$transaction(async (tx) => {
+    if (preparedImages.receiptIds.length) {
+      const consumed = await tx.communityActionReceipt.deleteMany({
+        where: {
+          id: { in: preparedImages.receiptIds },
+          userId,
+          action: "idea-image-upload",
+          expiresAt: { gt: new Date() }
+        }
+      });
+      if (consumed.count !== preparedImages.receiptIds.length) {
+        throw new Error("An uploaded image expired. Please upload it again.");
+      }
     }
+    await tx.communityIdea.update({
+      where: { slug },
+      data: {
+        title,
+        description,
+        category,
+        country,
+        postType,
+        productStage,
+        imageUrlsJson: JSON.stringify(preparedImages.imageUrls),
+        questionsJson: JSON.stringify(questions),
+        otherQuestion,
+        moderationStatus: "Approved",
+        hidden: false,
+        locked: false,
+        moderatedAt: null,
+        moderationNote: null,
+        homepageFeatured: false,
+        homepageFeaturedOrder: null
+      }
+    });
   });
 
   return getCommunityIdeaBySlug(slug, { userId });
@@ -1493,14 +1602,18 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
       return getCommunityIdeaBySlug(slug, { isAdmin: true });
     }
 
+    if (action === "remove") {
+      return permanentlyDeleteCommunityIdea(existing, { reason: reason! });
+    }
+
     await prisma.communityIdea.update({
       where: { slug },
       data: {
-        moderationStatus: action === "return" ? "Returned" : "Removed",
+        moderationStatus: "Returned",
         moderationNote: reason,
         moderatedAt: new Date(),
         hidden: true,
-        locked: action === "remove",
+        locked: false,
         pinned: false,
         homepageFeatured: false,
         homepageFeaturedOrder: null
@@ -1692,12 +1805,46 @@ export async function updateCommunityIdeaAdmin(slug: string, input: unknown) {
   return getCommunityIdeaBySlug(slug, { isAdmin: true });
 }
 
-async function permanentlyDeleteCommunityIdea(existing: { id: string; slug: string; imageUrlsJson: string }) {
+type PermanentlyDeletedCommunityIdea = {
+  id: string;
+  slug: string;
+  title: string;
+  authorId: string;
+  imageUrlsJson: string;
+};
+
+async function permanentlyDeleteCommunityIdea(
+  existing: PermanentlyDeletedCommunityIdea,
+  notice?: { reason: string }
+) {
   const privatePaths = storedIdeaImageUrls(existing.imageUrlsJson)
     .filter((value) => value.startsWith("private:idea-submissions/"))
     .map((value) => value.slice("private:".length));
-  for (const objectPath of privatePaths) await deletePrivateObject(objectPath);
+  const now = new Date();
+  const cleanupJobs = privatePaths.map((objectPath) => ({
+    id: makeCommunityId("DELETE"),
+    userId: existing.authorId,
+    action: "delete-private-idea-object",
+    resourceId: objectPath,
+    resultJson: JSON.stringify({ ideaId: existing.id }),
+    expiresAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+  }));
+
   await prisma.$transaction(async (tx) => {
+    if (notice) {
+      await tx.communityModerationNotice.create({
+        data: {
+          id: makeCommunityId("NOTICE"),
+          userId: existing.authorId,
+          ideaId: existing.id,
+          title: existing.title,
+          reason: notice.reason
+        }
+      });
+    }
+    if (cleanupJobs.length) {
+      await tx.communityActionReceipt.createMany({ data: cleanupJobs });
+    }
     const comments = await tx.communityComment.findMany({
       where: { ideaId: existing.id },
       select: { id: true }
@@ -1720,32 +1867,78 @@ async function permanentlyDeleteCommunityIdea(existing: { id: string; slug: stri
     await tx.communityIdea.delete({ where: { id: existing.id } });
   });
 
-  return { slug: existing.slug, privateObjectsDeleted: privatePaths.length };
+  let privateObjectsDeleted = 0;
+  for (const cleanupJob of cleanupJobs) {
+    try {
+      await deletePrivateObject(cleanupJob.resourceId);
+      await prisma.communityActionReceipt.delete({ where: { id: cleanupJob.id } });
+      privateObjectsDeleted += 1;
+    } catch {
+      // The database record is already gone. Keep the private deletion job for the scheduled retry.
+    }
+  }
+
+  return {
+    id: existing.id,
+    slug: existing.slug,
+    deleted: true,
+    privateObjectsDeleted,
+    privateObjectsPendingDeletion: cleanupJobs.length - privateObjectsDeleted
+  };
 }
 
 export async function deleteCommunityIdeaAdmin(slug: string) {
   const existing = await prisma.communityIdea.findUnique({
     where: { slug },
-    select: { id: true, slug: true, imageUrlsJson: true }
+    select: { id: true, slug: true, title: true, authorId: true, imageUrlsJson: true }
   });
   if (!existing) throw new Error("Idea not found.");
   return permanentlyDeleteCommunityIdea(existing);
 }
 
-export async function cleanupRemovedCommunityIdeas(options: { now?: Date; retentionDays?: number; limit?: number } = {}) {
-  const now = options.now || new Date();
-  const retentionDays = Math.max(30, Math.floor(options.retentionDays || 30));
+export async function cleanupPendingCommunityPrivateObjects(options: { limit?: number } = {}) {
   const limit = Math.min(100, Math.max(1, Math.floor(options.limit || 50)));
-  const cutoff = new Date(now.getTime() - retentionDays * 24 * 60 * 60 * 1000);
-  const expired = await prisma.communityIdea.findMany({
-    where: { moderationStatus: "Removed", hidden: true, moderatedAt: { lte: cutoff } },
-    orderBy: { moderatedAt: "asc" },
+  const pending = await prisma.communityActionReceipt.findMany({
+    where: { action: "delete-private-idea-object" },
+    orderBy: { createdAt: "asc" },
     take: limit,
-    select: { id: true, slug: true, imageUrlsJson: true }
+    select: { id: true, resourceId: true }
   });
-  const deleted = [];
-  for (const idea of expired) deleted.push(await permanentlyDeleteCommunityIdea(idea));
-  return { cutoff: cutoff.toISOString(), deletedCount: deleted.length, deleted };
+  let deletedCount = 0;
+  for (const job of pending) {
+    try {
+      await deletePrivateObject(job.resourceId);
+      await prisma.communityActionReceipt.delete({ where: { id: job.id } });
+      deletedCount += 1;
+    } catch {
+      // Keep the job for a later scheduled retry.
+    }
+  }
+  return { attemptedCount: pending.length, deletedCount, pendingCount: pending.length - deletedCount };
+}
+
+export async function cleanupExpiredCommunityImageUploads(options: { limit?: number } = {}) {
+  const limit = Math.min(100, Math.max(1, Math.floor(options.limit || 50)));
+  const expired = await prisma.communityActionReceipt.findMany({
+    where: {
+      action: "idea-image-upload",
+      expiresAt: { lte: new Date() }
+    },
+    orderBy: { expiresAt: "asc" },
+    take: limit,
+    select: { id: true, resourceId: true }
+  });
+  let deletedCount = 0;
+  for (const upload of expired) {
+    try {
+      await deletePrivateObject(upload.resourceId);
+      await prisma.communityActionReceipt.delete({ where: { id: upload.id } });
+      deletedCount += 1;
+    } catch {
+      // Keep the receipt so a later scheduled run can retry the private-object deletion.
+    }
+  }
+  return { attemptedCount: expired.length, deletedCount, pendingCount: expired.length - deletedCount };
 }
 
 function stringOrNull(value: unknown) {

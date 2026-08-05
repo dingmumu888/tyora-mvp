@@ -11,6 +11,14 @@ import { CommunityPageContent, CustomPageContent, defaultContent, SiteContent } 
 
 type QueueFilter = "needs-reply" | "replied" | "returned" | "removed" | "all";
 type ModerationAction = "return" | "remove";
+type CommunityRemovalNotice = {
+  id: string;
+  ideaId: string;
+  title: string;
+  reason: string;
+  createdAt: string;
+  user: { id: string; name: string };
+};
 
 const buckets: Array<[QueueFilter, string]> = [
   ["needs-reply", "Awaiting reply"],
@@ -97,6 +105,7 @@ function existingReply(idea: CommunityIdea) {
 export default function CommunityAdminClient() {
   const { t } = useAdminLanguage();
   const [ideas, setIdeas] = useState<CommunityIdea[]>([]);
+  const [removalNotices, setRemovalNotices] = useState<CommunityRemovalNotice[]>([]);
   const [active, setActive] = useState<QueueFilter>("needs-reply");
   const [replyingToState, setReplyingTo] = useState<CommunityIdea | null>(null);
   const replyingTo = replyingToState || normalizeCommunityIdea(null);
@@ -114,7 +123,8 @@ export default function CommunityAdminClient() {
       fetch("/api/content").then((response) => response.json())
     ])
       .then(([ideasPayload, contentPayload]) => {
-        setIdeas((ideasPayload.data || []).map(normalizeCommunityIdea));
+        setIdeas((ideasPayload.data?.ideas || []).map(normalizeCommunityIdea));
+        setRemovalNotices(ideasPayload.data?.removalNotices || []);
         setSiteContent(contentPayload.data || null);
       })
       .finally(() => setLoading(false));
@@ -125,10 +135,10 @@ export default function CommunityAdminClient() {
       "needs-reply": ideas.filter((idea) => idea.moderationStatus === "Approved" && idea.visibility === "Public" && !idea.hidden && idea.review?.assessmentStatus !== "Published").length,
       replied: ideas.filter((idea) => idea.moderationStatus === "Approved" && !idea.hidden && idea.review?.assessmentStatus === "Published").length,
       returned: ideas.filter((idea) => idea.moderationStatus === "Returned").length,
-      removed: ideas.filter((idea) => idea.moderationStatus === "Removed").length,
+      removed: removalNotices.length,
       all: ideas.length
     };
-  }, [ideas]);
+  }, [ideas, removalNotices.length]);
 
   async function save(event: FormEvent<HTMLFormElement>, idea: CommunityIdea) {
     event.preventDefault();
@@ -246,8 +256,21 @@ export default function CommunityAdminClient() {
       });
       const payload = await response.json();
       if (!payload.success) throw new Error(payload.message || "Unable to moderate post.");
-      const updated = normalizeCommunityIdea(payload.data);
-      setIdeas((current) => current.map((item) => item.id === updated.id ? updated : item));
+      if (moderating.action === "remove" && payload.data?.deleted) {
+        const removedIdea = moderating.idea;
+        setIdeas((current) => current.filter((item) => item.id !== removedIdea.id));
+        setRemovalNotices((current) => [{
+          id: `notice-${removedIdea.id}-${Date.now()}`,
+          ideaId: removedIdea.id,
+          title: removedIdea.title,
+          reason: moderationReason.trim(),
+          createdAt: new Date().toISOString(),
+          user: { id: removedIdea.author.id, name: removedIdea.author.name }
+        }, ...current]);
+      } else {
+        const updated = normalizeCommunityIdea(payload.data);
+        setIdeas((current) => current.map((item) => item.id === updated.id ? updated : item));
+      }
       setModerating(null);
       setModerationReason("");
     } catch (error) {
@@ -261,7 +284,7 @@ export default function CommunityAdminClient() {
     if (active === "needs-reply") return idea.moderationStatus === "Approved" && idea.visibility === "Public" && !idea.hidden && idea.review?.assessmentStatus !== "Published";
     if (active === "replied") return idea.moderationStatus === "Approved" && !idea.hidden && idea.review?.assessmentStatus === "Published";
     if (active === "returned") return idea.moderationStatus === "Returned";
-    if (active === "removed") return idea.moderationStatus === "Removed";
+    if (active === "removed") return false;
     return true;
   });
   const communitySettings = siteContent?.communityPage || defaultContent.communityPage;
@@ -322,7 +345,27 @@ export default function CommunityAdminClient() {
 
         {loading ? <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin" /></div> : (
           <div className="space-y-4">
-            {filtered.length === 0 ? <AdminEmptyState title={t("No posts in this section")} description={t("Posts will appear here when they match the selected moderation state.")} /> : null}
+            {filtered.length === 0 && !(active === "removed" && removalNotices.length) ? <AdminEmptyState title={t("No posts in this section")} description={t("Posts will appear here when they match the selected moderation state.")} /> : null}
+            {active === "removed" && removalNotices.length ? (
+              <div className="space-y-3">
+                {removalNotices.map((notice) => (
+                  <article key={notice.id} className="rounded-md border border-[#fecdca] bg-white p-4 shadow-sm sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#b42318]">{t("Permanently deleted")}</p>
+                        <h2 className="mt-2 text-xl font-semibold">{t(notice.title)}</h2>
+                        <p className="mt-1 text-xs text-[#69707d]">{notice.ideaId} · {notice.user.name} · {new Date(notice.createdAt).toLocaleString()}</p>
+                      </div>
+                      <span className="rounded-full bg-[#fff1f2] px-3 py-1 text-xs font-semibold text-[#b42318]">{t("No recovery copy")}</span>
+                    </div>
+                    <div className="mt-4 rounded-md bg-[#fffafa] px-4 py-3 text-sm leading-6 text-[#912018]">
+                      <p className="font-semibold">{t("Reason shown to the creator")}</p>
+                      <p className="mt-1 whitespace-pre-wrap">{t(notice.reason)}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
             {filtered.map((idea) => (
               <article key={idea.id} className="rounded-md border border-[#e4e7ec] bg-white p-4 shadow-sm sm:p-5">
                 <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
@@ -435,7 +478,7 @@ export default function CommunityAdminClient() {
                 <p className="mt-2 text-sm leading-6 text-[#69707d]">
                   {moderating.action === "return"
                     ? t("The post will be hidden until the creator edits and republishes it.")
-                    : t("The post will be removed from public view. Its private moderation record is preserved.")}
+                    : t("This permanently deletes the post, images, replies, comments, reactions, shares, and reports. It cannot be undone.")}
                 </p>
               </div>
               <button type="button" onClick={() => setModerating(null)} className="flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e8ebef] text-[#69707d] transition hover:bg-[#f5f6f8]" aria-label={t("Close moderation dialog")}>
@@ -459,7 +502,7 @@ export default function CommunityAdminClient() {
               <button type="button" onClick={() => setModerating(null)} className="inline-flex h-11 items-center justify-center rounded-md border border-[#d0d5dd] px-5 text-sm font-semibold">{t("Cancel")}</button>
               <button disabled={saving === moderating.idea.slug || !moderationReason.trim()} className={moderating.action === "return" ? "inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#b54708] px-5 text-sm font-semibold text-white disabled:opacity-60" : "inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#b42318] px-5 text-sm font-semibold text-white disabled:opacity-60"}>
                 {saving === moderating.idea.slug ? <Loader2 className="animate-spin" size={15} /> : moderating.action === "return" ? <RotateCcw size={15} /> : <Trash2 size={15} />}
-                {moderating.action === "return" ? t("Return post") : t("Remove post")}
+                {moderating.action === "return" ? t("Return post") : t("Delete permanently")}
               </button>
             </div>
           </form>

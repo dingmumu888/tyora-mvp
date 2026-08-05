@@ -1,25 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --color-navy: #070b14;
-  --color-primary: #4778d7;
-  --color-primary-hover: #5a88e3;
-  --color-primary-soft: #152747;
-  --color-orange: #d98a43;
-  --color-text: #f1f5f9;
-  --color-body: #d7dee8;
-  --color-text-secondary: #8f9bae;
-  --color-border: #2b3748;
-  --color-divider: #202b3a;
-  --color-page: #070b14;
-  --color-surface: #101725;
-  --color-surface-raised: #141d2b;
-  --color-surface-muted: #0c1422;
-  --color-success: #52c99a;
-  --color-warning: #e6a854;
-  --color-danger: #f27c86;
+  --color-navy: #0b1220;
+  --color-primary: #155eef;
+  --color-primary-hover: #004eeb;
+  --color-primary-soft: #eef4ff;
+  --color-orange: #f9733d;
+  --color-text: #0b1220;
+  --color-body: #253247;
+  --color-text-secondary: #667085;
+  --color-border: #d5dce6;
+  --color-divider: #e3e8ef;
+  --color-page: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-success: #0f766e;
+  --color-warning: #b54708;
+  --color-danger: #b42318;
+  --grid-color: rgb(37 50 71 / 0.055);
 
-  --font-sans: "Reddit Sans", "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  --font-sans: "Reddit Sans Variable", "Noto Sans SC Variable", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -32,10 +33,14 @@
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.125rem;
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24);
-  --shadow-md: 0 10px 28px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 24px 64px rgb(0 0 0 / 0.36);
-  --focus-ring: 0 0 0 4px rgb(71 120 215 / 0.22);
+  --shadow-sm: 0 1px 2px rgb(11 18 32 / 0.06);
+  --shadow-md: 0 10px 28px rgb(11 18 32 / 0.09);
+  --shadow-lg: 0 24px 64px rgb(11 18 32 / 0.13);
+  --focus-ring: 0 0 0 4px rgb(21 94 239 / 0.16);
+  --motion-fast: 160ms;
+  --motion-standard: 240ms;
+  --motion-slow: 360ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Backward-compatible aliases for existing pages. */
   --background: var(--color-page);
@@ -59,12 +64,37 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  color-scheme: dark;
+  color-scheme: light;
   font-family: var(--font-sans);
   font-weight: 450;
   letter-spacing: 0;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+.tyora-dark {
+  --color-navy: #070b14;
+  --color-primary: #4778d7;
+  --color-primary-hover: #5a88e3;
+  --color-primary-soft: #152747;
+  --color-orange: #d98a43;
+  --color-text: #f1f5f9;
+  --color-body: #d7dee8;
+  --color-text-secondary: #8f9bae;
+  --color-border: #2b3748;
+  --color-divider: #202b3a;
+  --color-page: #070b14;
+  --color-surface: #101725;
+  --color-surface-raised: #141d2b;
+  --color-surface-muted: #0c1422;
+  --color-success: #52c99a;
+  --color-warning: #e6a854;
+  --color-danger: #f27c86;
+  --grid-color: rgb(143 155 174 / 0.08);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24);
+  --shadow-md: 0 10px 28px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 24px 64px rgb(0 0 0 / 0.36);
+  --focus-ring: 0 0 0 4px rgb(71 120 215 / 0.22);
 }
 
 h1,
@@ -119,6 +149,10 @@ select {
 .tyora-dark :where(input, textarea, select) {
   color-scheme: dark;
   caret-color: var(--color-text);
+}
+
+.tyora-dark body {
+  color-scheme: dark;
 }
 
 .tyora-dark :where(input, textarea, select)::placeholder {
@@ -417,8 +451,8 @@ select {
 
 .fine-grid {
   background-image:
-    linear-gradient(rgb(143 155 174 / 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(143 155 174 / 0.08) 1px, transparent 1px);
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
@@ -429,4 +463,15 @@ select {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -220,6 +220,7 @@ model CommunityUser {
   reactions              CommunityReaction[]
   customInquiries        CustomInquiry[]
   shares                 CommunityShare[]
+  moderationNotices      CommunityModerationNotice[]
 
   @@index([joinedAt])
   @@index([country])
@@ -605,6 +606,20 @@ model CommunityActionReceipt {
   @@index([userId])
   @@index([resourceId])
   @@index([expiresAt])
+}
+
+model CommunityModerationNotice {
+  id        String        @id
+  userId    String
+  user      CommunityUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ideaId    String
+  title     String
+  reason    String
+  createdAt DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([ideaId])
+  @@index([createdAt])
 }
 
 model CommunityReaction {

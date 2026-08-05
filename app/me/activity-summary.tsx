@@ -139,6 +139,7 @@ export default function ActivitySummary({
   const [editingIdea, setEditingIdea] = useState<CommunityIdea | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({ title: "", category: "", country: "", description: "", imageUrls: [] });
   const [busy, setBusy] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
   const [message, setMessage] = useState("");
   const reviewedIdeas = useMemo(() => localIdeas.filter((idea) => idea.review), [localIdeas]);
   const activeItem = items.find((item) => item.view === activeView);
@@ -172,6 +173,7 @@ export default function ActivitySummary({
   async function saveEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingIdea) return;
+    if (imageUploading) return setMessage(translateNewIdea(language, "uploadingImage"));
     setBusy(`edit-${editingIdea.slug}`);
     setMessage("");
     try {
@@ -324,13 +326,21 @@ export default function ActivitySummary({
               </label>
               <div>
                 <p className="mb-2 text-sm font-semibold text-[#101216]">{t("ideaImages")}</p>
-                <EditableIdeaImages images={editForm.imageUrls} onChange={(imageUrls) => setEditForm({ ...editForm, imageUrls })} reorderHint={translateNewIdea(language, "reorderImages")} />
+                <EditableIdeaImages
+                  images={editForm.imageUrls}
+                  onChange={(imageUrls) => setEditForm({ ...editForm, imageUrls })}
+                  preparingLabel={translateNewIdea(language, "preparingImage")}
+                  uploadingLabel={translateNewIdea(language, "uploadingImage")}
+                  retryLabel={translateNewIdea(language, "retryUpload")}
+                  onBusyChange={setImageUploading}
+                  reorderHint={translateNewIdea(language, "reorderImages")}
+                />
               </div>
             </div>
             {message ? <p className="mt-3 rounded-2xl bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412]">{message}</p> : null}
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setEditingIdea(null)} className="h-11 rounded-full border border-[#dfe3e8] px-5 text-sm font-semibold text-[#59616e]">{t("cancel")}</button>
-              <button disabled={busy === `edit-${editingIdea.slug}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
+              <button disabled={busy === `edit-${editingIdea.slug}` || imageUploading} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#101216] px-5 text-sm font-semibold text-white disabled:opacity-60">
                 {busy === `edit-${editingIdea.slug}` ? <Loader2 className="animate-spin" size={15} /> : <Pencil size={15} />} {t("save")}
               </button>
             </div>

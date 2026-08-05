@@ -341,7 +341,7 @@ export async function updateWorkOrder(input: unknown): Promise<WorkOrder> {
       status: communityStatusInput(status),
       ...(publicUpdate !== undefined ? { review: { additionalNotes: publicUpdate } } : {})
     });
-    if (!updated) throw new Error("Idea not found.");
+    if (!updated || "deleted" in updated) throw new Error("Idea not found.");
     updatedOrder = { ...communityToWorkOrder(updated), contactHistory: order.contactHistory, lastContactAt: order.lastContactAt, lastContactChannel: order.lastContactChannel, nextFollowUpAt: order.nextFollowUpAt };
   } else if (hasCoreUpdate && order.type === "Source") {
     updatedOrder = { ...sourceToWorkOrder(await updateSourceRequest(order.actionId, {

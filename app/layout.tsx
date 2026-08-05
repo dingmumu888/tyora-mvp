@@ -3,6 +3,8 @@ import CommunityProfileGate from "@/components/community-profile-gate";
 import MobileBottomTabs from "@/components/mobile-bottom-tabs";
 import AnalyticsPageTracker from "@/components/analytics-page-tracker";
 import PublicLanguageProvider from "@/components/public-language-provider";
+import "@fontsource-variable/reddit-sans/wght.css";
+import "@fontsource-variable/noto-sans-sc/wght.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" translate="no" className="notranslate tyora-dark">
+    <html lang="en" translate="no" data-theme="light" className="notranslate tyora-light">
       <head>
         <meta name="google" content="notranslate" />
       </head>

@@ -633,7 +633,7 @@ export default function AdminPage() {
     try {
       const response = await fetch("/api/admin/community");
       const payload = await response.json();
-      setCommunityIdeas(payload.data || []);
+      setCommunityIdeas(Array.isArray(payload.data?.ideas) ? payload.data.ideas : []);
     } catch {
       setCommunityIdeas([]);
     }

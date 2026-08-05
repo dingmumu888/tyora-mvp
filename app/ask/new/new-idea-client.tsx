@@ -80,6 +80,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [step, setStep] = useState<Step>(0);
   const [oneSentence, setOneSentence] = useState("");
   const [message, setMessage] = useState("");
@@ -204,6 +205,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
+    if (imageUploading) return setMessage(t("uploadingImage"));
     const ideaSummary = form.description.trim() || oneSentence.trim();
     if (!form.title.trim()) return setMessage(t("addProductName"));
     if (!ideaSummary) return setMessage(t("describeIdea"));
@@ -237,7 +239,9 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
         })
       });
       const payload = await response.json();
-      if (!response.ok || !payload.success) throw new Error(t("unableSubmit"));
+      if (!response.ok || !payload.success) {
+        throw new Error(typeof payload?.message === "string" ? payload.message : t("unableSubmit"));
+      }
       setPublished(true);
       window.setTimeout(() => {
         window.location.href = `/ask/${payload.data.slug}`;
@@ -426,7 +430,10 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                 images={form.imageUrls}
                 onChange={updateIdeaImages}
                 addLabel={t("uploadImages")}
-                preparingLabel={t("unablePrepareImage")}
+                preparingLabel={t("preparingImage")}
+                uploadingLabel={t("uploadingImage")}
+                retryLabel={t("retryUpload")}
+                onBusyChange={setImageUploading}
                 limitMessage={t("imageLimit")}
                 reorderHint={t("reorderImages")}
                 errorMessage={t("unablePrepareImage")}
@@ -440,7 +447,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
               </p>
             ) : null}
 
-            <button disabled={submitting} className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
+            <button disabled={submitting || imageUploading} className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
               {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
               {submitting ? t("submitting") : t(form.visibility === "Public" ? "publishIdea" : "submitReview")}
             </button>
@@ -499,7 +506,10 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   images={form.imageUrls}
                   onChange={updateIdeaImages}
                   addLabel={t("uploadImages")}
-                  preparingLabel={t("unablePrepareImage")}
+                  preparingLabel={t("preparingImage")}
+                  uploadingLabel={t("uploadingImage")}
+                  retryLabel={t("retryUpload")}
+                  onBusyChange={setImageUploading}
                   limitMessage={t("imageLimit")}
                   reorderHint={t("reorderImages")}
                   errorMessage={t("unablePrepareImage")}
@@ -611,7 +621,7 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                 {t(step === 2 ? "continueCloser" : "next")} <ArrowRight size={16} />
               </button>
             ) : (
-              <button disabled={submitting} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
+              <button disabled={submitting || imageUploading} className={`inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:opacity-60 ${primaryButton}`}>
                 {submitting ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
                 {submitting ? t("submitting") : t(form.visibility === "Public" ? "publishIdea" : "submitReview")}
               </button>

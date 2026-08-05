@@ -60,7 +60,10 @@ test("helpful votes preserve legacy likes while new votes use Helpful", async ()
 });
 
 test("admin exposes the P0 reply and moderation workflow", async () => {
-  const admin = await read("app/admin/community/community-admin-client.tsx");
+  const [admin, adminDashboard] = await Promise.all([
+    read("app/admin/community/community-admin-client.tsx"),
+    read("app/admin/page.tsx")
+  ]);
 
   assert.match(admin, /"needs-reply", "Awaiting reply"/);
   assert.match(admin, /"replied", "Replied"/);
@@ -69,6 +72,7 @@ test("admin exposes the P0 reply and moderation workflow", async () => {
   assert.match(admin, /action: "reply"/);
   assert.match(admin, /action: moderating\.action/);
   assert.match(admin, /moderationReason/);
+  assert.match(adminDashboard, /payload\.data\?\.ideas/);
 });
 
 test("signed-in users can report public posts and admins see report context", async () => {
@@ -88,17 +92,24 @@ test("signed-in users can report public posts and admins see report context", as
   assert.match(admin, /Reported concerns/);
 });
 
-test("removed posts are retained for 30 days before scheduled permanent cleanup", async () => {
-  const [store, cron, contract] = await Promise.all([
+test("removed posts are deleted immediately while a minimal creator notice and retryable storage cleanup remain", async () => {
+  const [schema, migration, store, cron, contract] = await Promise.all([
+    read("prisma/schema.prisma"),
+    read("prisma/migrations/20260805010000_add_permanent_community_removal_notices/migration.sql"),
     read("lib/server/community-store.ts"),
     read("app/api/cron/source-weekly-cleanup/route.ts"),
     read("lib/server/storage-provider-contract.ts")
   ]);
 
-  assert.match(store, /retentionDays = Math\.max\(30/);
-  assert.match(store, /moderationStatus: "Removed"/);
+  assert.match(schema, /model CommunityModerationNotice/);
+  assert.match(migration, /CREATE TABLE "CommunityModerationNotice"/);
+  assert.doesNotMatch(migration, /DROP TABLE|DROP COLUMN|TRUNCATE/i);
+  assert.match(store, /action === "remove"[\s\S]+permanentlyDeleteCommunityIdea/);
+  assert.match(store, /communityModerationNotice\.create/);
+  assert.match(store, /communityIdea\.delete/);
+  assert.match(store, /delete-private-idea-object/);
   assert.match(store, /deletePrivateObject/);
-  assert.match(cron, /cleanupRemovedCommunityIdeas/);
+  assert.match(cron, /cleanupPendingCommunityPrivateObjects/);
   assert.match(contract, /deletePrivateObject/);
 });
 
@@ -109,7 +120,8 @@ test("community cards use an independent mobile image rail without changing desk
   ]);
 
   assert.match(page, /grid-cols-\[minmax\(0,1fr\)_104px\]/);
-  assert.match(page, /<Link href=\{href\} className="min-w-0 px-3 py-3 sm:px-4">/);
+  assert.match(page, /<Link href=\{href\} className="block rounded-md/);
+  assert.match(page, /href=\{`\/creator\/\$\{encodeURIComponent\(idea\.author\.id\)\}`\}/);
   assert.match(page, /<CommunityCardImageRail[\s\S]+imageUrls=\{imageUrls\}/);
   assert.match(page, /relative m-2 hidden aspect-\[4\/3\][^"]+sm:block/);
 
