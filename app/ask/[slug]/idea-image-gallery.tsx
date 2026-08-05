@@ -161,7 +161,7 @@ export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: stri
 
       {activeIndex !== null ? (
         <div
-          className="fixed inset-0 z-[90] flex flex-col bg-[#070b12]/96 text-white backdrop-blur-sm"
+          className="fixed inset-0 z-[10050] flex flex-col bg-[#070b12]/96 text-white backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-label={title}

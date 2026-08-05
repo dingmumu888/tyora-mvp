@@ -14,6 +14,8 @@ test("public product-image uploads share resizing and full-image previews", () =
   const uploadRoute = read("app/api/community/idea-images/route.ts");
   const uploadToken = read("lib/server/community-image-upload-token.ts");
   const cleanup = read("app/api/cron/source-weekly-cleanup/route.ts");
+  const gallery = read("app/ask/[slug]/idea-image-gallery.tsx");
+  const avatarViewer = read("components/creator-avatar-viewer.tsx");
 
   assert.match(idea, /preparePublicImage/);
   assert.match(source, /preparePublicImage/);
@@ -50,6 +52,8 @@ test("public product-image uploads share resizing and full-image previews", () =
   assert.match(uploadRoute, /action: "idea-image-upload"/);
   assert.match(uploadToken, /createHmac\("sha256"/);
   assert.match(cleanup, /cleanupExpiredCommunityImageUploads/);
+  assert.match(gallery, /z-\[10050\]/);
+  assert.match(avatarViewer, /z-\[10050\]/);
 });
 
 test("avatars remain intentionally square and PDFs remain unchanged", () => {

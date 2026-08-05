@@ -72,7 +72,7 @@ export default function CreatorAvatarViewer({ name, src }: { name: string; src?:
         <CommunityAvatar name={name} src={src} className="size-24 border-4 border-white text-2xl shadow-lg sm:size-28" />
       </button>
       {open ? (
-        <div className="fixed inset-0 z-[80] grid touch-none place-items-center overflow-hidden bg-[#05070b]/88 p-3 backdrop-blur-md sm:p-5" role="dialog" aria-modal="true" onClick={close} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd} onPointerCancel={onPointerEnd}>
+        <div className="fixed inset-0 z-[10050] grid touch-none place-items-center overflow-hidden bg-[#05070b]/88 p-3 backdrop-blur-md sm:p-5" role="dialog" aria-modal="true" onClick={close} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd} onPointerCancel={onPointerEnd}>
           <button type="button" onClick={close} className="absolute right-4 top-4 z-10 grid size-11 place-items-center rounded-full bg-white/12 text-white transition hover:bg-white/20" aria-label="Close avatar preview">
             <X size={22} />
           </button>
