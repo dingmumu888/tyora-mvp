@@ -199,6 +199,8 @@ function CommunityCard({ idea }: { idea: CommunityIdea }) {
         <CommunityImage
           src={idea.imageUrls[0]}
           alt={idea.title}
+          thumbnail
+          showLoadingPlaceholder
           className="size-full object-cover transition duration-300 hover:scale-[1.02]"
           fallbackClassName="size-full bg-[#eef2f6]"
         />

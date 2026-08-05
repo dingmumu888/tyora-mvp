@@ -1,6 +1,9 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- TYORA's authenticated image route supplies fixed-size WebP thumbnails while preserving private full-resolution access. */
+
 import { useMemo, useState } from "react";
+import { communityThumbnailUrl } from "@/lib/community-image-url";
 import { cn } from "@/lib/utils";
 
 type CommunityImageProps = {
@@ -9,6 +12,9 @@ type CommunityImageProps = {
   className?: string;
   fallbackClassName?: string;
   initialsClassName?: string;
+  thumbnail?: boolean;
+  priority?: boolean;
+  showLoadingPlaceholder?: boolean;
 };
 
 const MAX_INLINE_IMAGE_LENGTH = 900000;
@@ -31,14 +37,38 @@ export default function CommunityImage({
   alt,
   className,
   fallbackClassName,
-  initialsClassName
+  initialsClassName,
+  thumbnail = false,
+  priority = false,
+  showLoadingPlaceholder = false
 }: CommunityImageProps) {
-  const [failed, setFailed] = useState(false);
+  const renderSrc = thumbnail ? communityThumbnailUrl(src) : src;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const initials = useMemo(() => initialsFor(alt), [alt]);
+  const loaded = Boolean(renderSrc && loadedSrc === renderSrc);
 
-  if (canRenderImage(src) && !failed) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} loading="lazy" className={className} onError={() => setFailed(true)} />;
+  if (canRenderImage(renderSrc) && failedSrc !== renderSrc) {
+    return (
+      <>
+        {showLoadingPlaceholder && !loaded ? (
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 animate-pulse bg-[linear-gradient(110deg,#eef2f6_25%,#f8fafc_42%,#eef2f6_60%)] bg-[length:220%_100%]"
+          />
+        ) : null}
+        <img
+          src={renderSrc}
+          alt={alt}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          className={cn(className, showLoadingPlaceholder && (loaded ? "opacity-100" : "opacity-0"))}
+          onLoad={() => setLoadedSrc(renderSrc || null)}
+          onError={() => setFailedSrc(renderSrc || null)}
+        />
+      </>
+    );
   }
 
   return (

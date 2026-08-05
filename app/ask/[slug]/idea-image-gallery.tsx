@@ -148,6 +148,9 @@ export default function IdeaImageGallery({ imageUrls, title }: { imageUrls: stri
             <CommunityImage
               src={src}
               alt={`${title} image ${index + 1}`}
+              thumbnail
+              priority={index === 0}
+              showLoadingPlaceholder
               className="size-full object-contain transition duration-300 group-hover:scale-[1.015]"
               fallbackClassName="absolute inset-0 p-5"
               initialsClassName="size-16 rounded-2xl text-xl"

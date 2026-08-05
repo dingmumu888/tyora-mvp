@@ -82,7 +82,7 @@ function IdeaCard({
     <article className="rounded-[18px] border border-[#e3e9f1] bg-white p-3 shadow-sm shadow-[#101216]/4 transition hover:border-[#93c5fd]">
       <Link href={`/ask/${idea.slug}`} className="block">
         <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#e9f7f3] via-white to-[#eff4ff]">
-          <CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-contain" fallbackClassName="absolute inset-0 p-4" />
+          <CommunityImage src={idea.imageUrls[0]} alt={idea.title} thumbnail showLoadingPlaceholder className="absolute inset-0 size-full object-contain" fallbackClassName="absolute inset-0 p-4" />
         </div>
         <div className="mt-3 min-w-0">
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#69707d]">

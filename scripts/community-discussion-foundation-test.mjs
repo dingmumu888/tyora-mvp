@@ -113,7 +113,7 @@ test("removed posts are deleted immediately while a minimal creator notice and r
   assert.match(contract, /deletePrivateObject/);
 });
 
-test("community cards use an independent mobile image rail without changing desktop media", async () => {
+test("community cards load one mobile cover before opening the full gallery", async () => {
   const [page, rail] = await Promise.all([
     read("app/ask/page.tsx"),
     read("components/community-card-image-rail.tsx")
@@ -125,9 +125,10 @@ test("community cards use an independent mobile image rail without changing desk
   assert.match(page, /<CommunityCardImageRail[\s\S]+imageUrls=\{imageUrls\}/);
   assert.match(page, /relative m-2 hidden aspect-\[4\/3\][^"]+sm:block/);
 
-  assert.match(rail, /const visibleRows = Math\.min\(Math\.max\(images\.length, 1\), 3\)/);
+  assert.match(rail, /const coverImage = images\[0\]/);
   assert.match(rail, /data-testid="mobile-card-image-rail"/);
-  assert.match(rail, /overflow-y-auto/);
-  assert.match(rail, /onClick=\{\(\) => src && setActiveIndex\(index\)\}/);
+  assert.match(rail, /onClick=\{\(\) => coverImage && setActiveIndex\(0\)\}/);
+  assert.match(rail, /thumbnail/);
+  assert.doesNotMatch(rail, /overflow-y-auto/);
   assert.match(rail, /fixed inset-0 z-\[100\]/);
 });

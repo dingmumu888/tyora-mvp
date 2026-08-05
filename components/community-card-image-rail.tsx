@@ -9,18 +9,19 @@ type Props = {
   title: string;
   tone: string;
   cover?: boolean;
+  priority?: boolean;
 };
 
 export default function CommunityCardImageRail({
   imageUrls,
   title,
   tone,
-  cover = false
+  cover = false,
+  priority = false
 }: Props) {
   const images = imageUrls.slice(0, 9);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const visibleRows = Math.min(Math.max(images.length, 1), 3);
-  const itemHeight = `calc((100% - ${(visibleRows - 1) * 4}px) / ${visibleRows})`;
+  const coverImage = images[0];
 
   function move(direction: number) {
     if (activeIndex === null || images.length < 2) return;
@@ -29,36 +30,30 @@ export default function CommunityCardImageRail({
 
   return (
     <>
-      <div
+      <button
+        type="button"
         data-testid="mobile-card-image-rail"
-        className="no-scrollbar absolute inset-2 flex snap-y snap-mandatory flex-col gap-1 overflow-y-auto overscroll-contain rounded-lg"
-        aria-label={`${title} images`}
+        disabled={!coverImage}
+        onClick={() => coverImage && setActiveIndex(0)}
+        className={`absolute inset-2 overflow-hidden rounded-lg border border-[#dfe5ed] bg-gradient-to-br shadow-sm ${tone} disabled:cursor-default`}
+        aria-label={coverImage ? `Enlarge ${title} images` : `${title} image`}
       >
-        {(images.length ? images : [undefined]).map((src, index) => (
-          <button
-            key={`${src || "fallback"}-${index}`}
-            type="button"
-            disabled={!src}
-            onClick={() => src && setActiveIndex(index)}
-            style={{ height: itemHeight }}
-            className={`relative w-full shrink-0 snap-start overflow-hidden rounded-lg border border-[#dfe5ed] bg-gradient-to-br shadow-sm ${tone} disabled:cursor-default`}
-            aria-label={src ? `Enlarge ${title} image ${index + 1}` : `${title} image`}
-          >
-            <CommunityImage
-              src={src}
-              alt={`${title} image ${index + 1}`}
-              className={`absolute inset-0 size-full ${cover ? "object-cover" : "object-contain p-1"}`}
-              fallbackClassName="absolute inset-0 p-2"
-              initialsClassName="size-10 rounded-xl text-sm"
-            />
-            {images.length > 1 ? (
-              <span className="absolute bottom-1 right-1 rounded bg-[#0b1426]/72 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                {index + 1}/{images.length}
-              </span>
-            ) : null}
-          </button>
-        ))}
-      </div>
+        <CommunityImage
+          src={coverImage}
+          alt={`${title} image 1`}
+          thumbnail
+          priority={priority}
+          showLoadingPlaceholder
+          className={`absolute inset-0 size-full ${cover ? "object-cover" : "object-contain p-1"}`}
+          fallbackClassName="absolute inset-0 p-2"
+          initialsClassName="size-10 rounded-xl text-sm"
+        />
+        {images.length > 1 ? (
+          <span className="absolute bottom-1 right-1 rounded bg-[#0b1426]/72 px-1.5 py-0.5 text-[9px] font-bold text-white">
+            1/{images.length}
+          </span>
+        ) : null}
+      </button>
 
       {activeIndex !== null && images[activeIndex] ? (
         <div className="fixed inset-0 z-[100] flex flex-col bg-[#07101f]/96 text-white" role="dialog" aria-modal="true" aria-label={`${title} image preview`}>

@@ -68,7 +68,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ public
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {ideas.map((idea) => (
               <Link key={idea.id} href={`/ask/${idea.slug}`} className="group overflow-hidden rounded-[22px] border border-[#dfe6ef] bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-[#93c5fd] hover:shadow-lg">
-                <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#e9f7f3] via-white to-[#eff4ff]"><CommunityImage src={idea.imageUrls[0]} alt={idea.title} className="absolute inset-0 size-full object-contain transition duration-300 group-hover:scale-[1.02]" fallbackClassName="absolute inset-0 p-6" /></div>
+                <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#e9f7f3] via-white to-[#eff4ff]"><CommunityImage src={idea.imageUrls[0]} alt={idea.title} thumbnail showLoadingPlaceholder className="absolute inset-0 size-full object-contain transition duration-300 group-hover:scale-[1.02]" fallbackClassName="absolute inset-0 p-6" /></div>
                 <div className="p-4"><div className="flex items-center gap-2 text-[11px] font-semibold text-[#69707d]"><span className="rounded-full bg-[#eef4ff] px-2 py-1 text-[#155eef]">{idea.category}</span><span>{new Date(idea.createdAt).toLocaleDateString()}</span></div><h3 className="mt-3 line-clamp-2 text-lg font-bold group-hover:text-[#155eef]">{idea.title}</h3><p className="mt-2 line-clamp-2 text-sm leading-6 text-[#59616e]">{idea.description}</p></div>
               </Link>
             ))}

@@ -106,7 +106,7 @@ function caseStatus(story: CaseStudy): CommunityStatus {
 
 type InteractionLabels = Pick<CommunityPageContent, "likeText" | "commentText" | "interestedText" | "shareText">;
 
-function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: CaseStudy; labels: InteractionLabels }) {
+function CommunityCard({ idea, story, labels, priority = false }: { idea?: CommunityIdea; story?: CaseStudy; labels: InteractionLabels; priority?: boolean }) {
   if (!idea && !story) return null;
   const status = story ? caseStatus(story) : idea!.status;
   const title = story ? story.name : idea!.title;
@@ -182,6 +182,7 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
             title={title}
             tone={story ? "from-[#eef4ff] to-[#f8fafc]" : coverTone(idea!)}
             cover={Boolean(story)}
+            priority={priority}
           />
         </div>
 
@@ -196,7 +197,16 @@ function CommunityCard({ idea, story, labels }: { idea?: CommunityIdea; story?: 
               style={{ objectPosition: story.coverImage.objectPosition || "center center" }}
             />
           ) : (
-            <CommunityImage src={imageUrl} alt={title} className={`absolute inset-0 size-full ${story ? "object-cover" : "object-contain p-1.5"}`} fallbackClassName="absolute inset-0 p-3" initialsClassName="bg-white/74" />
+            <CommunityImage
+              src={imageUrl}
+              alt={title}
+              thumbnail={!story}
+              priority={priority}
+              showLoadingPlaceholder
+              className={`absolute inset-0 size-full ${story ? "object-cover" : "object-contain p-1.5"}`}
+              fallbackClassName="absolute inset-0 p-3"
+              initialsClassName="bg-white/74"
+            />
           )}
         </Link>
       </div>
@@ -396,7 +406,7 @@ export default async function AskCommunityPage({
               ) : <StarterCommunityState />
             ) : (
               <>
-                {ideas.map((idea) => <CommunityCard key={idea.id} idea={idea} labels={content.communityPage} />)}
+                {ideas.map((idea, index) => <CommunityCard key={idea.id} idea={idea} labels={content.communityPage} priority={index === 0} />)}
                 {tyoraCases.map((story) => <CommunityCard key={`case-${story.id}`} story={story} labels={content.communityPage} />)}
               </>
             )}
