@@ -4,6 +4,11 @@ import { ChangeEvent, DragEvent, TouchEvent, useEffect, useRef, useState } from 
 import { motion } from "framer-motion";
 import { AlertCircle, ChevronLeft, ChevronRight, GripVertical, ImagePlus, Loader2, RotateCcw, X } from "lucide-react";
 import { preparePublicImage } from "@/lib/public-image-processing";
+import {
+  MAX_IDEA_IMAGES,
+  summarizeUnsupportedFileNames,
+  validateIdeaImageSelection
+} from "@/lib/idea-image-selection";
 
 type TouchDragPreview = { src: string; x: number; y: number; width: number };
 type UploadTask = {
@@ -60,7 +65,9 @@ export default function EditableIdeaImages({
   onBusyChange,
   limitMessage = "You can upload up to 9 images.",
   reorderHint = "Drag to reorder. On mobile, press and hold, then drag.",
-  errorMessage = "Unable to prepare this image."
+  errorMessage = "Unable to prepare this image.",
+  capacityErrorMessage = (selected, remaining, excess) => `You selected ${selected} images. TYORA allows 9 in total and you have ${remaining} spaces left. Remove ${excess} and try again. Nothing was uploaded.`,
+  unsupportedFilesMessage = (files) => `Unsupported file selected: ${files}. Choose JPG, PNG, or WebP. Nothing was uploaded.`
 }: {
   images: string[];
   onChange: (images: string[]) => void;
@@ -72,6 +79,8 @@ export default function EditableIdeaImages({
   limitMessage?: string;
   reorderHint?: string;
   errorMessage?: string;
+  capacityErrorMessage?: (selected: number, remaining: number, excess: number) => string;
+  unsupportedFilesMessage?: (files: string) => string;
 }) {
   const [tasks, setTasks] = useState<UploadTask[]>([]);
   const [message, setMessage] = useState("");
@@ -143,13 +152,22 @@ export default function EditableIdeaImages({
   }
 
   async function addFiles(event: ChangeEvent<HTMLInputElement>) {
-    const remaining = Math.max(0, 9 - images.length - tasks.length);
     const candidates = Array.from(event.currentTarget.files || []);
     event.currentTarget.value = "";
-    const selected = candidates.filter((file) => file.type.startsWith("image/")).slice(0, remaining);
-    if (!selected.length) return;
-    setMessage(candidates.length > selected.length ? limitMessage : "");
-    const batch = selected.map((file, index): UploadTask => ({
+    if (!candidates.length) return;
+
+    const validation = validateIdeaImageSelection(candidates, images.length + tasks.length);
+    if (!validation.ok) {
+      if (validation.reason === "unsupported") {
+        setMessage(unsupportedFilesMessage(summarizeUnsupportedFileNames(validation.unsupported)));
+      } else {
+        setMessage(capacityErrorMessage(validation.selected, validation.remaining, validation.excess));
+      }
+      return;
+    }
+
+    setMessage("");
+    const batch = candidates.map((file, index): UploadTask => ({
       id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`,
       file,
       previewUrl: URL.createObjectURL(file),
@@ -171,7 +189,7 @@ export default function EditableIdeaImages({
     if (!mounted.current) return;
     const uploaded = results.filter((value): value is string => Boolean(value));
     if (uploaded.length) {
-      const next = [...liveImages.current, ...uploaded].slice(0, 9);
+      const next = [...liveImages.current, ...uploaded].slice(0, MAX_IDEA_IMAGES);
       liveImages.current = next;
       onChange(next);
     }
@@ -183,7 +201,7 @@ export default function EditableIdeaImages({
   async function retryTask(task: UploadTask) {
     const reference = await processTask(task);
     if (!reference || !mounted.current) return;
-    const next = [...liveImages.current, reference].slice(0, 9);
+    const next = [...liveImages.current, reference].slice(0, MAX_IDEA_IMAGES);
     liveImages.current = next;
     onChange(next);
     URL.revokeObjectURL(task.previewUrl);
@@ -336,16 +354,16 @@ export default function EditableIdeaImages({
             {task.status === "error" ? <button type="button" onClick={() => removeTask(task)} aria-label="Remove failed image" className="absolute right-1 top-1 grid size-11 place-items-center rounded-full bg-white text-[#be123c] shadow"><X size={17} /></button> : null}
           </div>
         ))}
-        {occupiedCount < 9 ? (
+        {occupiedCount < MAX_IDEA_IMAGES ? (
           <label className={`flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#93b4f8] bg-[#f8fbff] text-center text-[#155eef] transition ${busy ? "cursor-wait opacity-60" : "cursor-pointer hover:border-[#155eef] hover:bg-[#eef6ff]"}`}>
             {busy ? <Loader2 className="animate-spin" size={26} /> : <ImagePlus size={30} />}
             <span className="px-2 text-xs font-bold">{busy ? uploadingLabel : addLabel}</span>
-            <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" disabled={busy} onChange={addFiles} />
+            <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple className="sr-only" disabled={busy} onChange={addFiles} />
           </label>
         ) : null}
       </div>
-      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]"><span>{limitMessage}</span><strong>{occupiedCount}/9</strong></div>
-      {message ? <p className="mt-2 rounded-xl bg-[#fff7ed] px-3 py-2 text-xs text-[#9a3412]">{message}</p> : null}
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]"><span>{limitMessage}</span><strong>{occupiedCount}/{MAX_IDEA_IMAGES}</strong></div>
+      {message ? <p role="alert" aria-live="assertive" className="mt-2 rounded-xl bg-[#fff7ed] px-3 py-2 text-xs text-[#9a3412]">{message}</p> : null}
       {touchPreview ? (
         <div aria-hidden="true" className="pointer-events-none fixed z-[140] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border-2 border-[#2563eb] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.35)] ring-4 ring-[#2563eb]/15" style={{ left: touchPreview.x, top: touchPreview.y, width: Math.min(touchPreview.width, 280) }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

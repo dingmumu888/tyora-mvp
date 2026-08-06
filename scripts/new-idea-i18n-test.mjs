@@ -96,6 +96,30 @@ test("uploaded idea images are previewed without cropping", async () => {
   assert.match(preview, /max-h-\[88vh\] max-w-\[90vw\] object-contain/);
 });
 
+test("image selection rejects unsupported files and over-capacity batches before uploading", async () => {
+  const [page, preview, validation, copy] = await Promise.all([
+    read("app/ask/new/new-idea-client.tsx"),
+    read("components/editable-idea-images.tsx"),
+    read("lib/idea-image-selection.ts"),
+    read("lib/new-idea-i18n.ts")
+  ]);
+
+  assert.match(preview, /validateIdeaImageSelection\(candidates, images\.length \+ tasks\.length\)/);
+  assert.match(preview, /if \(!validation\.ok\)[\s\S]+return;[\s\S]+const batch = candidates\.map/);
+  assert.doesNotMatch(preview, /candidates[\s\S]{0,120}\.slice\(0, remaining\)/);
+  assert.match(preview, /accept="\.jpg,\.jpeg,\.png,\.webp,image\/jpeg,image\/png,image\/webp"/);
+  assert.match(preview, /role="alert" aria-live="assertive"/);
+  assert.match(validation, /MAX_IDEA_IMAGES = 9/);
+  assert.match(validation, /"image\/jpeg", "image\/png", "image\/webp"/);
+  assert.match(validation, /reason: "unsupported"/);
+  assert.match(validation, /reason: "capacity"/);
+  assert.match(page, /capacityErrorMessage=/);
+  assert.match(page, /unsupportedFilesMessage=/);
+  assert.equal((copy.match(/unsupportedFiles:/g) || []).length, 6);
+  assert.equal((copy.match(/imageSelectionTooLarge:/g) || []).length, 6);
+  assert.doesNotMatch(copy, /Only the first 9 were attached|只有前 9 张已添加|Solo se adjuntaron las primeras 9/);
+});
+
 test("customers submit only the TYORA questions they actually choose", async () => {
   const page = await read("app/ask/new/new-idea-client.tsx");
 

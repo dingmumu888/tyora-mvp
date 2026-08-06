@@ -25,6 +25,11 @@ import EditableIdeaImages from "@/components/editable-idea-images";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateNewIdea, type NewIdeaKey } from "@/lib/new-idea-i18n";
+import {
+  MAX_IDEA_IMAGES,
+  summarizeUnsupportedFileNames,
+  validateIdeaImageSelection
+} from "@/lib/idea-image-selection";
 import { PUBLIC_DISCLOSURE_NOTICE_VERSION } from "@/lib/public-disclosure";
 import { preparePublicImage } from "@/lib/public-image-processing";
 import { cn } from "@/lib/utils";
@@ -158,20 +163,26 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
 
   async function setImages(files: FileList | File[]) {
     const incoming = Array.from(files);
-    const imageFiles = incoming.filter((file) => !file.type || file.type.startsWith("image/"));
-    const selected = imageFiles.slice(0, 9 - imagePreviews.length);
-    if (selected.length === 0) return;
+    if (!incoming.length) return false;
+    const validation = validateIdeaImageSelection(incoming, imagePreviews.length);
+    if (!validation.ok) {
+      setMessage(validation.reason === "unsupported"
+        ? t("unsupportedFiles", { files: summarizeUnsupportedFileNames(validation.unsupported) })
+        : t("imageSelectionTooLarge", {
+          selected: validation.selected,
+          remaining: validation.remaining,
+          excess: validation.excess
+        }));
+      return false;
+    }
     try {
-      const nextPreviews = await Promise.all(selected.map(async (file) => ({ name: file.name, url: await normalizeProductImage(file, t) })));
-      setImagePreviews((current) => [...current, ...nextPreviews].slice(0, 9));
-      setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...nextPreviews.map((image) => image.url)].slice(0, 9) }));
-      if (incoming.length !== imageFiles.length) {
-        setMessage(t("filesSkipped"));
-      } else if (imageFiles.length + imagePreviews.length > 9) {
-        setMessage(t("maximumImages"));
-      }
+      const nextPreviews = await Promise.all(incoming.map(async (file) => ({ name: file.name, url: await normalizeProductImage(file, t) })));
+      setImagePreviews((current) => [...current, ...nextPreviews].slice(0, MAX_IDEA_IMAGES));
+      setForm((current) => ({ ...current, imageUrls: [...current.imageUrls, ...nextPreviews.map((image) => image.url)].slice(0, MAX_IDEA_IMAGES) }));
+      return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t("unablePrepareImage"));
+      return false;
     }
   }
 
@@ -180,13 +191,14 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
     setImagePreviews(imageUrls.map((url, index) => ({ name: `idea-image-${index + 1}`, url })));
   }
 
-  function onPaste(event: ClipboardEvent<HTMLFormElement>) {
+  async function onPaste(event: ClipboardEvent<HTMLFormElement>) {
     const imageFiles = Array.from(event.clipboardData.files);
     if (imageFiles.length === 0) return;
     event.preventDefault();
-    setImages(imageFiles);
-    setMessage(t("screenshotPasted"));
-    if (step !== 1) setStep(1);
+    if (await setImages(imageFiles)) {
+      setMessage(t("screenshotPasted"));
+      if (step !== 1) setStep(1);
+    }
   }
 
   function validateStep(target = step) {
@@ -496,6 +508,8 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                 limitMessage={t("imageLimit")}
                 reorderHint={t("reorderImages")}
                 errorMessage={t("unablePrepareImage")}
+                capacityErrorMessage={(selected, remaining, excess) => t("imageSelectionTooLarge", { selected, remaining, excess })}
+                unsupportedFilesMessage={(files) => t("unsupportedFiles", { files })}
               />
               {submissionPrivacyControls()}
             </div>
@@ -572,6 +586,8 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   limitMessage={t("imageLimit")}
                   reorderHint={t("reorderImages")}
                   errorMessage={t("unablePrepareImage")}
+                  capacityErrorMessage={(selected, remaining, excess) => t("imageSelectionTooLarge", { selected, remaining, excess })}
+                  unsupportedFilesMessage={(files) => t("unsupportedFiles", { files })}
                 />
               </div>
             </section>
