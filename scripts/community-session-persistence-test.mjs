@@ -90,7 +90,10 @@ test("login and logout synchronize across tabs and browser-restored pages", asyn
   ]);
 
   assert.match(sync, /localStorage\.setItem\(COMMUNITY_SESSION_SYNC_KEY/);
+  assert.match(sync, /BroadcastChannel\(COMMUNITY_SESSION_CHANNEL\)/);
   assert.match(bridge, /addEventListener\("storage", onStorage\)/);
+  assert.match(bridge, /channel\.onmessage/);
+  assert.match(bridge, /signal\?\.type === "logout"/);
   assert.match(bridge, /addEventListener\("pageshow", onPageShow\)/);
   assert.match(bridge, /addEventListener\("focus", onPageShow\)/);
   assert.match(bridge, /visibilityState === "visible"/);
