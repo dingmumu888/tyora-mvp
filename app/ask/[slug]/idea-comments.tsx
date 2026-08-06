@@ -79,9 +79,17 @@ export default function IdeaComments({
         .catch(() => setUser(null))
         .finally(() => setSessionChecked(true));
     }
+    function clearSession() {
+      setUser(null);
+      setSessionChecked(true);
+    }
     refreshSession();
     window.addEventListener("tyora:community-login", refreshSession);
-    return () => window.removeEventListener("tyora:community-login", refreshSession);
+    window.addEventListener("tyora:community-logout", clearSession);
+    return () => {
+      window.removeEventListener("tyora:community-login", refreshSession);
+      window.removeEventListener("tyora:community-logout", clearSession);
+    };
   }, []);
 
   async function deleteComment(comment: CommunityComment) {
@@ -219,7 +227,13 @@ export default function IdeaComments({
                 </button>
               ) : (
                 <span data-auth-gate="comment-reply">
-                  <EmailLogin className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition hover:bg-[#eef2f7]">
+                  <EmailLogin
+                    className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition hover:bg-[#eef2f7]"
+                    onSuccess={() => {
+                      setReplyingTo(comment);
+                      setReplyBody("");
+                    }}
+                  >
                     <Reply size={13} /> {t("reply")}
                   </EmailLogin>
                 </span>
@@ -233,7 +247,7 @@ export default function IdeaComments({
           </div>
         </div>
 
-        {replyingTo?.id === comment.id ? (
+        {user && replyingTo?.id === comment.id ? (
           <form onSubmit={postReply} className="ml-12 mt-3 rounded-2xl border border-[#d8dee8] bg-white p-3">
             <textarea
               autoFocus

@@ -60,10 +60,19 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
         .catch(() => setUser(null))
         .finally(() => setSessionChecked(true));
     }
+    function clearSession() {
+      setUser(null);
+      setSessionChecked(true);
+      setEditOpen(false);
+    }
 
     refreshSession();
     window.addEventListener("tyora:community-login", refreshSession);
-    return () => window.removeEventListener("tyora:community-login", refreshSession);
+    window.addEventListener("tyora:community-logout", clearSession);
+    return () => {
+      window.removeEventListener("tyora:community-login", refreshSession);
+      window.removeEventListener("tyora:community-logout", clearSession);
+    };
   }, []);
 
   useEffect(() => {

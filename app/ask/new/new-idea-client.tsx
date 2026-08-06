@@ -120,15 +120,21 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
         .catch(() => applyUser(null))
         .finally(() => setCheckingSession(false));
     }
+    function clearSession() {
+      applyUser(null);
+      setCheckingSession(false);
+    }
 
     refreshSession();
     window.addEventListener("tyora:community-login", refreshSession);
+    window.addEventListener("tyora:community-logout", clearSession);
     function onProfileUpdated(event: Event) {
       applyUser((event as CustomEvent<{ user?: SessionUser }>).detail?.user || null);
     }
     window.addEventListener("tyora:community-profile-updated", onProfileUpdated);
     return () => {
       window.removeEventListener("tyora:community-login", refreshSession);
+      window.removeEventListener("tyora:community-logout", clearSession);
       window.removeEventListener("tyora:community-profile-updated", onProfileUpdated);
     };
   }, []);

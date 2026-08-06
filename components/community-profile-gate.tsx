@@ -29,15 +29,21 @@ export default function CommunityProfileGate() {
     function onLogin() {
       void refresh();
     }
+    function onLogout() {
+      setUser(null);
+      setOpen(false);
+    }
     function onProfileUpdated(event: Event) {
       const detail = (event as CustomEvent<{ user?: CommunitySessionUser }>).detail;
       if (detail?.user) setUser(detail.user);
       setOpen(!detail?.user?.profileCompleted);
     }
     window.addEventListener("tyora:community-login", onLogin);
+    window.addEventListener("tyora:community-logout", onLogout);
     window.addEventListener("tyora:community-profile-updated", onProfileUpdated);
     return () => {
       window.removeEventListener("tyora:community-login", onLogin);
+      window.removeEventListener("tyora:community-logout", onLogout);
       window.removeEventListener("tyora:community-profile-updated", onProfileUpdated);
     };
   }, [refresh]);

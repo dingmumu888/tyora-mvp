@@ -62,3 +62,19 @@ test("pending email verification survives an accidental close until the real cod
   assert.equal((i18n.match(/brandSubtitle:/g) || []).length, 7);
   assert.equal((i18n.match(/resumeHint:/g) || []).length, 7);
 });
+
+test("logout immediately clears every auth-sensitive community surface", async () => {
+  const [comments, actions, newIdea, profileGate] = await Promise.all([
+    read("app/ask/[slug]/idea-comments.tsx"),
+    read("app/ask/[slug]/idea-actions.tsx"),
+    read("app/ask/new/new-idea-client.tsx"),
+    read("components/community-profile-gate.tsx")
+  ]);
+
+  for (const source of [comments, actions, newIdea, profileGate]) {
+    assert.match(source, /addEventListener\("tyora:community-logout"/);
+    assert.match(source, /removeEventListener\("tyora:community-logout"/);
+  }
+  assert.match(comments, /user && replyingTo\?\.id === comment\.id/);
+  assert.match(comments, /data-auth-gate="comment-reply"[\s\S]*?<EmailLogin[\s\S]*?onSuccess=\{\(\) => \{[\s\S]*?setReplyingTo\(comment\)/);
+});

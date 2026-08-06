@@ -19,7 +19,7 @@ Every modified customer-facing or employee-facing behavior must pass again on Pr
 | Retest area | Related issues | Required roles | Status |
 |---|---|---|---|
 | Refreshed community-feed thumbnails | `P0-E2E-011` | Visitor: full refresh → detail → browser Back | Passed by founder, 2026-08-06 |
-| Authentication before discussion creation, commenting, and replying | `P0-E2E-032` | Logged-out visitor → email login → creator draft/comment/reply | Implemented locally; automated checks passed; fresh Preview founder retest pending |
+| Authentication before discussion creation, commenting, and replying, including immediate logout synchronization | `P0-E2E-032`, `033` | Logged-out visitor → email login → creator draft/comment/reply → logout without refresh → login-resumed reply | Implemented locally; automated checks passed; fresh Preview founder retest pending |
 | Permanent deletion and atomic Posts count/list | `P0-E2E-002`, `029`, `030` | Creator → visitor → Admin | Not retested |
 | Lifecycle/visibility and complete Admin queues | `P0-E2E-027`, `028`, `031` | Creator → visitor → Admin | Not retested |
 | Private creator follow-up and idempotent send | `P0-E2E-025`, `026` | Creator → Admin → visitor | Next retest |
@@ -40,6 +40,7 @@ The current build cannot provide a stable test baseline because a destructive ac
 6. Relative age and default ordering use a stable creation timestamp. Updated, moderated, and last-activity times are separate, explicitly labelled values.
 7. New TYORA replies and notification indicators update without a full-page reload through focus revalidation plus a lightweight visible-page refresh strategy. Drafts, scroll, and active overlays must remain intact.
 8. Logged-out visitors may read public ideas, images, and published TYORA replies. Starting a discussion and posting a comment or reply require email login before the protected action begins. After authentication, return the user to the intended action; preserve any existing draft if a session expires mid-flow.
+9. Login and logout state changes apply immediately to every already-open community surface. Logout removes owner-only actions and hides protected composers without requiring refresh; a later login resumes the user's intended action without duplicate submission.
 
 ## In-scope fixes and acceptance criteria
 
@@ -109,12 +110,14 @@ Issue: `P0-E2E-031`
 
 ### G. Authentication before creator actions
 
-Issue: `P0-E2E-032`
+Issues: `P0-E2E-032`, `P0-E2E-033`
 
 - Logged-out visitors can open the community feed, public idea detail, images, and published TYORA replies without authentication.
 - Selecting `Start a Discussion` requests email login before the discussion form accepts product text or images.
 - Selecting the public comment composer or a comment `Reply` action requests email login before accepting text.
 - Successful authentication returns the creator to the intended discussion, comment, or reply action without sending duplicate requests.
+- Logging out from an already-open detail page immediately removes owner-only Edit, Withdraw, and Delete controls and replaces comment/reply entry points with email login, without a refresh.
+- If Reply triggered authentication, successful login opens the inline reply field for the exact selected comment without requiring a second click.
 - If an authenticated session expires after work begins, the existing draft-recovery path remains available and image-upload errors do not force the creator to rebuild the draft.
 - English, Simplified Chinese, Spanish, French, German, and Portuguese explain the same access rule.
 
