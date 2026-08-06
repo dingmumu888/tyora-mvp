@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- TYORA's authenticated image route supplies fixed-size WebP thumbnails while preserving private full-resolution access. */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { communityThumbnailUrl } from "@/lib/community-image-url";
 import { cn } from "@/lib/utils";
 
@@ -43,10 +43,21 @@ export default function CommunityImage({
   showLoadingPlaceholder = false
 }: CommunityImageProps) {
   const renderSrc = thumbnail ? communityThumbnailUrl(src) : src;
+  const imageRef = useRef<HTMLImageElement>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const initials = useMemo(() => initialsFor(alt), [alt]);
   const loaded = Boolean(renderSrc && loadedSrc === renderSrc);
+
+  useEffect(() => {
+    const image = imageRef.current;
+
+    // A cached image can finish before React attaches onLoad during hydration.
+    // Detect that state so a refreshed feed never leaves the image transparent.
+    if (renderSrc && image?.complete && image.naturalWidth > 0) {
+      setLoadedSrc(renderSrc);
+    }
+  }, [renderSrc]);
 
   if (canRenderImage(renderSrc) && failedSrc !== renderSrc) {
     return (
@@ -58,6 +69,7 @@ export default function CommunityImage({
           />
         ) : null}
         <img
+          ref={imageRef}
           src={renderSrc}
           alt={alt}
           loading={priority ? "eager" : "lazy"}

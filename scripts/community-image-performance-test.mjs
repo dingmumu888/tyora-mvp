@@ -62,6 +62,8 @@ test("feed and detail cards request thumbnails without pre-rendering nine mobile
   assert.doesNotMatch(rail, /images\.length \? images : \[undefined\]/);
   assert.match(image, /communityThumbnailUrl/);
   assert.match(image, /fetchPriority/);
+  assert.match(image, /image\?\.complete && image\.naturalWidth > 0/);
+  assert.match(image, /ref=\{imageRef\}/);
   assert.match(detail, /thumbnail[\s\S]+priority=\{index === 0\}/);
   assert.match(route, /createCommunityThumbnail/);
   assert.match(route, /communityImageVariant/);
