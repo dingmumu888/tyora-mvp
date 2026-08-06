@@ -206,12 +206,24 @@ export default function IdeaComments({
                   <ThumbsUp size={13} /> {comment.helpfulCount} {t("helpful")}
                 </EmailLogin>
               )}
-              <button type="button" onClick={() => {
-                setReplyingTo(comment);
-                setReplyBody("");
-              }} className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition hover:bg-[#eef2f7]">
-                <Reply size={13} /> {t("reply")}
-              </button>
+              {!sessionChecked ? (
+                <button disabled type="button" className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 opacity-60">
+                  <Loader2 className="animate-spin" size={13} /> {t("reply")}
+                </button>
+              ) : user ? (
+                <button type="button" onClick={() => {
+                  setReplyingTo(comment);
+                  setReplyBody("");
+                }} className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition hover:bg-[#eef2f7]">
+                  <Reply size={13} /> {t("reply")}
+                </button>
+              ) : (
+                <span data-auth-gate="comment-reply">
+                  <EmailLogin className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 transition hover:bg-[#eef2f7]">
+                    <Reply size={13} /> {t("reply")}
+                  </EmailLogin>
+                </span>
+              )}
               {canDelete ? (
                 <button type="button" disabled={deletingId === comment.id} onClick={() => void deleteComment(comment)} className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[#be123c] transition hover:bg-[#fff1f2] disabled:opacity-60">
                   {deletingId === comment.id ? <Loader2 className="animate-spin" size={13} /> : <Trash2 size={13} />} {t("delete")}
@@ -251,17 +263,30 @@ export default function IdeaComments({
           <MessageCircle size={18} className="text-[#155eef]" />
           <h2 className="text-lg font-bold text-[#0b1426]">{t("joinDiscussion")}</h2>
         </div>
-        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-[#cfd7e3] bg-[#f8fafc] p-3 focus-within:border-[#7ca5f5] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#2563eb]/8">
-          {user ? <CommunityAvatar name={user.name} src={user.avatar} className="size-9 shrink-0 border-0 text-[11px]" /> : <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#e8f0ff] text-[#155eef]"><MessageCircle size={16} /></span>}
-          <textarea
-            ref={composerRef}
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            rows={3}
-            placeholder={user ? t("joinPlaceholder") : t("loginToComment")}
-            className="min-h-20 min-w-0 flex-1 resize-none bg-transparent text-sm leading-6 outline-none"
-          />
-        </div>
+        {!sessionChecked ? (
+          <div className="mt-3 flex min-h-28 items-center justify-center rounded-2xl border border-[#cfd7e3] bg-[#f8fafc] text-sm text-[#667085]">
+            <Loader2 className="mr-2 animate-spin" size={15} /> {t("checking")}
+          </div>
+        ) : user ? (
+          <div className="mt-3 flex items-start gap-3 rounded-2xl border border-[#cfd7e3] bg-[#f8fafc] p-3 focus-within:border-[#7ca5f5] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#2563eb]/8">
+            <CommunityAvatar name={user.name} src={user.avatar} className="size-9 shrink-0 border-0 text-[11px]" />
+            <textarea
+              ref={composerRef}
+              value={body}
+              onChange={(event) => setBody(event.target.value)}
+              rows={3}
+              placeholder={t("joinPlaceholder")}
+              className="min-h-20 min-w-0 flex-1 resize-none bg-transparent text-sm leading-6 outline-none"
+            />
+          </div>
+        ) : (
+          <div data-auth-gate="comment-composer" className="mt-3">
+            <EmailLogin className="flex min-h-28 w-full items-start gap-3 rounded-2xl border border-[#cfd7e3] bg-[#f8fafc] p-3 text-left transition hover:border-[#7ca5f5] hover:bg-white hover:ring-4 hover:ring-[#2563eb]/8">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#e8f0ff] text-[#155eef]"><MessageCircle size={16} /></span>
+              <span className="pt-2 text-sm leading-6 text-[#667085]">{t("loginToComment")}</span>
+            </EmailLogin>
+          </div>
+        )}
         <div className="mt-3 flex justify-end">
           {!sessionChecked ? (
             <button disabled className="inline-flex h-10 items-center gap-2 rounded-full bg-[#0b1426] px-5 text-sm font-semibold text-white opacity-60">

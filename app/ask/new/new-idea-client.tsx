@@ -20,6 +20,7 @@ import {
   CommunityQuestion
 } from "@/lib/community";
 import CommunityUserMenu from "@/components/community-user-menu";
+import EmailLogin from "@/components/email-login";
 import EditableIdeaImages from "@/components/editable-idea-images";
 import PublicLanguageSwitcher from "@/components/public-language-switcher";
 import { usePublicLanguage } from "@/components/public-language-provider";
@@ -75,7 +76,7 @@ type NewIdeaClientProps = {
 };
 
 export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
-  const { language } = usePublicLanguage();
+  const { language, copy } = usePublicLanguage();
   const t: Translator = (key, values) => translateNewIdea(language, key, values);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -301,6 +302,58 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
 
   if (checkingSession) {
     return <div className="flex min-h-screen items-center justify-center bg-[#f6f7fb]"><Loader2 className="animate-spin text-[#2563eb]" /></div>;
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eaf3ff_0,#f6f7fb_42%,#f7f5f0_100%)] text-[#101216]">
+        <header className="border-b border-[#e8ebef]/90 bg-white/90 backdrop-blur-xl">
+          <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
+            <Link href="/ask" className="flex shrink-0 items-center gap-2" aria-label={`${brand.brandName} ideas`}>
+              {brand.logoImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={brand.logoImage}
+                  alt={brand.showBrandNameWithLogo ? "" : brand.brandName}
+                  className={brand.showBrandNameWithLogo ? "size-9 rounded-md object-contain" : "h-10 w-auto max-w-40 object-contain"}
+                />
+              ) : (
+                <span className="grid size-8 place-items-center rounded-md bg-[#101828] text-white"><Sparkles size={16} /></span>
+              )}
+              {brand.showBrandNameWithLogo ? <span className="text-lg font-bold text-[#101828]">{brand.brandName}</span> : null}
+            </Link>
+            <div className="flex items-center gap-2">
+              <PublicLanguageSwitcher compact />
+              <Link href="/ask" className="inline-flex h-10 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#59616e]">
+                {t("browseIdeas")}
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <section data-auth-gate="new-discussion" className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-[680px] place-items-center px-4 py-10">
+          <div className="w-full rounded-[28px] border border-[#dfe6ef] bg-white p-7 text-center shadow-[0_22px_70px_rgba(15,23,42,0.10)] sm:p-10">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#eef4ff] text-[#2563eb]">
+              <Sparkles size={24} />
+            </div>
+            <h1 className="mt-5 text-3xl font-semibold leading-tight sm:text-4xl">{t("startDiscussion")}</h1>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#59616e] sm:text-base">{t("loginToPublish")}</p>
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <EmailLogin
+                openSignal={1}
+                onSuccess={() => setMessage(t("loggedInDraft"))}
+                className="inline-flex h-12 min-w-44 items-center justify-center rounded-full bg-[#101216] px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1f2937]"
+              >
+                {copy.common.emailLogin}
+              </EmailLogin>
+              <Link href="/ask" className="inline-flex h-12 min-w-44 items-center justify-center rounded-full border border-[#dfe3e8] bg-white px-6 text-sm font-semibold text-[#59616e] transition hover:bg-[#f6f7fb]">
+                {t("browseIdeas")}
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (

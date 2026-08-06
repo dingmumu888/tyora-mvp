@@ -60,6 +60,18 @@ test("every visible stage of the new discussion page uses its localized copy", a
   }
 });
 
+test("protected creator actions request email login before data entry", async () => {
+  const [page, comments] = await Promise.all([
+    read("app/ask/new/new-idea-client.tsx"),
+    read("app/ask/[slug]/idea-comments.tsx")
+  ]);
+
+  assert.match(page, /if \(!user\) \{[\s\S]+data-auth-gate="new-discussion"/);
+  assert.match(page, /data-auth-gate="new-discussion"[\s\S]+<EmailLogin[\s\S]+openSignal=\{1\}/);
+  assert.match(comments, /data-auth-gate="comment-composer"[\s\S]+<EmailLogin/);
+  assert.match(comments, /data-auth-gate="comment-reply"[\s\S]+<EmailLogin/);
+});
+
 test("the new discussion header uses the admin-configurable site brand", async () => {
   const route = await read("app/ask/new/page.tsx");
   const page = await read("app/ask/new/new-idea-client.tsx");

@@ -1,7 +1,7 @@
 # TYORA P0 stabilization batch A
 
 - Date: 2026-08-05
-- Status: Founder approved; implementation complete locally; Preview migration/deployment pending
+- Status: Preview deployed; founder cross-role retest in progress
 - Environment: Local verification followed by a new Vercel Preview deployment; no Production deployment
 - Goal: Restore a trustworthy creator-to-TYORA operating loop before continuing broad feature testing
 - Source evidence: `2026-08-05-founder-pilot.md`
@@ -11,6 +11,20 @@
 - Local production build, security scan, existing community tests, i18n tests, and the dedicated Batch A regression suite pass.
 - The reviewed Preview schema changes were applied, then the guard safely stopped because the historical Phase 5B backfill was incorrectly invoked a second time against workflows that had since changed during testing. The runner now executes that legacy backfill only when the workflow foundation is first created. A guarded rerun is required to verify migration history and report completion. No Production migration or deployment was attempted.
 - Manual acceptance remains required on a fresh Vercel Preview before this batch can be marked passed.
+
+## Founder manual retest ledger
+
+Every modified customer-facing or employee-facing behavior must pass again on Preview through the real role sequence; automated checks alone do not close an item.
+
+| Retest area | Related issues | Required roles | Status |
+|---|---|---|---|
+| Refreshed community-feed thumbnails | `P0-E2E-011` | Visitor: full refresh → detail → browser Back | Passed by founder, 2026-08-06 |
+| Authentication before discussion creation, commenting, and replying | `P0-E2E-032` | Logged-out visitor → email login → creator draft/comment/reply | Implemented locally; automated checks passed; fresh Preview founder retest pending |
+| Permanent deletion and atomic Posts count/list | `P0-E2E-002`, `029`, `030` | Creator → visitor → Admin | Not retested |
+| Lifecycle/visibility and complete Admin queues | `P0-E2E-027`, `028`, `031` | Creator → visitor → Admin | Not retested |
+| Private creator follow-up and idempotent send | `P0-E2E-025`, `026` | Creator → Admin → visitor | Next retest |
+| TYORA reply and notification automatic refresh | `P0-E2E-017` | Admin → already-open creator tab | Not retested |
+| Stable timestamps and ordering | `P0-E2E-031` | Creator → public → Admin | Not retested |
 
 ## Why testing pauses here
 
@@ -25,6 +39,7 @@ The current build cannot provide a stable test baseline because a destructive ac
 5. My TYORA counters and their opened lists must use the same server definition. A successful mutation updates both atomically.
 6. Relative age and default ordering use a stable creation timestamp. Updated, moderated, and last-activity times are separate, explicitly labelled values.
 7. New TYORA replies and notification indicators update without a full-page reload through focus revalidation plus a lightweight visible-page refresh strategy. Drafts, scroll, and active overlays must remain intact.
+8. Logged-out visitors may read public ideas, images, and published TYORA replies. Starting a discussion and posting a comment or reply require email login before the protected action begins. After authentication, return the user to the intended action; preserve any existing draft if a session expires mid-flow.
 
 ## In-scope fixes and acceptance criteria
 
@@ -91,6 +106,17 @@ Issue: `P0-E2E-031`
 - Failed, cancelled, duplicate, or no-op actions do not change creation time or default creation order.
 - If a view orders by last activity rather than creation, it labels that rule and exposes the corresponding timestamp.
 - Created, Updated, Moderated, and Last activity remain separate fields and are tested independently.
+
+### G. Authentication before creator actions
+
+Issue: `P0-E2E-032`
+
+- Logged-out visitors can open the community feed, public idea detail, images, and published TYORA replies without authentication.
+- Selecting `Start a Discussion` requests email login before the discussion form accepts product text or images.
+- Selecting the public comment composer or a comment `Reply` action requests email login before accepting text.
+- Successful authentication returns the creator to the intended discussion, comment, or reply action without sending duplicate requests.
+- If an authenticated session expires after work begins, the existing draft-recovery path remains available and image-upload errors do not force the creator to rebuild the draft.
+- English, Simplified Chinese, Spanish, French, German, and Portuguese explain the same access rule.
 
 ## Required automated verification
 

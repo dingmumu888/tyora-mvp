@@ -94,8 +94,8 @@ const en = {
   describeOneSentence: "Please describe your idea in one sentence.",
   describeIdea: "Please describe your idea.",
   confirmPermissions: "Confirm the public-disclosure notice, or choose Private.",
-  loginToPublish: "Log in with email to publish your discussion. Your draft will stay here.",
-  loggedInDraft: "Logged in successfully. Your draft is still here.",
+  loginToPublish: "Log in with email before starting a discussion. If your session expires later, TYORA will keep your draft.",
+  loggedInDraft: "Logged in successfully. You can continue your discussion.",
   unableSubmit: "Unable to submit idea.",
   ideaLive: "Your idea is live.",
   notSpecified: "Not specified",
@@ -152,8 +152,8 @@ const zhCN: Dictionary = {
   screenshotPasted: "截图已粘贴，最多可以添加 9 张图片。", addProductName: "请填写产品名称。",
   describeOneSentence: "请用一句话介绍你的创意。", describeIdea: "请描述你的创意。",
   confirmPermissions: "请确认公开披露提示，或选择私密发布。",
-  loginToPublish: "请使用邮箱登录后发布讨论，你填写的草稿会保留在这里。",
-  loggedInDraft: "登录成功，你的草稿仍然保留。", unableSubmit: "暂时无法提交创意。", ideaLive: "创意已发布。",
+  loginToPublish: "请先使用邮箱登录，再发起讨论。如果之后登录状态失效，TYORA 仍会保留你的草稿。",
+  loggedInDraft: "登录成功，可以继续填写讨论。", unableSubmit: "暂时无法提交创意。", ideaLive: "创意已发布。",
   notSpecified: "未填写", qManufactured: "这个产品可以制造吗？", qCost: "预计成本是多少？",
   qMaterial: "建议使用什么材料？", qMoq: "预计起订量是多少？", qFactory: "适合什么类型的工厂？", qOther: "自定义问题"
 };
@@ -197,8 +197,8 @@ const es: Dictionary = {
   filesSkipped: "Se omitieron algunos archivos porque no eran imágenes.", maximumImages: "Máximo 9 imágenes. Solo se adjuntaron las primeras 9.",
   screenshotPasted: "Captura pegada. Puedes añadir hasta 9 imágenes.", addProductName: "Añade un nombre de producto.",
   describeOneSentence: "Describe tu idea en una frase.", describeIdea: "Describe tu idea.",
-  confirmPermissions: "Confirma el aviso de divulgación pública o elige Privado.", loginToPublish: "Inicia sesión por correo para publicar. Tu borrador seguirá aquí.",
-  loggedInDraft: "Sesión iniciada. Tu borrador sigue aquí.", unableSubmit: "No se pudo enviar la idea.", ideaLive: "Tu idea está publicada.",
+  confirmPermissions: "Confirma el aviso de divulgación pública o elige Privado.", loginToPublish: "Inicia sesión por correo antes de empezar una conversación. Si tu sesión caduca después, TYORA conservará tu borrador.",
+  loggedInDraft: "Sesión iniciada. Puedes continuar con tu conversación.", unableSubmit: "No se pudo enviar la idea.", ideaLive: "Tu idea está publicada.",
   notSpecified: "No especificado", qManufactured: "¿Se puede fabricar?", qCost: "¿Coste estimado?", qMaterial: "¿Material recomendado?",
   qMoq: "¿MOQ estimado?", qFactory: "¿Fábrica recomendada?", qOther: "Escribir otra pregunta"
 };
@@ -242,8 +242,8 @@ const fr: Dictionary = {
   filesSkipped: "Certains fichiers ont été ignorés car ce n’étaient pas des images.", maximumImages: "Maximum 9 images. Seules les 9 premières ont été ajoutées.",
   screenshotPasted: "Capture collée. Vous pouvez ajouter jusqu’à 9 images.", addProductName: "Ajoutez un nom de produit.",
   describeOneSentence: "Décrivez votre idée en une phrase.", describeIdea: "Décrivez votre idée.",
-  confirmPermissions: "Confirmez l’avis de divulgation publique ou choisissez Privé.", loginToPublish: "Connectez-vous par e-mail pour publier. Votre brouillon restera ici.",
-  loggedInDraft: "Connexion réussie. Votre brouillon est toujours là.", unableSubmit: "Impossible d’envoyer l’idée.", ideaLive: "Votre idée est publiée.",
+  confirmPermissions: "Confirmez l’avis de divulgation publique ou choisissez Privé.", loginToPublish: "Connectez-vous par e-mail avant de lancer une discussion. Si votre session expire ensuite, TYORA conservera votre brouillon.",
+  loggedInDraft: "Connexion réussie. Vous pouvez poursuivre votre discussion.", unableSubmit: "Impossible d’envoyer l’idée.", ideaLive: "Votre idée est publiée.",
   notSpecified: "Non précisé", qManufactured: "Ce produit peut-il être fabriqué ?", qCost: "Coût estimé ?", qMaterial: "Matériau conseillé ?",
   qMoq: "MOQ estimé ?", qFactory: "Usine recommandée ?", qOther: "Écrire une autre question"
 };
@@ -287,8 +287,8 @@ const de: Dictionary = {
   filesSkipped: "Einige Dateien wurden übersprungen, weil sie keine Bilder waren.", maximumImages: "Maximal 9 Bilder. Nur die ersten 9 wurden angehängt.",
   screenshotPasted: "Screenshot eingefügt. Du kannst bis zu 9 Bilder hinzufügen.", addProductName: "Bitte gib einen Produktnamen ein.",
   describeOneSentence: "Beschreibe deine Idee in einem Satz.", describeIdea: "Beschreibe deine Idee.",
-  confirmPermissions: "Bestätige den Hinweis zur öffentlichen Offenlegung oder wähle Privat.", loginToPublish: "Melde dich per E-Mail an. Dein Entwurf bleibt erhalten.",
-  loggedInDraft: "Anmeldung erfolgreich. Dein Entwurf ist noch da.", unableSubmit: "Idee konnte nicht gesendet werden.", ideaLive: "Deine Idee ist veröffentlicht.",
+  confirmPermissions: "Bestätige den Hinweis zur öffentlichen Offenlegung oder wähle Privat.", loginToPublish: "Melde dich per E-Mail an, bevor du eine Diskussion startest. Läuft deine Sitzung später ab, bewahrt TYORA deinen Entwurf auf.",
+  loggedInDraft: "Anmeldung erfolgreich. Du kannst mit deiner Diskussion fortfahren.", unableSubmit: "Idee konnte nicht gesendet werden.", ideaLive: "Deine Idee ist veröffentlicht.",
   notSpecified: "Nicht angegeben", qManufactured: "Kann das hergestellt werden?", qCost: "Geschätzte Kosten?", qMaterial: "Materialempfehlung?",
   qMoq: "Geschätzte MOQ?", qFactory: "Fabrikempfehlung?", qOther: "Eigene Frage schreiben"
 };
@@ -332,8 +332,8 @@ const pt: Dictionary = {
   filesSkipped: "Alguns arquivos foram ignorados porque não eram imagens.", maximumImages: "Máximo de 9 imagens. Apenas as 9 primeiras foram anexadas.",
   screenshotPasted: "Captura colada. Você pode adicionar até 9 imagens.", addProductName: "Informe o nome do produto.",
   describeOneSentence: "Descreva sua ideia em uma frase.", describeIdea: "Descreva sua ideia.",
-  confirmPermissions: "Confirme o aviso de divulgação pública ou escolha Privado.", loginToPublish: "Entre por e-mail para publicar. Seu rascunho ficará aqui.",
-  loggedInDraft: "Login realizado. Seu rascunho continua aqui.", unableSubmit: "Não foi possível enviar a ideia.", ideaLive: "Sua ideia foi publicada.",
+  confirmPermissions: "Confirme o aviso de divulgação pública ou escolha Privado.", loginToPublish: "Entre por e-mail antes de iniciar uma discussão. Se a sessão expirar depois, a TYORA manterá seu rascunho.",
+  loggedInDraft: "Login realizado. Você pode continuar a discussão.", unableSubmit: "Não foi possível enviar a ideia.", ideaLive: "Sua ideia foi publicada.",
   notSpecified: "Não informado", qManufactured: "Isso pode ser fabricado?", qCost: "Custo estimado?", qMaterial: "Material recomendado?",
   qMoq: "MOQ estimado?", qFactory: "Fábrica recomendada?", qOther: "Escrever outra pergunta"
 };
