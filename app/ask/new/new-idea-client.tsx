@@ -55,8 +55,6 @@ const nextSteps = [
   ["decideBuild", PackageCheck]
 ] as const;
 const primaryButton = "bg-[#2563eb] text-white shadow-sm shadow-[#2563eb]/20 transition duration-[180ms] hover:-translate-y-0.5 hover:bg-[#1d4ed8] hover:shadow-md hover:shadow-[#2563eb]/25";
-const quickEmojis = ["💡", "🔥", "👍", "❤️", "👀", "🙌"];
-
 async function normalizeProductImage(file: File, t: Translator) {
   const prepared = await preparePublicImage(file, {
     maxDimension: 1280,
@@ -155,10 +153,6 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
         ? current.questions.filter((item) => item !== question)
         : [...current.questions, question]
     }));
-  }
-
-  function appendDescriptionEmoji(emoji: string) {
-    setForm((current) => ({ ...current, description: `${current.description}${current.description ? " " : ""}${emoji}` }));
   }
 
   async function setImages(files: FileList | File[]) {
@@ -470,14 +464,9 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
               <label className="grid gap-2 text-sm font-semibold">{t("productName")}
                 <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder={t("productPlaceholder")} className={inputClass} />
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="grid gap-2 text-sm font-semibold">{t("category")}
-                  <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder={t("categoryPlaceholder")} className={inputClass} />
-                </label>
-                <label className="grid gap-2 text-sm font-semibold">{t("country")}
-                  <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder={t("countryPlaceholder")} className={inputClass} />
-                </label>
-              </div>
+              <label className="grid gap-2 text-sm font-semibold">{t("category")}
+                <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder={t("categoryPlaceholder")} className={inputClass} />
+              </label>
               <label className="grid gap-2 text-sm font-semibold">{t("description")}
                 <textarea
                   rows={8}
@@ -490,13 +479,6 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                   className="min-h-48 resize-none rounded-[18px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10"
                 />
               </label>
-              <div className="flex flex-wrap gap-2">
-                {quickEmojis.map((emoji) => (
-                  <button key={emoji} type="button" onClick={() => appendDescriptionEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
-                    {emoji}
-                  </button>
-                ))}
-              </div>
               <EditableIdeaImages
                 images={form.imageUrls}
                 onChange={updateIdeaImages}
@@ -601,21 +583,9 @@ export default function NewIdeaClient({ brand }: NewIdeaClientProps) {
                 <label className="grid gap-2 text-sm font-semibold">{t("description")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span>
                   <textarea rows={7} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder={t("descriptionPlaceholder")} className="min-h-44 resize-none rounded-[18px] border border-transparent bg-[#f8fafc] p-4 text-sm leading-6 outline-none transition duration-[180ms] hover:bg-white hover:ring-1 hover:ring-[#e4e8ef] focus:bg-white focus:ring-4 focus:ring-[#2563eb]/10" />
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {quickEmojis.map((emoji) => (
-                    <button key={emoji} type="button" onClick={() => appendDescriptionEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-semibold">{t("category")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span>
-                    <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder={t("categoryPlaceholder")} className={inputClass} />
-                  </label>
-                  <label className="grid gap-2 text-sm font-semibold">{t("country")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span>
-                    <input value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder={t("countryPlaceholder")} className={inputClass} />
-                  </label>
-                </div>
+                <label className="grid gap-2 text-sm font-semibold sm:max-w-md">{t("category")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span>
+                  <input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder={t("categoryPlaceholder")} className={inputClass} />
+                </label>
                 <div>
                   <p className="text-sm font-semibold">{t("questionType")} <span className="font-normal text-[#8b93a1]">{t("optional")}</span></p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">

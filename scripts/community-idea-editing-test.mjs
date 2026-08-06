@@ -16,6 +16,18 @@ test("owner edit dialog exposes all editable idea content", async () => {
   assert.match(actions, /max-h-\[94vh\]/);
   assert.doesNotMatch(actions, />Post type</);
   assert.doesNotMatch(actions, />Product stage</);
+  assert.doesNotMatch(actions, /appendEditEmoji/);
+  assert.doesNotMatch(actions, /isChinese \? "国家" : "Country"/);
+  assert.match(actions, /appendCommentEmoji/);
+});
+
+test("My TYORA post editing hides country while preserving stored metadata", async () => {
+  const activity = await readFile(new URL("app/me/activity-summary.tsx", root), "utf8");
+
+  assert.match(activity, /country:\s*idea\.country/);
+  assert.match(activity, /body:\s*JSON\.stringify\(editForm\)/);
+  assert.doesNotMatch(activity, /t\("country"\)/);
+  assert.doesNotMatch(activity, /value=\{editForm\.country\}/);
 });
 
 test("owner update persists editable metadata and republishes immediately", async () => {

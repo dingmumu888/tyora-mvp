@@ -130,6 +130,19 @@ test("customers submit only the TYORA questions they actually choose", async () 
   assert.doesNotMatch(page, /defaultQuestions/);
 });
 
+test("idea creation removes low-value emoji shortcuts and the ambiguous country control", async () => {
+  const [page, copy] = await Promise.all([
+    read("app/ask/new/new-idea-client.tsx"),
+    read("lib/new-idea-i18n.ts")
+  ]);
+
+  assert.doesNotMatch(page, /quickEmojis|appendDescriptionEmoji/);
+  assert.doesNotMatch(page, /t\("country"\)|t\("countryPlaceholder"\)/);
+  assert.doesNotMatch(copy, /countryPlaceholder:/);
+  assert.match(page, /country: current\.country\.trim\(\) \? current\.country : nextUser\.country/);
+  assert.match(page, /country: form\.country\.trim\(\) \|\| "Not specified"/);
+});
+
 test("the idea-detail step uses TYORA's energetic but credible voice", async () => {
   const page = await read("app/ask/new/new-idea-client.tsx");
   const copy = await read("lib/new-idea-i18n.ts");

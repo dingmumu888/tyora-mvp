@@ -89,10 +89,6 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
     window.setTimeout(() => commentRef.current?.focus(), 0);
   }
 
-  function appendEditEmoji(emoji: string) {
-    setEditForm((current) => ({ ...current, description: `${current.description}${current.description ? " " : ""}${emoji}` }));
-  }
-
   function toggleEditQuestion(question: CommunityQuestion) {
     setEditForm((current) => ({
       ...current,
@@ -291,28 +287,14 @@ export default function IdeaActions({ idea, mode = "bar", compact = false, label
               {isChinese ? "产品名称" : "Product name"}
               <input required value={editForm.title} onChange={(event) => setEditForm({ ...editForm, title: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
             </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm font-semibold text-[#101216]">
-                {isChinese ? "产品类型" : "Product type"}
-                <input required value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-              </label>
-              <label className="grid gap-2 text-sm font-semibold text-[#101216]">
-                {isChinese ? "国家" : "Country"}
-                <input required value={editForm.country} onChange={(event) => setEditForm({ ...editForm, country: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
-              </label>
-            </div>
+            <label className="grid gap-2 text-sm font-semibold text-[#101216] sm:max-w-md">
+              {isChinese ? "产品类型" : "Product type"}
+              <input required value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })} className="h-11 rounded-2xl border border-[#dfe3e8] px-3 text-sm outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
+            </label>
             <label className="grid gap-2 text-sm font-semibold text-[#101216]">
               {isChinese ? "详细描述" : "Description"}
               <textarea required value={editForm.description} onChange={(event) => setEditForm({ ...editForm, description: event.target.value })} rows={6} className="min-h-32 resize-y rounded-2xl border border-[#dfe3e8] p-3 text-sm leading-6 outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10" />
             </label>
-            <div className="flex flex-wrap gap-2">
-              {quickEmojis.map((emoji) => (
-                <button key={emoji} type="button" onClick={() => appendEditEmoji(emoji)} className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-sm transition hover:bg-[#e8edf5]">
-                  {emoji}
-                </button>
-              ))}
-            </div>
-
             <div>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-[#101216]">{isChinese ? "创意图片" : "Idea images"}</p>
