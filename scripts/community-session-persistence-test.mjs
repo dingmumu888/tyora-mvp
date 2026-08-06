@@ -78,3 +78,26 @@ test("logout immediately clears every auth-sensitive community surface", async (
   assert.match(comments, /user && replyingTo\?\.id === comment\.id/);
   assert.match(comments, /data-auth-gate="comment-reply"[\s\S]*?<EmailLogin[\s\S]*?onSuccess=\{\(\) => \{[\s\S]*?setReplyingTo\(comment\)/);
 });
+
+test("login and logout synchronize across tabs and browser-restored pages", async () => {
+  const [sync, bridge, layout, login, userMenu, myTyoraLogout] = await Promise.all([
+    read("lib/client/community-session-sync.ts"),
+    read("components/community-session-sync.tsx"),
+    read("app/layout.tsx"),
+    read("components/email-login.tsx"),
+    read("components/community-user-menu.tsx"),
+    read("components/my-tyora-logout-button.tsx")
+  ]);
+
+  assert.match(sync, /localStorage\.setItem\(COMMUNITY_SESSION_SYNC_KEY/);
+  assert.match(bridge, /addEventListener\("storage", onStorage\)/);
+  assert.match(bridge, /addEventListener\("pageshow", onPageShow\)/);
+  assert.match(bridge, /addEventListener\("focus", onPageShow\)/);
+  assert.match(bridge, /visibilityState === "visible"/);
+  assert.match(bridge, /fetch\("\/api\/community\/session", \{ cache: "no-store" \}\)/);
+  assert.match(layout, /<CommunitySessionSync \/>/);
+  assert.match(login, /broadcastCommunitySessionChange\("login", payload\.user\)/);
+  assert.match(userMenu, /broadcastCommunitySessionChange\("logout"\)/);
+  assert.match(userMenu, /addEventListener\("tyora:community-logout", onLogout\)/);
+  assert.match(myTyoraLogout, /broadcastCommunitySessionChange\("logout"\)/);
+});

@@ -3,12 +3,13 @@
 import { LogOut } from "lucide-react";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { translateMyTyora } from "@/lib/my-tyora-i18n";
+import { broadcastCommunitySessionChange } from "@/lib/client/community-session-sync";
 
 export default function MyTyoraLogoutButton() {
   const { language } = usePublicLanguage();
   async function logout() {
     await fetch("/api/community/logout", { method: "POST" }).catch(() => undefined);
-    window.dispatchEvent(new CustomEvent("tyora:community-logout"));
+    broadcastCommunitySessionChange("logout");
     window.location.href = "/me";
   }
 

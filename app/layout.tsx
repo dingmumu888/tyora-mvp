@@ -3,6 +3,7 @@ import CommunityProfileGate from "@/components/community-profile-gate";
 import MobileBottomTabs from "@/components/mobile-bottom-tabs";
 import AnalyticsPageTracker from "@/components/analytics-page-tracker";
 import PublicLanguageProvider from "@/components/public-language-provider";
+import CommunitySessionSync from "@/components/community-session-sync";
 import "@fontsource-variable/reddit-sans/wght.css";
 import "@fontsource-variable/noto-sans-sc/wght.css";
 import "./globals.css";
@@ -39,6 +40,7 @@ export default function RootLayout({
       </head>
       <body>
         <PublicLanguageProvider>
+          <CommunitySessionSync />
           <AnalyticsPageTracker />
           {children}
           <CommunityProfileGate />

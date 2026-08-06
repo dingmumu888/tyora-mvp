@@ -40,7 +40,7 @@ The current build cannot provide a stable test baseline because a destructive ac
 6. Relative age and default ordering use a stable creation timestamp. Updated, moderated, and last-activity times are separate, explicitly labelled values.
 7. New TYORA replies and notification indicators update without a full-page reload through focus revalidation plus a lightweight visible-page refresh strategy. Drafts, scroll, and active overlays must remain intact.
 8. Logged-out visitors may read public ideas, images, and published TYORA replies. Starting a discussion and posting a comment or reply require email login before the protected action begins. After authentication, return the user to the intended action; preserve any existing draft if a session expires mid-flow.
-9. Login and logout state changes apply immediately to every already-open community surface. Logout removes owner-only actions and hides protected composers without requiring refresh; a later login resumes the user's intended action without duplicate submission.
+9. Login and logout state changes apply immediately to every already-open community surface, including other TYORA tabs and pages restored through browser Back/Forward. Logout removes owner-only actions and hides protected composers without requiring refresh; focus and restored-page events revalidate with the server, and a later login resumes the user's intended action without duplicate submission.
 
 ## In-scope fixes and acceptance criteria
 
@@ -117,6 +117,7 @@ Issues: `P0-E2E-032`, `P0-E2E-033`
 - Selecting the public comment composer or a comment `Reply` action requests email login before accepting text.
 - Successful authentication returns the creator to the intended discussion, comment, or reply action without sending duplicate requests.
 - Logging out from an already-open detail page immediately removes owner-only Edit, Withdraw, and Delete controls and replaces comment/reply entry points with email login, without a refresh.
+- The same result holds when login or logout occurs in another TYORA tab or page and the user returns through browser Back/Forward; regaining focus revalidates the server session.
 - If Reply triggered authentication, successful login opens the inline reply field for the exact selected comment without requiring a second click.
 - If an authenticated session expires after work begins, the existing draft-recovery path remains available and image-upload errors do not force the creator to rebuild the draft.
 - English, Simplified Chinese, Spanish, French, German, and Portuguese explain the same access rule.

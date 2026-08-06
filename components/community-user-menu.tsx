@@ -9,6 +9,7 @@ import CommunityProfileModal, { CommunitySessionUser } from "@/components/commun
 import EmailLogin from "@/components/email-login";
 import { usePublicLanguage } from "@/components/public-language-provider";
 import { cn } from "@/lib/utils";
+import { broadcastCommunitySessionChange } from "@/lib/client/community-session-sync";
 
 export default function CommunityUserMenu({
   loginClassName,
@@ -52,15 +53,23 @@ export default function CommunityUserMenu({
       const detail = (event as CustomEvent<{ user?: CommunitySessionUser }>).detail;
       if (detail?.user) setUser(detail.user);
     }
+    function onLogout() {
+      setUser(null);
+      setNotificationCount(0);
+      setMenuOpen(false);
+      setProfileOpen(false);
+    }
     function onCommunityRevalidate() {
       void refreshSession();
     }
     window.addEventListener("tyora:community-login", onLogin);
+    window.addEventListener("tyora:community-logout", onLogout);
     window.addEventListener("tyora:community-profile-updated", onProfileUpdated);
     window.addEventListener("tyora:community-revalidate", onCommunityRevalidate);
     window.addEventListener("tyora:community-notifications-read", onCommunityRevalidate);
     return () => {
       window.removeEventListener("tyora:community-login", onLogin);
+      window.removeEventListener("tyora:community-logout", onLogout);
       window.removeEventListener("tyora:community-profile-updated", onProfileUpdated);
       window.removeEventListener("tyora:community-revalidate", onCommunityRevalidate);
       window.removeEventListener("tyora:community-notifications-read", onCommunityRevalidate);
@@ -80,7 +89,7 @@ export default function CommunityUserMenu({
     setUser(null);
     setNotificationCount(0);
     setMenuOpen(false);
-    window.dispatchEvent(new CustomEvent("tyora:community-logout"));
+    broadcastCommunitySessionChange("logout");
   }
 
   if (!user) {

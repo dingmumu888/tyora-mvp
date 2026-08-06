@@ -9,11 +9,10 @@ import {
   EMAIL_LOGIN_CODE_TTL_SECONDS,
   PENDING_EMAIL_LOGIN_STORAGE_KEY
 } from "@/lib/email-login-constants";
+import { broadcastCommunitySessionChange } from "@/lib/client/community-session-sync";
 
 type Step = "email" | "code" | "success";
 type PendingEmailLogin = { email: string; expiresAt: number };
-
-const loginSuccessEvent = "tyora:community-login";
 
 function readPendingEmailLogin(): PendingEmailLogin | null {
   try {
@@ -202,7 +201,7 @@ export default function EmailLogin({
       setExpiresAt(null);
       setRemainingSeconds(0);
       setStep("success");
-      window.dispatchEvent(new CustomEvent(loginSuccessEvent, { detail: { user: payload.user } }));
+      broadcastCommunitySessionChange("login", payload.user);
       onSuccess?.();
       window.setTimeout(() => {
         setOpen(false);
